@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Next.js
+.next/
+out/
+build/
+
+# Misc
+.DS_Store
+*.log
+.env*.local
+
+# IDE
+.vscode/
+.idea/
