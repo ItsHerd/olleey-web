@@ -9,13 +9,13 @@ import {
   useRef,
   useState,
 } from "react"
-import { DynamicAnimationOptions, motion } from "framer-motion"
+import { Transition, motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
 interface TextProps {
   children: React.ReactNode
   reverse?: boolean
-  transition?: DynamicAnimationOptions
+  transition?: Transition
   splitBy?: "words" | "characters" | "lines" | string
   staggerDuration?: number
   staggerFrom?: "first" | "last" | "center" | "random" | number
@@ -97,13 +97,13 @@ const VerticalCutReveal = forwardRef<VerticalCutRevealRef, TextProps>(
         const total =
           splitBy === "characters"
             ? elements.reduce(
-                (acc, word) =>
-                  acc +
-                  (typeof word === "string"
-                    ? 1
-                    : word.characters.length + (word.needsSpace ? 1 : 0)),
-                0
-              )
+              (acc, word) =>
+                acc +
+                (typeof word === "string"
+                  ? 1
+                  : word.characters.length + (word.needsSpace ? 1 : 0)),
+              0
+            )
             : elements.length
         if (staggerFrom === "first") return index * staggerDuration
         if (staggerFrom === "last") return (total - 1 - index) * staggerDuration
@@ -163,9 +163,9 @@ const VerticalCutReveal = forwardRef<VerticalCutRevealRef, TextProps>(
         {(splitBy === "characters"
           ? (elements as WordObject[])
           : (elements as string[]).map((el, i) => ({
-              characters: [el],
-              needsSpace: i !== elements.length - 1,
-            }))
+            characters: [el],
+            needsSpace: i !== elements.length - 1,
+          }))
         ).map((wordObj, wordIndex, array) => {
           const previousCharsCount = array
             .slice(0, wordIndex)
@@ -192,7 +192,7 @@ const VerticalCutReveal = forwardRef<VerticalCutRevealRef, TextProps>(
                     variants={variants}
                     onAnimationComplete={
                       wordIndex === elements.length - 1 &&
-                      charIndex === wordObj.characters.length - 1
+                        charIndex === wordObj.characters.length - 1
                         ? onComplete
                         : undefined
                     }

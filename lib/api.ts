@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://olleey-backend.onrender.com";
 
 // Simple logger for terminal visibility
 // Sends logs to server API route which logs to terminal
@@ -10,7 +10,7 @@ const logToTerminal = async (message: string, data?: any) => {
   } else {
     console.log(`[API DEBUG] ${message}`);
   }
-  
+
   // Also send to server for terminal visibility
   if (typeof window !== 'undefined') {
     try {
@@ -18,7 +18,7 @@ const logToTerminal = async (message: string, data?: any) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category: 'API', message, data }),
-      }).catch(() => {}); // Silently fail if endpoint doesn't exist
+      }).catch(() => { }); // Silently fail if endpoint doesn't exist
     } catch {
       // Ignore errors
     }
@@ -144,24 +144,24 @@ export const tokenStorage = {
     if (typeof window === "undefined") return null;
     return localStorage.getItem("access_token");
   },
-  
+
   getRefreshToken: (): string | null => {
     if (typeof window === "undefined") return null;
     return localStorage.getItem("refresh_token");
   },
-  
+
   setTokens: (tokens: TokenResponse): void => {
     if (typeof window === "undefined") return;
     localStorage.setItem("access_token", tokens.access_token);
     localStorage.setItem("refresh_token", tokens.refresh_token);
   },
-  
+
   clearTokens: (): void => {
     if (typeof window === "undefined") return;
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
   },
-  
+
   isAuthenticated: (): boolean => {
     return tokenStorage.getAccessToken() !== null;
   }
@@ -192,7 +192,7 @@ export const authAPI = {
     if (!response.ok) {
       let errorDetail = "Login failed";
       let errorCode: string | undefined;
-      
+
       try {
         const error = await response.json();
         errorDetail = error.detail || error.message || errorDetail;
@@ -201,7 +201,7 @@ export const authAPI = {
         // If response is not JSON, use status text
         errorDetail = response.statusText || `HTTP ${response.status}`;
       }
-      
+
       const error = new Error(errorCode || errorDetail);
       (error as any).code = errorCode;
       (error as any).status = response.status;
@@ -427,15 +427,15 @@ export const youtubeAPI = {
     // Backend will handle redirect_uri configuration internally
     const url = new URL(`${API_BASE_URL}/youtube/connect`);
     url.searchParams.set("token", token);
-    
+
     // Add master_connection_id if provided (for language channel association)
     if (options?.master_connection_id) {
       url.searchParams.set("master_connection_id", options.master_connection_id);
     }
-    
+
     const backendUrl = url.toString();
     logToTerminal("YouTube OAuth - Redirecting to backend", backendUrl);
-    
+
     // Return the backend URL - the frontend will redirect to it
     // Browser will automatically follow redirects from backend → Google → backend → frontend
     return { auth_url: backendUrl };
@@ -478,12 +478,12 @@ export const youtubeAPI = {
         errorDetail = `Failed to complete YouTube connection: ${response.status} ${response.statusText}`;
         logToTerminal("YouTube API - completeConnection non-JSON error", { status: response.status, statusText: response.statusText });
       }
-      
+
       // If 404, provide more specific error message
       if (response.status === 404) {
         throw new Error(`Backend callback endpoint not found (404). Please ensure /youtube/connect/callback is configured on the backend. ${errorDetail}`);
       }
-      
+
       throw new Error(errorDetail);
     }
 
@@ -519,7 +519,7 @@ export const youtubeAPI = {
    * - connection_type: Type of connection (master/satellite)
    * - unassigned_language_channels: Number of language channels that were unassigned
    */
-  disconnectChannel: async (connectionId: string): Promise<{ 
+  disconnectChannel: async (connectionId: string): Promise<{
     message: string;
     connection_id: string;
     connection_type?: "master" | "satellite";
@@ -701,7 +701,7 @@ export const authenticatedFetch = async (
   options: RequestInit = {}
 ): Promise<Response> => {
   const token = tokenStorage.getAccessToken();
-  
+
   if (!token) {
     throw new Error("No access token available");
   }

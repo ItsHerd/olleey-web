@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
-import { youtubeAPI, type MasterNode } from "@/lib/api";
+import { youtubeAPI, type MasterNode, type Video } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
 import {
@@ -65,7 +65,7 @@ export default function ContentPage() {
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [channelDropdownOpen, setChannelDropdownOpen] = useState(false);
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
-  
+
   const { dashboard, loading: dashboardLoading } = useDashboard();
   // Pass channel_id to useVideos for server-side filtering and per-channel caching
   const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
@@ -75,7 +75,6 @@ export default function ContentPage() {
   // Theme-aware classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
   const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
-  const cardAltClass = theme === "light" ? "bg-light-cardAlt" : "bg-dark-cardAlt";
   const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
   const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
   const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
@@ -114,7 +113,7 @@ export default function ContentPage() {
         setChannelDropdownOpen(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [languageDropdownOpen, channelDropdownOpen]);
@@ -139,22 +138,22 @@ export default function ContentPage() {
   const videosWithLocalizations: VideoWithLocalizations[] = useMemo(() => {
     // Only show original videos in the main list
     const originalVideos = videos.filter(v => v.video_type !== "translated");
-    
+
     return originalVideos.map(video => {
       const localizations: Record<string, LocalizationInfo> = {};
       const translatedLanguages = video.translated_languages || [];
-      
+
       // Build localization status for each selected language
       selectedLanguages.forEach(lang => {
         if (translatedLanguages.includes(lang)) {
           // This language has been translated - mark as live
           // In production, you could fetch the actual translated video details
-          const translatedVideo = videos.find(v => 
-            v.video_type === "translated" && 
+          const translatedVideo = videos.find(v =>
+            v.video_type === "translated" &&
             v.source_video_id === video.video_id &&
             v.title.toLowerCase().includes(LANGUAGE_OPTIONS.find(l => l.code === lang)?.name.toLowerCase() || lang)
           );
-          
+
           localizations[lang] = {
             status: "live",
             url: translatedVideo ? `https://youtube.com/watch?v=${translatedVideo.video_id}` : undefined,
@@ -184,7 +183,7 @@ export default function ContentPage() {
 
   const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): LocalizationStatus => {
     const statuses = Object.values(localizations).map(l => l.status);
-    
+
     // If any are processing, overall is processing
     if (statuses.some(s => s === "processing")) return "processing";
     // If any are draft, overall needs review
@@ -205,11 +204,11 @@ export default function ContentPage() {
 
     // Search filter
     if (searchQuery) {
-    const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter((video) =>
-      video.title.toLowerCase().includes(query) ||
-      video.channel_name?.toLowerCase().includes(query)
-    );
+        video.title.toLowerCase().includes(query) ||
+        video.channel_name?.toLowerCase().includes(query)
+      );
     }
 
     // Status filter
@@ -217,7 +216,7 @@ export default function ContentPage() {
       filtered = filtered.filter(video => {
         const localizations = video.localizations || {};
         const overallStatus = getOverallVideoStatus(localizations);
-        
+
         switch (statusFilter) {
           case "ready-to-dub":
             return overallStatus === "not-started";
@@ -325,9 +324,9 @@ export default function ContentPage() {
                   </div>
                 )}
                 <span className="flex-1 text-left">
-                  {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name || 
-                   dashboard.youtube_connections.find(c => c.is_primary)?.youtube_channel_name || 
-                   "Select Channel"}
+                  {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name ||
+                    dashboard.youtube_connections.find(c => c.is_primary)?.youtube_channel_name ||
+                    "Select Channel"}
                   {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.is_primary && (
                     <span className={`ml-2 text-xs ${textClass}Secondary`}>(Main)</span>
                   )}
@@ -342,7 +341,7 @@ export default function ContentPage() {
                     {dashboard.youtube_connections.map((channel) => {
                       const avatarUrl = getChannelAvatar(channel.youtube_channel_id);
                       const isSelected = channel.youtube_channel_id === selectedChannelId;
-                      
+
                       return (
                         <button
                           key={channel.youtube_channel_id}
@@ -350,11 +349,10 @@ export default function ContentPage() {
                             setSelectedChannelId(channel.youtube_channel_id);
                             setChannelDropdownOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
-                            isSelected
-                              ? "${cardClass}Alt ${textClass}"
-                              : "${textClass}Secondary hover:${cardClass}Alt hover:${textClass}"
-                          }`}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${isSelected
+                            ? "${cardClass}Alt ${textClass}"
+                            : "${textClass}Secondary hover:${cardClass}Alt hover:${textClass}"
+                            }`}
                         >
                           {avatarUrl ? (
                             <img
@@ -403,18 +401,18 @@ export default function ContentPage() {
                 {/* Center dot */}
                 <div className="relative w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
               </div>
-              
+
               {/* Micro-copy */}
               <span className={`text-sm ${textClass}Secondary flex-1`}>
                 Watching{" "}
                 <span className={`${textClass}`}>
-                  @{dashboard?.youtube_connections?.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name || 
-                     dashboard?.youtube_connections?.find(c => c.is_primary)?.youtube_channel_name || 
-                     "your channel"}
+                  @{dashboard?.youtube_connections?.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name ||
+                    dashboard?.youtube_connections?.find(c => c.is_primary)?.youtube_channel_name ||
+                    "your channel"}
                 </span>
                 {" "}for new uploads...
               </span>
-              
+
               {/* Action Buttons */}
               <div className="flex items-center gap-3 flex-shrink-0">
                 <button
@@ -475,7 +473,7 @@ export default function ContentPage() {
                   <option value="duration">Duration</option>
                 </select>
                 <ChevronDown className={`absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-3.5 sm:w-3.5 ${textClass}Secondary pointer-events-none`} />
-          </div>
+              </div>
 
               {/* Language Multi-Select */}
               <div className="relative language-dropdown flex-shrink-0">
@@ -516,11 +514,10 @@ export default function ContentPage() {
                                 setSelectedLanguages([...selectedLanguages, lang.code]);
                               }
                             }}
-                            className={`w-full flex items-center gap-3 px-2 py-2 rounded-lg text-sm transition-colors ${
-                              isSelected
-                                ? "${cardClass}Alt ${textClass}"
-                                : "${textClass}Secondary hover:${cardClass}Alt hover:${textClass}"
-                            }`}
+                            className={`w-full flex items-center gap-3 px-2 py-2 rounded-lg text-sm transition-colors ${isSelected
+                              ? "${cardClass}Alt ${textClass}"
+                              : "${textClass}Secondary hover:${cardClass}Alt hover:${textClass}"
+                              }`}
                           >
                             <span className="text-lg">{lang.flag}</span>
                             <span className="flex-1 text-left">{lang.name}</span>
@@ -568,180 +565,177 @@ export default function ContentPage() {
                 </Button>
               </div>
             ) : (
-              <div /> 
+              <div />
             )}
 
             {/* View Mode Toggle - Right Side */}
             <div className={`flex items-center gap-1 ${cardClass} border ${borderClass} rounded-lg p-1 ml-auto`}>
               <button
                 onClick={() => setViewMode("carousel")}
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm font-normal transition-colors ${
-                  viewMode === "carousel"
-                    ? "bg-white text-black"
-                    : "${textClass}Secondary hover:${textClass}"
-                }`}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm font-normal transition-colors ${viewMode === "carousel"
+                  ? "bg-white text-black"
+                  : "${textClass}Secondary hover:${textClass}"
+                  }`}
               >
                 <Grid3x3 className="h-4 w-4" />
                 Gallery
               </button>
               <button
                 onClick={() => setViewMode("table")}
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm font-normal transition-colors ${
-                  viewMode === "table"
-                    ? "bg-white text-black"
-                    : "${textClass}Secondary hover:${textClass}"
-                }`}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm font-normal transition-colors ${viewMode === "table"
+                  ? "bg-white text-black"
+                  : "${textClass}Secondary hover:${textClass}"
+                  }`}
               >
                 <List className="h-4 w-4" />
                 Table
               </button>
+            </div>
           </div>
-        </div>
 
           {/* Content Area - Carousel or Table */}
           <div className="flex-1 overflow-hidden">
-          {videosLoading ? (
-            <div className="flex items-center justify-center py-12">
+            {videosLoading ? (
+              <div className="flex items-center justify-center py-12">
                 <Loader2 className={`h-8 w-8 animate-spin ${textClass}Secondary`} />
-            </div>
-          ) : filteredVideos.length === 0 ? (
-            <div className={`${cardClass} rounded-2xl border ${borderClass} p-12 text-center`}>
-              <p className={`${textClass}Secondary text-lg mb-2`}>No videos found</p>
-              <p className={`text-sm ${textClass}Secondary`}>
-                  {searchQuery ? "Try a different search term" : "Your videos will appear here once synced"}
-              </p>
-            </div>
-          ) : viewMode === "table" ? (
-            /* Table View */
-            <div className={`${cardClass} rounded-xl border ${borderClass} overflow-hidden`}>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className={`${bgClass} border-b ${borderClass}`}>
-                    <tr>
-                      <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Video</th>
-                      <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Status</th>
-                      <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Languages</th>
-                      <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Stats</th>
-                      <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Progress</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredVideos.map((video) => {
-                      const localizations = video.localizations || {};
-                      const completedCount = Object.values(localizations).filter(l => l.status === "live").length;
-                      const totalCount = selectedLanguages.length;
-                      const overallStatus = getOverallVideoStatus(localizations);
-                      const overallBadge = getStatusBadge(overallStatus);
-
-                      return (
-                        <tr
-                          key={video.video_id}
-                          onClick={() => router.push(`/content/${video.video_id}`)}
-                          className={`border-b ${borderClass} hover:${cardClass}Alt cursor-pointer transition-colors`}
-                        >
-                          {/* Video Column */}
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-4">
-                              <div className={`relative w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden ${cardClass}Alt`}>
-                                {video.thumbnail_url ? (
-                                  <img
-                                    src={video.thumbnail_url}
-                                    alt={video.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <Play className={`h-8 w-8 ${textClass}Secondary`} />
-                                  </div>
-                                )}
-                                <div className={`absolute bottom-1 right-1 ${bgClass}/80 ${textClass} text-xs px-1.5 py-0.5 rounded`}>
-                                  {formatDuration(video.duration)}
-                                </div>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className={`font-normal ${textClass} text-base mb-1 line-clamp-2`}>
-                                  {video.title}
-                                </h3>
-                                <p className={`text-sm ${textClass}Secondary`}>{video.channel_name}</p>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Status Column */}
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-normal ${overallBadge.color}`}>
-                              {overallBadge.icon} {overallBadge.label}
-                            </span>
-                          </td>
-
-                          {/* Languages Column */}
-                          <td className="px-6 py-4">
-                            <div className="flex gap-1.5">
-                              {selectedLanguages.map(langCode => {
-                                const langOption = LANGUAGE_OPTIONS.find(l => l.code === langCode);
-                                const localization = localizations[langCode];
-                                const status = localization?.status || "not-started";
-
-                                return (
-                                  <div
-                                    key={langCode}
-                                    className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all ${
-                                      status === "live" 
-                                        ? "border-green-500 ${cardClass}Alt" 
-                                        : status === "draft"
-                                        ? "border-yellow-500 ${cardClass}Alt"
-                                        : status === "processing"
-                                        ? "border-blue-500 ${cardClass}Alt"
-                                        : "${borderClass} ${cardClass} opacity-50 grayscale"
-                                    }`}
-                                    title={`${langOption?.name} - ${status}`}
-                                  >
-                                    <span className="text-sm">{langOption?.flag}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </td>
-
-                          {/* Stats Column */}
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col gap-1 text-sm">
-                              <div className={`flex items-center gap-1.5 ${textClass}Secondary`}>
-                                <Eye className="h-3.5 w-3.5" />
-                                <span>{formatViews(video.view_count)}</span>
-                              </div>
-                              <div className={`flex items-center gap-1.5 ${textClass}Secondary`}>
-                                <Clock className="h-3.5 w-3.5" />
-                                <span>{formatDuration(video.duration)}</span>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Progress Column */}
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-center gap-2">
-                                <div className={`flex-1 h-2 rounded-full ${cardClass}Alt overflow-hidden`}>
-                                  <div
-                                    className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
-                                    style={{ width: `${(completedCount / totalCount) * 100}%` }}
-                                  />
-                                </div>
-                                <span className={`text-xs ${textClass}Secondary font-normal w-12 text-right`}>
-                                  {completedCount}/{totalCount}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
               </div>
-            </div>
-          ) : (
-            /* Carousel View */
+            ) : filteredVideos.length === 0 ? (
+              <div className={`${cardClass} rounded-2xl border ${borderClass} p-12 text-center`}>
+                <p className={`${textClass}Secondary text-lg mb-2`}>No videos found</p>
+                <p className={`text-sm ${textClass}Secondary`}>
+                  {searchQuery ? "Try a different search term" : "Your videos will appear here once synced"}
+                </p>
+              </div>
+            ) : viewMode === "table" ? (
+              /* Table View */
+              <div className={`${cardClass} rounded-xl border ${borderClass} overflow-hidden`}>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className={`${bgClass} border-b ${borderClass}`}>
+                      <tr>
+                        <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Video</th>
+                        <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Status</th>
+                        <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Languages</th>
+                        <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Stats</th>
+                        <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Progress</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredVideos.map((video) => {
+                        const localizations = video.localizations || {};
+                        const completedCount = Object.values(localizations).filter(l => l.status === "live").length;
+                        const totalCount = selectedLanguages.length;
+                        const overallStatus = getOverallVideoStatus(localizations);
+                        const overallBadge = getStatusBadge(overallStatus);
+
+                        return (
+                          <tr
+                            key={video.video_id}
+                            onClick={() => router.push(`/content/${video.video_id}`)}
+                            className={`border-b ${borderClass} hover:${cardClass}Alt cursor-pointer transition-colors`}
+                          >
+                            {/* Video Column */}
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-4">
+                                <div className={`relative w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden ${cardClass}Alt`}>
+                                  {video.thumbnail_url ? (
+                                    <img
+                                      src={video.thumbnail_url}
+                                      alt={video.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <Play className={`h-8 w-8 ${textClass}Secondary`} />
+                                    </div>
+                                  )}
+                                  <div className={`absolute bottom-1 right-1 ${bgClass}/80 ${textClass} text-xs px-1.5 py-0.5 rounded`}>
+                                    {formatDuration(video.duration)}
+                                  </div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className={`font-normal ${textClass} text-base mb-1 line-clamp-2`}>
+                                    {video.title}
+                                  </h3>
+                                  <p className={`text-sm ${textClass}Secondary`}>{video.channel_name}</p>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Status Column */}
+                            <td className="px-6 py-4">
+                              <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-normal ${overallBadge.color}`}>
+                                {overallBadge.icon} {overallBadge.label}
+                              </span>
+                            </td>
+
+                            {/* Languages Column */}
+                            <td className="px-6 py-4">
+                              <div className="flex gap-1.5">
+                                {selectedLanguages.map(langCode => {
+                                  const langOption = LANGUAGE_OPTIONS.find(l => l.code === langCode);
+                                  const localization = localizations[langCode];
+                                  const status = localization?.status || "not-started";
+
+                                  return (
+                                    <div
+                                      key={langCode}
+                                      className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all ${status === "live"
+                                        ? "border-green-500 ${cardClass}Alt"
+                                        : status === "draft"
+                                          ? "border-yellow-500 ${cardClass}Alt"
+                                          : status === "processing"
+                                            ? "border-blue-500 ${cardClass}Alt"
+                                            : "${borderClass} ${cardClass} opacity-50 grayscale"
+                                        }`}
+                                      title={`${langOption?.name} - ${status}`}
+                                    >
+                                      <span className="text-sm">{langOption?.flag}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </td>
+
+                            {/* Stats Column */}
+                            <td className="px-6 py-4">
+                              <div className="flex flex-col gap-1 text-sm">
+                                <div className={`flex items-center gap-1.5 ${textClass}Secondary`}>
+                                  <Eye className="h-3.5 w-3.5" />
+                                  <span>{formatViews(video.view_count)}</span>
+                                </div>
+                                <div className={`flex items-center gap-1.5 ${textClass}Secondary`}>
+                                  <Clock className="h-3.5 w-3.5" />
+                                  <span>{formatDuration(video.duration)}</span>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Progress Column */}
+                            <td className="px-6 py-4">
+                              <div className="flex flex-col gap-2">
+                                <div className="flex items-center gap-2">
+                                  <div className={`flex-1 h-2 rounded-full ${cardClass}Alt overflow-hidden`}>
+                                    <div
+                                      className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
+                                      style={{ width: `${(completedCount / totalCount) * 100}%` }}
+                                    />
+                                  </div>
+                                  <span className={`text-xs ${textClass}Secondary font-normal w-12 text-right`}>
+                                    {completedCount}/{totalCount}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              /* Carousel View */
               <div className="w-full">
                 <Carousel
                   setApi={setCarouselApi}
@@ -752,14 +746,14 @@ export default function ContentPage() {
                   className="w-full"
                 >
                   <CarouselContent className="-ml-4">
-              {filteredVideos.map((video) => {
+                    {filteredVideos.map((video) => {
                       const localizations = video.localizations || {};
                       const completedCount = Object.values(localizations).filter(l => l.status === "live").length;
                       const totalCount = selectedLanguages.length;
                       const overallStatus = getOverallVideoStatus(localizations);
                       const overallBadge = getStatusBadge(overallStatus);
 
-                return (
+                      return (
                         <CarouselItem key={video.video_id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                           <button
                             onClick={() => router.push(`/content/${video.video_id}`)}
@@ -768,13 +762,13 @@ export default function ContentPage() {
                             <div className={`relative h-full min-h-[450px] overflow-hidden rounded-xl ${cardClass} border-2 ${borderClass} hover:border-indigo-500 transition-all hover:shadow-xl`}>
                               {/* Thumbnail with Gradient Overlay */}
                               <div className="relative h-60 overflow-hidden">
-                        {video.thumbnail_url ? (
-                          <img
-                            src={video.thumbnail_url}
-                            alt={video.title}
+                                {video.thumbnail_url ? (
+                                  <img
+                                    src={video.thumbnail_url}
+                                    alt={video.title}
                                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
+                                  />
+                                ) : (
                                   <div className={`w-full h-full flex items-center justify-center ${cardClass}`}>
                                     <Play className={`h-16 w-16 ${textClass}Secondary`} />
                                   </div>
@@ -786,17 +780,17 @@ export default function ContentPage() {
                                 {video.video_type === "original" && (
                                   <div className={`absolute top-3 left-3 ${cardClass} ${textClass} text-xs font-normal px-2 py-1 rounded-full`}>
                                     Original
-                          </div>
-                        )}
-                      </div>
+                                  </div>
+                                )}
+                              </div>
 
                               {/* Content */}
                               <div className="p-5 flex flex-col gap-4">
                                 {/* Title & Stats */}
                                 <div>
                                   <h3 className={`font-normal ${textClass} text-lg mb-2 line-clamp-2 text-left`}>
-                              {video.title}
-                            </h3>
+                                    {video.title}
+                                  </h3>
                                   <div className={`flex items-center gap-3 text-sm ${textClass}Secondary`}>
                                     <div className="flex items-center gap-1">
                                       <Eye className="h-4 w-4" />
@@ -806,11 +800,11 @@ export default function ContentPage() {
                                       <Clock className="h-4 w-4" />
                                       <span>{formatDuration(video.duration)}</span>
                                     </div>
-                          </div>
+                                  </div>
                                   <div className={`mt-1 text-xs ${textClass}Secondary text-left`}>
                                     {video.channel_name}
-                          </div>
-                        </div>
+                                  </div>
+                                </div>
 
                                 {/* Status Badge */}
                                 <div className="flex items-center justify-between">
@@ -832,15 +826,14 @@ export default function ContentPage() {
                                     return (
                                       <div key={langCode} className="flex flex-col items-center gap-1">
                                         <div
-                                          className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
-                                            status === "live" 
-                                              ? "border-green-500 ${cardClass}Alt shadow-md" 
-                                              : status === "draft"
+                                          className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${status === "live"
+                                            ? "border-green-500 ${cardClass}Alt shadow-md"
+                                            : status === "draft"
                                               ? "border-yellow-500 ${cardClass}Alt"
                                               : status === "processing"
-                                              ? "border-blue-500 ${cardClass}Alt"
-                                              : "${borderClass} ${cardClass} opacity-50 grayscale"
-                                          }`}
+                                                ? "border-blue-500 ${cardClass}Alt"
+                                                : "${borderClass} ${cardClass} opacity-50 grayscale"
+                                            }`}
                                           title={`${langOption?.name} - ${status === "live" ? "Live" : status === "draft" ? "Draft" : status === "processing" ? "Processing" : "Not Started"}`}
                                         >
                                           <span className="text-xl">{langOption?.flag}</span>
@@ -852,20 +845,20 @@ export default function ContentPage() {
                                           {status === "live" && (
                                             <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
                                               <Play className={`w-1.5 h-1.5 ${textClass}`} fill="white" strokeWidth={0} />
-                              </div>
+                                            </div>
                                           )}
                                           {status === "processing" && (
                                             <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
                                               <Loader2 className={`w-2 h-2 ${textClass} animate-spin`} strokeWidth={2.5} />
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-        </div>
-      </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
                           </button>
                         </CarouselItem>
                       );
@@ -878,16 +871,15 @@ export default function ContentPage() {
                   {filteredVideos.map((_, index) => (
                     <button
                       key={index}
-                      className={`h-2 w-2 rounded-full transition-all ${
-                        currentSlide === index ? "bg-white w-6" : "${cardClass}Alt hover:${cardClass}0"
-                      }`}
+                      className={`h-2 w-2 rounded-full transition-all ${currentSlide === index ? "bg-white w-6" : "${cardClass}Alt hover:${cardClass}0"
+                        }`}
                       onClick={() => carouselApi?.scrollTo(index)}
                       aria-label={`Go to slide ${index + 1}`}
                     />
                   ))}
+                </div>
               </div>
-              </div>
-          )}
+            )}
           </div>
         </div>
       </div>
