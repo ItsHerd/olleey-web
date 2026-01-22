@@ -2,145 +2,128 @@
 
 import { useState } from "react";
 import { authAPI, type LoginCredentials } from "@/lib/api";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { SignInPage, type Testimonial } from "@/components/ui/sign-in";
+import { getUserFriendlyErrorMessage, isNetworkError } from "@/lib/errorMessages";
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
 }
 
+const sampleTestimonials: Testimonial[] = [
+
+];
+
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError(null);
     setIsLoading(true);
 
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    // Basic client-side validation
+    if (!email || !email.trim()) {
+      setError("Please enter your email address.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!password || !password.trim()) {
+      setError("Please enter your password.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const credentials: LoginCredentials = { email, password };
+      const credentials: LoginCredentials = { email: email.trim(), password };
       await authAPI.login(credentials);
       onLoginSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed. Please try again.");
+      const friendlyMessage = getUserFriendlyErrorMessage(err);
+      setError(friendlyMessage);
+
+      // Only show alert for network errors (since they might need user attention)
+      if (isNetworkError(err)) {
+        alert(friendlyMessage);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleGoogleSignIn = () => {
+    // TODO: Implement Google OAuth
+    console.log("Google sign-in clicked");
+    alert("Google sign-in will be implemented soon");
+  };
+
+  const handleResetPassword = () => {
+    // TODO: Implement password reset
+    console.log("Reset password clicked");
+    alert("Password reset will be implemented soon");
+  };
+
+  const handleCreateAccount = () => {
+    // TODO: Navigate to registration page
+    console.log("Create account clicked");
+    alert("Account creation will be implemented soon");
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-8">
-      <div className="w-full max-w-md">
-        {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <img 
-              src="/logo.png" 
-              alt="VoxAll"
-              className="w-12 h-12 rounded-lg object-contain"
-            />
-            <h1 className="text-3xl font-bold text-gray-900">VoxAll</h1>
+    <div className="bg-background text-foreground">
+      <SignInPage
+        title={
+          <div className="flex flex-col items-start gap-4 mb-2">
+            <span className="font-light text-foreground tracking-tighter">
+              Welcome to <span className="font-semibold">olleey</span>
+            </span>
           </div>
-          <p className="text-gray-600">Sign in to your account</p>
-        </div>
-
-        {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                  placeholder="user1@gmail.com"
-                  disabled={isLoading}
-                />
-              </div>
+        }
+        description="Sign in to your account and continue your journey with us"
+        heroImageSrc="https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80"
+        testimonials={sampleTestimonials}
+        onSignIn={handleSignIn}
+        onGoogleSignIn={handleGoogleSignIn}
+        onResetPassword={handleResetPassword}
+        onCreateAccount={handleCreateAccount}
+      />
+      {/* Error display overlay */}
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm shadow-lg z-50 max-w-md">
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <p className="font-medium mb-1">Sign in failed</p>
+              <p className="text-sm leading-relaxed">{error}</p>
             </div>
-
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                  placeholder="Enter your password"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit Button */}
             <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              onClick={() => setError(null)}
+              className="text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 transition-colors flex-shrink-0"
+              aria-label="Close error message"
             >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Signing in...
-                </>
-              ) : (
-                "Sign In"
-              )}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-          </form>
-
-          {/* Demo Credentials Hint */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              Demo credentials: <span className="font-mono">user1@gmail.com</span> / <span className="font-mono">123456</span>
-            </p>
           </div>
         </div>
-      </div>
+      )}
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-2xl p-8 flex flex-col items-center gap-4">
+            <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-foreground">Signing in...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

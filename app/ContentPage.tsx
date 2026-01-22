@@ -1,342 +1,893 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { CategoryList, Category } from "@/components/ui/category-list";
-import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
-import type { Video } from "@/lib/api";
+import { youtubeAPI, type MasterNode } from "@/lib/api";
+import { logger } from "@/lib/logger";
+import { useTheme } from "@/lib/useTheme";
+import {
+  Carousel,
+  CarouselApi,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 
-type DetectionState = "no-videos" | "videos-detected" | "processing";
+type StatusFilter = "all" | "ready-to-dub" | "processing" | "needs-review" | "published";
+type SortOption = "recent" | "duration";
+type ViewMode = "carousel" | "table";
+
+const LANGUAGE_OPTIONS = [
+  { code: "es", name: "Spanish", flag: "🇪🇸" },
+  { code: "fr", name: "French", flag: "🇫🇷" },
+  { code: "de", name: "German", flag: "🇩🇪" },
+  { code: "pt", name: "Portuguese", flag: "🇵🇹" },
+  { code: "ja", name: "Japanese", flag: "🇯🇵" },
+  { code: "ko", name: "Korean", flag: "🇰🇷" },
+  { code: "hi", name: "Hindi", flag: "🇮🇳" },
+  { code: "ar", name: "Arabic", flag: "🇸🇦" },
+  { code: "ru", name: "Russian", flag: "🇷🇺" },
+  { code: "it", name: "Italian", flag: "🇮🇹" },
+];
+
+type LocalizationStatus = "live" | "draft" | "processing" | "not-started";
+
+interface LocalizationInfo {
+  status: LocalizationStatus;
+  url?: string;
+  views?: number;
+  video_id?: string;
+}
+
+interface VideoWithLocalizations extends Video {
+  localizations?: Record<string, LocalizationInfo>;
+  estimated_credits?: number;
+  global_views?: number;
+}
 
 export default function ContentPage() {
+  const router = useRouter();
+  const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
-  const [detectionState, setDetectionState] = useState<DetectionState>("videos-detected");
-  const [autoPublishEnabled, setAutoPublishEnabled] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["es", "fr", "de", "pt", "ja"]);
+  const [sortBy, setSortBy] = useState<SortOption>("recent");
+  const [selectedChannelId, setSelectedChannelId] = useState<string>("");
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [viewMode, setViewMode] = useState<ViewMode>("carousel");
+  const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
+  const [channelDropdownOpen, setChannelDropdownOpen] = useState(false);
+  const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
+  
   const { dashboard, loading: dashboardLoading } = useDashboard();
-  const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos();
+  // Pass channel_id to useVideos for server-side filtering and per-channel caching
+  const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
+    selectedChannelId ? { channel_id: selectedChannelId } : undefined
+  );
 
-  const getStatusIcon = (status?: string) => {
-    switch (status) {
-      case "Ready":
-      case "ready":
-        return (
-          <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center" title="Ready">
-            <svg className="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        );
-      case "In Progress":
-      case "in_progress":
-      case "processing":
-        return (
-          <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center" title="In Progress">
-            <svg className="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        );
-      case "Distributed":
-      case "distributed":
-      case "completed":
-        return (
-          <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center" title="Distributed">
-            <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        );
-      default:
-        return (
-          <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center" title="Unknown">
-            <svg className="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        );
-    }
-  };
+  // Theme-aware classes
+  const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
+  const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
+  const cardAltClass = theme === "light" ? "bg-light-cardAlt" : "bg-dark-cardAlt";
+  const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
+  const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
+  const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
 
-  const getPlatformIcon = (platform: string) => {
-    const colors: Record<string, string> = {
-      youtube: "bg-red-500",
-      tiktok: "bg-black",
-      instagram: "bg-pink-500",
-      facebook: "bg-blue-600",
-      x: "bg-gray-900"
+  // Load channel graph for avatars
+  useEffect(() => {
+    const loadChannelGraph = async () => {
+      try {
+        const graph = await youtubeAPI.getChannelGraph();
+        setChannelGraph(graph.master_nodes || []);
+      } catch (error) {
+        logger.error("ContentPage", "Failed to load channel graph", error);
+      }
     };
-    return (
-      <div
-        className={`w-6 h-6 rounded-full ${colors[platform] || "bg-gray-400"} flex items-center justify-center text-white text-xs font-bold`}
-      >
-        {platform[0].toUpperCase()}
-      </div>
-    );
+    loadChannelGraph();
+  }, []);
+
+  // Set default channel to primary channel on load
+  useEffect(() => {
+    if (dashboard?.youtube_connections && dashboard.youtube_connections.length > 0 && !selectedChannelId) {
+      // Find primary channel or use first channel
+      const primaryChannel = dashboard.youtube_connections.find(c => c.is_primary);
+      const defaultChannel = primaryChannel || dashboard.youtube_connections[0];
+      setSelectedChannelId(defaultChannel.youtube_channel_id);
+    }
+  }, [dashboard, selectedChannelId]);
+
+  // Close language dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (languageDropdownOpen && !target.closest('.language-dropdown')) {
+        setLanguageDropdownOpen(false);
+      }
+      if (channelDropdownOpen && !target.closest('.channel-dropdown')) {
+        setChannelDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [languageDropdownOpen, channelDropdownOpen]);
+
+  useEffect(() => {
+    if (!carouselApi) {
+      return;
+    }
+    const updateSelection = () => {
+      setCanScrollPrev(carouselApi.canScrollPrev());
+      setCanScrollNext(carouselApi.canScrollNext());
+      setCurrentSlide(carouselApi.selectedScrollSnap());
+    };
+    updateSelection();
+    carouselApi.on("select", updateSelection);
+    return () => {
+      carouselApi.off("select", updateSelection);
+    };
+  }, [carouselApi]);
+
+  // Process videos with real localization data from backend
+  const videosWithLocalizations: VideoWithLocalizations[] = useMemo(() => {
+    // Only show original videos in the main list
+    const originalVideos = videos.filter(v => v.video_type !== "translated");
+    
+    return originalVideos.map(video => {
+      const localizations: Record<string, LocalizationInfo> = {};
+      const translatedLanguages = video.translated_languages || [];
+      
+      // Build localization status for each selected language
+      selectedLanguages.forEach(lang => {
+        if (translatedLanguages.includes(lang)) {
+          // This language has been translated - mark as live
+          // In production, you could fetch the actual translated video details
+          const translatedVideo = videos.find(v => 
+            v.video_type === "translated" && 
+            v.source_video_id === video.video_id &&
+            v.title.toLowerCase().includes(LANGUAGE_OPTIONS.find(l => l.code === lang)?.name.toLowerCase() || lang)
+          );
+          
+          localizations[lang] = {
+            status: "live",
+            url: translatedVideo ? `https://youtube.com/watch?v=${translatedVideo.video_id}` : undefined,
+            views: translatedVideo?.view_count,
+            video_id: translatedVideo?.video_id,
+          };
+        } else {
+          // Not yet translated - mark as not started
+          localizations[lang] = {
+            status: "not-started",
+          };
+        }
+      });
+
+      const duration = video.duration || 600; // Default 10 minutes
+      const estimated_credits = Math.ceil(duration / 60); // 1 credit per minute
+      const global_views = Object.values(localizations).reduce((sum, loc) => sum + (loc.views || 0), 0);
+
+      return {
+        ...video,
+        localizations,
+        estimated_credits,
+        global_views,
+      };
+    });
+  }, [videos, selectedLanguages]);
+
+  const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): LocalizationStatus => {
+    const statuses = Object.values(localizations).map(l => l.status);
+    
+    // If any are processing, overall is processing
+    if (statuses.some(s => s === "processing")) return "processing";
+    // If any are draft, overall needs review
+    if (statuses.some(s => s === "draft")) return "draft";
+    // If all are live, overall is live
+    if (statuses.every(s => s === "live")) return "live";
+    // Otherwise, ready to dub
+    return "not-started";
   };
 
   const filteredVideos = useMemo(() => {
-    if (!searchQuery) return videos;
+    let filtered = videosWithLocalizations;
+
+    // Channel filter - filter by selected channel
+    if (selectedChannelId) {
+      filtered = filtered.filter((video) => video.channel_id === selectedChannelId);
+    }
+
+    // Search filter
+    if (searchQuery) {
     const query = searchQuery.toLowerCase();
-    return videos.filter((video) =>
+      filtered = filtered.filter((video) =>
       video.title.toLowerCase().includes(query) ||
       video.channel_name?.toLowerCase().includes(query)
     );
-  }, [videos, searchQuery]);
+    }
 
-  // Mock channel statuses for each video with flags
-  const getChannelStatuses = (video: Video) => {
-    const channels = [
-      { name: "French", flag: "🇫🇷" },
-      { name: "Spanish", flag: "🇪🇸" },
-      { name: "German", flag: "🇩🇪" },
-      { name: "Portuguese", flag: "🇵🇹" },
-      { name: "Hindi", flag: "🇮🇳" },
-    ];
-    return channels.map((channel) => ({
-      ...channel,
-      status: Math.random() > 0.5 ? "completed" : Math.random() > 0.5 ? "processing" : "pending"
-    }));
-  };
+    // Status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(video => {
+        const localizations = video.localizations || {};
+        const overallStatus = getOverallVideoStatus(localizations);
+        
+        switch (statusFilter) {
+          case "ready-to-dub":
+            return overallStatus === "not-started";
+          case "processing":
+            return overallStatus === "processing";
+          case "needs-review":
+            return overallStatus === "draft";
+          case "published":
+            return overallStatus === "live";
+          default:
+            return true;
+        }
+      });
+    }
 
-  const getStatusColor = (status: string) => {
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "recent":
+          return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
+        case "duration":
+          return (b.duration || 0) - (a.duration || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [videosWithLocalizations, searchQuery, statusFilter, sortBy, selectedChannelId]);
+
+  const getStatusBadge = (status: LocalizationStatus) => {
     switch (status) {
-      case "completed": return "bg-green-500";
-      case "processing": return "bg-yellow-500";
-      case "pending": return "bg-red-500";
-      default: return "bg-gray-400";
+      case "live":
+        return { icon: "🟢", label: "Live", color: "bg-green-50 text-green-700 border-green-200" };
+      case "draft":
+        return { icon: "🟡", label: "Draft", color: "bg-yellow-50 text-yellow-700 border-yellow-200" };
+      case "processing":
+        return { icon: "⚪️", label: "Processing", color: "bg-blue-50 text-blue-700 border-blue-200" };
+      case "not-started":
+        return { icon: "⚫️", label: "Not Started", color: "${cardClass} ${textClass}Secondary border-gray-200" };
     }
   };
 
-  const handleStartPublish = () => {
-    setDetectionState("processing");
-    // Simulate processing
-    setTimeout(() => {
-      setDetectionState("no-videos");
-    }, 5000);
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatViews = (views?: number) => {
+    if (!views) return "0";
+    if (views >= 1000000) return `${(views / 1000000).toFixed(1)}M`;
+    if (views >= 1000) return `${(views / 1000).toFixed(1)}K`;
+    return views.toString();
+  };
+
+  // Get channel avatar from channel graph
+  const getChannelAvatar = (channelId: string) => {
+    const masterNode = channelGraph.find(m => m.channel_id === channelId);
+    return masterNode?.channel_avatar_url;
   };
 
   return (
-    <div className="flex h-full bg-transparent">
-      {/* Main Content - Video List */}
-      <div className="flex-1 bg-transparent flex flex-col overflow-hidden">
-        {/* Progress Card */}
-        <div className="mb-6 bg-gradient-to-br from-yellow-300 to-yellow-400 rounded-3xl p-6 shadow-lg w-full">
-          <div className="flex items-start justify-between mb-4">
-            <h3 className="text-sm font-bold text-gray-900 tracking-wider">PROGRESS</h3>
-            <button className="w-8 h-8 rounded-full bg-yellow-200/50 hover:bg-yellow-200 flex items-center justify-center transition-colors">
-              <svg className="w-5 h-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Big Number with Icon */}
-          <div className="flex items-center gap-3 mb-2">
-            <svg className="w-12 h-12 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <span className="text-7xl font-bold text-gray-900">
-              {dashboardLoading ? "..." : dashboard?.completed_jobs || 0}
-            </span>
-          </div>
-
-          {/* Stats Text */}
-          <div className="mb-4">
-            <p className="text-sm text-gray-900 font-medium">
-              Out of {dashboardLoading ? "..." : dashboard?.total_jobs || 0} jobs
-            </p>
-            <p className="text-sm text-gray-900 font-medium">
-              {dashboardLoading ? "..." : dashboard?.active_jobs || 0} active jobs
+    <div className={`w-full h-full ${bgClass} flex flex-col overflow-hidden`}>
+      {/* Header */}
+      <div className={`flex-shrink-0 px-0 py-3 sm:py-4 md:py-6 border-b ${borderClass}`}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal ${textClass} mb-1 sm:mb-2 truncate`}>Content Library</h1>
+            <p className={`text-xs sm:text-sm md:text-base ${textSecondaryClass} truncate`}>
+              Manage your videos and track translation progress across languages
             </p>
           </div>
+          <div className={`flex items-center gap-2 sm:gap-3 md:gap-6 text-xs sm:text-sm ${textClass}Secondary flex-shrink-0 flex-wrap`}>
+            <span className="whitespace-nowrap">Total Videos: <strong className={`${textClass}`}>{filteredVideos.length}</strong></span>
+            <span className="whitespace-nowrap">Translations: <strong className="text-indigo-400">
+              {filteredVideos.reduce((acc, video) => {
+                const localizations = video.localizations || {};
+                return acc + Object.values(localizations).filter(l => l.status === "live").length;
+              }, 0)}
+            </strong></span>
+          </div>
+        </div>
+      </div>
 
-          {/* Progress Bar */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="w-full flex flex-col px-2 sm:px-4">
+          {/* Channel Selector */}
+          {dashboard?.youtube_connections && dashboard.youtube_connections.length > 0 && (
+            <div className="mb-4 mt-4 relative channel-dropdown">
+              <button
+                onClick={() => setChannelDropdownOpen(!channelDropdownOpen)}
+                className={`w-full sm:w-auto flex items-center gap-3 ${cardClass} border ${borderClass} ${textClass} rounded-lg px-4 py-2.5 text-sm hover:${cardClass}Alt cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors`}
+              >
+                {selectedChannelId && getChannelAvatar(selectedChannelId) ? (
+                  <img
+                    src={getChannelAvatar(selectedChannelId)}
+                    alt="Channel"
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className={`w-6 h-6 rounded-full ${cardClass}Alt flex items-center justify-center`}>
+                    <Youtube className={`h-3 w-3 ${textClass}Secondary`} />
+                  </div>
+                )}
+                <span className="flex-1 text-left">
+                  {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name || 
+                   dashboard.youtube_connections.find(c => c.is_primary)?.youtube_channel_name || 
+                   "Select Channel"}
+                  {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.is_primary && (
+                    <span className={`ml-2 text-xs ${textClass}Secondary`}>(Main)</span>
+                  )}
+                </span>
+                <ChevronDown className={`h-4 w-4 ${textClass}Secondary transition-transform ${channelDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Channel Dropdown */}
+              {channelDropdownOpen && (
+                <div className={`absolute top-full left-0 mt-1 w-full sm:w-64 ${cardClass} border ${borderClass} rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto`}>
+                  <div className="py-1">
+                    {dashboard.youtube_connections.map((channel) => {
+                      const avatarUrl = getChannelAvatar(channel.youtube_channel_id);
+                      const isSelected = channel.youtube_channel_id === selectedChannelId;
+                      
+                      return (
+                        <button
+                          key={channel.youtube_channel_id}
+                          onClick={() => {
+                            setSelectedChannelId(channel.youtube_channel_id);
+                            setChannelDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
+                            isSelected
+                              ? "${cardClass}Alt ${textClass}"
+                              : "${textClass}Secondary hover:${cardClass}Alt hover:${textClass}"
+                          }`}
+                        >
+                          {avatarUrl ? (
+                            <img
+                              src={avatarUrl}
+                              alt={channel.youtube_channel_name}
+                              className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className={`w-8 h-8 rounded-full ${cardClass}Alt flex items-center justify-center flex-shrink-0`}>
+                              <Youtube className={`h-4 w-4 ${textClass}Secondary`} />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate">{channel.youtube_channel_name || channel.youtube_channel_id}</span>
+                              {channel.is_primary && (
+                                <span className="text-xs bg-white text-black px-1.5 py-0.5 rounded-full flex-shrink-0">
+                                  PRIMARY
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <div className="w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0">
+                              <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Listening Animation */}
+          {!videosLoading && (
+            <div className={`mb-4 mt-4 flex items-center gap-4 px-5 py-3 ${cardClass}/50 border ${borderClass} rounded-lg`}>
+              {/* Radar Animation */}
+              <div className="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
+                {/* Outer pulse ring */}
+                <div className="absolute w-5 h-5 rounded-full border-2 border-indigo-500/30 animate-ping"></div>
+                {/* Inner pulse ring */}
+                <div className="absolute w-3 h-3 rounded-full border border-indigo-500/50 animate-ping"></div>
+                {/* Center dot */}
+                <div className="relative w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+              </div>
+              
+              {/* Micro-copy */}
+              <span className={`text-sm ${textClass}Secondary flex-1`}>
+                Watching{" "}
+                <span className={`${textClass}`}>
+                  @{dashboard?.youtube_connections?.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name || 
+                     dashboard?.youtube_connections?.find(c => c.is_primary)?.youtube_channel_name || 
+                     "your channel"}
+                </span>
+                {" "}for new uploads...
+              </span>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <button
+                  onClick={() => refetchVideos()}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 font-normal transition-colors underline"
+                >
+                  Check Now
+                </button>
+                <button
+                  onClick={() => {
+                    // TODO: Implement manual process trigger
+                    console.log("Start manual process");
+                  }}
+                  className={`text-xs ${cardClass}Alt ${textClass} px-3 py-1.5 rounded-full font-normal hover:${cardClass}Alt transition-colors`}
+                >
+                  Start Manual Process
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Filter Bar */}
           <div className="mb-4">
-            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-white rounded-full transition-all" 
-                style={{ 
-                  width: dashboardLoading || !dashboard || dashboard.total_jobs === 0 
-                    ? '0%' 
-                    : `${(dashboard.completed_jobs / dashboard.total_jobs) * 100}%` 
-                }}
-              ></div>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Search */}
+              <Input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`flex-1 min-w-[120px] sm:w-48 ${cardClass} ${borderClass} ${textClass} placeholder:${textClass}Secondary text-sm h-9`}
+              />
+
+              {/* Status Filter */}
+              <div className="relative flex-shrink-0">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                  className={`appearance-none ${cardClass} border ${borderClass} ${textClass} rounded-lg px-2 sm:px-3 py-2 pr-6 sm:pr-8 text-xs sm:text-sm hover:${cardClass}Alt cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[100px]`}
+                >
+                  <option value="all">All Status</option>
+                  <option value="ready-to-dub">Ready to Dub</option>
+                  <option value="processing">Processing</option>
+                  <option value="needs-review">Needs Review</option>
+                  <option value="published">Published</option>
+                </select>
+                <ChevronDown className={`absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-3.5 sm:w-3.5 ${textClass}Secondary pointer-events-none`} />
+              </div>
+
+              {/* Sort By */}
+              <div className="relative flex-shrink-0">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className={`appearance-none ${cardClass} border ${borderClass} ${textClass} rounded-lg px-2 sm:px-3 py-2 pr-6 sm:pr-8 text-xs sm:text-sm hover:${cardClass}Alt cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[100px]`}
+                >
+                  <option value="recent">Upload Date</option>
+                  <option value="duration">Duration</option>
+                </select>
+                <ChevronDown className={`absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-3.5 sm:w-3.5 ${textClass}Secondary pointer-events-none`} />
+          </div>
+
+              {/* Language Multi-Select */}
+              <div className="relative language-dropdown flex-shrink-0">
+                <button
+                  onClick={() => setLanguageDropdownOpen(!languageDropdownOpen)}
+                  className={`flex items-center gap-1.5 sm:gap-2 ${cardClass} border ${borderClass} ${textClass} rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-sm hover:${cardClass}Alt focus:outline-none focus:ring-2 focus:ring-indigo-500 whitespace-nowrap`}
+                >
+                  <Globe2 className={`h-3.5 w-3.5 ${textClass}Secondary`} />
+                  <span>{selectedLanguages.length} Languages</span>
+                  <ChevronDown className={`h-3.5 w-3.5 ${textClass}Secondary`} />
+                </button>
+
+                {/* Language Dropdown */}
+                {languageDropdownOpen && (
+                  <div className={`absolute top-full left-0 mt-1 w-64 ${cardClass} border ${borderClass} rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto`}>
+                    <div className="p-2">
+                      <div className="flex items-center justify-between px-2 py-1.5 mb-1">
+                        <span className={`text-xs ${textClass}Secondary font-normal uppercase`}>Select Languages</span>
+                        <button
+                          onClick={() => setLanguageDropdownOpen(false)}
+                          className={`${textClass}Secondary hover:${textClass}`}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      {LANGUAGE_OPTIONS.map((lang) => {
+                        const isSelected = selectedLanguages.includes(lang.code);
+                        return (
+                          <button
+                            key={lang.code}
+                            onClick={() => {
+                              if (isSelected) {
+                                // Don't allow deselecting if it's the last language
+                                if (selectedLanguages.length > 1) {
+                                  setSelectedLanguages(selectedLanguages.filter(l => l !== lang.code));
+                                }
+                              } else {
+                                setSelectedLanguages([...selectedLanguages, lang.code]);
+                              }
+                            }}
+                            className={`w-full flex items-center gap-3 px-2 py-2 rounded-lg text-sm transition-colors ${
+                              isSelected
+                                ? "${cardClass}Alt ${textClass}"
+                                : "${textClass}Secondary hover:${cardClass}Alt hover:${textClass}"
+                            }`}
+                          >
+                            <span className="text-lg">{lang.flag}</span>
+                            <span className="flex-1 text-left">{lang.name}</span>
+                            {isSelected && (
+                              <div className="w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className={`ml-auto text-sm ${textClass}Secondary`}>
+                {filteredVideos.length} videos
+              </div>
             </div>
           </div>
 
-          {/* Friend Avatars */}
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 border-2 border-yellow-400 overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
-                  {String.fromCharCode(64 + i)}
-                </div>
+          {/* View Toggle & Navigation Controls */}
+          <div className="flex items-center justify-between gap-2 mb-4">
+            {/* Carousel Navigation Controls - Only show in carousel mode */}
+            {viewMode === "carousel" ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => carouselApi?.scrollPrev()}
+                  disabled={!canScrollPrev}
+                  className={`h-9 w-9 rounded-full disabled:opacity-30 ${textClass} hover:${textClass}`}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => carouselApi?.scrollNext()}
+                  disabled={!canScrollNext}
+                  className={`h-9 w-9 rounded-full disabled:opacity-30 ${textClass} hover:${textClass}`}
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
-            ))}
+            ) : (
+              <div /> 
+            )}
+
+            {/* View Mode Toggle - Right Side */}
+            <div className={`flex items-center gap-1 ${cardClass} border ${borderClass} rounded-lg p-1 ml-auto`}>
+              <button
+                onClick={() => setViewMode("carousel")}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm font-normal transition-colors ${
+                  viewMode === "carousel"
+                    ? "bg-white text-black"
+                    : "${textClass}Secondary hover:${textClass}"
+                }`}
+              >
+                <Grid3x3 className="h-4 w-4" />
+                Gallery
+              </button>
+              <button
+                onClick={() => setViewMode("table")}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm font-normal transition-colors ${
+                  viewMode === "table"
+                    ? "bg-white text-black"
+                    : "${textClass}Secondary hover:${textClass}"
+                }`}
+              >
+                <List className="h-4 w-4" />
+                Table
+              </button>
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <Input
-            type="text"
-            placeholder="Search videos..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-md"
-          />
-        </div>
-
-        {/* Video List */}
-        <div className="flex-1 overflow-y-auto">
+          {/* Content Area - Carousel or Table */}
+          <div className="flex-1 overflow-hidden">
           {videosLoading ? (
             <div className="flex items-center justify-center py-12">
-              <svg className="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+                <Loader2 className={`h-8 w-8 animate-spin ${textClass}Secondary`} />
             </div>
           ) : filteredVideos.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-              <p className="text-gray-600 text-lg mb-2">No videos found</p>
-              <p className="text-sm text-gray-500">
-                {searchQuery ? "Try a different search term" : "Your videos will appear here once uploaded"}
+            <div className={`${cardClass} rounded-2xl border ${borderClass} p-12 text-center`}>
+              <p className={`${textClass}Secondary text-lg mb-2`}>No videos found</p>
+              <p className={`text-sm ${textClass}Secondary`}>
+                  {searchQuery ? "Try a different search term" : "Your videos will appear here once synced"}
               </p>
             </div>
+          ) : viewMode === "table" ? (
+            /* Table View */
+            <div className={`${cardClass} rounded-xl border ${borderClass} overflow-hidden`}>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className={`${bgClass} border-b ${borderClass}`}>
+                    <tr>
+                      <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Video</th>
+                      <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Status</th>
+                      <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Languages</th>
+                      <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Stats</th>
+                      <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Progress</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredVideos.map((video) => {
+                      const localizations = video.localizations || {};
+                      const completedCount = Object.values(localizations).filter(l => l.status === "live").length;
+                      const totalCount = selectedLanguages.length;
+                      const overallStatus = getOverallVideoStatus(localizations);
+                      const overallBadge = getStatusBadge(overallStatus);
+
+                      return (
+                        <tr
+                          key={video.video_id}
+                          onClick={() => router.push(`/content/${video.video_id}`)}
+                          className={`border-b ${borderClass} hover:${cardClass}Alt cursor-pointer transition-colors`}
+                        >
+                          {/* Video Column */}
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-4">
+                              <div className={`relative w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden ${cardClass}Alt`}>
+                                {video.thumbnail_url ? (
+                                  <img
+                                    src={video.thumbnail_url}
+                                    alt={video.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Play className={`h-8 w-8 ${textClass}Secondary`} />
+                                  </div>
+                                )}
+                                <div className={`absolute bottom-1 right-1 ${bgClass}/80 ${textClass} text-xs px-1.5 py-0.5 rounded`}>
+                                  {formatDuration(video.duration)}
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className={`font-normal ${textClass} text-base mb-1 line-clamp-2`}>
+                                  {video.title}
+                                </h3>
+                                <p className={`text-sm ${textClass}Secondary`}>{video.channel_name}</p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Status Column */}
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-normal ${overallBadge.color}`}>
+                              {overallBadge.icon} {overallBadge.label}
+                            </span>
+                          </td>
+
+                          {/* Languages Column */}
+                          <td className="px-6 py-4">
+                            <div className="flex gap-1.5">
+                              {selectedLanguages.map(langCode => {
+                                const langOption = LANGUAGE_OPTIONS.find(l => l.code === langCode);
+                                const localization = localizations[langCode];
+                                const status = localization?.status || "not-started";
+
+                                return (
+                                  <div
+                                    key={langCode}
+                                    className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all ${
+                                      status === "live" 
+                                        ? "border-green-500 ${cardClass}Alt" 
+                                        : status === "draft"
+                                        ? "border-yellow-500 ${cardClass}Alt"
+                                        : status === "processing"
+                                        ? "border-blue-500 ${cardClass}Alt"
+                                        : "${borderClass} ${cardClass} opacity-50 grayscale"
+                                    }`}
+                                    title={`${langOption?.name} - ${status}`}
+                                  >
+                                    <span className="text-sm">{langOption?.flag}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
+
+                          {/* Stats Column */}
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col gap-1 text-sm">
+                              <div className={`flex items-center gap-1.5 ${textClass}Secondary`}>
+                                <Eye className="h-3.5 w-3.5" />
+                                <span>{formatViews(video.view_count)}</span>
+                              </div>
+                              <div className={`flex items-center gap-1.5 ${textClass}Secondary`}>
+                                <Clock className="h-3.5 w-3.5" />
+                                <span>{formatDuration(video.duration)}</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Progress Column */}
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center gap-2">
+                                <div className={`flex-1 h-2 rounded-full ${cardClass}Alt overflow-hidden`}>
+                                  <div
+                                    className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
+                                    style={{ width: `${(completedCount / totalCount) * 100}%` }}
+                                  />
+                                </div>
+                                <span className={`text-xs ${textClass}Secondary font-normal w-12 text-right`}>
+                                  {completedCount}/{totalCount}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           ) : (
-            <div className="space-y-4">
+            /* Carousel View */
+              <div className="w-full">
+                <Carousel
+                  setApi={setCarouselApi}
+                  opts={{
+                    align: "start",
+                    loop: false,
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent className="-ml-4">
               {filteredVideos.map((video) => {
-                const channelStatuses = getChannelStatuses(video);
+                      const localizations = video.localizations || {};
+                      const completedCount = Object.values(localizations).filter(l => l.status === "live").length;
+                      const totalCount = selectedLanguages.length;
+                      const overallStatus = getOverallVideoStatus(localizations);
+                      const overallBadge = getStatusBadge(overallStatus);
+
                 return (
-                  <div
-                    key={video.video_id}
-                    className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-                  >
-                    <div className="flex gap-6">
-                      {/* Thumbnail */}
-                      <div className="flex-shrink-0">
+                        <CarouselItem key={video.video_id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                          <button
+                            onClick={() => router.push(`/content/${video.video_id}`)}
+                            className="group w-full h-full"
+                          >
+                            <div className={`relative h-full min-h-[450px] overflow-hidden rounded-xl ${cardClass} border-2 ${borderClass} hover:border-indigo-500 transition-all hover:shadow-xl`}>
+                              {/* Thumbnail with Gradient Overlay */}
+                              <div className="relative h-60 overflow-hidden">
                         {video.thumbnail_url ? (
                           <img
                             src={video.thumbnail_url}
                             alt={video.title}
-                            className="w-32 h-20 object-cover rounded-lg"
+                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                         ) : (
-                          <div className="w-32 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
+                                  <div className={`w-full h-full flex items-center justify-center ${cardClass}`}>
+                                    <Play className={`h-16 w-16 ${textClass}Secondary`} />
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/40 to-transparent" />
+                                <div className={`absolute bottom-3 right-3 ${bgClass}/80 ${textClass} text-xs font-normal px-2 py-1 rounded`}>
+                                  {formatDuration(video.duration)}
+                                </div>
+                                {video.video_type === "original" && (
+                                  <div className={`absolute top-3 left-3 ${cardClass} ${textClass} text-xs font-normal px-2 py-1 rounded-full`}>
+                                    Original
                           </div>
                         )}
                       </div>
 
-                      {/* Video Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4 mb-3">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate">
+                              {/* Content */}
+                              <div className="p-5 flex flex-col gap-4">
+                                {/* Title & Stats */}
+                                <div>
+                                  <h3 className={`font-normal ${textClass} text-lg mb-2 line-clamp-2 text-left`}>
                               {video.title}
                             </h3>
-                            <p className="text-sm text-gray-600">
-                              {video.channel_name || "Unknown Channel"}
-                            </p>
+                                  <div className={`flex items-center gap-3 text-sm ${textClass}Secondary`}>
+                                    <div className="flex items-center gap-1">
+                                      <Eye className="h-4 w-4" />
+                                      <span>{formatViews(video.view_count)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="h-4 w-4" />
+                                      <span>{formatDuration(video.duration)}</span>
+                                    </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            {getStatusIcon(video.status)}
-                            <button className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1">
-                              <span>View</span>
-                              <ArrowRight className="w-4 h-4" />
-                            </button>
+                                  <div className={`mt-1 text-xs ${textClass}Secondary text-left`}>
+                                    {video.channel_name}
                           </div>
                         </div>
 
-                        {/* Language Channel Statuses */}
-                        {channelStatuses.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-3">
-                            {channelStatuses.map((channel, idx) => (
-                              <div
-                                key={idx}
-                                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-50 border border-gray-200"
-                              >
-                                <span className="text-sm">{channel.flag}</span>
-                                <span className="text-xs text-gray-600">{channel.name}</span>
-                                <div
-                                  className={`w-2 h-2 rounded-full ${getStatusColor(channel.status)}`}
-                                  title={channel.status}
-                                />
+                                {/* Status Badge */}
+                                <div className="flex items-center justify-between">
+                                  <span className={`text-xs ${textClass}Secondary`}>
+                                    {completedCount}/{totalCount} languages
+                                  </span>
+                                  <span className={`text-xs px-2 py-1 rounded-full border font-medium ${overallBadge.color}`}>
+                                    {overallBadge.icon} {overallBadge.label}
+                                  </span>
+                                </div>
+
+                                {/* Language Avatars */}
+                                <div className={`flex gap-2 flex-wrap justify-center pt-2 border-t ${borderClass}`}>
+                                  {selectedLanguages.map(langCode => {
+                                    const langOption = LANGUAGE_OPTIONS.find(l => l.code === langCode);
+                                    const localization = localizations[langCode];
+                                    const status = localization?.status || "not-started";
+
+                                    return (
+                                      <div key={langCode} className="flex flex-col items-center gap-1">
+                                        <div
+                                          className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
+                                            status === "live" 
+                                              ? "border-green-500 ${cardClass}Alt shadow-md" 
+                                              : status === "draft"
+                                              ? "border-yellow-500 ${cardClass}Alt"
+                                              : status === "processing"
+                                              ? "border-blue-500 ${cardClass}Alt"
+                                              : "${borderClass} ${cardClass} opacity-50 grayscale"
+                                          }`}
+                                          title={`${langOption?.name} - ${status === "live" ? "Live" : status === "draft" ? "Draft" : status === "processing" ? "Processing" : "Not Started"}`}
+                                        >
+                                          <span className="text-xl">{langOption?.flag}</span>
+                                          {status === "not-started" && (
+                                            <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${cardClass} flex items-center justify-center shadow-sm`}>
+                                              <Plus className={`w-2 h-2 ${textClass}`} strokeWidth={2.5} />
+                                            </div>
+                                          )}
+                                          {status === "live" && (
+                                            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
+                                              <Play className={`w-1.5 h-1.5 ${textClass}`} fill="white" strokeWidth={0} />
                               </div>
-                            ))}
+                                          )}
+                                          {status === "processing" && (
+                                            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
+                                              <Loader2 className={`w-2 h-2 ${textClass} animate-spin`} strokeWidth={2.5} />
                           </div>
                         )}
-                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
-          )}
         </div>
       </div>
+                          </button>
+                        </CarouselItem>
+                      );
+                    })}
+                  </CarouselContent>
+                </Carousel>
 
-      {/* Right Sidebar - Independent Widgets */}
-      <div className="w-80 bg-transparent border-l border-gray-200 p-4 overflow-y-auto">
-        <div className="space-y-4">
-          {/* Quick Stats Widget */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
-            <h3 className="font-semibold text-gray-900 mb-3">Quick Stats</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Total Videos</span>
-                <span className="text-sm font-semibold text-gray-900">{videos.length}</span>
+                {/* Pagination Dots */}
+                <div className="mt-6 flex justify-center gap-2">
+                  {filteredVideos.map((_, index) => (
+                    <button
+                      key={index}
+                      className={`h-2 w-2 rounded-full transition-all ${
+                        currentSlide === index ? "bg-white w-6" : "${cardClass}Alt hover:${cardClass}0"
+                      }`}
+                      onClick={() => carouselApi?.scrollTo(index)}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Ready</span>
-                <span className="text-sm font-semibold text-gray-700">
-                  {videos.filter(v => v.status === "Ready" || v.status === "ready").length}
-                </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">In Progress</span>
-                <span className="text-sm font-semibold text-amber-700">
-                  {videos.filter(v => v.status === "In Progress" || v.status === "in_progress" || v.status === "processing").length}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Distributed</span>
-                <span className="text-sm font-semibold text-green-700">
-                  {videos.filter(v => v.status === "Distributed" || v.status === "distributed" || v.status === "completed").length}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Activity Widget */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
-            <h3 className="font-semibold text-gray-900 mb-3">Recent Activity</h3>
-            <div className="space-y-3">
-              <div className="text-sm">
-                <p className="text-gray-900 font-medium">Video Distributed</p>
-                <p className="text-xs text-gray-500">2 hours ago</p>
-              </div>
-              <div className="text-sm">
-                <p className="text-gray-900 font-medium">New Upload</p>
-                <p className="text-xs text-gray-500">5 hours ago</p>
-              </div>
-              <div className="text-sm">
-                <p className="text-gray-900 font-medium">Translation Complete</p>
-                <p className="text-xs text-gray-500">1 day ago</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Tips Widget */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
-            <h3 className="font-semibold text-gray-900 mb-3">💡 Tip</h3>
-            <p className="text-sm text-gray-600">
-              Upload videos in batches to save time on translation setup.
-            </p>
+          )}
           </div>
         </div>
       </div>

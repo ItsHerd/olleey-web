@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTheme } from "@/lib/useTheme";
 
 
 type SidebarProps = {
@@ -11,13 +12,23 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ currentPage, onNavigate, isLocked = false, onLogout }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { theme } = useTheme();
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Sidebar is expanded when hovered, collapsed otherwise
+  const isExpanded = isHovered;
+
+  const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
+  const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
+  const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
+  const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
+  const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
 
   const mainNavItems = [
     { name: "Content", icon: <ContentIcon /> },
     { name: "Channels", icon: <ChannelsIcon /> },
-    { name: "Languages", icon: <LanguagesIcon /> },
-    { name: "Destinations", icon: <DestinationsIcon /> },
+    { name: "Queued Jobs", icon: <LanguagesIcon /> },
+    { name: "Notifications", icon: <NotificationsIcon /> },
     { name: "Analytics", icon: <AnalyticsIcon /> }
   ];
 
@@ -27,50 +38,45 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
   ];
 
   return (
-    <aside 
-      className={`${
-        isCollapsed ? "w-20" : "w-72"
-      } bg-white border-r border-gray-200 flex flex-col h-screen transition-all duration-200 ease-in-out`}
+    <aside
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`${isExpanded ? "w-56 sm:w-64 md:w-72" : "w-16 sm:w-20"
+        } ${bgClass} border-r ${borderClass} flex flex-col h-full transition-all duration-200 ease-in-out overflow-hidden`}
     >
       {/* Logo Section at Top */}
-      <div className="px-5 pt-6 pb-6">
-        {!isCollapsed ? (
-          <div className="flex items-center gap-3">
-            <img 
-              src="/logo.png" 
-              alt="Sheaperd"
-              className="w-10 h-10 rounded-lg object-contain"
-            />
-              <span className="text-xl font-bold text-gray-900">Sheaperd</span>
+      <div className="px-3 sm:px-5 pt-4 sm:pt-6 pb-4 sm:pb-6">
+        {isExpanded ? (
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img src="/logo-name-black-trans.png" alt="olleey" className="h-32 w-auto object-contain" />
           </div>
         ) : (
-          <img 
-            src="/logo.png" 
-            alt="Sheaperd"
-            className="w-10 h-10 rounded-lg object-contain mx-auto"
+          <img
+            src="/logo-transparent.png"
+            alt="olleey"
+            className="w-auto h-24 sm:w-auto sm:h-24 rounded-lg object-contain mx-auto"
           />
         )}
       </div>
 
       {/* Main Navigation - Centered Vertically */}
-      <nav className="flex-1 px-3 flex flex-col justify-center space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-2 sm:px-3 flex flex-col justify-center space-y-1 overflow-y-auto">
         {mainNavItems.map((item) => (
           <button
             key={item.name}
             onClick={() => !isLocked && onNavigate(item.name)}
             disabled={isLocked}
-            className={`w-full flex items-center gap-5 px-4 py-3 rounded-full text-xl font-normal transition-all ${
-              isLocked
-                ? "text-gray-400 cursor-not-allowed opacity-50"
-                : currentPage === item.name
-                ? "bg-gray-100 text-gray-900 font-bold"
-                : "text-gray-900 hover:bg-gray-100"
-            }`}
+            className={`w-full flex items-center gap-3 sm:gap-4 md:gap-5 px-3 sm:px-4 py-2 sm:py-3 rounded-full text-base sm:text-lg md:text-xl font-normal transition-all ${isLocked
+              ? `${textSecondaryClass} cursor-not-allowed opacity-50`
+              : currentPage === item.name
+                ? `${cardClass} ${textClass} font-normal`
+                : `${textSecondaryClass} hover:${cardClass} hover:${textClass}`
+              }`}
           >
-            <span className={`${isCollapsed ? "mx-auto" : ""} w-7 h-7 flex items-center justify-center flex-shrink-0`}>
+            <span className={`${isExpanded ? "" : "mx-auto"} w-7 h-7 flex items-center justify-center flex-shrink-0`}>
               {item.icon}
             </span>
-            {!isCollapsed && (
+            {isExpanded && (
               <span className="truncate">{item.name}</span>
             )}
           </button>
@@ -78,75 +84,28 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
       </nav>
 
       {/* Bottom Navigation - Settings & Account */}
-      <div className="px-3 pb-4 space-y-1 border-t border-gray-200 pt-4">
+      <div className={`px-3 pb-4 space-y-1 border-t ${borderClass} pt-4`}>
         {bottomNavItems.map((item) => (
           <button
             key={item.name}
             onClick={() => !isLocked && onNavigate(item.name)}
             disabled={isLocked}
-            className={`w-full flex items-center gap-5 px-4 py-3 rounded-full text-xl font-normal transition-all ${
-              isLocked
-                ? "text-gray-400 cursor-not-allowed opacity-50"
-                : currentPage === item.name
-                ? "bg-blue-50 text-blue-600 font-bold"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`w-full flex items-center gap-5 px-4 py-3 rounded-full text-xl font-normal transition-all ${isLocked
+              ? `${textSecondaryClass} cursor-not-allowed opacity-50`
+              : currentPage === item.name
+                ? `${cardClass} ${textClass} font-normal`
+                : `${textSecondaryClass} hover:${cardClass} hover:${textClass}`
+              }`}
           >
-            <span className={`${isCollapsed ? "mx-auto" : ""} w-7 h-7 flex items-center justify-center flex-shrink-0`}>
+            <span className={`${isExpanded ? "" : "mx-auto"} w-7 h-7 flex items-center justify-center flex-shrink-0`}>
               {item.icon}
             </span>
-            {!isCollapsed && (
+            {isExpanded && (
               <span className="truncate">{item.name}</span>
             )}
           </button>
         ))}
-        
-        {/* Profile Section */}
-        <div className="mt-4 px-3">
-          {!isCollapsed ? (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-white">S</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 truncate">Sidiq Moltafet</p>
-                <p className="text-xs text-gray-600 truncate">@sidiqmoltafet</p>
-              </div>
-            </div>
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mx-auto">
-              <span className="text-sm font-semibold text-white">S</span>
-            </div>
-          )}
-        </div>
-        
-        {/* Collapse Toggle */}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="w-full flex items-center gap-5 px-4 py-2 rounded-full text-sm font-normal text-gray-600 hover:bg-gray-100 transition-all mt-2"
-        >
-          <span className={`${isCollapsed ? "mx-auto" : ""} w-5 h-5 flex items-center justify-center flex-shrink-0`}>
-            {isCollapsed ? <ExpandIcon /> : <CollapseIcon />}
-          </span>
-          {!isCollapsed && (
-            <span className="truncate">Collapse</span>
-          )}
-        </button>
 
-        {/* Logout Button */}
-        {onLogout && (
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-5 px-4 py-2 rounded-full text-sm font-normal text-red-600 hover:bg-red-50 transition-all mt-2"
-          >
-            <span className={`${isCollapsed ? "mx-auto" : ""} w-5 h-5 flex items-center justify-center flex-shrink-0`}>
-              <LogoutIcon />
-            </span>
-            {!isCollapsed && (
-              <span className="truncate">Logout</span>
-            )}
-          </button>
-        )}
       </div>
     </aside>
   );
@@ -191,10 +150,11 @@ function LanguagesIcon() {
   );
 }
 
-function DestinationsIcon() {
+function NotificationsIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-7 h-7">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
   );
 }

@@ -11,7 +11,7 @@ const PLATFORMS = [
   {
     id: "tiktok",
     name: "TikTok",
-    color: "bg-black",
+    color: "bg-dark-bg",
     status: "Active",
     notes: "Short-form content optimized"
   },
@@ -32,7 +32,7 @@ const PLATFORMS = [
   {
     id: "x",
     name: "X",
-    color: "bg-gray-900",
+    color: "bg-dark-card",
     status: "Inactive",
     notes: "Awaiting configuration"
   }
@@ -42,7 +42,7 @@ export default function DestinationsPage() {
   return (
     <div className="flex-1 p-6 bg-[#f9fafb]">
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-[#111827]">Destinations</h2>
+        <h2 className="text-2xl font-normal text-[#111827]">Destinations</h2>
         <p className="text-sm text-[#6b7280] mt-1">
           Overview of platform configurations and status
         </p>
@@ -56,17 +56,17 @@ export default function DestinationsPage() {
           >
             <div className="flex items-center gap-3 mb-4">
               <div
-                className={`w-12 h-12 rounded-full ${platform.color} flex items-center justify-center text-white font-bold text-lg`}
+                className={`w-12 h-12 rounded-full ${platform.color} flex items-center justify-center text-dark-text font-normal text-lg`}
               >
                 {platform.name[0]}
               </div>
               <div>
-                <div className="font-semibold text-[#111827]">{platform.name}</div>
+                <div className="font-normal text-[#111827]">{platform.name}</div>
                 <span
                   className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
                     platform.status === "Active"
                       ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-700"
+                      : "bg-dark-card text-gray-700"
                   }`}
                 >
                   {platform.status}

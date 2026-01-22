@@ -36,23 +36,23 @@ export default function YouTubeConnectErrorPage() {
               <X className="w-10 h-10 text-red-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-2xl font-normal text-gray-900 mb-2">
                 Connection Failed
               </h1>
-              <p className="text-gray-600 mb-4">
+              <p className="text-dark-textSecondary mb-4">
                 <strong>Error:</strong> {errorMessage}
               </p>
             </div>
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => router.push("/")}
-                className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                className="bg-dark-card hover:bg-dark-cardAlt text-dark-text font-normal py-3 px-6 rounded-lg transition-colors"
               >
                 Go to Dashboard
               </button>
               <button
                 onClick={() => router.push("/")}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors"
+                className="bg-dark-card hover:bg-gray-200 text-gray-700 font-normal py-3 px-6 rounded-lg transition-colors"
               >
                 Try Again
               </button>

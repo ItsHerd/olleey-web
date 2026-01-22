@@ -11,18 +11,23 @@ export default function YouTubeConnectSuccessPage() {
   const [channelName, setChannelName] = useState<string>("");
   const [channelId, setChannelId] = useState<string>("");
   const [connectionId, setConnectionId] = useState<string>("");
+  const connectionType = searchParams.get("type") || searchParams.get("connection_type") || "channel";
 
   useEffect(() => {
     // Extract connection details from URL parameters
-    // Backend redirects here with: connection_id, channel_id, channel_name
+    // Backend redirects here with: connection_id, channel_id, channel_name, type, master_connection_id
     const connectionIdParam = searchParams.get("connection_id");
     const channelIdParam = searchParams.get("channel_id");
     const channelNameParam = searchParams.get("channel_name");
+    const typeParam = searchParams.get("type") || searchParams.get("connection_type");
+    const masterConnectionIdParam = searchParams.get("master_connection_id");
 
     logger.debug("YouTube Connect Success", "Connection details received", {
       connection_id: connectionIdParam,
       channel_id: channelIdParam,
       channel_name: channelNameParam,
+      type: typeParam,
+      master_connection_id: masterConnectionIdParam,
       all_params: Object.fromEntries(searchParams.entries()),
       current_url: window.location.href,
     });
@@ -38,11 +43,33 @@ export default function YouTubeConnectSuccessPage() {
       setChannelName(decodeURIComponent(channelNameParam));
     }
 
-    // Mark onboarding as complete when YouTube is connected
-    // Auto-redirect to main app after 2 seconds
-    localStorage.setItem("onboardingComplete", "true");
+    // Always redirect to /channels to show the assign channel modal
+    const redirectTo = searchParams.get("redirect_to") || "/channels";
+    
+    // Build redirect URL with connection info for refresh
+    const redirectUrl = new URL(redirectTo, window.location.origin);
+    if (connectionIdParam) {
+      redirectUrl.searchParams.set("connection_id", connectionIdParam);
+    }
+    if (channelIdParam) {
+      redirectUrl.searchParams.set("channel_id", channelIdParam);
+    }
+    // Always pass type parameter - use typeParam if available, otherwise check connection_type
+    const finalType = typeParam || searchParams.get("connection_type");
+    if (finalType) {
+      redirectUrl.searchParams.set("type", finalType);
+      // Also set connection_type for consistency
+      redirectUrl.searchParams.set("connection_type", finalType);
+    }
+    // IMPORTANT: Pass master_connection_id so ChannelsPage can re-select the correct master
+    // Note: For master channels, master_connection_id will be null (which is correct)
+    if (masterConnectionIdParam) {
+      redirectUrl.searchParams.set("master_connection_id", masterConnectionIdParam);
+    }
+
+    // Auto-redirect after 2 seconds
     const timer = setTimeout(() => {
-      router.push("/");
+      router.push(redirectUrl.pathname + redirectUrl.search);
     }, 2000);
 
     return () => clearTimeout(timer);
@@ -57,8 +84,12 @@ export default function YouTubeConnectSuccessPage() {
               <Check className="w-10 h-10 text-green-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                YouTube Channel Connected!
+              <h1 className="text-2xl font-normal text-gray-900 mb-2">
+                {connectionType === "master" 
+                  ? "Master Channel Synced!" 
+                  : connectionType === "satellite"
+                  ? "Satellite Channel Linked!"
+                  : "YouTube Channel Connected!"}
               </h1>
               {channelName && (
                 <p className="text-lg text-gray-700 mb-2">
@@ -70,16 +101,42 @@ export default function YouTubeConnectSuccessPage() {
                   <strong>Channel ID:</strong> {channelId}
                 </p>
               )}
-              <p className="text-gray-600 mt-4">
-                Your YouTube account has been successfully connected.
+              <p className="text-dark-textSecondary mt-4">
+                {connectionType === "master" 
+                  ? "Your primary channel is now connected. Continue to set up satellite channels."
+                  : connectionType === "satellite"
+                  ? "Your target channel has been added to your distribution network."
+                  : "Your YouTube account has been successfully connected."}
               </p>
-              <p className="text-sm text-gray-500 mt-4">
+              <p className="text-sm text-dark-textSecondary mt-4">
                 Redirecting you back...
               </p>
             </div>
             <button
-              onClick={() => router.push("/")}
-              className="mt-4 bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              onClick={() => {
+                const redirectTo = searchParams.get("redirect_to") || "/channels";
+                const masterConnectionId = searchParams.get("master_connection_id");
+                const typeParam = searchParams.get("type") || searchParams.get("connection_type");
+                const redirectUrl = new URL(redirectTo, window.location.origin);
+                if (connectionId) {
+                  redirectUrl.searchParams.set("connection_id", connectionId);
+                }
+                if (channelId) {
+                  redirectUrl.searchParams.set("channel_id", channelId);
+                }
+                // Always pass type parameter
+                if (typeParam) {
+                  redirectUrl.searchParams.set("type", typeParam);
+                  redirectUrl.searchParams.set("connection_type", typeParam);
+                }
+                // IMPORTANT: Pass master_connection_id so ChannelsPage can re-select the correct master
+                // Note: For master channels, master_connection_id will be null (which is correct)
+                if (masterConnectionId) {
+                  redirectUrl.searchParams.set("master_connection_id", masterConnectionId);
+                }
+                router.push(redirectUrl.pathname + redirectUrl.search);
+              }}
+              className="mt-4 bg-dark-card hover:bg-dark-cardAlt text-dark-text font-normal py-3 px-6 rounded-lg transition-colors"
             >
               Go to Dashboard Now
             </button>
