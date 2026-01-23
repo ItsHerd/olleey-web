@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { tokenStorage } from "@/lib/api";
 import { Typewriter } from "@/components/Typewriter";
+import FeatureShowcase from "@/components/FeatureShowcase";
 
 // Pricing Calculator Component
 function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
@@ -295,6 +296,9 @@ export default function Index() {
             </div>
           </div>
         </section>
+
+        {/* Feature Showcase - Scroll-Pinned */}
+        <FeatureShowcase onGetStarted={handleNavigation} />
 
         {/* Business Features Section */}
         <section className="py-[109px] bg-white/90">
