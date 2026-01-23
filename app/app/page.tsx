@@ -161,7 +161,9 @@ export default function App() {
     const handleProjectSelect = (channelId: string) => {
         const params = new URLSearchParams(window.location.search);
         params.set("channel_id", channelId);
-        router.push(`?${params.toString()}`);
+        // Build the full URL path with /app prefix
+        const newUrl = `/app?${params.toString()}`;
+        router.push(newUrl);
     };
 
     const renderPage = () => {

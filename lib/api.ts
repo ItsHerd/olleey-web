@@ -325,10 +325,14 @@ export const authAPI = {
   },
 
   /**
-   * Logout (clear tokens)
+   * Logout (clear tokens and session cache)
    */
   logout: (): void => {
     tokenStorage.clearTokens();
+    // Clear sessionStorage to remove any cached data
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear();
+    }
   },
 };
 

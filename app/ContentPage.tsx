@@ -5,8 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DestinationCard } from "@/components/ui/DestinationCard";
-import { LanguageBadge } from "@/components/ui/LanguageBadge";
-import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube } from "lucide-react";
+import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
 import { youtubeAPI, type MasterNode, type Video } from "@/lib/api";
@@ -14,8 +13,7 @@ import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
 // Carousel imports removed as we switched to Grid layout
 
-type StatusFilter = "all" | "ready-to-dub" | "processing" | "needs-review" | "published";
-type SortOption = "recent" | "duration";
+
 type ViewMode = "carousel" | "table";
 
 const LANGUAGE_OPTIONS = [
@@ -51,9 +49,7 @@ export default function ContentPage() {
   const searchParams = useSearchParams();
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["es", "fr", "de", "pt", "ja"]);
-  const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [selectedChannelId, setSelectedChannelId] = useState<string>("");
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
@@ -111,7 +107,9 @@ export default function ContentPage() {
   const handleChannelSelect = (channelId: string) => {
     const params = new URLSearchParams(window.location.search);
     params.set("channel_id", channelId);
-    router.push(`?${params.toString()}`);
+    // Build the full URL path with /app prefix
+    const newUrl = `/app?${params.toString()}`;
+    router.push(newUrl);
     setChannelDropdownOpen(false);
   };
 
@@ -210,52 +208,48 @@ export default function ContentPage() {
       );
     }
 
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(video => {
-        const localizations = video.localizations || {};
-        const overallStatus = getOverallVideoStatus(localizations);
-
-        switch (statusFilter) {
-          case "ready-to-dub":
-            return overallStatus === "not-started";
-          case "processing":
-            return overallStatus === "processing";
-          case "needs-review":
-            return overallStatus === "draft";
-          case "published":
-            return overallStatus === "live";
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Sort
+    // Default Sort (Recent)
     filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "recent":
-          return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
-        case "duration":
-          return (b.duration || 0) - (a.duration || 0);
-        default:
-          return 0;
-      }
+      return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
     });
 
     return filtered;
-  }, [videosWithLocalizations, searchQuery, statusFilter, sortBy, selectedChannelId]);
+  }, [videosWithLocalizations, selectedChannelId, searchQuery]);
 
   const getStatusBadge = (status: LocalizationStatus) => {
     switch (status) {
       case "live":
-        return { icon: "🟢", label: "Live", color: "bg-green-50 text-green-700 border-green-200" };
+        return {
+          icon: CheckCircle,
+          label: "Live",
+          color: "text-green-400",
+          bgColor: "bg-green-900/20",
+          borderColor: "border-green-700/30"
+        };
       case "draft":
-        return { icon: "🟡", label: "Draft", color: "bg-yellow-50 text-yellow-700 border-yellow-200" };
+        return {
+          icon: AlertCircle,
+          label: "Draft",
+          color: "text-yellow-400",
+          bgColor: "bg-yellow-900/20",
+          borderColor: "border-yellow-700/30"
+        };
       case "processing":
-        return { icon: "⚪️", label: "Processing", color: "bg-blue-50 text-blue-700 border-blue-200" };
+        return {
+          icon: Loader2,
+          label: "Processing",
+          color: "text-blue-400",
+          bgColor: "bg-blue-900/20",
+          borderColor: "border-blue-700/30"
+        };
       case "not-started":
-        return { icon: "⚫️", label: "Not Started", color: "${cardClass} ${textClass}Secondary border-gray-200" };
+        return {
+          icon: XCircle,
+          label: "Not Started",
+          color: "text-gray-400",
+          bgColor: "bg-gray-900/20",
+          borderColor: "border-gray-700/30"
+        };
     }
   };
 
@@ -345,8 +339,7 @@ export default function ContentPage() {
                         <button
                           key={channel.youtube_channel_id}
                           onClick={() => {
-                            setSelectedChannelId(channel.youtube_channel_id);
-                            setChannelDropdownOpen(false);
+                            handleChannelSelect(channel.youtube_channel_id);
                           }}
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${isSelected
                             ? "${cardClass}Alt ${textClass}"
@@ -433,81 +426,17 @@ export default function ContentPage() {
             </div>
           )}
 
-          {/* Filter Bar */}
+
+
+          {/* Search Bar */}
           <div className="mb-4">
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Search */}
-              <Input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`flex-1 min-w-[120px] sm:w-48 ${cardClass} ${borderClass} ${textClass} placeholder:${textClass}Secondary text-sm h-9`}
-              />
-
-              {/* Status Filter */}
-              <div className="relative flex-shrink-0">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                  className={`appearance-none ${cardClass} border ${borderClass} ${textClass} rounded-lg px-2 sm:px-3 py-2 pr-6 sm:pr-8 text-xs sm:text-sm hover:${cardClass}Alt cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[100px]`}
-                >
-                  <option value="all">All Status</option>
-                  <option value="ready-to-dub">Ready to Dub</option>
-                  <option value="processing">Processing</option>
-                  <option value="needs-review">Needs Review</option>
-                  <option value="published">Published</option>
-                </select>
-                <ChevronDown className={`absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-3.5 sm:w-3.5 ${textClass}Secondary pointer-events-none`} />
-              </div>
-
-              {/* Sort By */}
-              <div className="relative flex-shrink-0">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className={`appearance-none ${cardClass} border ${borderClass} ${textClass} rounded-lg px-2 sm:px-3 py-2 pr-6 sm:pr-8 text-xs sm:text-sm hover:${cardClass}Alt cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[100px]`}
-                >
-                  <option value="recent">Upload Date</option>
-                  <option value="duration">Duration</option>
-                </select>
-                <ChevronDown className={`absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-3.5 sm:w-3.5 ${textClass}Secondary pointer-events-none`} />
-              </div>
-
-              {/* Language Filters - Chips */}
-              <div className="flex-1 min-w-0 overflow-x-auto pb-2 -mb-2">
-                <div className="flex items-center gap-2">
-                  {LANGUAGE_OPTIONS.map((lang) => {
-                    const isSelected = selectedLanguages.includes(lang.code);
-                    return (
-                      <LanguageBadge
-                        key={lang.code}
-                        flag={lang.flag}
-                        name={lang.name}
-                        isSelected={isSelected}
-                        onClick={() => {
-                          if (isSelected) {
-                            // Allow deselecting unless it's the last one -> actually UX usually allows deselecting all, but code logic wants at least one?
-                            // Original logic: if (selectedLanguages.length > 1) ...
-                            // I'll keep that safety or maybe allow 0? The code uses selectedLanguages for columns.
-                            // Let's keep the "don't deselect last one" for now to match logic.
-                            if (selectedLanguages.length > 1) {
-                              setSelectedLanguages(selectedLanguages.filter(l => l !== lang.code));
-                            }
-                          } else {
-                            setSelectedLanguages([...selectedLanguages, lang.code]);
-                          }
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className={`ml-auto text-sm ${textClass}Secondary`}>
-                {filteredVideos.length} videos
-              </div>
-            </div>
+            <Input
+              type="text"
+              placeholder="Search videos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full ${cardClass} ${borderClass} ${textClass} placeholder:${textClass}Secondary text-sm h-10`}
+            />
           </div>
 
           {/* View Toggle & Navigation Controls */}
@@ -612,8 +541,9 @@ export default function ContentPage() {
 
                             {/* Status Column */}
                             <td className="px-6 py-4">
-                              <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-normal ${overallBadge.color}`}>
-                                {overallBadge.icon} {overallBadge.label}
+                              <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border font-medium ${overallBadge.bgColor} ${overallBadge.borderColor} ${overallBadge.color}`}>
+                                <overallBadge.icon className="h-3 w-3" />
+                                {overallBadge.label}
                               </span>
                             </td>
 

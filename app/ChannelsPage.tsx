@@ -5,6 +5,7 @@ import { youtubeAPI, channelsAPI, type MasterNode, type LanguageChannel, type Yo
 import { useDashboard } from "@/lib/useDashboard";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Loader2, Youtube, Plus, RefreshCw, CheckCircle, XCircle, AlertCircle, Radio, ChevronRight, ChevronDown, Video, Globe2, Pause, Play, Trash2, Star } from "lucide-react";
 
 type ConnectionStatus = "active" | "expired" | "restricted" | "disconnected";
@@ -24,50 +25,6 @@ const LANGUAGE_FLAGS: Record<string, string> = {
   zh: "🇨🇳",
 };
 
-const getStatusConfig = (status: ConnectionStatus) => {
-  switch (status) {
-    case "active":
-      return {
-        icon: CheckCircle,
-        label: "Active",
-        emoji: "🟢",
-        color: "text-green-600",
-        bgColor: "bg-green-50",
-        borderColor: "border-green-200",
-        dotColor: "bg-green-500",
-      };
-    case "expired":
-      return {
-        icon: XCircle,
-        label: "Token Expired",
-        emoji: "🔴",
-        color: "text-red-600",
-        bgColor: "bg-red-50",
-        borderColor: "border-red-200",
-        dotColor: "bg-red-500",
-      };
-    case "restricted":
-      return {
-        icon: AlertCircle,
-        label: "Restricted Access",
-        emoji: "🟡",
-        color: "text-yellow-600",
-        bgColor: "bg-yellow-50",
-        borderColor: "border-yellow-200",
-        dotColor: "bg-yellow-500",
-      };
-    case "disconnected":
-      return {
-        icon: XCircle,
-        label: "Disconnected",
-        emoji: "⚫",
-        color: "${textClass}Secondary",
-        bgColor: "${cardClass}",
-        borderColor: "border-gray-200",
-        dotColor: "${cardClass}",
-      };
-  }
-};
 
 const getLanguageFlag = (langCode: string): string => {
   return LANGUAGE_FLAGS[langCode] || "🌍";
@@ -741,7 +698,6 @@ export default function ChannelsPage() {
                 return filtered.map((channel) => {
                   const isSelected = selectedChannel?.connection_id === channel.connection_id;
                   const status = channel.master_node?.status.status || channel.language_channel?.status.status || "active";
-                  const statusConfig = getStatusConfig(status);
 
                   // Get parent master for satellite channels
                   const parentMaster = channel.parent_master || channel.master_node;
@@ -918,15 +874,11 @@ export default function ChannelsPage() {
                               </span>
                             )}
                           </div>
-                          <div className={`flex items-center gap-1.5 text-xs font-medium ${statusConfig.color}`}>
-                            {statusConfig.emoji} {statusConfig.label}
-                          </div>
-                          {channel.master_node?.is_paused && (
-                            <span className="inline-flex items-center gap-1 bg-yellow-900/20 text-yellow-400 text-xs font-normal px-2 py-0.5 rounded-full mt-1">
-                              <Pause className="h-2.5 w-2.5" />
-                              Paused
-                            </span>
-                          )}
+                          <StatusBadge
+                            status={status}
+                            isPaused={channel.master_node?.is_paused}
+                            size="sm"
+                          />
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {isSelected && (
@@ -1293,7 +1245,6 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
   const { theme } = useTheme();
   const [isPausing, setIsPausing] = useState(false);
   const status = master.status.status;
-  const statusConfig = getStatusConfig(status);
 
   // Theme-aware classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -1354,9 +1305,11 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
                   </span>
                 )}
               </h2>
-              <div className={`flex items-center gap-2 text-lg font-normal ${statusConfig.color}`}>
-                {statusConfig.emoji} {statusConfig.label}
-              </div>
+              <StatusBadge
+                status={status}
+                isPaused={master.is_paused}
+                size="md"
+              />
             </div>
           </div>
 
@@ -1480,7 +1433,6 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
                 <tbody>
                   {master.language_channels.map((lang) => {
                     const langStatus = lang.status.status;
-                    const langStatusConfig = getStatusConfig(langStatus);
                     const languageCodes = lang.language_codes || (lang.language_code ? [lang.language_code] : []);
                     const languageNames = lang.language_names || (lang.language_name ? [lang.language_name] : []);
 
@@ -1527,15 +1479,7 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <div className="flex items-center gap-2 text-sm">
-                            <div className={`w-2 h-2 rounded-full ${langStatusConfig.dotColor}`} />
-                            <span className={
-                              langStatus === "active" ? "text-green-400" :
-                                langStatus === "expired" || langStatus === "disconnected" ? "text-red-400" :
-                                  langStatus === "restricted" ? "text-yellow-400" :
-                                    "${textClass}Secondary"
-                            }>{langStatusConfig.label}</span>
-                          </div>
+                          <StatusBadge status={langStatus} size="sm" />
                         </td>
                         <td className="py-4 px-4">
                           <span className={`text-sm ${textClass}Secondary`}>{lang.videos_count}</span>
@@ -1718,7 +1662,6 @@ function LanguageDetailView({ channelId, allMasters, onBack, onReloadGraph }: La
         <div className="space-y-3">
           {connections.map(({ master, langChannel }) => {
             const status = langChannel.status.status;
-            const statusConfig = getStatusConfig(status);
 
             return (
               <div
@@ -1736,9 +1679,7 @@ function LanguageDetailView({ channelId, allMasters, onBack, onReloadGraph }: La
                   </div>
                   <div className={`flex items-center gap-4 text-sm ${textClass}Secondary`}>
                     <span>{langChannel.videos_count} videos</span>
-                    <div className={`flex items-center gap-1 ${statusConfig.color}`}>
-                      {statusConfig.emoji} {statusConfig.label}
-                    </div>
+                    <StatusBadge status={status} size="sm" />
                   </div>
                 </div>
               </div>
@@ -1757,8 +1698,8 @@ function LanguageDetailView({ channelId, allMasters, onBack, onReloadGraph }: La
         </div>
         <div className={`${cardClass} border ${borderClass} rounded-xl p-6`}>
           <div className={`text-sm ${textClass}Secondary mb-2`}>Status</div>
-          <div className="text-lg font-normal text-green-500">
-            {getStatusConfig(langChannel.status.status).emoji} {getStatusConfig(langChannel.status.status).label}
+          <div className="flex justify-center">
+            <StatusBadge status={langChannel.status.status} size="md" />
           </div>
         </div>
       </div>
@@ -1976,9 +1917,6 @@ function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters
     }
   };
 
-  const statusConfig = channel.language_channel
-    ? getStatusConfig(channel.language_channel.status.status)
-    : { emoji: "⚪", label: "Unknown", color: "${textClass}Secondary" };
 
   return (
     <div>
@@ -2011,9 +1949,10 @@ function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters
               </p>
             </div>
           </div>
-          <div className={`flex items-center gap-1.5 text-sm font-medium ${statusConfig.color}`}>
-            {statusConfig.emoji} {statusConfig.label}
-          </div>
+          <StatusBadge
+            status={channel.language_channel?.status.status || "disconnected"}
+            size="sm"
+          />
         </div>
 
         {/* Languages Section */}
