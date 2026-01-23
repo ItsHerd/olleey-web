@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActivityQueue from "@/components/ActivityQueue";
@@ -23,19 +23,20 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function App() {
+function AppContent() {
     const { theme } = useTheme();
     const router = useRouter();
     const searchParams = useSearchParams();
     const [currentPage, setCurrentPage] = useState("Content");
+    // Determine if authenticated from token storage initially
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [onboardingComplete, setOnboardingComplete] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
 
-    // Use the dashboard hook for data
-    const { dashboard, loading: dashboardLoading } = useDashboard();
+    // Use the dashboard hook for data - only enabled when authenticated
+    const { dashboard, loading: dashboardLoading } = useDashboard({ enabled: isAuthenticated });
 
     // Get theme-aware classes
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -91,7 +92,24 @@ export default function App() {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                // Check if user has tokens
+                // 1. Check for Google OAuth ID Token in URL (Handle Redirects)
+                const urlHash = window.location.hash;
+                const urlParams = new URLSearchParams(urlHash.replace(/^#/, '?'));
+                const idToken = urlParams.get('id_token');
+
+                if (idToken) {
+                    try {
+                        // Clear the hash from the URL for a cleaner look
+                        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+
+                        // Authenticate with the ID token
+                        await authAPI.googleAuth(idToken);
+                    } catch (err) {
+                        console.error("Google auth redirect failed:", err);
+                    }
+                }
+
+                // 2. Check if user has tokens (either from step 1 or existing)
                 if (tokenStorage.isAuthenticated()) {
                     // Verify token is valid by fetching user info
                     try {
@@ -99,6 +117,7 @@ export default function App() {
                         setIsAuthenticated(true);
                         await syncOnboardingFromBackend();
                     } catch (error) {
+                        console.error("Auth verification failed:", error);
                         // Token invalid, clear it
                         tokenStorage.clearTokens();
                         setIsAuthenticated(false);
@@ -327,5 +346,23 @@ export default function App() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function App() {
+    return (
+        <Suspense fallback={
+            <div className="h-screen bg-dark-bg flex items-center justify-center">
+                <div className="text-center">
+                    <svg className="animate-spin h-8 w-8 text-white mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className="text-gray-400">Initializing...</p>
+                </div>
+            </div>
+        }>
+            <AppContent />
+        </Suspense>
     );
 }
