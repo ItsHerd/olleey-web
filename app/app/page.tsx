@@ -1,37 +1,68 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActivityQueue from "@/components/ActivityQueue";
 import ContentPage from "../ContentPage";
 import ChannelsPage from "../ChannelsPage";
 import AccountsPage from "../AccountsPage";
+import { PanelLeft, ChevronDown, Check, Youtube } from "lucide-react";
 import LanguagesPage from "../LanguagesPage";
 import NotificationsPage from "../NotificationsPage";
 import AnalyticsPage from "../AnalyticsPage";
 import SettingsPage from "../SettingsPage";
 import OnboardingPage from "../OnboardingPage";
 import LoginPage from "../LoginPage";
-import { tokenStorage, authAPI, dashboardAPI } from "@/lib/api";
+import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from "@/lib/api";
+import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function App() {
     const { theme } = useTheme();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [currentPage, setCurrentPage] = useState("Content");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [onboardingComplete, setOnboardingComplete] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
+
+    // Use the dashboard hook for data
+    const { dashboard, loading: dashboardLoading } = useDashboard();
 
     // Get theme-aware classes
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
     const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
+    const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
+    const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
+
+    // Determine current project from URL or defaults
+    const currentChannelId = searchParams?.get("channel_id");
+
+    // Find the currently selected project object
+    const selectedProject = dashboard?.youtube_connections?.find(c => c.youtube_channel_id === currentChannelId) ||
+        dashboard?.youtube_connections?.find(c => c.is_primary) ||
+        dashboard?.youtube_connections?.[0];
+
+    const getChannelAvatar = (channelId?: string) => {
+        if (!channelId) return undefined;
+        const masterNode = channelGraph.find(m => m.channel_id === channelId);
+        return masterNode?.channel_avatar_url;
+    };
 
     const syncOnboardingFromBackend = async () => {
-        const dashboard = await dashboardAPI.getDashboard();
+        const dashboardData = await dashboardAPI.getDashboard();
         const hasConnection =
-            dashboard.has_youtube_connection || dashboard.youtube_connections.length > 0;
+            dashboardData.has_youtube_connection || dashboardData.youtube_connections.length > 0;
         setOnboardingComplete(hasConnection);
-        // If the user already has a connection, land them on the Content page (home),
-        // UNLESS the URL specifically requests a different page (e.g., via ?page=Channels)
+
         if (hasConnection) {
             const params = new URLSearchParams(window.location.search);
             const pageParam = params.get("page");
@@ -40,6 +71,21 @@ export default function App() {
             }
         }
     };
+
+    // Load channel graph for avatars
+    useEffect(() => {
+        const loadChannelGraph = async () => {
+            if (isAuthenticated) {
+                try {
+                    const graph = await youtubeAPI.getChannelGraph();
+                    setChannelGraph(graph.master_nodes || []);
+                } catch (error) {
+                    console.error("Failed to load channel graph", error);
+                }
+            }
+        };
+        loadChannelGraph();
+    }, [isAuthenticated]);
 
     // Check authentication and onboarding status on mount
     useEffect(() => {
@@ -71,23 +117,20 @@ export default function App() {
         checkAuth();
     }, []);
 
-    // Read page query parameter from URL (e.g., from /channels redirect)
+    // Read page query parameter to sync internal state
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const pageParam = params.get("page");
-            if (pageParam) {
-                // Map page param to valid page names
-                const validPages = ["Content", "Channels", "Accounts", "Queued Jobs", "Notifications", "Analytics", "Settings"];
-                if (validPages.includes(pageParam)) {
-                    setCurrentPage(pageParam);
-                } else if (pageParam === "Languages") {
-                    // Handle legacy "Languages" page name
-                    setCurrentPage("Queued Jobs");
-                }
+        const pageParam = searchParams?.get("page");
+        if (pageParam) {
+            // Map page param to valid page names
+            const validPages = ["Content", "Channels", "Accounts", "Queued Jobs", "Notifications", "Analytics", "Settings"];
+            if (validPages.includes(pageParam)) {
+                setCurrentPage(pageParam);
+            } else if (pageParam === "Languages") {
+                // Handle legacy "Languages" page name
+                setCurrentPage("Queued Jobs");
             }
         }
-    }, []);
+    }, [searchParams]);
 
     const handleLoginSuccess = async () => {
         setIsAuthenticated(true);
@@ -112,9 +155,17 @@ export default function App() {
         setIsAuthenticated(false);
         setOnboardingComplete(false);
         setCurrentPage("Content");
+        setIsSidebarOpen(false);
+    };
+
+    const handleProjectSelect = (channelId: string) => {
+        const params = new URLSearchParams(window.location.search);
+        params.set("channel_id", channelId);
+        router.push(`?${params.toString()}`);
     };
 
     const renderPage = () => {
+        // Pass selectedChannelId to the page if needed, though they might read from URL independently
         switch (currentPage) {
             case "Content":
                 return <ContentPage />;
@@ -161,23 +212,104 @@ export default function App() {
     return (
         <div className={`h-screen ${bgClass} overflow-hidden`}>
             <div className={`flex h-full ${bgClass} overflow-hidden`}>
-                {/* Sidebar - Fixed width, hidden on very small screens if needed */}
+                {/* Sidebar */}
                 <div className="flex-shrink-0 hidden sm:block">
                     <Sidebar
                         currentPage={currentPage}
                         onNavigate={setCurrentPage}
                         isLocked={!onboardingComplete}
                         onLogout={handleLogout}
+                        isOpen={isSidebarOpen}
                     />
                 </div>
 
                 {/* Main Content Area */}
-                <div className={`flex-1 flex flex-col sm:flex-row overflow-hidden ${bgClass} relative min-w-0`}>
+                <div className={`flex-1 flex flex-col overflow-hidden ${bgClass} relative min-w-0`}>
+
+                    {/* Breadcrumb Header */}
+                    <header className={`flex items-center h-14 px-4 border-b ${theme === 'light' ? 'border-gray-200 bg-white/50' : 'border-gray-800 bg-[#0f0f0f]/50'} shrink-0 gap-2 backdrop-blur-sm z-10`}>
+                        <button
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            className={`p-2 rounded-md hover:${theme === 'light' ? 'bg-gray-100' : 'bg-white/10'}`}
+                        >
+                            <PanelLeft className={`h-4 w-4 ${textClass} transition-colors ${isSidebarOpen ? 'text-indigo-500' : ''}`} />
+                        </button>
+
+                        <div className={`h-4 w-[1px] ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-800'} mx-1`} />
+
+                        {/* Project Breadcrumb / Selector */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <div className="flex items-center gap-1 group cursor-pointer outline-none">
+                                    <div className={`flex items-center gap-2 px-2 py-1 rounded-md hover:${theme === 'light' ? 'bg-gray-100' : 'bg-white/10'} transition-colors`}>
+                                        {selectedProject && getChannelAvatar(selectedProject.youtube_channel_id) ? (
+                                            <img
+                                                src={getChannelAvatar(selectedProject.youtube_channel_id)}
+                                                alt={selectedProject.youtube_channel_name}
+                                                className="w-4 h-4 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-4 h-4 rounded bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold">
+                                                {selectedProject?.youtube_channel_name?.charAt(0) || "P"}
+                                            </div>
+                                        )}
+                                        <span className={`text-sm ${textClass} font-medium truncate max-w-[150px] sm:max-w-xs`}>
+                                            {selectedProject?.youtube_channel_name || "Select Project"}
+                                        </span>
+                                        <ChevronDown className={`h-3 w-3 ${textClass} opacity-50 w-3 h-3 ml-0.5`} />
+                                    </div>
+                                </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-[240px]">
+                                {dashboard?.youtube_connections?.map((connection) => (
+                                    <DropdownMenuItem
+                                        key={connection.youtube_channel_id}
+                                        onClick={() => handleProjectSelect(connection.youtube_channel_id)}
+                                        className="gap-2 cursor-pointer"
+                                    >
+                                        {getChannelAvatar(connection.youtube_channel_id) ? (
+                                            <img
+                                                src={getChannelAvatar(connection.youtube_channel_id)}
+                                                alt={connection.youtube_channel_name}
+                                                className="w-5 h-5 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                                <Youtube className="w-3 h-3 text-indigo-500" />
+                                            </div>
+                                        )}
+                                        <div className="flex flex-col flex-1 min-w-0">
+                                            <span className="truncate text-sm font-medium">{connection.youtube_channel_name}</span>
+                                            {connection.is_primary && (
+                                                <span className="text-[10px] text-muted-foreground">Primary Channel</span>
+                                            )}
+                                        </div>
+                                        {selectedProject?.youtube_channel_id === connection.youtube_channel_id && (
+                                            <Check className="w-4 h-4 text-indigo-500 ml-auto" />
+                                        )}
+                                    </DropdownMenuItem>
+                                ))}
+                                {(!dashboard?.youtube_connections || dashboard.youtube_connections.length === 0) && (
+                                    <div className="p-2 text-xs text-muted-foreground text-center">
+                                        No projects found
+                                    </div>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <span className={`${theme === 'light' ? 'text-gray-400' : 'text-gray-600'}`}>/</span>
+
+                        {/* Current Page Breadcrumb */}
+                        <div className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm ${textClass}`}>
+                            {currentPage}
+                        </div>
+                    </header>
+
                     <main className={`flex-1 overflow-y-auto ${bgClass} px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 lg:py-10 min-w-0`}>
                         {renderPage()}
                     </main>
 
-                    {/* Onboarding Overlay - only covers the main content area */}
+                    {/* Onboarding Overlay */}
                     {!onboardingComplete && (
                         <OnboardingPage
                             onComplete={handleOnboardingComplete}
