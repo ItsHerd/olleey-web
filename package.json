@@ -17,6 +17,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dagre": "^0.8.5",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.27.0",
     "lucide-react": "^0.562.0",
@@ -24,10 +25,12 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-social-icons": "^6.25.0",
+    "reactflow": "^11.11.4",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1.11.3",
+    "@types/dagre": "^0.7.53",
     "@types/google-one-tap": "^1.2.7",
     "@types/node": "25.0.9",
     "@types/react": "19.2.8",

@@ -6,7 +6,8 @@ import { useDashboard } from "@/lib/useDashboard";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Loader2, Youtube, Plus, RefreshCw, CheckCircle, XCircle, AlertCircle, Radio, ChevronRight, ChevronDown, Video, Globe2, Pause, Play, Trash2, Star } from "lucide-react";
+import { ChannelGraphView } from "@/components/ChannelGraphView";
+import { Loader2, Youtube, Plus, RefreshCw, CheckCircle, XCircle, AlertCircle, Radio, ChevronRight, ChevronDown, Video, Globe2, Pause, Play, Trash2, Star, List, GitGraph } from "lucide-react";
 
 type ConnectionStatus = "active" | "expired" | "restricted" | "disconnected";
 
@@ -51,6 +52,7 @@ export default function ChannelsPage() {
   } | null>(null);
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>("all");
   const [isChannelListCollapsed, setIsChannelListCollapsed] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "graph">("list");
 
   // Theme-aware classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -594,6 +596,24 @@ export default function ChannelsPage() {
                 <span className="whitespace-nowrap">Expired: <strong className="text-red-500">{graphStats.expired_connections}</strong></span>
               )}
             </div>
+
+            <div className={`flex items-center p-1 rounded-lg border ${borderClass} mr-2`}>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 rounded ${viewMode === "list" ? "bg-gray-200 text-black dark:bg-gray-700 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
+                title="List View"
+              >
+                <List className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("graph")}
+                className={`p-2 rounded ${viewMode === "graph" ? "bg-gray-200 text-black dark:bg-gray-700 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
+                title="Graph View"
+              >
+                <GitGraph className="h-4 w-4" />
+              </button>
+            </div>
+
             <button
               onClick={() => handleAddChannel()}
               className={`inline-flex items-center justify-center gap-2 ${cardClass} ${textClass} px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-xs sm:text-sm md:text-base font-normal hover:${cardClass}Alt transition-colors whitespace-nowrap`}
@@ -622,6 +642,10 @@ export default function ChannelsPage() {
               Connect First Channel
             </button>
           </div>
+        </div>
+      ) : viewMode === "graph" ? (
+        <div className="flex-1 p-4 overflow-hidden">
+          <ChannelGraphView masters={channelGraph} />
         </div>
       ) : (
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
@@ -1011,223 +1035,228 @@ export default function ChannelsPage() {
             )}
           </main>
         </div>
-      )}
+      )
+      }
 
       {/* Assign Channel Modal - Shown after OAuth success */}
-      {showAssignChannelModal && pendingConnectionData && (
-        <div className={`fixed inset-0 ${bgClass}/80 flex items-center justify-center z-50 p-4 overflow-y-auto`}>
-          <div className={`${cardClass} border ${borderClass} rounded-xl p-4 sm:p-6 max-w-md w-full my-auto max-h-[90vh] overflow-y-auto`}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className={`text-xl font-normal ${textClass}`}>Assign Channel</h2>
-              <button
-                onClick={() => {
-                  setShowAssignChannelModal(false);
-                  setPendingConnectionData(null);
-                  setAssignAsPrimary(false);
-                  setSelectedParentMasterId("");
-                }}
-                className={`${textClass}Secondary hover:${textClass}`}
-              >
-                <XCircle className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <p className={`text-sm ${textClass}Secondary mb-2`}>New Channel:</p>
-              <p className={`${textClass} font-normal text-lg`}>{pendingConnectionData.channel_name}</p>
-            </div>
-
-            <div className="mb-6">
-              <p className={`text-sm ${textClass}Secondary mb-3`}>Choose how to assign this channel:</p>
-
-              {/* Option 1: Make Primary */}
-              <div className="mb-4">
-                <label className={`flex items-center gap-3 p-4 ${cardClass}Alt rounded-lg cursor-pointer hover:${cardClass}Alt transition-colors`}>
-                  <input
-                    type="radio"
-                    name="assignOption"
-                    checked={assignAsPrimary}
-                    onChange={() => {
-                      setAssignAsPrimary(true);
-                      setSelectedParentMasterId("");
-                    }}
-                    className="w-4 h-4 text-olleey-yellow focus:ring-olleey-yellow"
-                  />
-                  <div className="flex-1">
-                    <div className={`${textClass} font-normal`}>Make Primary Channel</div>
-                    <div className={`text-xs ${textClass}Secondary mt-1`}>Set this as your main channel</div>
-                  </div>
-                </label>
+      {
+        showAssignChannelModal && pendingConnectionData && (
+          <div className={`fixed inset-0 ${bgClass}/80 flex items-center justify-center z-50 p-4 overflow-y-auto`}>
+            <div className={`${cardClass} border ${borderClass} rounded-xl p-4 sm:p-6 max-w-md w-full my-auto max-h-[90vh] overflow-y-auto`}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-xl font-normal ${textClass}`}>Assign Channel</h2>
+                <button
+                  onClick={() => {
+                    setShowAssignChannelModal(false);
+                    setPendingConnectionData(null);
+                    setAssignAsPrimary(false);
+                    setSelectedParentMasterId("");
+                  }}
+                  className={`${textClass}Secondary hover:${textClass}`}
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
               </div>
 
-              {/* Option 2: Assign to Parent */}
-              <div>
-                <label className={`flex items-center gap-3 p-4 ${cardClass}Alt rounded-lg cursor-pointer hover:${cardClass}Alt transition-colors`}>
-                  <input
-                    type="radio"
-                    name="assignOption"
-                    checked={!assignAsPrimary && selectedParentMasterId !== ""}
-                    onChange={() => {
-                      setAssignAsPrimary(false);
-                      if (!selectedParentMasterId && channelGraph.length > 0) {
-                        setSelectedParentMasterId(channelGraph[0].connection_id);
-                      }
-                    }}
-                    className="w-4 h-4 text-olleey-yellow focus:ring-olleey-yellow"
-                  />
-                  <div className="flex-1">
-                    <div className={`${textClass} font-normal`}>Assign to Parent Channel</div>
-                    <div className={`text-xs ${textClass}Secondary mt-1`}>Add as a language channel under a master</div>
-                  </div>
-                </label>
-
-                {!assignAsPrimary && (
-                  <div className="mt-3 ml-7">
-                    <select
-                      value={selectedParentMasterId}
-                      onChange={(e) => setSelectedParentMasterId(e.target.value)}
-                      className={`w-full ${cardClass} border ${borderClass} ${textClass} rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-olleey-yellow`}
-                    >
-                      <option value="">Select a master channel...</option>
-                      {channelGraph
-                        .filter(master => !master.is_paused) // Only show active masters
-                        .map(master => (
-                          <option key={master.connection_id} value={master.connection_id}>
-                            {master.channel_name} {master.is_primary && "(Primary)"}
-                          </option>
-                        ))}
-                    </select>
-                    {channelGraph.length === 0 && (
-                      <p className={`text-xs ${textClass}Secondary mt-2`}>
-                        No master channels available. Make this channel primary first.
-                      </p>
-                    )}
-                  </div>
-                )}
+              <div className="mb-6">
+                <p className={`text-sm ${textClass}Secondary mb-2`}>New Channel:</p>
+                <p className={`${textClass} font-normal text-lg`}>{pendingConnectionData.channel_name}</p>
               </div>
-            </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  setShowAssignChannelModal(false);
-                  setPendingConnectionData(null);
-                  setAssignAsPrimary(false);
-                  setSelectedParentMasterId("");
-                }}
-                className={`flex-1 px-4 py-2 ${cardClass}Alt ${textClass} rounded-full hover:${cardClass}Alt transition-colors`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAssignChannel}
-                disabled={(!assignAsPrimary && !selectedParentMasterId) || isAssigningChannel}
-                className={`flex-1 px-4 py-2 bg-olleey-yellow ${textClass} rounded-full hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
-              >
-                {isAssigningChannel ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Assigning...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    Assign Channel
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="mb-6">
+                <p className={`text-sm ${textClass}Secondary mb-3`}>Choose how to assign this channel:</p>
 
-      {/* Language Channel Creation Modal */}
-      {showLanguageChannelModal && pendingChannelData && (
-        <div className={`fixed inset-0 ${bgClass}/80 flex items-center justify-center z-50 p-4 overflow-y-auto`}>
-          <div className={`${cardClass} border ${borderClass} rounded-xl p-4 sm:p-6 max-w-md w-full my-auto max-h-[90vh] overflow-y-auto`}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className={`text-xl font-normal ${textClass}`}>Create Language Channel</h2>
-              <button
-                onClick={() => {
-                  setShowLanguageChannelModal(false);
-                  setPendingChannelData(null);
-                  setSelectedLanguages([]);
-                }}
-                className={`${textClass}Secondary hover:${textClass}`}
-              >
-                <XCircle className="h-5 w-5" />
-              </button>
-            </div>
+                {/* Option 1: Make Primary */}
+                <div className="mb-4">
+                  <label className={`flex items-center gap-3 p-4 ${cardClass}Alt rounded-lg cursor-pointer hover:${cardClass}Alt transition-colors`}>
+                    <input
+                      type="radio"
+                      name="assignOption"
+                      checked={assignAsPrimary}
+                      onChange={() => {
+                        setAssignAsPrimary(true);
+                        setSelectedParentMasterId("");
+                      }}
+                      className="w-4 h-4 text-olleey-yellow focus:ring-olleey-yellow"
+                    />
+                    <div className="flex-1">
+                      <div className={`${textClass} font-normal`}>Make Primary Channel</div>
+                      <div className={`text-xs ${textClass}Secondary mt-1`}>Set this as your main channel</div>
+                    </div>
+                  </label>
+                </div>
 
-            <div className="mb-4">
-              <p className={`text-sm ${textClass}Secondary mb-2`}>Channel:</p>
-              <p className={`${textClass} font-normal`}>{pendingChannelData.channel_name}</p>
-            </div>
-
-            <div className="mb-6">
-              <p className={`text-sm ${textClass}Secondary mb-3`}>Select Languages:</p>
-              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                {LANGUAGE_OPTIONS.map((lang) => {
-                  const isSelected = selectedLanguages.includes(lang.code);
-                  return (
-                    <button
-                      key={lang.code}
-                      onClick={() => {
-                        if (isSelected) {
-                          setSelectedLanguages(selectedLanguages.filter(l => l !== lang.code));
-                        } else {
-                          setSelectedLanguages([...selectedLanguages, lang.code]);
+                {/* Option 2: Assign to Parent */}
+                <div>
+                  <label className={`flex items-center gap-3 p-4 ${cardClass}Alt rounded-lg cursor-pointer hover:${cardClass}Alt transition-colors`}>
+                    <input
+                      type="radio"
+                      name="assignOption"
+                      checked={!assignAsPrimary && selectedParentMasterId !== ""}
+                      onChange={() => {
+                        setAssignAsPrimary(false);
+                        if (!selectedParentMasterId && channelGraph.length > 0) {
+                          setSelectedParentMasterId(channelGraph[0].connection_id);
                         }
                       }}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${isSelected
-                        ? "bg-olleey-yellow ${textClass}"
-                        : "${cardClass}Alt ${textClass}Secondary hover:${cardClass}Alt"
-                        }`}
-                    >
-                      <span className="text-lg">{lang.flag}</span>
-                      <span>{lang.name}</span>
-                      {isSelected && (
-                        <CheckCircle className="h-4 w-4 ml-auto" />
+                      className="w-4 h-4 text-olleey-yellow focus:ring-olleey-yellow"
+                    />
+                    <div className="flex-1">
+                      <div className={`${textClass} font-normal`}>Assign to Parent Channel</div>
+                      <div className={`text-xs ${textClass}Secondary mt-1`}>Add as a language channel under a master</div>
+                    </div>
+                  </label>
+
+                  {!assignAsPrimary && (
+                    <div className="mt-3 ml-7">
+                      <select
+                        value={selectedParentMasterId}
+                        onChange={(e) => setSelectedParentMasterId(e.target.value)}
+                        className={`w-full ${cardClass} border ${borderClass} ${textClass} rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-olleey-yellow`}
+                      >
+                        <option value="">Select a master channel...</option>
+                        {channelGraph
+                          .filter(master => !master.is_paused) // Only show active masters
+                          .map(master => (
+                            <option key={master.connection_id} value={master.connection_id}>
+                              {master.channel_name} {master.is_primary && "(Primary)"}
+                            </option>
+                          ))}
+                      </select>
+                      {channelGraph.length === 0 && (
+                        <p className={`text-xs ${textClass}Secondary mt-2`}>
+                          No master channels available. Make this channel primary first.
+                        </p>
                       )}
-                    </button>
-                  );
-                })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setShowAssignChannelModal(false);
+                    setPendingConnectionData(null);
+                    setAssignAsPrimary(false);
+                    setSelectedParentMasterId("");
+                  }}
+                  className={`flex-1 px-4 py-2 ${cardClass}Alt ${textClass} rounded-full hover:${cardClass}Alt transition-colors`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAssignChannel}
+                  disabled={(!assignAsPrimary && !selectedParentMasterId) || isAssigningChannel}
+                  className={`flex-1 px-4 py-2 bg-olleey-yellow ${textClass} rounded-full hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                >
+                  {isAssigningChannel ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Assigning...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4" />
+                      Assign Channel
+                    </>
+                  )}
+                </button>
               </div>
             </div>
+          </div>
+        )
+      }
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  setShowLanguageChannelModal(false);
-                  setPendingChannelData(null);
-                  setSelectedLanguages([]);
-                }}
-                className={`flex-1 px-4 py-2 ${cardClass}Alt ${textClass} rounded-full hover:${cardClass}Alt transition-colors`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateLanguageChannel}
-                disabled={selectedLanguages.length === 0 || isCreatingLanguageChannel}
-                className={`flex-1 px-4 py-2 bg-olleey-yellow ${textClass} rounded-full hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
-              >
-                {isCreatingLanguageChannel ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4" />
-                    Create Language Channel
-                  </>
-                )}
-              </button>
+      {/* Language Channel Creation Modal */}
+      {
+        showLanguageChannelModal && pendingChannelData && (
+          <div className={`fixed inset-0 ${bgClass}/80 flex items-center justify-center z-50 p-4 overflow-y-auto`}>
+            <div className={`${cardClass} border ${borderClass} rounded-xl p-4 sm:p-6 max-w-md w-full my-auto max-h-[90vh] overflow-y-auto`}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-xl font-normal ${textClass}`}>Create Language Channel</h2>
+                <button
+                  onClick={() => {
+                    setShowLanguageChannelModal(false);
+                    setPendingChannelData(null);
+                    setSelectedLanguages([]);
+                  }}
+                  className={`${textClass}Secondary hover:${textClass}`}
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <p className={`text-sm ${textClass}Secondary mb-2`}>Channel:</p>
+                <p className={`${textClass} font-normal`}>{pendingChannelData.channel_name}</p>
+              </div>
+
+              <div className="mb-6">
+                <p className={`text-sm ${textClass}Secondary mb-3`}>Select Languages:</p>
+                <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                  {LANGUAGE_OPTIONS.map((lang) => {
+                    const isSelected = selectedLanguages.includes(lang.code);
+                    return (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedLanguages(selectedLanguages.filter(l => l !== lang.code));
+                          } else {
+                            setSelectedLanguages([...selectedLanguages, lang.code]);
+                          }
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${isSelected
+                          ? "bg-olleey-yellow ${textClass}"
+                          : "${cardClass}Alt ${textClass}Secondary hover:${cardClass}Alt"
+                          }`}
+                      >
+                        <span className="text-lg">{lang.flag}</span>
+                        <span>{lang.name}</span>
+                        {isSelected && (
+                          <CheckCircle className="h-4 w-4 ml-auto" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setShowLanguageChannelModal(false);
+                    setPendingChannelData(null);
+                    setSelectedLanguages([]);
+                  }}
+                  className={`flex-1 px-4 py-2 ${cardClass}Alt ${textClass} rounded-full hover:${cardClass}Alt transition-colors`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateLanguageChannel}
+                  disabled={selectedLanguages.length === 0 || isCreatingLanguageChannel}
+                  className={`flex-1 px-4 py-2 bg-olleey-yellow ${textClass} rounded-full hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                >
+                  {isCreatingLanguageChannel ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4" />
+                      Create Language Channel
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }
 
