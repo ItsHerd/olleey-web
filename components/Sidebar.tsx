@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useTheme } from "@/lib/useTheme";
 
 
@@ -14,10 +13,9 @@ type SidebarProps = {
 
 export default function Sidebar({ currentPage, onNavigate, isLocked = false, onLogout, isOpen = false }: SidebarProps) {
   const { theme } = useTheme();
-  const [isHovered, setIsHovered] = useState(false);
 
-  // Sidebar is expanded when hovered or when forced open (pinned)
-  const isExpanded = isOpen || isHovered;
+  // Sidebar is expanded only when forced open (pinned)
+  const isExpanded = isOpen;
 
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
   const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
@@ -29,19 +27,15 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
     { name: "Content", icon: <ContentIcon /> },
     { name: "Channels", icon: <ChannelsIcon /> },
     { name: "Queued Jobs", icon: <LanguagesIcon /> },
-    { name: "Notifications", icon: <NotificationsIcon /> },
     { name: "Analytics", icon: <AnalyticsIcon /> }
   ];
 
   const bottomNavItems = [
-    { name: "Accounts", icon: <AccountsIcon /> },
     { name: "Settings", icon: <SettingsIcon /> }
   ];
 
   return (
     <aside
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className={`${isExpanded ? "w-48 sm:w-56 md:w-60" : "w-14 sm:w-16"
         } ${bgClass} border-r ${borderClass} flex flex-col h-full transition-all duration-200 ease-in-out overflow-hidden`}
     >

@@ -6,7 +6,7 @@ import ActivityQueue from "@/components/ActivityQueue";
 import ContentPage from "../ContentPage";
 import ChannelsPage from "../ChannelsPage";
 import AccountsPage from "../AccountsPage";
-import { PanelLeft, ChevronDown, Check, Youtube } from "lucide-react";
+import { PanelLeft, ChevronDown, Check, Youtube, Bell, User } from "lucide-react";
 import LanguagesPage from "../LanguagesPage";
 import NotificationsPage from "../NotificationsPage";
 import AnalyticsPage from "../AnalyticsPage";
@@ -208,17 +208,16 @@ function AppContent() {
         }
     };
 
-    // Show loading state
+    // Show loading state (use static classes to avoid hydration mismatch)
     if (isLoading) {
-        const loadingTextClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
         return (
-            <div className={`h-screen ${bgClass} flex items-center justify-center`}>
+            <div className="h-screen bg-dark-bg flex items-center justify-center">
                 <div className="text-center">
-                    <svg className={`animate-spin h-8 w-8 ${textClass} mx-auto mb-4`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-8 w-8 text-white mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <p className={loadingTextClass}>Loading...</p>
+                    <p className="text-gray-400">Loading...</p>
                 </div>
             </div>
         );
@@ -323,6 +322,32 @@ function AppContent() {
                         {/* Current Page Breadcrumb */}
                         <div className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm ${textClass}`}>
                             {currentPage}
+                        </div>
+
+                        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+                            {/* Notifications Link */}
+                            <button
+                                onClick={() => setCurrentPage("Notifications")}
+                                className={`flex items-center gap-2 p-2 rounded-md transition-all duration-200 ${currentPage === "Notifications" ? (theme === 'light' ? 'bg-amber-50 text-amber-600 pr-3' : 'bg-amber-500/10 text-amber-400 pr-3') : `hover:${theme === 'light' ? 'bg-gray-100' : 'bg-white/10'} ${textClass}`}`}
+                                title="Notifications"
+                            >
+                                <Bell className="h-4 w-4 flex-shrink-0" />
+                                <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-200 ${currentPage === "Notifications" ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
+                                    Notifications
+                                </span>
+                            </button>
+
+                            {/* Account/User Link */}
+                            <button
+                                onClick={() => setCurrentPage("Accounts")}
+                                className={`flex items-center gap-2 p-2 rounded-md transition-all duration-200 ${currentPage === "Accounts" ? (theme === 'light' ? 'bg-amber-50 text-amber-600 pr-3' : 'bg-amber-500/10 text-amber-400 pr-3') : `hover:${theme === 'light' ? 'bg-gray-100' : 'bg-white/10'} ${textClass}`}`}
+                                title="Account"
+                            >
+                                <User className="h-4 w-4 flex-shrink-0" />
+                                <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-200 ${currentPage === "Accounts" ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
+                                    Account
+                                </span>
+                            </button>
                         </div>
                     </header>
 
