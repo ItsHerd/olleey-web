@@ -85,7 +85,12 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 
 // --- 3. Main Component ---
 export function ChannelGraphView({ masters }: { masters: MasterNode[] }) {
+    const { theme } = useTheme();
     const nodeTypes = useMemo(() => ({ channelCard: ChannelNode }), []);
+
+    // Theme-aware styles
+    const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
+    const dotColor = theme === "light" ? "#ccc" : "#333";
 
     // Transform your API data into React Flow Nodes/Edges
     const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
@@ -138,7 +143,7 @@ export function ChannelGraphView({ masters }: { masters: MasterNode[] }) {
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
     return (
-        <div className="w-full h-full min-h-[500px] bg-gray-50/50 rounded-xl overflow-hidden">
+        <div className={`w-full h-full min-h-[500px] ${bgClass} rounded-xl overflow-hidden`}>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -148,8 +153,8 @@ export function ChannelGraphView({ masters }: { masters: MasterNode[] }) {
                 fitView
                 attributionPosition="bottom-right"
             >
-                <Controls />
-                <Background color="#ccc" gap={20} size={1} />
+                <Controls className={theme === "dark" ? "bg-gray-800 fill-gray-100 border-gray-700" : ""} />
+                <Background color={dotColor} gap={20} size={1} />
             </ReactFlow>
         </div>
     );
