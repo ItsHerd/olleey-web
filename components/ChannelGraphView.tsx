@@ -6,6 +6,7 @@ import ReactFlow, {
     Position,
     useNodesState,
     useEdgesState,
+    Panel,
     MarkerType,
     Node,
     Edge
@@ -26,8 +27,8 @@ const ChannelNode = ({ data }: { data: any }) => {
 
     return (
         <div className={`px-4 py-3 rounded-xl border-2 shadow-sm min-w-[200px] ${cardClass} ${data.isSelected ? 'border-yellow-500 ring-2 ring-yellow-500/20' : ''}`}>
-            {/* Input Handle (Top) - Only for satellites */}
-            {!isMaster && <Handle type="target" position={Position.Top} className="!bg-gray-400" />}
+            {/* Input Handle (Left) - Only for satellites */}
+            {!isMaster && <Handle type="target" position={Position.Left} className="!bg-gray-400" />}
 
             <div className="flex items-center gap-3">
                 <img
@@ -43,8 +44,8 @@ const ChannelNode = ({ data }: { data: any }) => {
                 </div>
             </div>
 
-            {/* Output Handle (Bottom) - Only for masters */}
-            {isMaster && <Handle type="source" position={Position.Bottom} className="!bg-yellow-500" />}
+            {/* Output Handle (Right) - Only for masters */}
+            {isMaster && <Handle type="source" position={Position.Right} className="!bg-yellow-500" />}
         </div>
     );
 };
@@ -57,7 +58,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
     const nodeWidth = 220;
     const nodeHeight = 80;
 
-    dagreGraph.setGraph({ rankdir: 'TB' }); // TB = Top to Bottom
+    dagreGraph.setGraph({ rankdir: 'LR' }); // LR = Left to Right
 
     nodes.forEach((node) => {
         dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
@@ -84,7 +85,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 };
 
 // --- 3. Main Component ---
-export function ChannelGraphView({ masters }: { masters: MasterNode[] }) {
+export function ChannelGraphView({ masters, onAddConnection }: { masters: MasterNode[], onAddConnection: () => void }) {
     const { theme } = useTheme();
     const nodeTypes = useMemo(() => ({ channelCard: ChannelNode }), []);
 
@@ -155,6 +156,14 @@ export function ChannelGraphView({ masters }: { masters: MasterNode[] }) {
             >
                 <Controls className={theme === "dark" ? "bg-gray-800 fill-gray-100 border-gray-700" : ""} />
                 <Background color={dotColor} gap={20} size={1} />
+                <Panel position="top-right">
+                    <button
+                        onClick={onAddConnection}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${theme === "light" ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-200"}`}
+                    >
+                        Add Connection
+                    </button>
+                </Panel>
             </ReactFlow>
         </div>
     );

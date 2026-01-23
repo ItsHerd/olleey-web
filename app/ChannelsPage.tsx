@@ -7,7 +7,8 @@ import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChannelGraphView } from "@/components/ChannelGraphView";
-import { Loader2, Youtube, Plus, RefreshCw, CheckCircle, XCircle, AlertCircle, Radio, ChevronRight, ChevronDown, Video, Globe2, Pause, Play, Trash2, Star, List, GitGraph } from "lucide-react";
+import { ChannelBoardView } from "@/components/ChannelBoardView";
+import { Loader2, Youtube, Plus, RefreshCw, CheckCircle, XCircle, AlertCircle, Radio, ChevronRight, ChevronDown, Video, Globe2, Pause, Play, Trash2, Star, List, GitGraph, Kanban } from "lucide-react";
 
 type ConnectionStatus = "active" | "expired" | "restricted" | "disconnected";
 
@@ -52,7 +53,7 @@ export default function ChannelsPage() {
   } | null>(null);
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>("all");
   const [isChannelListCollapsed, setIsChannelListCollapsed] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "graph">("list");
+  const [viewMode, setViewMode] = useState<"list" | "graph" | "board">("list");
 
   // Theme-aware classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -612,6 +613,13 @@ export default function ChannelsPage() {
               >
                 <GitGraph className="h-4 w-4" />
               </button>
+              <button
+                onClick={() => setViewMode("board")}
+                className={`p-2 rounded ${viewMode === "board" ? "bg-gray-200 text-black dark:bg-gray-700 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
+                title="Board View"
+              >
+                <Kanban className="h-4 w-4" />
+              </button>
             </div>
 
             <button
@@ -645,7 +653,11 @@ export default function ChannelsPage() {
         </div>
       ) : viewMode === "graph" ? (
         <div className="flex-1 p-4 overflow-hidden">
-          <ChannelGraphView masters={channelGraph} />
+          <ChannelGraphView masters={channelGraph} onAddConnection={handleAddChannel} />
+        </div>
+      ) : viewMode === "board" ? (
+        <div className="flex-1 overflow-hidden bg-gray-50/30 dark:bg-gray-900/10">
+          <ChannelBoardView masters={channelGraph} onAddConnection={handleAddChannel} />
         </div>
       ) : (
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
