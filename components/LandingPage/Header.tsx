@@ -24,8 +24,8 @@ export default function Header({ onLoginClick, onGetStartedClick }: HeaderProps)
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-8">
-                        <a href="#" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Product</a>
-                        <a href="#" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Solutions</a>
+                        <a href="#product" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Product</a>
+                        <a href="#solutions" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Solutions</a>
                         <a href="#" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Resources</a>
                         <a href="#pricing" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Pricing</a>
                     </nav>
@@ -65,8 +65,8 @@ export default function Header({ onLoginClick, onGetStartedClick }: HeaderProps)
             {mobileMenuOpen && (
                 <div className="md:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg">
                     <div className="px-4 pt-2 pb-6 space-y-2">
-                        <a href="#" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Product</a>
-                        <a href="#" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Solutions</a>
+                        <a href="#product" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Product</a>
+                        <a href="#solutions" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Solutions</a>
                         <a href="#" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Resources</a>
                         <a href="#pricing" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Pricing</a>
                         <div className="border-t border-gray-100 my-2 pt-2">

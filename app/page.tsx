@@ -259,59 +259,14 @@ export default function Index() {
         </div>
       </section>
 
-      <div className="bg-white">
+      <div className="bg-white" id="solutions">
         <IndustryTailored />
 
         {/* Feature Showcase - Scroll-Pinned */}
-        <div className="bg-[#F1F3FF]">
+        <div className="bg-[#F1F3FF]" id="product">
           <FeatureShowcase onGetStarted={handleNavigation} />
         </div>
 
-        {/* Business Features Section */}
-        <section className="py-[109px] bg-white/90">
-          <div className="max-w-[1920px] mx-auto px-[90px]">
-            <div className="flex justify-between items-start mb-16">
-              <h2 className="text-[63px] leading-[70px] font-normal text-black max-w-[770px]">
-                Add anything you need for your business as you go
-              </h2>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-8">
-              <div className="space-y-5">
-                {/* eCommerce Feature (Expanded) */}
-                <div className="bg-gray-100 rounded-[38px] p-[50px]">
-                  <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-[28px] font-normal text-black">eCommerce</h3>
-                    <X className="w-6 h-6" />
-                  </div>
-                  <p className="text-base text-black mb-4">
-                    <span className="underline">Sell online</span> and manage orders, shipping and more in one place.
-                  </p>
-                  <a href="#learn-more" className="inline-flex items-center gap-2 text-[15px] hover:opacity-70 border-b border-black pb-1">
-                    Learn more
-                    <ArrowRight className="w-3 h-3" />
-                  </a>
-                </div>
-
-                {/* Other Features (Collapsed) */}
-                {['Scheduling', 'Portfolio', 'Blog', 'Online courses', 'Events'].map((feature) => (
-                  <div key={feature} className="bg-gray-100 rounded-[38px] px-[50px] py-[15px] flex justify-between items-center cursor-pointer hover:bg-gray-200 transition-colors">
-                    <h3 className="text-[28px] font-normal text-black">{feature}</h3>
-                    <ChevronDown className="w-6 h-6" />
-                  </div>
-                ))}
-              </div>
-
-              <div className="relative">
-                <div className="rounded-[33px] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[1140/625] shadow-xl">
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <p className="text-sm">eCommerce Features</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Pricing Section */}
         <section id="pricing" className="py-[100px] bg-white/90">
@@ -330,21 +285,6 @@ export default function Index() {
           </div>
         </section>
       </div>
-
-      {/* Final CTA Section */}
-      <section className="relative py-20 md:py-32 lg:py-[211px] bg-olleey-black">
-        <div className="max-w-[1459px] mx-auto px-5 md:px-12 lg:px-[230px] text-center">
-          <h2 className="text-4xl md:text-7xl lg:text-[133px] leading-tight md:leading-[140px] font-normal text-white mb-12 md:mb-16 lg:mb-[82px]">
-            Your voice. Your story. Your world.
-          </h2>
-          <button
-            onClick={handleNavigation}
-            className="bg-olleey-yellow text-olleey-black px-8 md:px-[35px] h-14 md:h-[60px] rounded-full inline-flex items-center justify-center text-xl md:text-[24px] leading-9 hover:opacity-90 transition-opacity"
-          >
-            Get Started
-          </button>
-        </div>
-      </section>
 
       <Footer />
     </div>

@@ -35,10 +35,10 @@ export default function Footer() {
                     <div className="md:col-span-4 lg:col-span-2 lg:col-start-7">
                         <h4 className="text-sm font-semibold text-black mb-6 uppercase tracking-wider">Product</h4>
                         <ul className="space-y-4">
-                            <li><a href="#" className="text-base text-gray-500 hover:text-black transition-colors">Overview</a></li>
-                            <li><a href="#" className="text-base text-gray-500 hover:text-black transition-colors">Pricing</a></li>
-                            <li><a href="#" className="text-base text-gray-500 hover:text-black transition-colors">Marketplace</a></li>
-                            <li><a href="#" className="text-base text-gray-500 hover:text-black transition-colors">Features</a></li>
+                            <li><a href="#product" className="text-base text-gray-500 hover:text-black transition-colors">Overview</a></li>
+                            <li><a href="#solutions" className="text-base text-gray-500 hover:text-black transition-colors">Solutions</a></li>
+                            <li><a href="#" className="text-base text-gray-500 hover:text-black transition-colors">Resources</a></li>
+                            <li><a href="#pricing" className="text-base text-gray-500 hover:text-black transition-colors">Pricing</a></li>
                         </ul>
                     </div>
 
@@ -56,9 +56,7 @@ export default function Footer() {
                         <h4 className="text-sm font-semibold text-black mb-6 uppercase tracking-wider">Resources</h4>
                         <ul className="space-y-4">
                             <li><a href="#" className="text-base text-gray-500 hover:text-black transition-colors">Help</a></li>
-                            <li><a href="#" className="text-base text-gray-500 hover:text-black transition-colors">Sales</a></li>
-                            <li><a href="#" className="text-base text-gray-500 hover:text-black transition-colors">Advertise</a></li>
-                            <li><a href="#" className="text-base text-gray-500 hover:text-black transition-colors">Privacy</a></li>
+                            <li><a href="/privacy" className="text-base text-gray-500 hover:text-black transition-colors">Privacy</a></li>
                         </ul>
                     </div>
                 </div>
@@ -69,8 +67,8 @@ export default function Footer() {
                         &copy; {new Date().getFullYear()} olleey.com. All rights reserved.
                     </p>
                     <div className="flex gap-8 text-sm text-gray-500">
-                        <a href="#" className="hover:text-black transition-colors">Terms and Conditions</a>
-                        <a href="#" className="hover:text-black transition-colors">Privacy Policy</a>
+                        <a href="/terms" className="hover:text-black transition-colors">Terms and Conditions</a>
+                        <a href="/privacy" className="hover:text-black transition-colors">Privacy Policy</a>
                     </div>
                 </div>
             </div>
