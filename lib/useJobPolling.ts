@@ -10,27 +10,27 @@ export interface UseJobPollingOptions {
 
 export function useJobPolling(jobId: string | null, options: UseJobPollingOptions = {}) {
   const {
-    interval = 5000,
+    interval = 10000,
     enabled = true,
     onComplete = null,
     onFail = null,
   } = options;
-  
+
   const [job, setJob] = useState<Job | null>(null);
   const [isPolling, setIsPolling] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
-  
+
   const fetchJob = useCallback(async () => {
     if (!jobId) return;
-    
+
     try {
       const data = await jobsAPI.listJobs();
       const currentJob = data.jobs.find(j => j.job_id === jobId);
-      
+
       if (currentJob) {
         setJob(currentJob);
         setError(null);
-        
+
         // Check if job is done
         if (currentJob.status === 'completed') {
           setIsPolling(false);
@@ -48,19 +48,19 @@ export function useJobPolling(jobId: string | null, options: UseJobPollingOption
       console.error('Job polling error:', err);
     }
   }, [jobId, onComplete, onFail]);
-  
+
   useEffect(() => {
     if (!jobId || !isPolling) return;
-    
+
     // Fetch immediately
     fetchJob();
-    
+
     // Then poll at interval
     const intervalId = setInterval(fetchJob, interval);
-    
+
     return () => clearInterval(intervalId);
   }, [jobId, isPolling, interval, fetchJob]);
-  
+
   return {
     job,
     isPolling,

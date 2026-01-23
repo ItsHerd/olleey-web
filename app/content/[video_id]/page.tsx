@@ -114,7 +114,7 @@ export default function VideoDetailPage() {
   // Poll for the created job
   const { job: createdJob, isPolling: isPollingJob } = useJobPolling(createdJobId, {
     enabled: !!createdJobId,
-    interval: 5000,
+    interval: 8000,
     onComplete: async (job) => {
       logger.info("VideoDetail", "Dubbing job completed", job);
       // Refresh videos and dashboard to show updated status

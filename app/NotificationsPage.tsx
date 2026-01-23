@@ -19,7 +19,7 @@ export default function NotificationsPage() {
   const { theme } = useTheme();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<"all" | "unread" | "job" | "channel" | "system">("all");
-  const { activeJobs } = useActiveJobs({ interval: 5000, enabled: true });
+  const { activeJobs } = useActiveJobs({ interval: 30000, enabled: true });
 
   // Theme-aware classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -148,8 +148,8 @@ export default function NotificationsPage() {
             key={filterOption}
             onClick={() => setFilter(filterOption)}
             className={`px-4 py-2 text-sm font-normal border-b-2 transition-colors ${filter === filterOption
-                ? `border-dark-accent ${textClass}`
-                : `border-transparent ${textSecondaryClass} hover:${textClass}`
+              ? `border-dark-accent ${textClass}`
+              : `border-transparent ${textSecondaryClass} hover:${textClass}`
               }`}
           >
             {filterOption.charAt(0).toUpperCase() + filterOption.slice(1)}

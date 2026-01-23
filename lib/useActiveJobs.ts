@@ -9,11 +9,11 @@ export interface UseActiveJobsOptions {
 const ACTIVE_STATUSES = ['pending', 'downloading', 'processing', 'voice_cloning', 'lip_sync', 'uploading', 'ready'];
 
 export function useActiveJobs(options: UseActiveJobsOptions = {}) {
-  const { interval = 5000, enabled = true } = options;
+  const { interval = 30000, enabled = true } = options;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const fetchJobs = useCallback(async () => {
     try {
       const data = await jobsAPI.listJobs();
@@ -27,26 +27,26 @@ export function useActiveJobs(options: UseActiveJobsOptions = {}) {
       console.error('Failed to fetch jobs:', err);
     }
   }, []);
-  
+
   useEffect(() => {
     if (!enabled) return;
-    
+
     // Fetch immediately
     fetchJobs();
-    
+
     // Poll at interval
     const intervalId = setInterval(fetchJobs, interval);
-    
+
     return () => {
       clearInterval(intervalId);
     };
   }, [enabled, interval, fetchJobs]);
-  
+
   const activeJobs = jobs.filter(j => ACTIVE_STATUSES.includes(j.status));
   const completedJobs = jobs.filter(j => j.status === 'completed');
   const failedJobs = jobs.filter(j => j.status === 'failed');
   const hasActiveJobs = activeJobs.length > 0;
-  
+
   return {
     jobs,
     activeJobs,
