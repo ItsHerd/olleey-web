@@ -13,6 +13,9 @@ const sampleTestimonials: Testimonial[] = [
 
 ];
 
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +79,14 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
   return (
     <div className="bg-background text-foreground">
+      {/* Back to Home Button */}
+      <Link
+        href="/"
+        className="fixed top-6 left-6 z-50 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-background/80 border border-border/50"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Home
+      </Link>
       <SignInPage
         title={
           <div className="flex flex-col items-start gap-4 mb-2">

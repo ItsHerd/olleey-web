@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 /**
- * Route handler for /channels
- * Redirects to main app with query params preserved
- * The main app will handle setting the current page to "Channels"
+ * Component that handles the redirection logic using search params
  */
-export default function ChannelsRoute() {
+function ChannelsRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -23,5 +21,22 @@ export default function ChannelsRoute() {
     <div className="flex items-center justify-center h-screen bg-dark-bg">
       <div className="text-dark-text">Redirecting...</div>
     </div>
+  );
+}
+
+/**
+ * Route handler for /channels
+ * Redirects to main app with query params preserved
+ * The main app will handle setting the current page to "Channels"
+ */
+export default function ChannelsRoute() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen bg-dark-bg">
+        <div className="text-dark-text">Loading...</div>
+      </div>
+    }>
+      <ChannelsRedirect />
+    </Suspense>
   );
 }
