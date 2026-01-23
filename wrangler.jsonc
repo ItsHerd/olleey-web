@@ -1,5 +1,5 @@
 {
-    "name": "olleey-frontend",
+    "name": "olleey-web",
     "compatibility_date": "2026-01-23",
     "main": ".vercel/output/static/_worker.js/index.js",
     "assets": {
