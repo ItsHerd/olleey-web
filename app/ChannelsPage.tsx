@@ -635,7 +635,7 @@ export default function ChannelsPage() {
                     onClick={() => setChannelFilter("all")}
                     className={`flex-1 px-3 py-1.5 rounded text-xs font-normal transition-colors ${channelFilter === "all"
                       ? "bg-white text-black"
-                      : "${textClass}Secondary hover:${textClass}"
+                      : `${textSecondaryClass} hover:${textClass}`
                       }`}
                   >
                     All
@@ -644,7 +644,7 @@ export default function ChannelsPage() {
                     onClick={() => setChannelFilter("primary")}
                     className={`flex-1 px-3 py-1.5 rounded text-xs font-normal transition-colors ${channelFilter === "primary"
                       ? "bg-white text-black"
-                      : "${textClass}Secondary hover:${textClass}"
+                      : `${textSecondaryClass} hover:${textClass}`
                       }`}
                   >
                     Primary
@@ -653,7 +653,7 @@ export default function ChannelsPage() {
                     onClick={() => setChannelFilter("unassigned")}
                     className={`flex-1 px-3 py-1.5 rounded text-xs font-normal transition-colors ${channelFilter === "unassigned"
                       ? "bg-white text-black"
-                      : "${textClass}Secondary hover:${textClass}"
+                      : `${textSecondaryClass} hover:${textClass}`
                       }`}
                   >
                     Unassigned

@@ -20,7 +20,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<"all" | "unread" | "job" | "channel" | "system">("all");
   const { activeJobs } = useActiveJobs({ interval: 5000, enabled: true });
-  
+
   // Theme-aware classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
   const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
@@ -60,7 +60,7 @@ export default function NotificationsPage() {
     });
 
     // Sort by timestamp (newest first)
-    generatedNotifications.sort((a, b) => 
+    generatedNotifications.sort((a, b) =>
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
@@ -147,15 +147,14 @@ export default function NotificationsPage() {
           <button
             key={filterOption}
             onClick={() => setFilter(filterOption)}
-            className={`px-4 py-2 text-sm font-normal border-b-2 transition-colors ${
-              filter === filterOption
-                ? "border-dark-accent ${textClass}"
-                : "border-transparent ${textClass}Secondary hover:${textClass}"
-            }`}
+            className={`px-4 py-2 text-sm font-normal border-b-2 transition-colors ${filter === filterOption
+                ? `border-dark-accent ${textClass}`
+                : `border-transparent ${textSecondaryClass} hover:${textClass}`
+              }`}
           >
             {filterOption.charAt(0).toUpperCase() + filterOption.slice(1)}
             {filterOption === "unread" && unreadCount > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 ${accentClass} text-white rounded-full text-xs">
+              <span className={`ml-2 px-1.5 py-0.5 ${accentClass} text-white rounded-full text-xs`}>
                 {unreadCount}
               </span>
             )}
@@ -171,8 +170,8 @@ export default function NotificationsPage() {
             {filter === "unread" ? "No unread notifications" : "No notifications"}
           </p>
           <p className={`${textClass}Secondary text-sm mt-2`}>
-            {filter === "unread" 
-              ? "You're all caught up!" 
+            {filter === "unread"
+              ? "You're all caught up!"
               : "Notifications about your jobs and channels will appear here"}
           </p>
         </div>
@@ -182,9 +181,8 @@ export default function NotificationsPage() {
             <div
               key={notif.id}
               onClick={() => markAsRead(notif.id)}
-              className={`${cardClass} border ${borderClass} rounded-xl p-4 cursor-pointer transition-all hover:${cardClass}Alt ${
-                !notif.read ? "border-l-4 border-l-dark-accent" : ""
-              }`}
+              className={`${cardClass} border ${borderClass} rounded-xl p-4 cursor-pointer transition-all hover:${cardClass}Alt ${!notif.read ? "border-l-4 border-l-dark-accent" : ""
+                }`}
             >
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 mt-0.5">
@@ -192,7 +190,7 @@ export default function NotificationsPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-4 mb-1">
-                    <h3 className={`text-sm font-normal ${notif.read ? "${textClass}Secondary" : "${textClass}"}`}>
+                    <h3 className={`text-sm font-normal ${notif.read ? textSecondaryClass : textClass}`}>
                       {notif.title}
                     </h3>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -205,7 +203,7 @@ export default function NotificationsPage() {
                   <p className={`text-sm ${textClass}Secondary`}>{notif.message}</p>
                 </div>
                 {!notif.read && (
-                  <div className="w-2 h-2 ${accentClass} rounded-full flex-shrink-0 mt-2" />
+                  <div className={`w-2 h-2 ${accentClass} rounded-full flex-shrink-0 mt-2`} />
                 )}
               </div>
             </div>

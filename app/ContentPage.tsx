@@ -5,10 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DestinationCard } from "@/components/ui/DestinationCard";
-import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause } from "lucide-react";
+import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause, Sparkles } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
-import { youtubeAPI, type MasterNode, type Video } from "@/lib/api";
+import { youtubeAPI, jobsAPI, type MasterNode, type Video, type Job } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
 // Carousel imports removed as we switched to Grid layout
@@ -57,6 +57,9 @@ export default function ContentPage() {
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [channelDropdownOpen, setChannelDropdownOpen] = useState(false);
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
+  const [latestJob, setLatestJob] = useState<Job | null>(null);
+  const [latestJobLoading, setLatestJobLoading] = useState(false);
+
 
   const { dashboard, loading: dashboardLoading } = useDashboard();
   // Pass channel_id to useVideos for server-side filtering and per-channel caching
@@ -67,6 +70,7 @@ export default function ContentPage() {
   // Theme-aware classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
   const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
+  const cardAltClass = theme === "light" ? "bg-light-cardAlt" : "bg-dark-cardAlt";
   const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
   const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
   const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
@@ -82,6 +86,28 @@ export default function ContentPage() {
       }
     };
     loadChannelGraph();
+  }, []);
+
+  // Load latest processed job
+  useEffect(() => {
+    const loadLatestJob = async () => {
+      try {
+        setLatestJobLoading(true);
+        const response = await jobsAPI.listJobsWithLimit(1);
+        if (response.jobs && response.jobs.length > 0) {
+          // Only set if the job has a completed status (ready, completed, or has live localizations)
+          const job = response.jobs[0];
+          if (job.status === "ready" || job.status === "completed") {
+            setLatestJob(job);
+          }
+        }
+      } catch (error) {
+        logger.error("ContentPage", "Failed to load latest job", error);
+      } finally {
+        setLatestJobLoading(false);
+      }
+    };
+    loadLatestJob();
   }, []);
 
   // Set default channel to primary channel on load or from URL
@@ -101,7 +127,7 @@ export default function ContentPage() {
         setSelectedChannelId(defaultChannel.youtube_channel_id);
       }
     }
-  }, [dashboard, selectedChannelId, searchParams]);
+  }, [dashboard?.youtube_connections?.length, searchParams]); // Removed selectedChannelId to prevent multiple calls
 
   // Handle channel selection update to URL
   const handleChannelSelect = (channelId: string) => {
@@ -383,7 +409,7 @@ export default function ContentPage() {
 
           {/* Listening Animation */}
           {!videosLoading && (
-            <div className={`mb-4 mt-4 flex items-center gap-4 px-5 py-3 ${cardClass}/50 border ${borderClass} rounded-lg`}>
+            <div className={`mb-4 mt-4 flex items-center gap-4 px-6 py-4 ${cardClass}/50 border ${borderClass} rounded-lg`}>
               {/* Radar Animation */}
               <div className="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
                 {/* Outer pulse ring */}
@@ -395,7 +421,7 @@ export default function ContentPage() {
               </div>
 
               {/* Micro-copy */}
-              <span className={`text-sm ${textClass}Secondary flex-1`}>
+              <span className={`text-sm ${textSecondaryClass} flex-1`}>
                 Watching{" "}
                 <span className={`${textClass}`}>
                   @{dashboard?.youtube_connections?.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name ||
@@ -426,32 +452,26 @@ export default function ContentPage() {
             </div>
           )}
 
-
-
-          {/* Search Bar */}
-          <div className="mb-4">
-            <Input
-              type="text"
-              placeholder="Search videos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full ${cardClass} ${borderClass} ${textClass} placeholder:${textClass}Secondary text-sm h-10`}
-            />
-          </div>
-
-          {/* View Toggle & Navigation Controls */}
-          <div className="flex items-center justify-between gap-2 mb-4">
-            {/* Carousel Navigation Controls - Only show in carousel mode */}
-            {/* Carousel Navigation Controls - Removed */}
-            <div />
+          {/* Search Bar & View Toggle - Combined Row */}
+          <div className="flex items-center justify-between gap-3 mb-4">
+            {/* Search Bar - Left Side */}
+            <div className="flex-1 max-w-md">
+              <Input
+                type="text"
+                placeholder="Search videos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full ${cardClass} ${borderClass} ${textClass} placeholder:${textSecondaryClass} text-sm h-10`}
+              />
+            </div>
 
             {/* View Mode Toggle - Right Side */}
-            <div className={`flex items-center gap-1 ${cardClass} border ${borderClass} rounded-lg p-1 ml-auto`}>
+            <div className={`flex items-center gap-1 ${cardClass} border ${borderClass} rounded-lg p-1`}>
               <button
                 onClick={() => setViewMode("carousel")}
                 className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm font-normal transition-colors ${viewMode === "carousel"
                   ? "bg-white text-black"
-                  : "${textClass}Secondary hover:${textClass}"
+                  : `${textSecondaryClass} hover:${textClass}`
                   }`}
               >
                 <Grid3x3 className="h-4 w-4" />
@@ -461,7 +481,7 @@ export default function ContentPage() {
                 onClick={() => setViewMode("table")}
                 className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm font-normal transition-colors ${viewMode === "table"
                   ? "bg-white text-black"
-                  : "${textClass}Secondary hover:${textClass}"
+                  : `${textSecondaryClass} hover:${textClass}`
                   }`}
               >
                 <List className="h-4 w-4" />
@@ -469,6 +489,142 @@ export default function ContentPage() {
               </button>
             </div>
           </div>
+
+          {/* Latest Video Processed Card - Above Table/Grid */}
+          {!videosLoading && filteredVideos.length > 0 && (() => {
+            // Find the most recently processed video (has at least one live localization)
+            const videosWithLive = filteredVideos.filter(video => {
+              const localizations = video.localizations || {};
+              return Object.values(localizations).some(l => l.status === "live");
+            });
+
+            const latestProcessed = videosWithLive[0];
+
+            // Show empty state if no processed videos
+            if (!latestProcessed) {
+              return (
+                <div className="mb-6">
+                  <div className={`${cardClass} rounded-xl border-2 border-dashed ${borderClass} overflow-hidden relative`}>
+                    <div className="flex flex-col md:flex-row gap-4 p-6 items-center text-center md:text-left">
+                      <div className={`w-24 h-24 rounded-full ${cardAltClass} flex items-center justify-center flex-shrink-0`}>
+                        <Sparkles className={`h-12 w-12 ${textSecondaryClass}`} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-semibold ${textClass} text-base mb-2`}>
+                          No Processed Videos Yet
+                        </h3>
+                        <p className={`text-sm ${textSecondaryClass} mb-3`}>
+                          Start dubbing your videos to see your latest processed content here
+                        </p>
+                        <button
+                          onClick={() => {
+                            // Navigate to first video to start processing
+                            if (filteredVideos[0]) {
+                              router.push(`/content/${filteredVideos[0].video_id}`);
+                            }
+                          }}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          Start Processing
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            const localizations = latestProcessed.localizations || {};
+            const liveCount = Object.values(localizations).filter(l => l.status === "live").length;
+
+            return (
+              <div className="mb-6">
+                <div
+                  className={`${cardClass} rounded-xl border-2 border-indigo-500/30 overflow-hidden cursor-pointer transition-all hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/20 relative group`}
+                  onClick={() => router.push(`/content/${latestProcessed.video_id}`)}
+                >
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent pointer-events-none" />
+
+                  {/* Badge */}
+                  <div className="absolute top-3 left-3 z-10">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg">
+                      <Sparkles className="h-3 w-3" />
+                      Latest Processed
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row gap-4 p-4 relative">
+                    {/* Thumbnail */}
+                    <div className="relative aspect-video md:w-64 flex-shrink-0 rounded-lg overflow-hidden bg-gray-900">
+                      {latestProcessed.thumbnail_url ? (
+                        <img
+                          src={latestProcessed.thumbnail_url}
+                          alt={latestProcessed.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Play className={`h-12 w-12 ${textSecondaryClass}`} />
+                        </div>
+                      )}
+                      {/* Duration Badge */}
+                      <div className={`absolute bottom-2 right-2 ${bgClass}/90 ${textClass} text-xs px-2 py-0.5 rounded`}>
+                        {formatDuration(latestProcessed.duration)}
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 flex flex-col justify-between min-w-0">
+                      <div>
+                        <h3 className={`font-semibold ${textClass} text-base mb-2 line-clamp-2`}>
+                          {latestProcessed.title}
+                        </h3>
+                        <p className={`text-sm ${textSecondaryClass} mb-3`}>
+                          {latestProcessed.channel_name}
+                        </p>
+                      </div>
+
+                      {/* Stats */}
+                      <div className="space-y-2">
+                        <div className={`flex items-center gap-4 text-sm ${textSecondaryClass}`}>
+                          <div className="flex items-center gap-1.5">
+                            <Eye className="h-4 w-4" />
+                            <span>{formatViews(latestProcessed.view_count)}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Globe2 className="h-4 w-4 text-indigo-400" />
+                            <span className="text-indigo-400 font-medium">{liveCount} {liveCount === 1 ? 'language' : 'languages'}</span>
+                          </div>
+                        </div>
+
+                        {/* Language Flags */}
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {Object.keys(localizations)
+                            .filter(langCode => localizations[langCode]?.status === "live")
+                            .slice(0, 6)
+                            .map(langCode => {
+                              const lang = LANGUAGE_OPTIONS.find(l => l.code === langCode);
+                              return lang ? (
+                                <span key={langCode} className="text-lg" title={lang.name}>
+                                  {lang.flag}
+                                </span>
+                              ) : null;
+                            })}
+                          {liveCount > 6 && (
+                            <span className={`text-xs ${textSecondaryClass} ml-1`}>
+                              +{liveCount - 6} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Content Area - Carousel or Table */}
           <div className="flex-1 overflow-hidden">
@@ -485,36 +641,42 @@ export default function ContentPage() {
               </div>
             ) : viewMode === "table" ? (
               /* Table View */
-              <div className={`${cardClass} rounded-xl border ${borderClass} overflow-hidden`}>
+              <div className={`${cardClass} rounded-xl overflow-hidden`}>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className={`${bgClass} border-b ${borderClass}`}>
-                      <tr>
-                        <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Video</th>
-                        <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Status</th>
-                        <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Languages</th>
-                        <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Stats</th>
-                        <th className={`text-left px-6 py-4 text-sm font-normal ${textClass}Secondary uppercase`}>Progress</th>
+                    <thead className={`${bgClass}`}>
+                      <tr className="border-b border-border/50">
+                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Video</th>
+                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Status</th>
+                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Languages</th>
+                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Views</th>
+                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Progress</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredVideos.map((video) => {
+                      {filteredVideos.map((video, index) => {
                         const localizations = video.localizations || {};
                         const completedCount = Object.values(localizations).filter(l => l.status === "live").length;
                         const totalCount = selectedLanguages.length;
                         const overallStatus = getOverallVideoStatus(localizations);
                         const overallBadge = getStatusBadge(overallStatus);
 
+                        // Get live language flags for display
+                        const liveLanguages = selectedLanguages
+                          .filter(langCode => localizations[langCode]?.status === "live")
+                          .map(langCode => LANGUAGE_OPTIONS.find(l => l.code === langCode))
+                          .filter(Boolean);
+
                         return (
                           <tr
                             key={video.video_id}
                             onClick={() => router.push(`/content/${video.video_id}`)}
-                            className={`border-b ${borderClass} hover:${cardClass}Alt cursor-pointer transition-colors`}
+                            className={`hover:bg-white/5 cursor-pointer transition-colors ${index !== filteredVideos.length - 1 ? 'border-b border-border/30' : ''}`}
                           >
                             {/* Video Column */}
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-4">
-                                <div className={`relative w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden ${cardClass}Alt`}>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className={`relative w-24 h-14 flex-shrink-0 rounded-md overflow-hidden ${cardClass}Alt`}>
                                   {video.thumbnail_url ? (
                                     <img
                                       src={video.thumbnail_url}
@@ -523,86 +685,77 @@ export default function ContentPage() {
                                     />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center">
-                                      <Play className={`h-8 w-8 ${textClass}Secondary`} />
+                                      <Play className={`h-6 w-6 ${textSecondaryClass}`} />
                                     </div>
                                   )}
-                                  <div className={`absolute bottom-1 right-1 ${bgClass}/80 ${textClass} text-xs px-1.5 py-0.5 rounded`}>
+                                  <div className={`absolute bottom-0.5 right-0.5 ${bgClass}/90 ${textClass} text-[10px] px-1 py-0.5 rounded`}>
                                     {formatDuration(video.duration)}
                                   </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <h3 className={`font-normal ${textClass} text-base mb-1 line-clamp-2`}>
+                                  <h3 className={`font-medium ${textClass} text-sm mb-0.5 line-clamp-1`}>
                                     {video.title}
                                   </h3>
-                                  <p className={`text-sm ${textClass}Secondary`}>{video.channel_name}</p>
+                                  <p className={`text-xs ${textSecondaryClass}`}>{video.channel_name}</p>
                                 </div>
                               </div>
                             </td>
 
                             {/* Status Column */}
-                            <td className="px-6 py-4">
-                              <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border font-medium ${overallBadge.bgColor} ${overallBadge.borderColor} ${overallBadge.color}`}>
-                                <overallBadge.icon className="h-3 w-3" />
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold ${overallBadge.bgColor} ${overallBadge.color} border-2 ${overallBadge.borderColor}`}>
+                                <overallBadge.icon className="h-3.5 w-3.5" />
                                 {overallBadge.label}
                               </span>
                             </td>
 
-                            {/* Languages Column */}
-                            <td className="px-6 py-4">
-                              <div className="flex gap-1.5">
-                                {selectedLanguages.map(langCode => {
-                                  const langOption = LANGUAGE_OPTIONS.find(l => l.code === langCode);
-                                  const localization = localizations[langCode];
-                                  const status = localization?.status || "not-started";
-
-                                  return (
-                                    <div
-                                      key={langCode}
-                                      className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all ${status === "live"
-                                        ? "border-green-500 ${cardClass}Alt"
-                                        : status === "draft"
-                                          ? "border-yellow-500 ${cardClass}Alt"
-                                          : status === "processing"
-                                            ? "border-blue-500 ${cardClass}Alt"
-                                            : "${borderClass} ${cardClass} opacity-50 grayscale"
-                                        }`}
-                                      title={`${langOption?.name} - ${status}`}
-                                    >
-                                      <span className="text-sm">{langOption?.flag}</span>
-                                    </div>
-                                  );
-                                })}
+                            {/* Languages Column - Show 2 avatars + count */}
+                            <td className="px-4 py-3">
+                              <div className="flex items-center -space-x-2">
+                                {liveLanguages.slice(0, 2).map((lang, idx) => (
+                                  <div
+                                    key={lang?.code || idx}
+                                    className={`relative flex items-center justify-center w-7 h-7 rounded-full border-2 border-green-500/50 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm`}
+                                    title={lang?.name}
+                                    style={{ zIndex: 2 - idx }}
+                                  >
+                                    <span className="text-sm">{lang?.flag}</span>
+                                  </div>
+                                ))}
+                                {liveLanguages.length > 2 && (
+                                  <div
+                                    className={`relative flex items-center justify-center w-7 h-7 rounded-full border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/20 to-orange-500/20 backdrop-blur-sm`}
+                                    title={`${liveLanguages.length - 2} more languages`}
+                                  >
+                                    <span className="text-[10px] font-bold text-amber-400">+{liveLanguages.length - 2}</span>
+                                  </div>
+                                )}
+                                {liveLanguages.length === 0 && (
+                                  <span className={`text-xs ${textSecondaryClass} italic`}>None</span>
+                                )}
                               </div>
                             </td>
 
-                            {/* Stats Column */}
-                            <td className="px-6 py-4">
-                              <div className="flex flex-col gap-1 text-sm">
-                                <div className={`flex items-center gap-1.5 ${textClass}Secondary`}>
-                                  <Eye className="h-3.5 w-3.5" />
-                                  <span>{formatViews(video.view_count)}</span>
-                                </div>
-                                <div className={`flex items-center gap-1.5 ${textClass}Secondary`}>
-                                  <Clock className="h-3.5 w-3.5" />
-                                  <span>{formatDuration(video.duration)}</span>
-                                </div>
+                            {/* Views Column */}
+                            <td className="px-4 py-3">
+                              <div className={`flex items-center gap-1.5 text-sm ${textClass}`}>
+                                <Eye className={`h-3.5 w-3.5 ${textSecondaryClass}`} />
+                                <span className="font-medium">{formatViews(video.view_count)}</span>
                               </div>
                             </td>
 
                             {/* Progress Column */}
-                            <td className="px-6 py-4">
-                              <div className="flex flex-col gap-2">
-                                <div className="flex items-center gap-2">
-                                  <div className={`flex-1 h-2 rounded-full ${cardClass}Alt overflow-hidden`}>
-                                    <div
-                                      className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
-                                      style={{ width: `${(completedCount / totalCount) * 100}%` }}
-                                    />
-                                  </div>
-                                  <span className={`text-xs ${textClass}Secondary font-normal w-12 text-right`}>
-                                    {completedCount}/{totalCount}
-                                  </span>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <div className={`flex-1 h-2 rounded-full bg-white/5 overflow-hidden`}>
+                                  <div
+                                    className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
+                                    style={{ width: `${(completedCount / totalCount) * 100}%` }}
+                                  />
                                 </div>
+                                <span className={`text-xs ${textSecondaryClass} font-medium w-10 text-right`}>
+                                  {completedCount}/{totalCount}
+                                </span>
                               </div>
                             </td>
                           </tr>
@@ -616,6 +769,7 @@ export default function ContentPage() {
               /* Grid View (formerly Carousel) */
               <div className="w-full">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                  {/* Regular Video Cards */}
                   {filteredVideos.map((video) => {
                     const localizations = video.localizations || {};
                     const completedCount = Object.values(localizations).filter(l => l.status === "live").length;

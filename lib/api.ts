@@ -1089,6 +1089,23 @@ export const jobsAPI = {
   },
 
   /**
+   * List jobs with limit
+   * GET /jobs?limit={limit}
+   */
+  listJobsWithLimit: async (limit: number): Promise<JobListResponse> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs?limit=${limit}`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to list jobs");
+    }
+
+    return await response.json();
+  },
+
+  /**
    * Get job by ID
    * GET /jobs/{job_id}
    */

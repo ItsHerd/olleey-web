@@ -56,7 +56,7 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
       const currentParams = paramsRef.current;
       const cacheKey = getCacheKey(currentParams);
       const cached = cacheStore.get(cacheKey);
-      
+
       // Use cache if valid and not forcing refresh
       if (!forceRefresh && cached && isCacheValid(cached)) {
         setVideos(cached.data.videos || []);
@@ -70,13 +70,13 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
         setLoading(true);
         setError(null);
         const data: VideoListResponse = await videosAPI.listVideos(currentParams);
-        
+
         // Update cache
         cacheStore.set(cacheKey, {
           data,
           timestamp: Date.now(),
         });
-        
+
         setVideos(data.videos || []);
         setTotal(data.total || 0);
       } catch (err) {
@@ -91,7 +91,7 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
     // Check cache first on initial mount
     const cacheKey = getCacheKey(paramsRef.current);
     const cached = cacheStore.get(cacheKey);
-    
+
     if (cached && isCacheValid(cached) && isInitialMountRef.current) {
       // Use cached data on initial mount
       setVideos(cached.data.videos || []);
@@ -103,28 +103,41 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
 
     // Clear expired entries periodically
     clearExpiredCache();
-    
+
     // Fetch fresh data
     loadVideos(false);
   }, [params?.page, params?.page_size, params?.channel_id]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[useVideos] State updated:', {
+      videosCount: videos.length,
+      loading,
+      error,
+      total,
+      params: paramsRef.current,
+      cacheKey: getCacheKey(paramsRef.current),
+      hasCachedData: cacheStore.has(getCacheKey(paramsRef.current))
+    });
+  }, [videos, loading, error, total]);
 
   // Refetch function that forces refresh
   const refetch = async () => {
     const loadVideos = async () => {
       const currentParams = paramsRef.current;
       const cacheKey = getCacheKey(currentParams);
-      
+
       try {
         setLoading(true);
         setError(null);
         const data: VideoListResponse = await videosAPI.listVideos(currentParams);
-        
+
         // Update cache
         cacheStore.set(cacheKey, {
           data,
           timestamp: Date.now(),
         });
-        
+
         setVideos(data.videos || []);
         setTotal(data.total || 0);
       } catch (err) {
@@ -134,7 +147,7 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
         setLoading(false);
       }
     };
-    
+
     await loadVideos();
   };
 
