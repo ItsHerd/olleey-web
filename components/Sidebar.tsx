@@ -40,17 +40,19 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
         } ${bgClass} border-r ${borderClass} flex flex-col h-full transition-all duration-200 ease-in-out overflow-hidden`}
     >
       {/* Logo Section at Top */}
-      <div className="px-3 sm:px-5 pt-4 sm:pt-6 pb-4 sm:pb-6">
+      <div className="px-2 sm:px-3 pt-3 sm:pt-4 pb-3 sm:pb-4">
         {isExpanded ? (
           <div className="flex items-center gap-2 sm:gap-3">
             <h1 className={`text-2xl font-bold ${textClass}`}>olleey</h1>
           </div>
         ) : (
-          <img
-            src="/logo-transparent.png"
-            alt="olleey"
-            className="w-auto h-24 sm:w-auto sm:h-24 rounded-lg object-contain mx-auto"
-          />
+          <div className="flex items-center gap-2 sm:gap-3 bg-amber-50 rounded-lg p-1">
+            <img
+              src="/logo-transparent.png"
+              alt="olleey"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-contain mx-auto"
+            />
+          </div>
         )}
       </div>
 
