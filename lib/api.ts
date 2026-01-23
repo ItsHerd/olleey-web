@@ -334,6 +334,65 @@ export const authAPI = {
       sessionStorage.clear();
     }
   },
+
+  /**
+   * Authenticate with Google OAuth (handles both login and registration)
+   * @param idToken - Google ID token from Google Sign-In
+   * Backend automatically handles whether this is a login or registration
+   */
+  googleAuth: async (idToken: string): Promise<TokenResponse> => {
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id_token: idToken }),
+      });
+    } catch (fetchError) {
+      // Network error (no response from server)
+      const networkError = new Error("NETWORK_ERROR");
+      (networkError as any).originalError = fetchError;
+      throw networkError;
+    }
+
+    if (!response.ok) {
+      let errorDetail = "Google authentication failed";
+      let errorCode: string | undefined;
+
+      try {
+        const error = await response.json();
+        errorDetail = error.detail || error.message || errorDetail;
+        errorCode = error.code || error.error_code;
+      } catch {
+        // If response is not JSON, use status text
+        errorDetail = response.statusText || `HTTP ${response.status}`;
+      }
+
+      const error = new Error(errorCode || errorDetail);
+      (error as any).code = errorCode;
+      (error as any).status = response.status;
+      throw error;
+    }
+
+    const data: TokenResponse = await response.json();
+    tokenStorage.setTokens(data);
+    return data;
+  },
+
+  /**
+   * Generates the Google OAuth2 authorization URL for custom buttons
+   */
+  getGoogleAuthUrl: (clientId: string): string => {
+    const redirectUri = window.location.origin + '/app';
+    const scope = 'openid profile email';
+    const responseType = 'id_token';
+    const nonce = Math.random().toString(36).substring(2);
+
+    // Using Google Identity Services redirect endpoint
+    return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}&nonce=${nonce}`;
+  },
 };
 
 /**

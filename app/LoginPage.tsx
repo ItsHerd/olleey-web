@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { authAPI, type LoginCredentials } from "@/lib/api";
 import { SignInPage, type Testimonial } from "@/components/ui/sign-in";
 import { getUserFriendlyErrorMessage, isNetworkError } from "@/lib/errorMessages";
+import { useGoogleSignIn } from "@/lib/useGoogleSignIn";
+import { useRouter } from "next/navigation";
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -16,9 +18,14 @@ const sampleTestimonials: Testimonial[] = [
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+// Get Google Client ID from environment variable
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -59,10 +66,61 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     }
   };
 
+  // Handle Google Sign-In response
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      // Send the Google ID token to your backend
+      // Backend handles both login and registration automatically
+      await authAPI.googleAuth(credentialResponse.credential);
+      onLoginSuccess();
+    } catch (err) {
+      const friendlyMessage = getUserFriendlyErrorMessage(err);
+      setError(friendlyMessage);
+      console.error("Google sign-in error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError("Google sign-in failed. Please try again.");
+    setIsLoading(false);
+  };
+
+  // Initialize Google Sign-In
+  const { renderButton, showOneTap } = useGoogleSignIn({
+    clientId: GOOGLE_CLIENT_ID,
+    onSuccess: handleGoogleSuccess,
+    onError: handleGoogleError,
+    context: 'signin',
+    uxMode: 'redirect', // This provides the full-screen experience
+  });
+
+  // Render Google Sign-In button when component mounts
+  useEffect(() => {
+    if (googleButtonRef.current && GOOGLE_CLIENT_ID) {
+      renderButton(googleButtonRef.current, {
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        width: 400,
+        logo_alignment: 'center'
+      });
+    }
+  }, [renderButton]);
+
   const handleGoogleSignIn = () => {
-    // TODO: Implement Google OAuth
-    console.log("Google sign-in clicked");
-    alert("Google sign-in will be implemented soon");
+    if (GOOGLE_CLIENT_ID) {
+      // Trigger full-screen redirect to Google
+      const authUrl = authAPI.getGoogleAuthUrl(GOOGLE_CLIENT_ID);
+      window.location.href = authUrl;
+    } else {
+      setError("Google Sign-In is not configured.");
+    }
   };
 
   const handleResetPassword = () => {
@@ -72,9 +130,8 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   };
 
   const handleCreateAccount = () => {
-    // TODO: Navigate to registration page
-    console.log("Create account clicked");
-    alert("Account creation will be implemented soon");
+    // Navigate to registration page
+    router.push("/register");
   };
 
   return (
@@ -100,6 +157,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         testimonials={sampleTestimonials}
         onSignIn={handleSignIn}
         onGoogleSignIn={handleGoogleSignIn}
+        googleButtonRef={googleButtonRef}
         onResetPassword={handleResetPassword}
         onCreateAccount={handleCreateAccount}
       />

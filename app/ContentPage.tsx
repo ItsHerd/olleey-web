@@ -615,7 +615,7 @@ export default function ContentPage() {
             ) : (
               /* Grid View (formerly Carousel) */
               <div className="w-full">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                   {filteredVideos.map((video) => {
                     const localizations = video.localizations || {};
                     const completedCount = Object.values(localizations).filter(l => l.status === "live").length;
@@ -640,16 +640,91 @@ export default function ContentPage() {
                     return (
                       <div
                         key={video.video_id}
-                        className="aspect-[3/4] w-full cursor-pointer hover:scale-[1.02] transition-transform duration-300"
+                        className={`${cardClass} rounded-xl border ${borderClass} overflow-hidden cursor-pointer transition-colors hover:${cardClass}Alt`}
                         onClick={() => router.push(`/content/${video.video_id}`)}
                       >
-                        <DestinationCard
-                          imageUrl={video.thumbnail_url || ""}
-                          category={video.channel_name || "Unknown Channel"}
-                          title={video.title}
-                          className="h-full"
-                          flags={flags}
-                        />
+                        {/* Thumbnail */}
+                        <div className="relative aspect-video w-full bg-gray-900">
+                          {video.thumbnail_url ? (
+                            <img
+                              src={video.thumbnail_url}
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Play className={`h-12 w-12 ${textClass}Secondary`} />
+                            </div>
+                          )}
+                          {/* Duration Badge */}
+                          <div className={`absolute bottom-2 right-2 ${bgClass}/90 ${textClass} text-xs px-2 py-0.5 rounded`}>
+                            {formatDuration(video.duration)}
+                          </div>
+                          {/* Status Badge */}
+                          <div className="absolute top-2 left-2">
+                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-medium ${overallBadge.bgColor} ${overallBadge.borderColor} ${overallBadge.color}`}>
+                              <overallBadge.icon className="h-2.5 w-2.5" />
+                              {overallBadge.label}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-3 space-y-2">
+                          {/* Title */}
+                          <h3 className={`font-medium ${textClass} text-sm line-clamp-2 leading-tight`}>
+                            {video.title}
+                          </h3>
+
+                          {/* Channel Name */}
+                          <p className={`text-xs ${textClass}Secondary truncate`}>
+                            {video.channel_name}
+                          </p>
+
+                          {/* Stats Row */}
+                          <div className={`flex items-center gap-3 text-xs ${textClass}Secondary`}>
+                            <div className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              <span>{formatViews(video.view_count)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>{formatDuration(video.duration)}</span>
+                            </div>
+                          </div>
+
+                          {/* Language Flags */}
+                          {flags.length > 0 && (
+                            <div className="flex items-center gap-1">
+                              {flags.slice(0, 5).map((flag, index) => (
+                                <div
+                                  key={index}
+                                  className={`flex items-center justify-center w-6 h-6 rounded-full ${cardClass}Alt border ${borderClass}`}
+                                >
+                                  <span className="text-sm">{flag}</span>
+                                </div>
+                              ))}
+                              {flags.length > 5 && (
+                                <div className={`flex items-center justify-center w-6 h-6 rounded-full ${cardClass}Alt border ${borderClass}`}>
+                                  <span className="text-xs font-medium">+{flags.length - 5}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Progress Bar */}
+                          <div className="flex items-center gap-2">
+                            <div className={`flex-1 h-1.5 rounded-full ${cardClass}Alt overflow-hidden`}>
+                              <div
+                                className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
+                                style={{ width: `${(completedCount / totalCount) * 100}%` }}
+                              />
+                            </div>
+                            <span className={`text-xs ${textClass}Secondary font-medium`}>
+                              {completedCount}/{totalCount}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
