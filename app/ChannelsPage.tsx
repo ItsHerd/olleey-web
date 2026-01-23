@@ -362,18 +362,8 @@ export default function ChannelsPage() {
   };
 
   const handleAddChannel = async () => {
-    try {
-      // Simply initiate OAuth - no master_connection_id
-      // After OAuth success, user will choose to make it primary or assign to parent
-      const response = await youtubeAPI.initiateConnection();
-
-      if (response.auth_url) {
-        // Redirect directly to backend - browser will follow redirects automatically
-        window.location.href = response.auth_url;
-      }
-    } catch (error) {
-      logger.error("Channels", "Failed to add channel", error);
-    }
+    // Redirect to the new connections page to select platform
+    window.location.href = "/connections/add";
   };
 
   const handleAssignChannel = async () => {
@@ -652,7 +642,7 @@ export default function ChannelsPage() {
               className={`inline-flex items-center justify-center gap-2 ${cardClass} ${textClass} px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-xs sm:text-sm md:text-base font-normal hover:${cardClass}Alt transition-colors whitespace-nowrap`}
             >
               <Plus className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-              <span className="hidden sm:inline">Add Channel</span>
+              <span className="hidden sm:inline">Add Connection</span>
               <span className="sm:hidden">Add</span>
             </button>
           </div>
@@ -1455,7 +1445,7 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
                 className={`inline-flex items-center gap-2 ${cardClass} ${textClass} border ${borderClass} px-4 py-2 rounded-full text-sm font-normal hover:${cardClass}Alt transition-colors`}
               >
                 <Plus className="h-4 w-4" />
-                Add Channel
+                Add Connection
               </button>
             )}
           </div>
@@ -1472,7 +1462,7 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
                 className={`inline-flex items-center gap-2 ${cardClass} ${textClass} border ${borderClass} px-6 py-3 rounded-full text-sm font-normal hover:${cardClass}Alt transition-colors`}
               >
                 <Plus className="h-4 w-4" />
-                Add YouTube Channel
+                Add Connection
               </button>
             </div>
           ) : (

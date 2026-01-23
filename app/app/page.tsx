@@ -30,9 +30,14 @@ export default function App() {
         const hasConnection =
             dashboard.has_youtube_connection || dashboard.youtube_connections.length > 0;
         setOnboardingComplete(hasConnection);
-        // If the user already has a connection, land them on the Content page (home).
+        // If the user already has a connection, land them on the Content page (home),
+        // UNLESS the URL specifically requests a different page (e.g., via ?page=Channels)
         if (hasConnection) {
-            setCurrentPage("Content");
+            const params = new URLSearchParams(window.location.search);
+            const pageParam = params.get("page");
+            if (!pageParam) {
+                setCurrentPage("Content");
+            }
         }
     };
 
