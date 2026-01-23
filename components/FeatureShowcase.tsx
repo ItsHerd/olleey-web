@@ -82,9 +82,9 @@ export default function FeatureShowcase({ onGetStarted }: FeatureShowcaseProps) 
                 {/* Vertical line */}
                 <div className="absolute left-0 top-0 bottom-[-40px] w-px bg-gray-300" />
                 
-                {/* Sliding yellow indicator */}
+                {/* Sliding blue indicator */}
                 <div 
-                  className="absolute -left-px w-1 bg-olleey-yellow transition-all duration-500 ease-in-out"
+                  className="absolute -left-px w-1 bg-[#5155DC] transition-all duration-500 ease-in-out"
                   style={{ 
                     height: '32px',
                     top: '0px',
@@ -101,7 +101,7 @@ export default function FeatureShowcase({ onGetStarted }: FeatureShowcaseProps) 
                       className="group relative block text-left w-full h-8"
                     >
                       <p className={`pl-6 text-xl transition-colors duration-300 ${
-                        activeSection === index ? 'text-black font-medium' : 'text-gray-400 font-normal group-hover:text-gray-600'
+                        activeSection === index ? 'text-black font-semibold' : 'text-gray-400 font-normal group-hover:text-gray-600'
                        }`}>
                         {feature.id.charAt(0).toUpperCase() + feature.id.slice(1)}
                       </p>

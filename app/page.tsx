@@ -9,6 +9,7 @@ import { tokenStorage } from "@/lib/api";
 import { Typewriter } from "@/components/Typewriter";
 import FeatureShowcase from "@/components/FeatureShowcase";
 import VideoLibraryMockup from "@/components/LandingPage/VideoLibraryMockup";
+import IndustryTailored from "@/components/LandingPage/IndustryTailored";
 
 // Pricing Calculator Component
 function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
@@ -258,60 +259,8 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Wrapper for Background Image Sections */}
       <div className="bg-white">
-        {/* Customization Section */}
-        <section className="py-[115px] bg-white">
-          <div className="max-w-[1920px] mx-auto px-[94px]">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div className="max-w-[549px]">
-                <h2 className="text-[62px] leading-[70px] font-normal text-black mb-[54px]">
-                  You are ignoring 95% of the world.
-                </h2>
-
-                <div className="space-y-8">
-                  <div className="border-b border-gray-200 pb-6">
-                    <h3 className="text-[28px] leading-[28px] font-normal text-black mb-4 flex items-center gap-3">
-                      <ArrowRight className="w-6 h-6" />
-                      Don't let language barriers limit your growth
-                    </h3>
-                    <p className="text-[17px] leading-[25px] text-black ml-9">
-                      The biggest creators run regional channels. Now, you can too.
-                    </p>
-                  </div>
-
-                  <div className="border-b border-gray-200 pb-6">
-                    <h3 className="text-[28px] leading-[28px] font-normal text-black">
-                      Built-in AI tools
-                    </h3>
-                  </div>
-
-                  <div>
-                    <h3 className="text-[28px] leading-[28px] font-normal text-[#1C1D21]">
-                      New audiences, new revenue streams
-                    </h3>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleNavigation}
-                  className="mt-12 bg-black text-white px-[36px] h-[54px] rounded-full inline-flex items-center justify-center text-[20px] hover:opacity-90 transition-opacity gap-2"
-                >
-                  Get Started
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="relative">
-                <div className="rounded-[20px] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[1050/581] shadow-2xl">
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <p className="text-sm">Customization Demo</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <IndustryTailored />
 
         {/* Feature Showcase - Scroll-Pinned */}
         <div className="bg-[#F1F3FF]">
