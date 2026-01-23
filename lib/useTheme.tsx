@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { settingsAPI, type UserSettings } from "@/lib/api";
+import { settingsAPI, tokenStorage, type UserSettings } from "@/lib/api";
 
 type Theme = "light" | "dark";
 
@@ -32,6 +32,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Load theme from backend on mount
   useEffect(() => {
     const loadTheme = async () => {
+      // Don't try to fetch settings if not authenticated
+      if (!tokenStorage.isAuthenticated()) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const settings = await settingsAPI.getSettings();
         setThemeState(settings.theme);

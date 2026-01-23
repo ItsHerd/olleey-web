@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { tokenStorage } from "@/lib/api";
 import { Typewriter } from "@/components/Typewriter";
 import FeatureShowcase from "@/components/FeatureShowcase";
+import VideoLibraryMockup from "@/components/LandingPage/VideoLibraryMockup";
 
 // Pricing Calculator Component
 function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
@@ -174,19 +175,15 @@ export default function Index() {
       />
 
       {/* Hero Section */}
-      <section className="relative pt-24 md:pt-32 lg:pt-[137px] pb-20 md:pb-28 lg:pb-[134px] overflow-hidden">
-        {/* Gradient Background */}
-        {/* Background */}
-        <div className="absolute inset-0 bg-white" />
-
-        <div className="relative max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[88px]">
+      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-[#F1F3FF]">
+        <div className="relative w-full max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[88px]">
           <div className="max-w-[1744px] mx-auto">
-            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-0">
               {/* Left Content */}
-              <div className="flex-1 text-left flex flex-col items-start">
+              <div className="lg:flex-[1.1] text-left flex flex-col items-start z-10">
                 {/* Headline */}
-                <h1 className="text-4xl md:text-6xl lg:text-[78px] leading-tight md:leading-[1.1] font-normal text-olleey-black mb-8 md:mb-12 max-w-4xl whitespace-pre-wrap">
-                  <span>{"We're born to "}</span>
+                <h1 className="text-5xl md:text-7xl lg:text-[88px] leading-[1.05] font-normal text-black mb-8 md:mb-10 max-w-none tracking-tight">
+                  <span className="block mb-2">{"We're born to"}</span>
                   <Typewriter
                     text={[
                       "share",
@@ -194,7 +191,7 @@ export default function Index() {
                       "stories without barriers",
                     ]}
                     speed={70}
-                    className="text-olleey-yellow"
+                    className="text-[#5155DC] inline-block border-b-4 border-[#5155DC] pb-2 whitespace-nowrap"
                     waitTime={1500}
                     deleteSpeed={40}
                     cursorChar={"_"}
@@ -202,40 +199,59 @@ export default function Index() {
                 </h1>
 
                 {/* Subheadline */}
-                <p className="text-lg md:text-xl lg:text-[22px] leading-relaxed font-normal text-[#1C1D21] mb-8 md:mb-10 max-w-xl">
-                  One upload, endless languages.
+                <p className="text-xl md:text-2xl lg:text-[24px] leading-relaxed font-normal text-gray-500 mb-10 md:mb-12 max-w-xl">
+                  One upload, endless languages. Search and understand your videos with AI.
                 </p>
 
                 {/* CTA Button */}
-                <div className="flex flex-col items-start mb-0">
+                <div className="flex flex-col items-start">
                   <button
                     onClick={handleNavigation}
-                    className="bg-olleey-black text-white px-8 md:px-[38px] h-12 md:h-[54px] rounded-full flex items-center justify-center text-lg md:text-[20px] hover:opacity-90 transition-opacity gap-2"
+                    className="bg-black text-white px-10 h-[64px] rounded-full flex items-center justify-center text-[20px] font-medium hover:bg-gray-800 transition-all gap-2 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0"
                   >
                     Get Started
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-5 h-5 ml-1" />
                   </button>
-                  <p className="text-sm mt-4 md:mt-[22px] text-gray-500">
+                  <p className="text-sm mt-6 text-gray-400 font-medium">
                     Start for free. No credit card required.
                   </p>
                 </div>
               </div>
 
-              {/* Vertical Separator */}
-              <div className="hidden lg:block w-px h-96 bg-gray-200 flex-shrink-0" />
-
-              {/* Right Content / Hero Image */}
-              <div className="flex-1 w-full relative">
-                <div className="relative w-full max-w-[800px] mx-auto lg:mx-0 lg:ml-auto">
-                  <div className="rounded-[10px] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[1048/597] shadow-xl">
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      {/* Placeholder for hero image */}
-                      <div className="text-center">
-                        <p className="text-sm">Website Preview</p>
+              {/* Right Content / Hero Video */}
+              <div className="lg:flex-[0.9] w-full relative lg:pl-12">
+                <div className="relative rounded-[32px] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.1)] border border-gray-100 bg-gray-50 aspect-video">
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  >
+                    <source 
+                      src="https://videos.pexels.com/video-files/3129957/3129957-uhd_2560_1440_25fps.mp4" 
+                      type="video/mp4" 
+                    />
+                    Your browser does not support the video tag.
+                  </video>
+                  
+                  {/* Glass overlay effect on bottom */}
+                  <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#5155DC] flex items-center justify-center">
+                        <Plus className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="text-white text-sm font-medium">Processing global release...</div>
+                        <div className="text-white/60 text-xs">Awaiting 12 language tracks</div>
                       </div>
                     </div>
+                    <div className="text-white/80 text-xs font-mono">92%</div>
                   </div>
                 </div>
+                
+                {/* Decorative background element */}
+                <div className="absolute -top-20 -right-20 w-[600px] h-[600px] bg-[#5155DC]/5 rounded-full -z-10 blur-3xl opacity-60"></div>
               </div>
             </div>
           </div>
@@ -243,9 +259,9 @@ export default function Index() {
       </section>
 
       {/* Wrapper for Background Image Sections */}
-      <div className="bg-cover bg-center" style={{ backgroundImage: "url(/images/background.jpg)" }}>
+      <div className="bg-white">
         {/* Customization Section */}
-        <section className="py-[115px] bg-white/90">
+        <section className="py-[115px] bg-white">
           <div className="max-w-[1920px] mx-auto px-[94px]">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="max-w-[549px]">
@@ -298,7 +314,9 @@ export default function Index() {
         </section>
 
         {/* Feature Showcase - Scroll-Pinned */}
-        <FeatureShowcase onGetStarted={handleNavigation} />
+        <div className="bg-[#F1F3FF]">
+          <FeatureShowcase onGetStarted={handleNavigation} />
+        </div>
 
         {/* Business Features Section */}
         <section className="py-[109px] bg-white/90">

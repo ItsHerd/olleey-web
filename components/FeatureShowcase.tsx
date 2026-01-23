@@ -68,9 +68,9 @@ export default function FeatureShowcase({ onGetStarted }: FeatureShowcaseProps) 
   };
 
   return (
-    <div className="relative bg-white">
+    <div className="relative bg-[#F1F3FF]">
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-20">
-        <h2 className="text-[62px] leading-[70px] font-normal text-black mb-24 text-center">
+        <h2 className="text-[62px] leading-[70px] font-normal text-black mb-12 text-center">
           What can you do with olleey.com?
         </h2>
         
@@ -102,7 +102,7 @@ export default function FeatureShowcase({ onGetStarted }: FeatureShowcaseProps) 
                     >
                       <p className={`pl-6 text-xl transition-colors duration-300 ${
                         activeSection === index ? 'text-black font-medium' : 'text-gray-400 font-normal group-hover:text-gray-600'
-                      }`}>
+                       }`}>
                         {feature.id.charAt(0).toUpperCase() + feature.id.slice(1)}
                       </p>
                     </button>
@@ -139,16 +139,36 @@ export default function FeatureShowcase({ onGetStarted }: FeatureShowcaseProps) 
                   
                   {/* Visual Placeholder/Video - 751px × 434px */}
                   <div 
-                    className="bg-gray-100 rounded-[20px] border border-gray-200 flex items-center justify-center overflow-hidden shadow-sm"
+                    className="bg-white rounded-[20px] border border-gray-200 flex items-center justify-center overflow-hidden shadow-sm"
                     style={{ width: '751px', height: '434px' }}
                   >
-                    <div className="text-gray-400 text-base">Visual Placeholder</div>
+                    {feature.id === 'centralize' ? (
+                      <div className="w-full h-full bg-white p-8 flex flex-col items-center justify-center text-center">
+                        <div className="w-20 h-20 rounded-2xl bg-[#F1F3FF] flex items-center justify-center mb-6">
+                          <svg className="w-10 h-10 text-[#5155DC]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                        </div>
+                        <h4 className="text-2xl font-medium text-black mb-2">Upload your footage</h4>
+                        <p className="text-gray-500 mb-8 max-w-[320px]">
+                          Drag and drop your video files here, or click to browse your library.
+                        </p>
+                        <div className="w-full max-w-[400px] h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="w-1/3 h-full bg-[#5155DC] rounded-full" />
+                        </div>
+                        <div className="mt-4 text-sm text-gray-400 font-mono">
+                          Uploading: MEO_POR_0315.mov (32%)
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-400 text-base">Visual Placeholder: {feature.id}</div>
+                    )}
                   </div>
                 </div>
 
                 {/* Divider Line (except after last section) */}
                 {index < features.length - 1 && (
-                  <div className="border-t border-gray-100 w-full" />
+                  <div className="border-t border-gray-200 w-full" />
                 )}
               </div>
             ))}
@@ -159,7 +179,7 @@ export default function FeatureShowcase({ onGetStarted }: FeatureShowcaseProps) 
 
 
       {/* Mobile Section Indicator */}
-      <div className="lg:hidden fixed top-24 left-6 text-black text-sm bg-white/90 px-3 py-2 rounded-full z-10 border border-gray-200">
+      <div className="lg:hidden fixed top-24 left-6 text-black text-sm bg-[#F1F3FF]/90 backdrop-blur-md px-3 py-2 rounded-full z-10 border border-gray-200">
         <span className="font-medium">{features[activeSection].id.charAt(0).toUpperCase() + features[activeSection].id.slice(1)}</span>
       </div>
     </div>
