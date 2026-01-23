@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 import { logger } from "@/lib/logger";
 
-export default function YouTubeConnectSuccessPage() {
+function YouTubeConnectSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [channelName, setChannelName] = useState<string>("");
@@ -45,7 +45,7 @@ export default function YouTubeConnectSuccessPage() {
 
     // Always redirect to /channels to show the assign channel modal
     const redirectTo = searchParams.get("redirect_to") || "/channels";
-    
+
     // Build redirect URL with connection info for refresh
     const redirectUrl = new URL(redirectTo, window.location.origin);
     if (connectionIdParam) {
@@ -85,11 +85,11 @@ export default function YouTubeConnectSuccessPage() {
             </div>
             <div>
               <h1 className="text-2xl font-normal text-gray-900 mb-2">
-                {connectionType === "master" 
-                  ? "Master Channel Synced!" 
+                {connectionType === "master"
+                  ? "Master Channel Synced!"
                   : connectionType === "satellite"
-                  ? "Satellite Channel Linked!"
-                  : "YouTube Channel Connected!"}
+                    ? "Satellite Channel Linked!"
+                    : "YouTube Channel Connected!"}
               </h1>
               {channelName && (
                 <p className="text-lg text-gray-700 mb-2">
@@ -102,11 +102,11 @@ export default function YouTubeConnectSuccessPage() {
                 </p>
               )}
               <p className="text-dark-textSecondary mt-4">
-                {connectionType === "master" 
+                {connectionType === "master"
                   ? "Your primary channel is now connected. Continue to set up satellite channels."
                   : connectionType === "satellite"
-                  ? "Your target channel has been added to your distribution network."
-                  : "Your YouTube account has been successfully connected."}
+                    ? "Your target channel has been added to your distribution network."
+                    : "Your YouTube account has been successfully connected."}
               </p>
               <p className="text-sm text-dark-textSecondary mt-4">
                 Redirecting you back...
@@ -144,5 +144,19 @@ export default function YouTubeConnectSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function YouTubeConnectSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-8">
+        <div className="bg-white rounded-3xl shadow-xl p-8">
+          <div className="text-gray-900">Finalizing connection...</div>
+        </div>
+      </div>
+    }>
+      <YouTubeConnectSuccessContent />
+    </Suspense>
   );
 }

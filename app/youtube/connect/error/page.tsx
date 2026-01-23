@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
 import { logger } from "@/lib/logger";
 
-export default function YouTubeConnectErrorPage() {
+function YouTubeConnectErrorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [errorMessage, setErrorMessage] = useState<string>("Unknown error");
@@ -13,7 +13,7 @@ export default function YouTubeConnectErrorPage() {
   useEffect(() => {
     // Extract error message from URL parameter
     const errorParam = searchParams.get("error");
-    
+
     if (errorParam) {
       // URL decode the error message
       setErrorMessage(decodeURIComponent(errorParam));
@@ -61,5 +61,19 @@ export default function YouTubeConnectErrorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function YouTubeConnectErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-8">
+        <div className="bg-white rounded-3xl shadow-xl p-8">
+          <div className="text-gray-900">Loading error details...</div>
+        </div>
+      </div>
+    }>
+      <YouTubeConnectErrorContent />
+    </Suspense>
   );
 }
