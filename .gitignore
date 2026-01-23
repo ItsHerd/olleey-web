@@ -15,3 +15,7 @@ build/
 # IDE
 .vscode/
 .idea/
+
+# Cloudflare / Vercel
+.vercel
+.wrangler

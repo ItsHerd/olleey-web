@@ -1,10 +1,12 @@
 "use client";
 
+export const runtime = 'edge';
+
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { 
-  ArrowLeft, 
-  Play, 
+import { useRouter, useParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Play,
   Pause,
   Volume2,
   Maximize,
@@ -51,11 +53,12 @@ interface LanguageCardData {
   views?: number;
 }
 
-export default function VideoDetailPage({ params }: { params: { video_id: string } }) {
+export default function VideoDetailPage() {
   const router = useRouter();
+  const params = useParams();
   const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos();
   const { dashboard, refetch: refetchDashboard } = useDashboard();
-  
+
   const [video, setVideo] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showDubbingModal, setShowDubbingModal] = useState(false);
@@ -148,32 +151,32 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
 
   const handleConfirmDubbing = async () => {
     if (!video || selectedLanguages.length === 0) return;
-    
+
     setIsCreatingJob(true);
     setJobError(null);
-    
+
     try {
       // Get the source channel ID from video or dashboard
       const sourceChannelId = video.channel_id || video.source_channel_id;
-      
+
       if (!sourceChannelId) {
         // Try to find from dashboard connections
         const videoChannel = dashboard?.youtube_connections?.find(
           c => c.youtube_channel_id === video.channel_id
         );
         const fallbackChannelId = videoChannel?.youtube_channel_id;
-        
+
         if (!fallbackChannelId) {
           throw new Error("No source channel found. Please ensure the video is from a connected YouTube channel.");
         }
-        
+
         // Use fallback
         const job = await jobsAPI.createJob({
           source_video_id: video.video_id,
           source_channel_id: fallbackChannelId,
           target_languages: selectedLanguages,
         });
-        
+
         logger.info("VideoDetail", "Dubbing job created", job);
         setCreatedJobId(job.job_id);
         setShowDubbingModal(false);
@@ -181,32 +184,32 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
         await refetchDashboard();
         return;
       }
-      
+
       // Create the dubbing job
       const job = await jobsAPI.createJob({
         source_video_id: video.video_id,
         source_channel_id: sourceChannelId,
         target_languages: selectedLanguages,
       });
-      
+
       logger.info("VideoDetail", "Dubbing job created", job);
-      
+
       // Start polling for this job
       setCreatedJobId(job.job_id);
-      
+
       // Close modal and reset
       setShowDubbingModal(false);
       setSelectedLanguages([]);
-      
+
       // Refresh dashboard to show new job
       await refetchDashboard();
     } catch (error: any) {
       // Extract error message from backend response
       let errorMessage = "Failed to create dubbing job";
-      
+
       if (error instanceof Error) {
         errorMessage = error.message;
-        
+
         // Handle specific backend error messages
         if (errorMessage.includes("No active language channels found")) {
           const availableMatch = errorMessage.match(/Available: \[(.*?)\]/);
@@ -218,7 +221,7 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
           }
         }
       }
-      
+
       logger.error("VideoDetail", "Failed to create dubbing job", error);
       setJobError(errorMessage);
     } finally {
@@ -227,7 +230,7 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
   };
 
   const toggleLanguageSelection = (code: string) => {
-    setSelectedLanguages(prev => 
+    setSelectedLanguages(prev =>
       prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
     );
   };
@@ -287,7 +290,7 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            
+
             {isEditingTitle ? (
               <input
                 type="text"
@@ -301,7 +304,7 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
                 autoFocus
               />
             ) : (
-              <h1 
+              <h1
                 className="text-lg sm:text-xl font-normal text-dark-text truncate cursor-pointer hover:text-dark-textSecondary transition-colors"
                 onClick={() => setIsEditingTitle(true)}
               >
@@ -324,9 +327,8 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
 
       {/* Job Progress Banner */}
       {(createdJob || isPollingJob || jobError) && (
-        <div className={`flex-shrink-0 border-b border-dark-border px-4 sm:px-6 md:px-8 py-3 ${
-          jobError ? "bg-red-900/20" : "bg-indigo-900/20"
-        }`}>
+        <div className={`flex-shrink-0 border-b border-dark-border px-4 sm:px-6 md:px-8 py-3 ${jobError ? "bg-red-900/20" : "bg-indigo-900/20"
+          }`}>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1">
               {isPollingJob && (
@@ -391,13 +393,13 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
           {/* Video Player */}
           <div className="relative aspect-video bg-dark-bg rounded-xl overflow-hidden mb-6">
             {video.thumbnail_url && (
-              <img 
-                src={video.thumbnail_url} 
+              <img
+                src={video.thumbnail_url}
                 alt={video.title}
                 className="w-full h-full object-cover"
               />
             )}
-            
+
             {/* Player Controls Overlay */}
             <div className="absolute inset-0 flex flex-col justify-between p-4">
               {/* Top Controls - Audio Toggle */}
@@ -406,21 +408,19 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
                   <div className="inline-flex items-center bg-dark-bg/80 backdrop-blur-sm rounded-full p-1">
                     <button
                       onClick={() => setAudioMode("original")}
-                      className={`px-4 py-2 rounded-full text-sm font-normal transition-colors ${
-                        audioMode === "original" 
-                          ? "bg-white text-gray-900" 
-                          : "text-dark-text hover:text-dark-textSecondary"
-                      }`}
+                      className={`px-4 py-2 rounded-full text-sm font-normal transition-colors ${audioMode === "original"
+                        ? "bg-white text-gray-900"
+                        : "text-dark-text hover:text-dark-textSecondary"
+                        }`}
                     >
                       Original
                     </button>
                     <button
                       onClick={() => setAudioMode("dubbed")}
-                      className={`px-4 py-2 rounded-full text-sm font-normal transition-colors ${
-                        audioMode === "dubbed" 
-                          ? "bg-white text-gray-900" 
-                          : "text-dark-text hover:text-dark-textSecondary"
-                      }`}
+                      className={`px-4 py-2 rounded-full text-sm font-normal transition-colors ${audioMode === "dubbed"
+                        ? "bg-white text-gray-900"
+                        : "text-dark-text hover:text-dark-textSecondary"
+                        }`}
                     >
                       Dubbed
                     </button>
@@ -463,7 +463,7 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
                 <TrendingUp className="h-5 w-5 text-green-600" />
                 <h3 className="text-lg font-normal text-gray-900">Global Performance</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="text-center p-4 bg-dark-card rounded-lg">
                   <p className="text-2xl font-normal text-gray-900 mb-1">1.2M</p>
@@ -533,9 +533,8 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
                         }
                       }
                     }}
-                    className={`w-full text-left border-2 ${config.border} ${config.bg} rounded-xl p-4 transition-all hover:shadow-md ${
-                      isActive ? "ring-2 ring-indigo-500" : ""
-                    }`}
+                    className={`w-full text-left border-2 ${config.border} ${config.bg} rounded-xl p-4 transition-all hover:shadow-md ${isActive ? "ring-2 ring-indigo-500" : ""
+                      }`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -552,7 +551,7 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
                           Phase 3/4: {card.phase}
                         </div>
                         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-all duration-500"
                             style={{ width: `${card.progress}%` }}
                           />
@@ -627,7 +626,7 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
       {/* Script Editor Panel (State 3) */}
       {showScriptEditor && activeLanguage && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl transition-transform duration-300 z-50"
-             style={{ height: "40vh" }}>
+          style={{ height: "40vh" }}>
           <div className="h-full flex flex-col">
             {/* Editor Header */}
             <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200">
@@ -729,25 +728,24 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
                           ch => ch.language_code === lang.code
                         );
                         const isAvailable = hasActiveChannel && !alreadyExists;
-                        
+
                         return (
                           <button
                             key={lang.code}
                             onClick={() => isAvailable && toggleLanguageSelection(lang.code)}
                             disabled={!isAvailable}
-                            className={`p-3 rounded-xl border-2 transition-all relative ${
-                              !isAvailable
-                                ? "border-gray-200 bg-dark-card opacity-50 cursor-not-allowed"
-                                : isSelected
+                            className={`p-3 rounded-xl border-2 transition-all relative ${!isAvailable
+                              ? "border-gray-200 bg-dark-card opacity-50 cursor-not-allowed"
+                              : isSelected
                                 ? "border-indigo-600 bg-indigo-50"
                                 : "border-gray-200 hover:border-gray-300"
-                            }`}
+                              }`}
                             title={
                               !hasActiveChannel
                                 ? "No active language channel for this language"
                                 : alreadyExists
-                                ? "Translation already exists"
-                                : undefined
+                                  ? "Translation already exists"
+                                  : undefined
                             }
                           >
                             <div className="flex items-center gap-2">
@@ -809,7 +807,7 @@ export default function VideoDetailPage({ params }: { params: { video_id: string
                   </p>
                 </div>
               )}
-              
+
               {/* No Languages Selected Warning */}
               {selectedLanguages.length === 0 && !isLoadingChannels && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl mb-6">

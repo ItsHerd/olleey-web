@@ -38,49 +38,59 @@ export default function Index() {
 
         <div className="relative max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[88px]">
           <div className="max-w-[1744px] mx-auto">
-            {/* Headline */}
-            <h1 className="text-4xl md:text-6xl lg:text-[78px] leading-tight md:leading-[68px] font-normal text-center text-olleey-black mb-8 md:mb-16 lg:mb-[88px] max-w-[1143px] mx-auto px-4 whitespace-pre-wrap">
-              <span>{"We're born to "}</span>
-              <Typewriter
-                text={[
-                  "share",
-                  "explore",
-                  "stories without barriers",
-                ]}
-                speed={70}
-                className="text-olleey-yellow"
-                waitTime={1500}
-                deleteSpeed={40}
-                cursorChar={"_"}
-              />
-            </h1>
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+              {/* Left Content */}
+              <div className="flex-1 text-left flex flex-col items-start">
+                {/* Headline */}
+                <h1 className="text-4xl md:text-6xl lg:text-[78px] leading-tight md:leading-[1.1] font-normal text-olleey-black mb-8 md:mb-12 max-w-4xl whitespace-pre-wrap">
+                  <span>{"We're born to "}</span>
+                  <Typewriter
+                    text={[
+                      "share",
+                      "explore",
+                      "stories without barriers",
+                    ]}
+                    speed={70}
+                    className="text-olleey-yellow"
+                    waitTime={1500}
+                    deleteSpeed={40}
+                    cursorChar={"_"}
+                  />
+                </h1>
 
-            {/* Subheadline */}
-            <p className="text-lg md:text-xl lg:text-[22px] leading-relaxed md:leading-[31px] font-normal text-center text-[#1C1D21] mb-8 md:mb-12 lg:mb-[51px] max-w-[545px] mx-auto px-4">
-              One upload, endless languages.
-            </p>
+                {/* Subheadline */}
+                <p className="text-lg md:text-xl lg:text-[22px] leading-relaxed font-normal text-[#1C1D21] mb-8 md:mb-10 max-w-xl">
+                  One upload, endless languages.
+                </p>
 
-            {/* CTA Button */}
-            <div className="flex flex-col items-center mb-12 md:mb-24 lg:mb-[161px]">
-              <button
-                onClick={handleNavigation}
-                className="bg-olleey-black text-white px-8 md:px-[38px] h-12 md:h-[54px] rounded-full flex items-center justify-center text-lg md:text-[20px] hover:opacity-90 transition-opacity gap-2"
-              >
-                Get Started
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <p className="text-sm text-center mt-4 md:mt-[22px]">
-                Start for free. No credit card required.
-              </p>
-            </div>
+                {/* CTA Button */}
+                <div className="flex flex-col items-start mb-0">
+                  <button
+                    onClick={handleNavigation}
+                    className="bg-olleey-black text-white px-8 md:px-[38px] h-12 md:h-[54px] rounded-full flex items-center justify-center text-lg md:text-[20px] hover:opacity-90 transition-opacity gap-2"
+                  >
+                    Get Started
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <p className="text-sm mt-4 md:mt-[22px] text-gray-500">
+                    Start for free. No credit card required.
+                  </p>
+                </div>
+              </div>
 
-            {/* Hero Image */}
-            <div className="relative max-w-[1048px] mx-auto px-4">
-              <div className="rounded-[10px] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[1048/597] shadow-xl">
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  {/* Placeholder for hero image */}
-                  <div className="text-center">
-                    <p className="text-sm">Website Preview</p>
+              {/* Vertical Separator */}
+              <div className="hidden lg:block w-px h-96 bg-gray-200 flex-shrink-0" />
+
+              {/* Right Content / Hero Image */}
+              <div className="flex-1 w-full relative">
+                <div className="relative w-full max-w-[800px] mx-auto lg:mx-0 lg:ml-auto">
+                  <div className="rounded-[10px] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 aspect-[1048/597] shadow-xl">
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      {/* Placeholder for hero image */}
+                      <div className="text-center">
+                        <p className="text-sm">Website Preview</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
