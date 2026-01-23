@@ -1,0 +1,9 @@
+{
+    "name": "olleey-frontend",
+    "compatibility_date": "2026-01-23",
+    "main": ".vercel/output/static/_worker.js",
+    "assets": {
+        "directory": ".vercel/output/static",
+        "binding": "ASSETS"
+    }
+}
