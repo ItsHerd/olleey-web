@@ -27,7 +27,7 @@ export default function Header({ onLoginClick, onGetStartedClick }: HeaderProps)
                         <a href="#" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Product</a>
                         <a href="#" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Solutions</a>
                         <a href="#" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Resources</a>
-                        <a href="#" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Pricing</a>
+                        <a href="#pricing" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">Pricing</a>
                     </nav>
 
                     {/* Desktop Actions */}
@@ -68,7 +68,7 @@ export default function Header({ onLoginClick, onGetStartedClick }: HeaderProps)
                         <a href="#" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Product</a>
                         <a href="#" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Solutions</a>
                         <a href="#" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Resources</a>
-                        <a href="#" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Pricing</a>
+                        <a href="#pricing" className="block px-3 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Pricing</a>
                         <div className="border-t border-gray-100 my-2 pt-2">
                             <button
                                 onClick={onLoginClick}
