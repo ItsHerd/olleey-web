@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // Simple logger for terminal visibility
 // Sends logs to server API route which logs to terminal
@@ -103,6 +103,13 @@ export interface MasterNode {
   total_translations: number;
 }
 
+export interface Project {
+  id: string;
+  name: string;
+  master_connection_id?: string;
+  created_at: string;
+}
+
 export interface ChannelGraphResponse {
   master_nodes: MasterNode[];
   total_connections: number;
@@ -117,6 +124,7 @@ export interface ProcessingJob {
   progress: number;
   target_languages: string[];
   created_at: string;
+  project_id?: string;
 }
 
 // Note: LanguageChannel interface is defined above with full details
@@ -460,6 +468,41 @@ export interface UnsubscribeRequest {
 }
 
 /**
+ * Projects API
+ */
+export const projectsAPI = {
+  listProjects: async (): Promise<Project[]> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/projects`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to list projects");
+    }
+
+    return await response.json();
+  },
+
+  createProject: async (data: { name: string; master_connection_id?: string }): Promise<Project> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/projects`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to create project");
+    }
+
+    return await response.json();
+  },
+};
+
+/**
  * YouTube Connection API
  * Based on FastAPI docs: http://10.0.0.15:8000/docs#/youtube-connection/
  */
@@ -604,8 +647,12 @@ export const youtubeAPI = {
    * Get channel graph (hub & spoke visualization data)
    * GET /channels/graph - Returns master nodes with satellite language channels
    */
-  getChannelGraph: async (): Promise<ChannelGraphResponse> => {
-    const response = await authenticatedFetch(`${API_BASE_URL}/channels/graph`, {
+  getChannelGraph: async (projectId?: string): Promise<ChannelGraphResponse> => {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.append("project_id", projectId);
+
+    const url = `${API_BASE_URL}/channels/graph${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedFetch(url, {
       method: "GET",
     });
 
@@ -644,11 +691,12 @@ export const videosAPI = {
    * List videos
    * GET /videos/list
    */
-  listVideos: async (params?: { page?: number; page_size?: number; channel_id?: string }): Promise<VideoListResponse> => {
+  listVideos: async (params?: { page?: number; page_size?: number; channel_id?: string; project_id?: string }): Promise<VideoListResponse> => {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.page_size) queryParams.append("page_size", params.page_size.toString());
     if (params?.channel_id) queryParams.append("channel_id", params.channel_id);
+    if (params?.project_id) queryParams.append("project_id", params.project_id);
 
     const url = `${API_BASE_URL}/videos/list${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     const response = await authenticatedFetch(url, {
@@ -673,6 +721,10 @@ export const videosAPI = {
     formData.append("title", data.title);
     if (data.description) formData.append("description", data.description);
     if (data.channel_id) formData.append("channel_id", data.channel_id);
+    // Note: uploadVideo typically takes channel_id which is linked to a project, so project_id might not be strictly needed in body if channel implies it.
+    // But if creating a raw video without channel?
+    // User said "Everything... is scoped to a Project."
+    // Let's assume channel_id context covers it for upload as channel belongs to project. 
 
     const token = tokenStorage.getAccessToken();
     if (!token) {
@@ -695,6 +747,7 @@ export const videosAPI = {
 
     return await response.json();
   },
+
 
   /**
    * Subscribe to channel
@@ -924,9 +977,31 @@ export interface CreateLanguageChannelRequest {
   language_codes?: string[]; // Multiple languages
   channel_name?: string;
   master_connection_id: string; // Master connection ID to associate with
+  project_id: string;
 }
 
 export const channelsAPI = {
+  /**
+   * List language channels
+   * GET /channels
+   */
+  listChannels: async (projectId?: string): Promise<LanguageChannel[]> => {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.append("project_id", projectId);
+
+    const url = `${API_BASE_URL}/channels${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to list channels");
+    }
+
+    return await response.json();
+  },
+
   /**
    * Create a language channel
    * POST /channels
@@ -1029,6 +1104,7 @@ export interface CreateJobRequest {
   source_video_id: string;
   source_channel_id: string;
   target_languages: string[];
+  project_id: string;
 }
 
 export interface Job {
@@ -1042,6 +1118,7 @@ export interface Job {
   updated_at?: string;
   completed_at?: string;
   error_message?: string;
+  project_id?: string;
 }
 
 export interface JobListResponse {
@@ -1075,8 +1152,12 @@ export const jobsAPI = {
    * List all jobs
    * GET /jobs
    */
-  listJobs: async (): Promise<JobListResponse> => {
-    const response = await authenticatedFetch(`${API_BASE_URL}/jobs`, {
+  listJobs: async (projectId?: string): Promise<JobListResponse> => {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.append("project_id", projectId);
+
+    const url = `${API_BASE_URL}/jobs${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedFetch(url, {
       method: "GET",
     });
 
@@ -1092,8 +1173,12 @@ export const jobsAPI = {
    * List jobs with limit
    * GET /jobs?limit={limit}
    */
-  listJobsWithLimit: async (limit: number): Promise<JobListResponse> => {
-    const response = await authenticatedFetch(`${API_BASE_URL}/jobs?limit=${limit}`, {
+  listJobsWithLimit: async (limit: number, projectId?: string): Promise<JobListResponse> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("limit", limit.toString());
+    if (projectId) queryParams.append("project_id", projectId);
+
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs?${queryParams.toString()}`, {
       method: "GET",
     });
 

@@ -202,3 +202,56 @@ input[type="range"].slider::-moz-range-thumb:hover {
   transform: scale(1.1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+
+/* NebulaCube 3D Scroll Experience Styles */
+.content {
+  position: relative;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.section-inner {
+  max-width: 800px;
+  text-align: center;
+}
+
+.title {
+  font-size: clamp(3rem, 10vw, 8rem);
+  font-weight: 800;
+  line-height: 0.9;
+  color: white;
+  margin-bottom: 2rem;
+  opacity: 0;
+  transform: translateY(50px);
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.description {
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  transform: translateY(30px);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.footer {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 12px;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0.6;
+}

@@ -19,7 +19,7 @@ export default function NotificationsPage() {
   const { theme } = useTheme();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<"all" | "unread" | "job" | "channel" | "system">("all");
-  const { activeJobs } = useActiveJobs({ interval: 30000, enabled: true });
+  const { activeJobs } = useActiveJobs({ enabled: true });
 
   // Theme-aware classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -124,92 +124,94 @@ export default function NotificationsPage() {
 
   return (
     <div className={`flex-1 p-6 ${bgClass}`}>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className={`text-2xl font-normal ${textClass}`}>Notifications</h2>
-          <p className={`text-sm ${textClass}Secondary mt-1`}>
-            Stay updated on your dubbing jobs and channel activity
-          </p>
+      <div className="max-w-3xl mx-auto w-full">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className={`text-2xl font-normal ${textClass}`}>Notifications</h2>
+            <p className={`text-sm ${textClass}Secondary mt-1`}>
+              Stay updated on your dubbing jobs and channel activity
+            </p>
+          </div>
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className={`px-4 py-2 ${cardClass} ${textClass} rounded-full text-sm font-normal border ${borderClass} hover:${cardClass}Alt`}
+            >
+              Mark all as read
+            </button>
+          )}
         </div>
-        {unreadCount > 0 && (
-          <button
-            onClick={markAllAsRead}
-            className={`px-4 py-2 ${cardClass} ${textClass} rounded-full text-sm font-normal border ${borderClass} hover:${cardClass}Alt`}
-          >
-            Mark all as read
-          </button>
-        )}
-      </div>
 
-      {/* Filter Tabs */}
-      <div className={`mb-6 flex gap-2 border-b ${borderClass}`}>
-        {(["all", "unread", "job", "channel", "system"] as const).map((filterOption) => (
-          <button
-            key={filterOption}
-            onClick={() => setFilter(filterOption)}
-            className={`px-4 py-2 text-sm font-normal border-b-2 transition-colors ${filter === filterOption
-              ? `border-dark-accent ${textClass}`
-              : `border-transparent ${textSecondaryClass} hover:${textClass}`
-              }`}
-          >
-            {filterOption.charAt(0).toUpperCase() + filterOption.slice(1)}
-            {filterOption === "unread" && unreadCount > 0 && (
-              <span className={`ml-2 px-1.5 py-0.5 ${accentClass} text-white rounded-full text-xs`}>
-                {unreadCount}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Notifications List */}
-      {filteredNotifications.length === 0 ? (
-        <div className={`${cardClass} border ${borderClass} rounded-xl p-12 text-center`}>
-          <Bell className={`h-16 w-16 ${textClass}Secondary mx-auto mb-4 opacity-50`} />
-          <p className={`${textClass}Secondary text-lg font-normal`}>
-            {filter === "unread" ? "No unread notifications" : "No notifications"}
-          </p>
-          <p className={`${textClass}Secondary text-sm mt-2`}>
-            {filter === "unread"
-              ? "You're all caught up!"
-              : "Notifications about your jobs and channels will appear here"}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredNotifications.map((notif) => (
-            <div
-              key={notif.id}
-              onClick={() => markAsRead(notif.id)}
-              className={`${cardClass} border ${borderClass} rounded-xl p-4 cursor-pointer transition-all hover:${cardClass}Alt ${!notif.read ? "border-l-4 border-l-dark-accent" : ""
+        {/* Filter Tabs */}
+        <div className={`mb-6 flex gap-2 border-b ${borderClass}`}>
+          {(["all", "unread", "job", "channel", "system"] as const).map((filterOption) => (
+            <button
+              key={filterOption}
+              onClick={() => setFilter(filterOption)}
+              className={`px-4 py-2 text-sm font-normal border-b-2 transition-colors ${filter === filterOption
+                ? `border-dark-accent ${textClass}`
+                : `border-transparent ${textSecondaryClass} hover:${textClass}`
                 }`}
             >
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 mt-0.5">
-                  {getIcon(notif.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4 mb-1">
-                    <h3 className={`text-sm font-normal ${notif.read ? textSecondaryClass : textClass}`}>
-                      {notif.title}
-                    </h3>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {getCategoryIcon(notif.category)}
-                      <span className={`text-xs ${textClass}Secondary`}>
-                        {formatTimestamp(notif.timestamp)}
-                      </span>
-                    </div>
-                  </div>
-                  <p className={`text-sm ${textClass}Secondary`}>{notif.message}</p>
-                </div>
-                {!notif.read && (
-                  <div className={`w-2 h-2 ${accentClass} rounded-full flex-shrink-0 mt-2`} />
-                )}
-              </div>
-            </div>
+              {filterOption.charAt(0).toUpperCase() + filterOption.slice(1)}
+              {filterOption === "unread" && unreadCount > 0 && (
+                <span className={`ml-2 px-1.5 py-0.5 ${accentClass} text-white rounded-full text-xs`}>
+                  {unreadCount}
+                </span>
+              )}
+            </button>
           ))}
         </div>
-      )}
+
+        {/* Notifications List */}
+        {filteredNotifications.length === 0 ? (
+          <div className={`${cardClass} border ${borderClass} rounded-xl p-12 text-center`}>
+            <Bell className={`h-16 w-16 ${textClass}Secondary mx-auto mb-4 opacity-50`} />
+            <p className={`${textClass}Secondary text-lg font-normal`}>
+              {filter === "unread" ? "No unread notifications" : "No notifications"}
+            </p>
+            <p className={`${textClass}Secondary text-sm mt-2`}>
+              {filter === "unread"
+                ? "You're all caught up!"
+                : "Notifications about your jobs and channels will appear here"}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredNotifications.map((notif) => (
+              <div
+                key={notif.id}
+                onClick={() => markAsRead(notif.id)}
+                className={`${cardClass} border ${borderClass} rounded-xl p-4 cursor-pointer transition-all hover:${cardClass}Alt ${!notif.read ? "border-l-4 border-l-dark-accent" : ""
+                  }`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {getIcon(notif.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4 mb-1">
+                      <h3 className={`text-sm font-normal ${notif.read ? textSecondaryClass : textClass}`}>
+                        {notif.title}
+                      </h3>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {getCategoryIcon(notif.category)}
+                        <span className={`text-xs ${textClass}Secondary`}>
+                          {formatTimestamp(notif.timestamp)}
+                        </span>
+                      </div>
+                    </div>
+                    <p className={`text-sm ${textClass}Secondary`}>{notif.message}</p>
+                  </div>
+                  {!notif.read && (
+                    <div className={`w-2 h-2 ${accentClass} rounded-full flex-shrink-0 mt-2`} />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

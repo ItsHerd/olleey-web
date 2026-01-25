@@ -6,12 +6,14 @@ import { Loader2, Play, Clock, Download, Sparkles, Mic, Smile, Upload, CheckCirc
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
 import { useTheme } from "@/lib/useTheme";
+import { useProject } from "@/lib/ProjectContext";
 
 export default function QueuedJobsPage() {
   const router = useRouter();
   const { theme } = useTheme();
   const { dashboard, loading: dashboardLoading } = useDashboard();
   const { videos } = useVideos();
+  const { selectedProject } = useProject();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
 
@@ -104,6 +106,11 @@ export default function QueuedJobsPage() {
 
   // Filter jobs based on search and status
   const filteredJobs = allJobs.filter(job => {
+    // Project filter
+    if (selectedProject && job.project_id && job.project_id !== selectedProject.id) {
+      return false;
+    }
+
     // Status filter
     if (statusFilter === "active") {
       const activeStatuses = ["pending", "downloading", "processing", "voice_cloning", "lip_sync", "uploading"];

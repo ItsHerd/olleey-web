@@ -13,8 +13,7 @@ export default function ActivityQueue() {
   const { dashboard, loading: dashboardLoading } = useDashboard();
   const { videos } = useVideos();
   const { activeJobs, isLoading: jobsLoading, hasActiveJobs } = useActiveJobs({
-    interval: 15000, // Poll every 15 seconds
-    enabled: true,  // Only poll when there are active jobs
+    enabled: true,
   });
 
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";

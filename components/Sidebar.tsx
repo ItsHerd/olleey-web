@@ -30,8 +30,8 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
     { name: "Analytics", icon: <AnalyticsIcon /> }
   ];
 
-  const bottomNavItems = [
-    { name: "Settings", icon: <SettingsIcon /> }
+  const bottomNavItems: { name: string; icon: React.ReactNode }[] = [
+    // { name: "Settings", icon: <SettingsIcon /> }
   ];
 
   return (
@@ -81,29 +81,30 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
       </nav>
 
       {/* Bottom Navigation - Settings & Account */}
-      <div className={`px-3 pb-4 space-y-1 border-t ${borderClass} pt-4`}>
-        {bottomNavItems.map((item) => (
-          <button
-            key={item.name}
-            onClick={() => !isLocked && onNavigate(item.name)}
-            disabled={isLocked}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isLocked
-              ? `${textSecondaryClass} cursor-not-allowed opacity-50`
-              : currentPage === item.name
-                ? `${cardClass} ${textClass} font-medium`
-                : `${textSecondaryClass} hover:${cardClass} hover:${textClass}`
-              }`}
-          >
-            <span className={`${isExpanded ? "" : "mx-auto"} w-5 h-5 flex items-center justify-center flex-shrink-0`}>
-              {item.icon}
-            </span>
-            {isExpanded && (
-              <span className="truncate">{item.name}</span>
-            )}
-          </button>
-        ))}
-
-      </div>
+      {bottomNavItems.length > 0 && (
+        <div className={`px-3 pb-4 space-y-1 border-t ${borderClass} pt-4`}>
+          {bottomNavItems.map((item) => (
+            <button
+              key={item.name}
+              onClick={() => !isLocked && onNavigate(item.name)}
+              disabled={isLocked}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isLocked
+                ? `${textSecondaryClass} cursor-not-allowed opacity-50`
+                : currentPage === item.name
+                  ? `${cardClass} ${textClass} font-medium`
+                  : `${textSecondaryClass} hover:${cardClass} hover:${textClass}`
+                }`}
+            >
+              <span className={`${isExpanded ? "" : "mx-auto"} w-5 h-5 flex items-center justify-center flex-shrink-0`}>
+                {item.icon}
+              </span>
+              {isExpanded && (
+                <span className="truncate">{item.name}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </aside>
   );
 }

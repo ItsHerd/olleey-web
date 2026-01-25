@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ChevronDown, Plus, X, Check } from "lucide-react";
+import { ArrowRight, ChevronDown, Plus, X, Check, Facebook, Instagram, Twitter, Linkedin, Globe, Zap, Users } from "lucide-react";
 import Header from "@/components/LandingPage/Header";
 import Footer from "@/components/LandingPage/Footer";
 import { useState, useEffect } from "react";
@@ -10,6 +10,13 @@ import { Typewriter } from "@/components/Typewriter";
 import FeatureShowcase from "@/components/FeatureShowcase";
 import VideoLibraryMockup from "@/components/LandingPage/VideoLibraryMockup";
 import IndustryTailored from "@/components/LandingPage/IndustryTailored";
+import HoverPlayCard from "@/components/ui/hover-play-card";
+import HeroOrbitDeck from "@/components/ui/hero-modern";
+import { MinimalistHero } from "@/components/ui/minimalist-hero";
+import { NebulaCube } from "@/components/ui/explorations-with-gsap-and-scroll-trigger";
+import OlleeyGallery from "@/components/ui/olleey-gallery";
+import { OlleeyFeatureCarousel } from "@/components/ui/feature-carousel";
+import { cn } from "@/lib/utils";
 
 // Pricing Calculator Component
 function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
@@ -79,12 +86,12 @@ function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
         <h3 className="text-xl md:text-2xl font-normal text-black mb-8">
           Calculate your pricing
         </h3>
-        
+
         <div className="mb-8">
           <div className="text-4xl md:text-5xl font-normal text-black mb-6">
             {minutes} minutes
           </div>
-          
+
           {/* Slider */}
           <input
             type="range"
@@ -97,7 +104,7 @@ function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
               background: `linear-gradient(to right, #272932 0%, #272932 ${(minutes / 500) * 100}%, #e5e7eb ${(minutes / 500) * 100}%, #e5e7eb 100%)`
             }}
           />
-          
+
           <div className="flex justify-between mt-2 text-sm text-gray-500">
             <span>0</span>
             <span>500+</span>
@@ -170,123 +177,101 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-white font-sans">
-      <Header
-        onLoginClick={handleNavigation}
-        onGetStartedClick={handleNavigation}
+      {/* Hero Section - Minimalist Design */}
+      <MinimalistHero
+        logoText="olleey.com"
+        navLinks={[
+          { label: 'HOME', href: '#' },
+          { label: 'PRODUCT', href: '#product' },
+          { label: 'PRICING', href: '#pricing' },
+        ]}
+        mainText="Break language barriers with AI-powered video dubbing. One upload, endless languages. Transform your content into a global phenomenon."
+        readMoreLink="#product"
+        imageSrc="/hero-image.png"
+        imageAlt="Professional content creator"
+        overlayText={{
+          part1: 'speak',
+          part2: 'global.',
+        }}
+        socialLinks={[
+          { icon: Facebook, href: '#' },
+          { icon: Instagram, href: '#' },
+          { icon: Twitter, href: '#' },
+          { icon: Linkedin, href: '#' },
+        ]}
+        languageFlags={['🇺🇸', '🇪🇸', '🇫🇷', '🇩🇪']}
+        totalLanguages={40}
+        onSignIn={handleNavigation}
+        onSignUp={handleNavigation}
+        onGetStarted={handleNavigation}
       />
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-[#F1F3FF]">
-        <div className="relative w-full max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[88px]">
-          <div className="max-w-[1744px] mx-auto">
-            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-0">
-              {/* Left Content */}
-              <div className="lg:flex-[1.1] text-left flex flex-col items-start z-10">
-                {/* Headline */}
-                <h1 className="text-5xl md:text-7xl lg:text-[88px] leading-[1.05] font-normal text-black mb-8 md:mb-10 max-w-none tracking-tight">
-                  <span className="block mb-2">{"We're born to"}</span>
-                  <Typewriter
-                    text={[
-                      "share",
-                      "explore",
-                      "stories without barriers",
-                    ]}
-                    speed={70}
-                    className="text-[#5155DC] inline-block border-b-4 border-[#5155DC] pb-2 whitespace-nowrap"
-                    waitTime={1500}
-                    deleteSpeed={40}
-                    cursorChar={"_"}
-                  />
-                </h1>
+      {/* What Can You Do - 3D Cube with Feature Carousel */}
+      <div id="product" className="relative bg-black">
+        <NebulaCube />
 
-                {/* Subheadline */}
-                <p className="text-xl md:text-2xl lg:text-[24px] leading-relaxed font-normal text-gray-500 mb-10 md:mb-12 max-w-xl">
-                  One upload, endless languages. Search and understand your videos with AI.
-                </p>
-
-                {/* CTA Button */}
-                <div className="flex flex-col items-start">
-                  <button
-                    onClick={handleNavigation}
-                    className="bg-black text-white px-10 h-[64px] rounded-full flex items-center justify-center text-[20px] font-medium hover:bg-gray-800 transition-all gap-2 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0"
-                  >
-                    Get Started
-                    <ArrowRight className="w-5 h-5 ml-1" />
-                  </button>
-                  <p className="text-sm mt-6 text-gray-400 font-medium">
-                    Start for free. No credit card required.
-                  </p>
-                </div>
-              </div>
-
-              {/* Right Content / Hero Video */}
-              <div className="lg:flex-[0.9] w-full relative lg:pl-12">
-                <div className="relative rounded-[32px] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.1)] border border-gray-100 bg-gray-50 aspect-video">
-                  <video
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                  >
-                    <source 
-                      src="https://videos.pexels.com/video-files/3129957/3129957-uhd_2560_1440_25fps.mp4" 
-                      type="video/mp4" 
-                    />
-                    Your browser does not support the video tag.
-                  </video>
-                  
-                  {/* Glass overlay effect on bottom */}
-                  <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#5155DC] flex items-center justify-center">
-                        <Plus className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-white text-sm font-medium">Processing global release...</div>
-                        <div className="text-white/60 text-xs">Awaiting 12 language tracks</div>
-                      </div>
-                    </div>
-                    <div className="text-white/80 text-xs font-mono">92%</div>
-                  </div>
-                </div>
-                
-                {/* Decorative background element */}
-                <div className="absolute -top-20 -right-20 w-[600px] h-[600px] bg-[#5155DC]/5 rounded-full -z-10 blur-3xl opacity-60"></div>
-              </div>
-            </div>
+        {/* Feature Carousel Overlay */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <div className="max-w-7xl w-full pointer-events-auto px-4 md:px-8">
+            <OlleeyFeatureCarousel
+              title="What We Do"
+              description="Transform your content with AI-powered dubbing"
+              step1img1Class={cn(
+                "pointer-events-none w-[50%] border border-gray-200 transition-all duration-500",
+                "max-md:scale-[160%] max-md:rounded-[24px] rounded-[24px] left-[25%] top-[57%] md:left-[35px] md:top-[29%]",
+                "md:group-hover:translate-y-2"
+              )}
+              step1img2Class={cn(
+                "pointer-events-none w-[60%] border border-gray-200 transition-all duration-500 overflow-hidden",
+                "max-md:scale-[160%] rounded-2xl max-md:rounded-[24px] left-[69%] top-[53%] md:top-[21%] md:left-[calc(50%+35px+1rem)]",
+                "md:group-hover:-translate-y-6"
+              )}
+              step2img1Class={cn(
+                "pointer-events-none w-[50%] rounded-t-[24px] overflow-hidden border border-gray-200 transition-all duration-500",
+                "max-md:scale-[160%] left-[25%] top-[69%] md:left-[35px] md:top-[30%]",
+                "md:group-hover:translate-y-2"
+              )}
+              step2img2Class={cn(
+                "pointer-events-none w-[40%] rounded-t-[24px] border border-gray-200 transition-all duration-500 rounded-2xl overflow-hidden",
+                "max-md:scale-[140%] left-[70%] top-[53%] md:top-[25%] md:left-[calc(50%+27px+1rem)]",
+                "md:group-hover:-translate-y-6"
+              )}
+              step3imgClass={cn(
+                "pointer-events-none w-[90%] border border-gray-200 rounded-t-[24px] transition-all duration-500 overflow-hidden",
+                "left-[5%] top-[50%] md:top-[30%] md:left-[68px]"
+              )}
+              image={{
+                step1light1: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1200&q=80",
+                step1light2: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1200&q=80",
+                step2light1: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1200&q=80",
+                step2light2: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&q=80",
+                step3light: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=1200&q=80",
+                alt: "Video dubbing features",
+              }}
+              bgClass="bg-white"
+            />
           </div>
+        </div>
+      </div>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="bg-white pb-20 mb-20">
+        <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px]">
+          <div className="text-center mb-16">
+            <p className="text-sm text-gray-500 mb-2 uppercase tracking-wide">Pricing</p>
+            <h2 className="text-[50px] leading-[60px] font-normal text-black mb-6">
+              One price, all the things
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Scale your content globally with transparent pricing based on your usage.
+            </p>
+          </div>
+
+          <PricingCalculator onGetStarted={handleNavigation} />
         </div>
       </section>
 
-      <div className="bg-white" id="solutions">
-        <IndustryTailored />
-
-        {/* Feature Showcase - Scroll-Pinned */}
-        <div className="bg-[#F1F3FF]" id="product">
-          <FeatureShowcase onGetStarted={handleNavigation} />
-        </div>
-
-
-        {/* Pricing Section */}
-        <section id="pricing" className="py-[100px] bg-white/90">
-          <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px]">
-            <div className="text-center mb-16">
-              <p className="text-sm text-gray-500 mb-2 uppercase tracking-wide">Pricing</p>
-              <h2 className="text-[50px] leading-[60px] font-normal text-black mb-6">
-                One price, all the things
-              </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Scale your content globally with transparent pricing based on your usage.
-              </p>
-            </div>
-
-            <PricingCalculator onGetStarted={handleNavigation} />
-          </div>
-        </section>
-      </div>
-
       <Footer />
-    </div>
+    </div >
   );
 }

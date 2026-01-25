@@ -6,7 +6,7 @@ import ActivityQueue from "@/components/ActivityQueue";
 import ContentPage from "../ContentPage";
 import ChannelsPage from "../ChannelsPage";
 import AccountsPage from "../AccountsPage";
-import { PanelLeft, ChevronDown, Check, Youtube, Bell, User } from "lucide-react";
+import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings } from "lucide-react";
 import LanguagesPage from "../LanguagesPage";
 import NotificationsPage from "../NotificationsPage";
 import AnalyticsPage from "../AnalyticsPage";
@@ -16,6 +16,7 @@ import LoginPage from "../LoginPage";
 import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
+import { ProjectProvider } from "@/lib/ProjectContext";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,7 +31,8 @@ function AppContent() {
     const [currentPage, setCurrentPage] = useState("Content");
     // Determine if authenticated from token storage initially
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [onboardingComplete, setOnboardingComplete] = useState(false);
+    // Always treat onboarding as complete to allow access to dashboard
+    const [onboardingComplete, setOnboardingComplete] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
@@ -59,17 +61,13 @@ function AppContent() {
     };
 
     const syncOnboardingFromBackend = async () => {
-        const dashboardData = await dashboardAPI.getDashboard();
-        const hasConnection =
-            dashboardData.has_youtube_connection || dashboardData.youtube_connections.length > 0;
-        setOnboardingComplete(hasConnection);
+        // Removed mandatory onboarding check
+        setOnboardingComplete(true);
 
-        if (hasConnection) {
-            const params = new URLSearchParams(window.location.search);
-            const pageParam = params.get("page");
-            if (!pageParam) {
-                setCurrentPage("Content");
-            }
+        const params = new URLSearchParams(window.location.search);
+        const pageParam = params.get("page");
+        if (!pageParam) {
+            setCurrentPage("Content");
         }
     };
 
@@ -158,7 +156,8 @@ function AppContent() {
             await syncOnboardingFromBackend();
         } catch (error) {
             console.error("Failed to sync onboarding state after login:", error);
-            setOnboardingComplete(false);
+            // Default to allowed even on error
+            setOnboardingComplete(true);
         } finally {
             setIsLoading(false);
         }
@@ -237,7 +236,7 @@ function AppContent() {
                     <Sidebar
                         currentPage={currentPage}
                         onNavigate={setCurrentPage}
-                        isLocked={!onboardingComplete}
+                        isLocked={false}
                         onLogout={handleLogout}
                         isOpen={isSidebarOpen}
                     />
@@ -337,6 +336,18 @@ function AppContent() {
                                 </span>
                             </button>
 
+                            {/* Settings Link */}
+                            <button
+                                onClick={() => setCurrentPage("Settings")}
+                                className={`flex items-center gap-2 p-2 rounded-md transition-all duration-200 ${currentPage === "Settings" ? (theme === 'light' ? 'bg-amber-50 text-amber-600 pr-3' : 'bg-amber-500/10 text-amber-400 pr-3') : `hover:${theme === 'light' ? 'bg-gray-100' : 'bg-white/10'} ${textClass}`}`}
+                                title="Settings"
+                            >
+                                <Settings className="h-4 w-4 flex-shrink-0" />
+                                <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-200 ${currentPage === "Settings" ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
+                                    Settings
+                                </span>
+                            </button>
+
                             {/* Account/User Link */}
                             <button
                                 onClick={() => setCurrentPage("Accounts")}
@@ -355,20 +366,13 @@ function AppContent() {
                         {renderPage()}
                     </main>
 
-                    {/* Onboarding Overlay */}
-                    {!onboardingComplete && (
-                        <OnboardingPage
-                            onComplete={handleOnboardingComplete}
-                        />
-                    )}
+                    {/* Onboarding Overlay - REMOVED */}
                 </div>
 
                 {/* Activity Queue - Hidden on smaller screens, shown on xl+ */}
-                {onboardingComplete && (
-                    <div className="flex-shrink-0 hidden xl:block">
-                        <ActivityQueue />
-                    </div>
-                )}
+                <div className="flex-shrink-0 hidden xl:block">
+                    <ActivityQueue />
+                </div>
             </div>
         </div>
     );
@@ -387,7 +391,9 @@ export default function App() {
                 </div>
             </div>
         }>
-            <AppContent />
+            <ProjectProvider>
+                <AppContent />
+            </ProjectProvider>
         </Suspense>
     );
 }

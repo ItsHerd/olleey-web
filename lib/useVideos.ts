@@ -14,11 +14,12 @@ interface CacheEntry {
 const cacheStore = new Map<string, CacheEntry>();
 
 // Generate cache key from params
-function getCacheKey(params?: { page?: number; page_size?: number; channel_id?: string }): string {
+function getCacheKey(params?: { page?: number; page_size?: number; channel_id?: string; project_id?: string }): string {
   const key = JSON.stringify({
     page: params?.page || 1,
     page_size: params?.page_size || 50,
     channel_id: params?.channel_id || "all",
+    project_id: params?.project_id || "all",
   });
   return `${CACHE_KEY_PREFIX}${key}`;
 }
@@ -38,7 +39,7 @@ function clearExpiredCache() {
   }
 }
 
-export function useVideos(params?: { page?: number; page_size?: number; channel_id?: string }) {
+export function useVideos(params?: { page?: number; page_size?: number; channel_id?: string; project_id?: string }) {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +50,7 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
   // Update params ref when params change
   useEffect(() => {
     paramsRef.current = params;
-  }, [params?.page, params?.page_size, params?.channel_id]);
+  }, [params?.page, params?.page_size, params?.channel_id, params?.project_id]);
 
   useEffect(() => {
     const loadVideos = async (forceRefresh: boolean = false) => {
@@ -106,7 +107,7 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
 
     // Fetch fresh data
     loadVideos(false);
-  }, [params?.page, params?.page_size, params?.channel_id]);
+  }, [params?.page, params?.page_size, params?.channel_id, params?.project_id]);
 
   // Debug logging
   useEffect(() => {

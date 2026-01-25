@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+// import { useState, useEffect, useCallback } from 'react';
 import { jobsAPI, type Job } from '@/lib/api';
+import { useJobEvents } from './useJobEvents';
 
 export interface UseActiveJobsOptions {
   interval?: number;        // Poll every N milliseconds (default: 5000)
@@ -9,38 +10,8 @@ export interface UseActiveJobsOptions {
 const ACTIVE_STATUSES = ['pending', 'downloading', 'processing', 'voice_cloning', 'lip_sync', 'uploading', 'ready'];
 
 export function useActiveJobs(options: UseActiveJobsOptions = {}) {
-  const { interval = 30000, enabled = true } = options;
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchJobs = useCallback(async () => {
-    try {
-      const data = await jobsAPI.listJobs();
-      setJobs(data.jobs);
-      setError(null);
-      setIsLoading(false);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch jobs';
-      setError(errorMessage);
-      setIsLoading(false);
-      console.error('Failed to fetch jobs:', err);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!enabled) return;
-
-    // Fetch immediately
-    fetchJobs();
-
-    // Poll at interval
-    const intervalId = setInterval(fetchJobs, interval);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [enabled, interval, fetchJobs]);
+  // Options like interval are now ignored as we rely on SSE
+  const { jobs, isConnected, refetch } = useJobEvents();
 
   const activeJobs = jobs.filter(j => ACTIVE_STATUSES.includes(j.status));
   const completedJobs = jobs.filter(j => j.status === 'completed');
@@ -53,9 +24,9 @@ export function useActiveJobs(options: UseActiveJobsOptions = {}) {
     completedJobs,
     failedJobs,
     hasActiveJobs,
-    isLoading,
-    error,
-    refetch: fetchJobs,
-    isPolling: hasActiveJobs || isLoading, // Indicate polling is active if there are active jobs or still loading
+    isLoading: !isConnected && jobs.length === 0, // Loading if not connected and no jobs yet
+    error: null,
+    refetch,
+    isPolling: isConnected, // Map connected state to isPolling for consumers
   };
 }

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useVideos } from "@/lib/useVideos";
 import { useDashboard } from "@/lib/useDashboard";
+import { useProject } from "@/lib/ProjectContext";
 import { jobsAPI, youtubeAPI, type LanguageChannel } from "@/lib/api";
 import { useJobPolling } from "@/lib/useJobPolling";
 import { logger } from "@/lib/logger";
@@ -56,6 +57,7 @@ interface LanguageCardData {
 export default function VideoDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { selectedProject } = useProject();
   const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos();
   const { dashboard, refetch: refetchDashboard } = useDashboard();
 
@@ -86,7 +88,10 @@ export default function VideoDetailPage() {
     const loadChannels = async () => {
       try {
         setIsLoadingChannels(true);
-        const graph = await youtubeAPI.getChannelGraph();
+        // Only load if project is selected
+        if (!selectedProject) return;
+
+        const graph = await youtubeAPI.getChannelGraph(selectedProject.id);
         // Get all active (non-paused) language channels
         const activeChannels = graph.master_nodes
           .flatMap(master => master.language_channels)
@@ -98,8 +103,10 @@ export default function VideoDetailPage() {
         setIsLoadingChannels(false);
       }
     };
-    loadChannels();
-  }, []);
+    if (selectedProject) {
+      loadChannels();
+    }
+  }, [selectedProject]);
 
   useEffect(() => {
     if (!videosLoading && videos.length > 0) {
@@ -114,7 +121,6 @@ export default function VideoDetailPage() {
   // Poll for the created job
   const { job: createdJob, isPolling: isPollingJob } = useJobPolling(createdJobId, {
     enabled: !!createdJobId,
-    interval: 8000,
     onComplete: async (job) => {
       logger.info("VideoDetail", "Dubbing job completed", job);
       // Refresh videos and dashboard to show updated status
@@ -175,6 +181,7 @@ export default function VideoDetailPage() {
           source_video_id: video.video_id,
           source_channel_id: fallbackChannelId,
           target_languages: selectedLanguages,
+          project_id: selectedProject?.id || "",
         });
 
         logger.info("VideoDetail", "Dubbing job created", job);
@@ -190,6 +197,7 @@ export default function VideoDetailPage() {
         source_video_id: video.video_id,
         source_channel_id: sourceChannelId,
         target_languages: selectedLanguages,
+        project_id: selectedProject?.id || "",
       });
 
       logger.info("VideoDetail", "Dubbing job created", job);

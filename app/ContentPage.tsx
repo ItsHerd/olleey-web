@@ -8,6 +8,7 @@ import { DestinationCard } from "@/components/ui/DestinationCard";
 import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause, Sparkles } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
+import { useProject } from "@/lib/ProjectContext";
 import { youtubeAPI, jobsAPI, type MasterNode, type Video, type Job } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
@@ -60,11 +61,13 @@ export default function ContentPage() {
   const [latestJob, setLatestJob] = useState<Job | null>(null);
   const [latestJobLoading, setLatestJobLoading] = useState(false);
 
-
+  const { selectedProject } = useProject();
   const { dashboard, loading: dashboardLoading } = useDashboard();
   // Pass channel_id to useVideos for server-side filtering and per-channel caching
   const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
-    selectedChannelId ? { channel_id: selectedChannelId } : undefined
+    selectedChannelId
+      ? { channel_id: selectedChannelId, project_id: selectedProject?.id }
+      : { project_id: selectedProject?.id }
   );
 
   // Theme-aware classes
@@ -93,7 +96,8 @@ export default function ContentPage() {
     const loadLatestJob = async () => {
       try {
         setLatestJobLoading(true);
-        const response = await jobsAPI.listJobsWithLimit(1);
+        if (!selectedProject) return;
+        const response = await jobsAPI.listJobsWithLimit(1, selectedProject.id);
         if (response.jobs && response.jobs.length > 0) {
           // Only set if the job has a completed status (ready, completed, or has live localizations)
           const job = response.jobs[0];
@@ -107,8 +111,11 @@ export default function ContentPage() {
         setLatestJobLoading(false);
       }
     };
-    loadLatestJob();
-  }, []);
+
+    if (selectedProject) {
+      loadLatestJob();
+    }
+  }, [selectedProject]);
 
   // Set default channel to primary channel on load or from URL
   useEffect(() => {

@@ -1,72 +1,48 @@
-import { useState, useEffect, useCallback } from 'react';
-import { jobsAPI, type Job } from '@/lib/api';
+import { useEffect } from 'react';
+import { type Job } from '@/lib/api';
+import { useActiveJobs } from './useActiveJobs';
 
 export interface UseJobPollingOptions {
-  interval?: number;        // Poll every N milliseconds (default: 5000)
-  enabled?: boolean;         // Can disable polling (default: true)
-  onComplete?: (job: Job) => void;      // Callback when job completes
-  onFail?: (job: Job) => void;          // Callback when job fails
+  interval?: number;        // Ignored, kept for compatibility
+  enabled?: boolean;
+  onComplete?: (job: Job) => void;
+  onFail?: (job: Job) => void;
 }
 
+/**
+ * Hook to monitor a specific job using real-time SSE updates.
+ * Previously used polling, now leverages useActiveJobs/useJobEvents.
+ */
 export function useJobPolling(jobId: string | null, options: UseJobPollingOptions = {}) {
   const {
-    interval = 10000,
     enabled = true,
     onComplete = null,
     onFail = null,
   } = options;
 
-  const [job, setJob] = useState<Job | null>(null);
-  const [isPolling, setIsPolling] = useState(enabled);
-  const [error, setError] = useState<string | null>(null);
+  // Use the global job list which is updated via SSE
+  const { jobs, isPolling } = useActiveJobs();
 
-  const fetchJob = useCallback(async () => {
-    if (!jobId) return;
-
-    try {
-      const data = await jobsAPI.listJobs();
-      const currentJob = data.jobs.find(j => j.job_id === jobId);
-
-      if (currentJob) {
-        setJob(currentJob);
-        setError(null);
-
-        // Check if job is done
-        if (currentJob.status === 'completed') {
-          setIsPolling(false);
-          onComplete?.(currentJob);
-        } else if (currentJob.status === 'failed') {
-          setIsPolling(false);
-          onFail?.(currentJob);
-        }
-      } else {
-        setError('Job not found');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch job';
-      setError(errorMessage);
-      console.error('Job polling error:', err);
-    }
-  }, [jobId, onComplete, onFail]);
+  const job = jobId ? jobs.find(j => j.job_id === jobId) || null : null;
+  const error = jobId && !job && isPolling ? 'Job not found' : null;
 
   useEffect(() => {
-    if (!jobId || !isPolling) return;
+    if (!enabled || !job) return;
 
-    // Fetch immediately
-    fetchJob();
-
-    // Then poll at interval
-    const intervalId = setInterval(fetchJob, interval);
-
-    return () => clearInterval(intervalId);
-  }, [jobId, isPolling, interval, fetchJob]);
+    // Check status changes
+    if (job.status === 'completed') {
+      onComplete?.(job);
+    } else if (job.status === 'failed') {
+      onFail?.(job);
+    }
+  }, [job, enabled, onComplete, onFail]);
 
   return {
     job,
-    isPolling,
+    isPolling, // Connected to SSE
     error,
-    stopPolling: () => setIsPolling(false),
-    startPolling: () => setIsPolling(true),
-    refetch: fetchJob,
+    stopPolling: () => { }, // No-op
+    startPolling: () => { }, // No-op
+    refetch: () => { }, // No-op, managed globally
   };
 }

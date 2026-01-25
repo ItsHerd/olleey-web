@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { youtubeAPI, channelsAPI, type MasterNode, type LanguageChannel, type YouTubeConnection } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
+import { useProject } from "@/lib/ProjectContext";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -36,6 +37,7 @@ type ChannelFilter = "all" | "primary" | "unassigned";
 
 export default function ChannelsPage() {
   const { theme } = useTheme();
+  const { selectedProject } = useProject();
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
   const [isLoadingConnections, setIsLoadingConnections] = useState(true);
   const [reconnectingId, setReconnectingId] = useState<string | null>(null);
@@ -137,8 +139,10 @@ export default function ChannelsPage() {
   })();
 
   useEffect(() => {
-    loadChannelGraph();
-  }, []);
+    if (selectedProject) {
+      loadChannelGraph();
+    }
+  }, [selectedProject]);
 
   // Reload channel graph when page becomes visible (e.g., returning from OAuth)
   useEffect(() => {
@@ -229,7 +233,10 @@ export default function ChannelsPage() {
   const loadChannelGraph = async () => {
     try {
       setIsLoadingConnections(true);
-      const graph = await youtubeAPI.getChannelGraph();
+      // Only load if project is selected
+      if (!selectedProject) return;
+
+      const graph = await youtubeAPI.getChannelGraph(selectedProject.id);
       const masterNodes = graph.master_nodes || [];
       setChannelGraph(masterNodes);
       setGraphStats({
@@ -413,7 +420,8 @@ export default function ChannelsPage() {
         channel_id: pendingChannelData.channel_id,
         language_codes: selectedLanguages, // Use language_codes for multi-language support
         channel_name: pendingChannelData.channel_name,
-        master_connection_id: pendingChannelData.master_connection_id
+        master_connection_id: pendingChannelData.master_connection_id,
+        project_id: selectedProject?.id || "",
       });
 
       logger.info("Channels", "Language channel created successfully");
