@@ -1020,6 +1020,7 @@ export default function ChannelsPage() {
                   }}
                   onReloadGraph={loadChannelGraph}
                   allMasters={channelGraph}
+                  projectId={selectedProject?.id || ''}
                 />
               )}
 
@@ -1874,9 +1875,10 @@ interface SatelliteChannelDetailViewProps {
   onBack: () => void;
   onReloadGraph: () => Promise<void>;
   allMasters: MasterNode[];
+  projectId: string;
 }
 
-function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters }: SatelliteChannelDetailViewProps) {
+function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters, projectId }: SatelliteChannelDetailViewProps) {
   const { theme } = useTheme();
   const [editingLanguages, setEditingLanguages] = useState(false);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
@@ -1929,6 +1931,7 @@ function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters
 
       // Recreate with new languages
       await channelsAPI.createLanguageChannel({
+        project_id: projectId,
         channel_id: channel.channel_id,
         language_codes: selectedLanguages,
         channel_name: channel.channel_name,
