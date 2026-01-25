@@ -140,7 +140,7 @@ function useNumberCycler(
     interval: number = 3000
 ) {
     const [currentNumber, setCurrentNumber] = useState(0)
-    const timerRef = useRef<NodeJS.Timeout>()
+    const timerRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
     const setupTimer = useCallback(() => {
         if (timerRef.current) {
