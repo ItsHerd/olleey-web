@@ -229,7 +229,7 @@ export function ManualProcessModal({
             const response = await jobsAPI.createJob({
                 source_video_id: videoId,
                 source_channel_id: sourceChannelId,
-                target_languages: [selectedTargetChannel], // TODO: Backend should accept target_channel_ids
+                target_languages: selectedTargetChannel === "none" ? [] : [selectedTargetChannel], // TODO: Backend should accept target_channel_ids
                 project_id: projectId,
             });
 
@@ -527,6 +527,7 @@ export function ManualProcessModal({
                             disabled={isSubmitting || success}
                         >
                             <option value="">Select a target channel</option>
+                            <option value="none">No target channel (Save only)</option>
                             {availableChannels
                                 .filter((channel) => channel.id !== sourceChannelId) // Don't show source channel
                                 .map((channel) => {

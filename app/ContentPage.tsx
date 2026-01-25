@@ -56,6 +56,7 @@ export default function ContentPage() {
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("carousel");
+  const [activeTab, setActiveTab] = useState<"original" | "processed">("original");
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [channelDropdownOpen, setChannelDropdownOpen] = useState(false);
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
@@ -119,6 +120,19 @@ export default function ContentPage() {
     }
   }, [selectedProject]);
 
+  // Update channel selection when project changes
+  useEffect(() => {
+    if (selectedProject && dashboard?.youtube_connections) {
+      const master = dashboard.youtube_connections.find(c => c.connection_id === selectedProject.master_connection_id);
+      if (master) {
+        setSelectedChannelId(master.youtube_channel_id);
+      } else if (dashboard.youtube_connections.length > 0) {
+        // Fallback to first available if master not found (e.g. legacy project)
+        setSelectedChannelId(dashboard.youtube_connections[0].youtube_channel_id);
+      }
+    }
+  }, [selectedProject?.id, dashboard?.youtube_connections]);
+
   // Set default channel to primary channel on load or from URL
   useEffect(() => {
     if (dashboard?.youtube_connections && dashboard.youtube_connections.length > 0) {
@@ -168,7 +182,18 @@ export default function ContentPage() {
 
   // Process videos with real localization data from backend
   const videosWithLocalizations: VideoWithLocalizations[] = useMemo(() => {
-    // Only show original videos in the main list
+    if (activeTab === "processed") {
+      // Processed videos view - show videos that are results of translation
+      const processedVideos = videos.filter(v => v.video_type === "translated");
+      return processedVideos.map(video => ({
+        ...video,
+        localizations: { 'processed': { status: 'live' } }, // Dummy localization to show "Live" status
+        estimated_credits: 0,
+        global_views: video.view_count,
+      }));
+    }
+
+    // Original videos view (default)
     const originalVideos = videos.filter(v => v.video_type !== "translated");
 
     return originalVideos.map(video => {
@@ -211,7 +236,7 @@ export default function ContentPage() {
         global_views,
       };
     });
-  }, [videos, selectedLanguages]);
+  }, [videos, selectedLanguages, activeTab]);
 
   const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): LocalizationStatus => {
     const statuses = Object.values(localizations).map(l => l.status);
@@ -420,8 +445,7 @@ export default function ContentPage() {
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="w-full flex flex-col px-2 sm:px-4">
 
-
-          {/* Listening Animation */}
+          {/* Listening Animation - Moved above search bar */}
           {!videosLoading && (
             <div className={`mb-4 mt-4 flex items-center gap-4 px-6 py-4 border ${borderClass} rounded-lg`} style={{ backgroundColor: '#EEB868' }}>
               {/* Radar Animation */}
@@ -436,13 +460,21 @@ export default function ContentPage() {
 
               {/* Micro-copy */}
               <span className="text-sm text-black flex-1">
-                Watching{" "}
-                <span className="text-black font-semibold">
-                  @{dashboard?.youtube_connections?.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name ||
-                    dashboard?.youtube_connections?.find(c => c.is_primary)?.youtube_channel_name ||
-                    "your channel"}
-                </span>
-                {" "}for new uploads...
+                {filteredVideos.length === 0 ? (
+                  <>
+                    <span className="font-semibold">Add a channel</span> to get started with video dubbing
+                  </>
+                ) : (
+                  <>
+                    Watching{" "}
+                    <span className="text-black font-semibold">
+                      @{dashboard?.youtube_connections?.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name ||
+                        dashboard?.youtube_connections?.find(c => c.is_primary)?.youtube_channel_name ||
+                        "your channel"}
+                    </span>
+                    {" "}for new uploads...
+                  </>
+                )}
               </span>
 
               {/* Action Buttons */}
@@ -462,6 +494,34 @@ export default function ContentPage() {
               </div>
             </div>
           )}
+
+          {/* Tabs for Original / Processed */}
+          <div className="flex items-center gap-6 mb-6 border-b border-border/50">
+            <button
+              onClick={() => setActiveTab("original")}
+              className={`pb-3 px-1 text-sm font-medium transition-all relative ${activeTab === "original"
+                ? `${textClass}`
+                : `${textSecondaryClass} hover:${textClass}`
+                }`}
+            >
+              Original Videos
+              {activeTab === "original" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-t-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("processed")}
+              className={`pb-3 px-1 text-sm font-medium transition-all relative ${activeTab === "processed"
+                ? `${textClass}`
+                : `${textSecondaryClass} hover:${textClass}`
+                }`}
+            >
+              Processed Videos
+              {activeTab === "processed" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-t-full" />
+              )}
+            </button>
+          </div>
 
           {/* Search Bar & View Toggle - Combined Row */}
           <div className="flex items-center justify-between gap-3 mb-4">
@@ -501,8 +561,8 @@ export default function ContentPage() {
             </div>
           </div>
 
-          {/* Latest Video Processed Card - Above Table/Grid */}
-          {!videosLoading && filteredVideos.length > 0 && (() => {
+          {/* Latest Video Processed Card - Only for Original Tab */}
+          {!videosLoading && activeTab === "original" && filteredVideos.length > 0 && (() => {
             // Find the most recently processed video (has at least one live localization)
             const videosWithLive = filteredVideos.filter(video => {
               const localizations = video.localizations || {};
@@ -660,7 +720,7 @@ export default function ContentPage() {
                         <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Video</th>
                         <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Status</th>
                         <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Languages</th>
-                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Views</th>
+                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Channels</th>
                         <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Progress</th>
                       </tr>
                     </thead>
@@ -677,6 +737,34 @@ export default function ContentPage() {
                           .filter(langCode => localizations[langCode]?.status === "live")
                           .map(langCode => LANGUAGE_OPTIONS.find(l => l.code === langCode))
                           .filter(Boolean);
+
+                        // Calculate target channels based on active localizations
+                        const targetChannels = (() => {
+                          const channels: { id: string; name: string; avatar?: string }[] = [];
+                          // Get all languages that have any activity (not just live)
+                          const activeLangCodes = Object.entries(localizations)
+                            .filter(([_, loc]) => loc.status !== "not-started")
+                            .map(([code]) => code);
+
+                          if (activeLangCodes.length === 0) return [];
+
+                          channelGraph.forEach(master => {
+                            master.language_channels.forEach(channel => {
+                              // Check if this channel supports any of the active languages
+                              const hasOverlap = channel.language_codes?.some(code => activeLangCodes.includes(code));
+                              if (hasOverlap) {
+                                if (!channels.some(c => c.id === channel.channel_id)) {
+                                  channels.push({
+                                    id: channel.channel_id,
+                                    name: channel.channel_name,
+                                    avatar: channel.channel_avatar_url
+                                  });
+                                }
+                              }
+                            });
+                          });
+                          return channels;
+                        })();
 
                         return (
                           <tr
@@ -747,11 +835,33 @@ export default function ContentPage() {
                               </div>
                             </td>
 
-                            {/* Views Column */}
+                            {/* Channels Column */}
                             <td className="px-4 py-3">
-                              <div className={`flex items-center gap-1.5 text-sm ${textClass}`}>
-                                <Eye className={`h-3.5 w-3.5 ${textSecondaryClass}`} />
-                                <span className="font-medium">{formatViews(video.view_count)}</span>
+                              <div className="flex items-center -space-x-2">
+                                {targetChannels.slice(0, 3).map((channel, idx) => (
+                                  <div
+                                    key={channel.id}
+                                    className={`relative w-6 h-6 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden cursor-help`}
+                                    title={channel.name}
+                                    style={{ zIndex: 3 - idx }}
+                                  >
+                                    {channel.avatar ? (
+                                      <img src={channel.avatar} alt={channel.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className={`w-full h-full ${cardClass}Alt flex items-center justify-center text-[8px] font-bold`}>
+                                        {channel.name.charAt(0)}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                                {targetChannels.length > 3 && (
+                                  <div className="relative w-6 h-6 rounded-full ring-2 ring-white dark:ring-gray-900 bg-gray-100 flex items-center justify-center text-[10px] text-gray-600 font-medium" style={{ zIndex: 0 }}>
+                                    +{targetChannels.length - 3}
+                                  </div>
+                                )}
+                                {targetChannels.length === 0 && (
+                                  <span className={`text-xs ${textSecondaryClass}`}>-</span>
+                                )}
                               </div>
                             </td>
 
@@ -923,6 +1033,6 @@ export default function ContentPage() {
           refetchVideos();
         }}
       />
-    </div>
+    </div >
   );
 }

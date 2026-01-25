@@ -37,7 +37,7 @@ type ChannelFilter = "all" | "primary" | "unassigned";
 
 export default function ChannelsPage() {
   const { theme } = useTheme();
-  const { selectedProject } = useProject();
+  const { selectedProject, isLoading: isProjectLoading } = useProject();
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
   const [isLoadingConnections, setIsLoadingConnections] = useState(true);
   const [reconnectingId, setReconnectingId] = useState<string | null>(null);
@@ -139,10 +139,14 @@ export default function ChannelsPage() {
   })();
 
   useEffect(() => {
+    if (isProjectLoading) return;
+
     if (selectedProject) {
       loadChannelGraph();
+    } else {
+      setIsLoadingConnections(false);
     }
-  }, [selectedProject]);
+  }, [selectedProject?.id, isProjectLoading]); // Depend on ID to avoid loop if object ref changes
 
   // Reload channel graph when page becomes visible (e.g., returning from OAuth)
   useEffect(() => {
@@ -233,10 +237,7 @@ export default function ChannelsPage() {
   const loadChannelGraph = async () => {
     try {
       setIsLoadingConnections(true);
-      // Only load if project is selected
-      if (!selectedProject) return;
-
-      const graph = await youtubeAPI.getChannelGraph(selectedProject.id);
+      const graph = await youtubeAPI.getChannelGraph(selectedProject?.id);
       const masterNodes = graph.master_nodes || [];
       setChannelGraph(masterNodes);
       setGraphStats({
@@ -452,6 +453,17 @@ export default function ChannelsPage() {
   };
 
   const handleSetPrimary = async (connectionId: string, channelName: string) => {
+    // Check if there is already a primary channel
+    const primaryExists = channelGraph.some(m => m.is_primary);
+
+    // Allow if we are setting the current primary (redundant but safe) or if no primary exists
+    const isAlreadyPrimary = channelGraph.find(m => m.connection_id === connectionId)?.is_primary;
+
+    if (primaryExists && !isAlreadyPrimary) {
+      alert("A primary channel already exists. Please unassign the current primary channel before assigning a new one.");
+      return;
+    }
+
     try {
       await youtubeAPI.setPrimaryConnection(connectionId);
       logger.info("Channels", `Set ${channelName} as primary`);
@@ -642,7 +654,7 @@ export default function ChannelsPage() {
         </div>
       </div>
 
-      {channelGraph.length === 0 ? (
+      {unifiedChannels.length === 0 ? (
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center max-w-md">
             <Youtube className={`h-12 w-12 sm:h-16 sm:w-16 ${textClass}Secondary mx-auto mb-4`} />
@@ -1001,6 +1013,7 @@ export default function ChannelsPage() {
                     setShowAssignChannelModal(true);
                   }}
                   allMasters={channelGraph}
+                  onRemove={handleRemoveChannel}
                 />
               )}
 
@@ -1767,10 +1780,11 @@ interface UnassignedChannelDetailViewProps {
   };
   onBack: () => void;
   onAssign: (assignAsPrimary: boolean, parentMasterId?: string) => void;
+  onRemove: (connectionId: string, channelName: string) => void;
   allMasters: MasterNode[];
 }
 
-function UnassignedChannelDetailView({ channel, onBack, onAssign, allMasters }: UnassignedChannelDetailViewProps) {
+function UnassignedChannelDetailView({ channel, onBack, onAssign, onRemove, allMasters }: UnassignedChannelDetailViewProps) {
   const { theme } = useTheme();
 
   // Theme-aware classes
@@ -1825,13 +1839,21 @@ function UnassignedChannelDetailView({ channel, onBack, onAssign, allMasters }: 
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => onAssign(true)}
-              className={`flex-1 inline-flex items-center justify-center gap-2 bg-white text-black px-4 py-3 rounded-full text-sm font-normal hover:${cardClass} transition-colors`}
-            >
-              <Star className="h-4 w-4" />
-              Make Primary Channel
-            </button>
+            <div className="flex-1 group relative">
+              <button
+                onClick={() => onAssign(true)}
+                disabled={allMasters.some(m => m.is_primary)}
+                className={`w-full inline-flex items-center justify-center gap-2 bg-white text-black px-4 py-3 rounded-full text-sm font-normal hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Star className="h-4 w-4" />
+                Make Primary Channel
+              </button>
+              {allMasters.some(m => m.is_primary) && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-black text-white text-xs rounded shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity text-center z-10">
+                  A primary channel already exists. Unassign it first.
+                </div>
+              )}
+            </div>
             {allMasters.length > 0 && (
               <div className="flex-1 relative">
                 <select
@@ -1855,6 +1877,17 @@ function UnassignedChannelDetailView({ channel, onBack, onAssign, allMasters }: 
               </div>
             )}
           </div>
+        </div>
+
+        {/* Remove Button */}
+        <div className="flex justify-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
+          <button
+            onClick={() => onRemove(channel.connection_id, channel.channel_name)}
+            className="inline-flex items-center gap-2 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors text-sm font-medium"
+          >
+            <Trash2 className="h-4 w-4" />
+            Remove Channel
+          </button>
         </div>
       </div>
     </div>

@@ -302,16 +302,22 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
             </div>
 
             {/* Error display overlay */}
+            {/* Error display overlay */}
             {error && (
-                <div className="fixed top-4 right-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm shadow-lg z-50 max-w-md">
-                    <div className="flex items-start gap-3">
-                        <div className="flex-1">
-                            <p className="font-medium mb-1">Registration failed</p>
-                            <p className="text-sm leading-relaxed">{error}</p>
+                <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50 max-w-lg w-full md:w-auto animate-in slide-in-from-top-5 fade-in duration-300 border border-red-500/50">
+                    <div className="flex items-start gap-4">
+                        <div className="bg-white/20 p-2 rounded-full flex-shrink-0">
+                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div className="flex-1 pt-0.5">
+                            <p className="font-bold text-base mb-1">Registration failed</p>
+                            <p className="text-white/90 text-sm leading-relaxed font-medium">{error}</p>
                         </div>
                         <button
                             onClick={() => setError(null)}
-                            className="text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 transition-colors flex-shrink-0"
+                            className="text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-lg p-1.5 ml-2"
                             aria-label="Close error message"
                         >
                             <svg

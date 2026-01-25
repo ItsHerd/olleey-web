@@ -27,7 +27,11 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
     { name: "Content", icon: <ContentIcon /> },
     { name: "Channels", icon: <ChannelsIcon /> },
     { name: "Queued Jobs", icon: <LanguagesIcon /> },
-    { name: "Analytics", icon: <AnalyticsIcon /> }
+  ];
+
+  const comingSoonItems = [
+    { name: "Dynamic Sponsor Swaps", icon: <SponsorIcon /> },
+    { name: "Comment Mirroring", icon: <CommentsIcon /> }
   ];
 
   const bottomNavItems: { name: string; icon: React.ReactNode }[] = [
@@ -59,6 +63,29 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
       {/* Main Navigation - Centered Vertically */}
       <nav className="flex-1 px-2 sm:px-3 flex flex-col justify-center space-y-1 overflow-y-auto">
         {mainNavItems.map((item) => (
+          <button
+            key={item.name}
+            onClick={() => !isLocked && onNavigate(item.name)}
+            disabled={isLocked}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isLocked
+              ? `${textSecondaryClass} cursor-not-allowed opacity-50`
+              : currentPage === item.name
+                ? `${cardClass} ${textClass} font-medium`
+                : `${textSecondaryClass} hover:${cardClass} hover:${textClass}`
+              }`}
+          >
+            <span className={`${isExpanded ? "" : "mx-auto"} w-5 h-5 flex items-center justify-center flex-shrink-0`}>
+              {item.icon}
+            </span>
+            {isExpanded && (
+              <span className="truncate">{item.name}</span>
+            )}
+          </button>
+        ))}
+
+        <div className={`my-2 mx-3 border-t ${borderClass}`} />
+
+        {comingSoonItems.map((item) => (
           <button
             key={item.name}
             onClick={() => !isLocked && onNavigate(item.name)}
@@ -200,6 +227,25 @@ function LogoutIcon() {
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
       <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
+function SponsorIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+      <path d="M16 21h5v-5" />
+    </svg>
+  );
+}
+
+function CommentsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
     </svg>
   );
 }

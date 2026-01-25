@@ -17,7 +17,7 @@ import LoginPage from "../LoginPage";
 import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
-import { ProjectProvider } from "@/lib/ProjectContext";
+import { useProject } from "@/lib/ProjectContext";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -25,6 +25,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CreateProjectModal } from "@/components/ui/create-project-modal";
+import { ComingSoonPage } from "@/components/ComingSoonPage";
 
 function AppContent() {
     const { theme } = useTheme();
@@ -38,23 +40,17 @@ function AppContent() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
+    const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
 
     // Use the dashboard hook for data - only enabled when authenticated
     const { dashboard, loading: dashboardLoading } = useDashboard({ enabled: isAuthenticated });
+    const { projects, selectedProject, setSelectedProject } = useProject();
 
     // Get theme-aware classes
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
     const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
     const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
     const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
-
-    // Determine current project from URL or defaults
-    const currentChannelId = searchParams?.get("channel_id");
-
-    // Find the currently selected project object
-    const selectedProject = dashboard?.youtube_connections?.find(c => c.youtube_channel_id === currentChannelId) ||
-        dashboard?.youtube_connections?.find(c => c.is_primary) ||
-        dashboard?.youtube_connections?.[0];
 
     const getChannelAvatar = (channelId?: string) => {
         if (!channelId) return undefined;
@@ -141,7 +137,7 @@ function AppContent() {
         const pageParam = searchParams?.get("page");
         if (pageParam) {
             // Map page param to valid page names
-            const validPages = ["Content", "Channels", "Accounts", "Queued Jobs", "Notifications", "Analytics", "Settings"];
+            const validPages = ["Content", "Channels", "Accounts", "Queued Jobs", "Notifications", "Dynamic Sponsor Swaps", "Comment Mirroring", "Settings"];
             if (validPages.includes(pageParam)) {
                 setCurrentPage(pageParam);
             } else if (pageParam === "Languages") {
@@ -178,14 +174,6 @@ function AppContent() {
         setIsSidebarOpen(false);
     };
 
-    const handleProjectSelect = (channelId: string) => {
-        const params = new URLSearchParams(window.location.search);
-        params.set("channel_id", channelId);
-        // Build the full URL path with /app prefix
-        const newUrl = `/app?${params.toString()}`;
-        router.push(newUrl);
-    };
-
     const renderPage = () => {
         // Pass selectedChannelId to the page if needed, though they might read from URL independently
         switch (currentPage) {
@@ -201,8 +189,24 @@ function AppContent() {
                 return <LanguagesPage />;
             case "Notifications":
                 return <NotificationsPage />;
-            case "Analytics":
-                return <AnalyticsPage />;
+            case "Dynamic Sponsors":
+                return (
+                    <ComingSoonPage
+                        title="Dynamic Sponsors"
+                        description="Automatically swap brand segments for local sponsors in target countries."
+                        value=""
+                        features={[]}
+                    />
+                );
+            case "Comment Mirroring":
+                return (
+                    <ComingSoonPage
+                        title="AI Comment Mirroring"
+                        description="Automatically translate viewer comments and your replies to maintain engagement across languages."
+                        value=""
+                        features={[]}
+                    />
+                );
             case "Settings":
                 return <SettingsPage />;
             default:
@@ -263,66 +267,47 @@ function AppContent() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <div className="flex items-center gap-1 group cursor-pointer outline-none">
-                                    <div className={`flex items-center gap-2 px-2 py-1 rounded-md hover:${theme === 'light' ? 'bg-gray-100' : 'bg-white/10'} transition-colors`}>
-                                        {selectedProject && getChannelAvatar(selectedProject.youtube_channel_id) ? (
-                                            <img
-                                                src={getChannelAvatar(selectedProject.youtube_channel_id)}
-                                                alt={selectedProject.youtube_channel_name}
-                                                className="w-4 h-4 rounded-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-4 h-4 rounded bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold">
-                                                {selectedProject?.youtube_channel_name?.charAt(0) || "P"}
-                                            </div>
-                                        )}
-                                        <span className={`text-sm ${textClass} font-medium truncate max-w-[150px] sm:max-w-xs`}>
-                                            {selectedProject?.youtube_channel_name || "Select Project"}
+                                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${theme === 'light' ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white/5 hover:bg-white/10'} border ${theme === 'light' ? 'border-gray-200' : 'border-white/10'} transition-all duration-200`}>
+                                        <div className="w-5 h-5 rounded-md bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-[10px] text-white font-bold shadow-sm">
+                                            {selectedProject?.name?.charAt(0) || "P"}
+                                        </div>
+                                        <span className={`text-sm ${textClass} font-medium truncate max-w-[150px] sm:max-w-xs ml-1`}>
+                                            {selectedProject?.name || "Select Project"}
                                         </span>
-                                        <ChevronDown className={`h-3 w-3 ${textClass} opacity-50 w-3 h-3 ml-0.5`} />
+                                        <ChevronDown className={`h-4 w-4 ${textClass} opacity-50 ml-2 transition-transform duration-200 group-data-[state=open]:rotate-180`} />
                                     </div>
                                 </div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" className="w-[240px]">
-                                {dashboard?.youtube_connections?.map((connection) => (
+                                {projects.map((project) => (
                                     <DropdownMenuItem
-                                        key={connection.youtube_channel_id}
-                                        onClick={() => handleProjectSelect(connection.youtube_channel_id)}
+                                        key={project.id}
+                                        onClick={() => setSelectedProject(project)}
                                         className="gap-2 cursor-pointer"
                                     >
-                                        {getChannelAvatar(connection.youtube_channel_id) ? (
-                                            <img
-                                                src={getChannelAvatar(connection.youtube_channel_id)}
-                                                alt={connection.youtube_channel_name}
-                                                className="w-5 h-5 rounded-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                                                <Youtube className="w-3 h-3 text-indigo-500" />
-                                            </div>
-                                        )}
-                                        <div className="flex flex-col flex-1 min-w-0">
-                                            <span className="truncate text-sm font-medium">{connection.youtube_channel_name}</span>
-                                            {connection.is_primary && (
-                                                <span className="text-[10px] text-muted-foreground">Primary Channel</span>
-                                            )}
+                                        <div className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                            <span className="text-xs font-bold text-indigo-500">{project.name.charAt(0)}</span>
                                         </div>
-                                        {selectedProject?.youtube_channel_id === connection.youtube_channel_id && (
+                                        <div className="flex flex-col flex-1 min-w-0">
+                                            <span className="truncate text-sm font-medium">{project.name}</span>
+                                        </div>
+                                        {selectedProject?.id === project.id && (
                                             <Check className="w-4 h-4 text-indigo-500 ml-auto" />
                                         )}
                                     </DropdownMenuItem>
                                 ))}
-                                {(!dashboard?.youtube_connections || dashboard.youtube_connections.length === 0) && (
+
+                                {projects.length === 0 && (
                                     <div className="p-2 text-xs text-muted-foreground text-center">
                                         No projects found
                                     </div>
                                 )}
 
+                                <DropdownMenuSeparator />
+
                                 {/* Add Project Option */}
-                                {dashboard?.youtube_connections && dashboard.youtube_connections.length > 0 && (
-                                    <DropdownMenuSeparator />
-                                )}
                                 <DropdownMenuItem
-                                    onClick={() => setCurrentPage("Channels")}
+                                    onClick={() => setIsCreateProjectModalOpen(true)}
                                     className="gap-2 cursor-pointer text-indigo-600 dark:text-indigo-400 font-medium"
                                 >
                                     <div className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
@@ -334,6 +319,33 @@ function AppContent() {
                         </DropdownMenu>
 
                         <span className={`${theme === 'light' ? 'text-gray-400' : 'text-gray-600'}`}>/</span>
+
+                        {/* Master Channel Breadcrumb (if project selected and has master channel) */}
+                        {(() => {
+                            if (!selectedProject) return null;
+
+                            const masterChannel = dashboard?.youtube_connections?.find(
+                                c => c.connection_id === selectedProject.master_connection_id
+                            );
+
+                            if (!masterChannel) return null;
+
+                            return (
+                                <>
+                                    <div className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm ${textClass}`}>
+                                        {getChannelAvatar(masterChannel.youtube_channel_id) && (
+                                            <img
+                                                src={getChannelAvatar(masterChannel.youtube_channel_id)}
+                                                alt={masterChannel.youtube_channel_name}
+                                                className="w-4 h-4 rounded-full object-cover"
+                                            />
+                                        )}
+                                        <span>{masterChannel.youtube_channel_name}</span>
+                                    </div>
+                                    <span className={`${theme === 'light' ? 'text-gray-400' : 'text-gray-600'}`}>/</span>
+                                </>
+                            );
+                        })()}
 
                         {/* Current Page Breadcrumb */}
                         <div className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm ${textClass}`}>
@@ -391,6 +403,16 @@ function AppContent() {
                     <ActivityQueue />
                 </div>
             </div>
+
+            {/* Create Project Modal */}
+            <CreateProjectModal
+                isOpen={isCreateProjectModalOpen}
+                onClose={() => setIsCreateProjectModalOpen(false)}
+                onSuccess={() => {
+                    // Reload dashboard to show new project
+                    window.location.reload();
+                }}
+            />
         </div>
     );
 }
@@ -408,9 +430,7 @@ export default function App() {
                 </div>
             </div>
         }>
-            <ProjectProvider>
-                <AppContent />
-            </ProjectProvider>
+            <AppContent />
         </Suspense>
     );
 }

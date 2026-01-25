@@ -145,10 +145,10 @@ export default function ActivityQueue() {
               )}
             </div>
             <span className={`inline-flex items-center justify-center min-w-[24px] sm:min-w-[28px] h-6 sm:h-7 px-1.5 sm:px-2 text-xs sm:text-sm font-normal ${textClass} ${cardClass} rounded-full`}>
-              {dashboardLoading || jobsLoading ? "…" : activeJobs.length}
+              {dashboardLoading ? "…" : activeJobs.length}
             </span>
           </div>
-          {dashboardLoading || jobsLoading ? (
+          {dashboardLoading ? (
             <div className={`flex items-center justify-center py-12 ${textSecondaryClass} text-base`}>
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>

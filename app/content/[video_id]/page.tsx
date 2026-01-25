@@ -24,7 +24,7 @@ import {
 import { useVideos } from "@/lib/useVideos";
 import { useDashboard } from "@/lib/useDashboard";
 import { useProject } from "@/lib/ProjectContext";
-import { jobsAPI, youtubeAPI, type LanguageChannel } from "@/lib/api";
+import { jobsAPI, youtubeAPI, videosAPI, type LanguageChannel } from "@/lib/api";
 import { useJobPolling } from "@/lib/useJobPolling";
 import { logger } from "@/lib/logger";
 
@@ -58,7 +58,7 @@ export default function VideoDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { selectedProject } = useProject();
-  const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos();
+  const { refetch: refetchVideos } = useVideos();
   const { dashboard, refetch: refetchDashboard } = useDashboard();
 
   const [video, setVideo] = useState<any>(null);
@@ -108,15 +108,32 @@ export default function VideoDetailPage() {
     }
   }, [selectedProject]);
 
+  // Fetch video details directly
+  const [loadingVideo, setLoadingVideo] = useState(true);
+
   useEffect(() => {
-    if (!videosLoading && videos.length > 0) {
-      const foundVideo = videos.find(v => v.video_id === params.video_id);
-      setVideo(foundVideo);
-      if (foundVideo) {
-        setVideoTitle(foundVideo.title);
+    const fetchVideoDetails = async () => {
+      try {
+        setLoadingVideo(true);
+        // Cast params.video_id to string to ensure type safety
+        const videoId = Array.isArray(params.video_id) ? params.video_id[0] : params.video_id;
+
+        if (!videoId) return;
+
+        const fetchedVideo = await videosAPI.getVideoById(videoId);
+        setVideo(fetchedVideo);
+        if (fetchedVideo) {
+          setVideoTitle(fetchedVideo.title);
+        }
+      } catch (error) {
+        logger.error("VideoDetail", "Failed to fetch video details", error);
+      } finally {
+        setLoadingVideo(false);
       }
-    }
-  }, [videos, videosLoading, params.video_id]);
+    };
+
+    fetchVideoDetails();
+  }, [params.video_id]);
 
   // Poll for the created job
   const { job: createdJob, isPolling: isPollingJob } = useJobPolling(createdJobId, {
@@ -256,7 +273,7 @@ export default function VideoDetailPage() {
     }
   };
 
-  if (videosLoading) {
+  if (loadingVideo) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-dark-textSecondary" />
