@@ -122,12 +122,17 @@ export const MinimalistHero = ({
                     className="z-20 order-2 md:order-1 text-center md:text-left"
                 >
                     <p className="mx-auto max-w-xs text-sm leading-relaxed text-foreground/80 md:mx-0">{mainText}</p>
-                    <button
-                        onClick={onGetStarted}
-                        className="mt-6 rounded-full bg-foreground px-8 py-3 text-sm font-medium tracking-widest text-background transition-opacity hover:opacity-90"
-                    >
-                        GET STARTED
-                    </button>
+                    <div className="mt-6 flex flex-col sm:flex-row gap-4 items-center md:items-start">
+
+                        <a
+                            href="https://cal.com/ahmad-moltafet-q8mgvt"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-full border-2 border-foreground px-8 py-3 text-sm font-medium tracking-widest text-foreground transition-all hover:bg-foreground hover:text-background"
+                        >
+                            TALK TO FOUNDER
+                        </a>
+                    </div>
                 </motion.div>
 
                 {/* Center Image with Circle */}
@@ -189,9 +194,9 @@ export const MinimalistHero = ({
                     {languageFlags.map((flag, index) => (
                         <span
                             key={index}
-                            className="flex items-center justify-center rounded-full bg-foreground/5 px-3 py-2 backdrop-blur-sm border border-foreground/10 text-xl transition-all hover:scale-110 hover:z-50"
+                            className="flex items-center justify-center rounded-full bg-white px-3 py-2 border border-black/20 text-xl transition-all hover:scale-110 hover:z-50"
                             style={{
-                                marginLeft: index === 0 ? 0 : '-8px',
+                                marginLeft: index === 0 ? 0 : '-12px',
                                 zIndex: languageFlags.length - index,
                             }}
                         >
@@ -199,9 +204,9 @@ export const MinimalistHero = ({
                         </span>
                     ))}
                     <span
-                        className="flex items-center justify-center rounded-full bg-foreground/5 px-3 py-2 backdrop-blur-sm border border-foreground/10 text-sm font-semibold text-foreground/80 transition-all hover:scale-110 hover:z-50"
+                        className="flex items-center justify-center rounded-full bg-white px-3 py-2 border border-black/20 text-sm font-semibold text-black transition-all hover:scale-110 hover:z-50"
                         style={{
-                            marginLeft: '-8px',
+                            marginLeft: '-12px',
                             zIndex: 0,
                         }}
                     >

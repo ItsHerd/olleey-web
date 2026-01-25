@@ -1,14 +1,12 @@
 "use client";
 
 import { ArrowRight, Play } from "lucide-react";
-import { useState } from "react";
 
 interface HeroProps {
     onGetStartedClick: () => void;
 }
 
 export default function Hero({ onGetStartedClick }: HeroProps) {
-    const [isPlaying, setIsPlaying] = useState(false);
 
     return (
         <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-gradient-to-b from-blue-50/50 to-white">

@@ -212,7 +212,60 @@ export default function Index() {
 
         {/* Feature Carousel Overlay */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <div className="max-w-7xl w-full pointer-events-auto px-4 md:px-8">
+          <div className="max-w-5xl w-full pointer-events-auto px-4 md:px-8 relative">
+            {/* Video Section - Overlapping top-right of carousel */}
+            <div className="absolute -top-16 -right-8 md:-top-20 md:-right-12 pointer-events-none z-20">
+              <div className="w-80 md:w-96">
+                <div className="relative group">
+                  <video
+                    id="feature-video"
+                    loop
+                    playsInline
+                    className="w-full h-auto rounded-2xl shadow-2xl pointer-events-auto border-2 border-white/30"
+                  >
+                    <source src="/speaker.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+
+                  {/* Play Button Overlay */}
+                  <button
+                    onClick={(e) => {
+                      const video = document.getElementById('feature-video') as HTMLVideoElement;
+                      if (video.paused) {
+                        video.play();
+                        e.currentTarget.style.opacity = '0';
+                      } else {
+                        video.pause();
+                        e.currentTarget.style.opacity = '1';
+                      }
+                    }}
+                    className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl transition-opacity hover:bg-black/40 pointer-events-auto"
+                    style={{ opacity: 1 }}
+                  >
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center shadow-xl transition-transform hover:scale-110">
+                      <svg
+                        className="w-8 h-8 md:w-10 md:h-10 text-black ml-1"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Get Started Button */}
+                <div className="text-center mt-4">
+                  <button
+                    onClick={handleNavigation}
+                    className="pointer-events-auto px-6 py-3 bg-white text-black rounded-full font-semibold text-sm hover:bg-gray-100 transition-all hover:scale-105 shadow-lg"
+                  >
+                    Get Started
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <OlleeyFeatureCarousel
               title="What We Do"
               description="Transform your content with AI-powered dubbing"
@@ -254,7 +307,7 @@ export default function Index() {
       </div>
 
       {/* Pricing Section */}
-      <section id="pricing" className="bg-white pb-20 mb-20">
+      <section id="pricing" className="bg-white pb-20 mb-20 mt-10">
         <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px]">
           <div className="text-center mb-16">
             <p className="text-sm text-gray-500 mb-2 uppercase tracking-wide">Pricing</p>

@@ -68,26 +68,44 @@ interface Step {
     description: string
 }
 
-const TOTAL_STEPS = 3
+const TOTAL_STEPS = 6
 
 const steps: readonly Step[] = [
     {
         id: "1",
         name: "Step 1",
-        title: "40+ Languages",
-        description: "Reach global audiences with natural-sounding voiceovers in over 40 languages while preserving emotion and tone",
+        title: "Voice cloning with real emotion",
+        description: "Keep your voice and performance—tone, intensity, and energy—across languages.",
     },
     {
         id: "2",
         name: "Step 2",
-        title: "Lightning Fast",
-        description: "Upload once and get professionally dubbed videos in minutes, not days or weeks",
+        title: "Lip-sync that looks natural",
+        description: "Mouth movements match the new audio, so it feels filmed in-language.",
     },
     {
         id: "3",
         name: "Step 3",
-        title: "Lip Sync Perfect",
-        description: "Advanced AI ensures your dubbed videos look as natural as the original with perfect lip synchronization",
+        title: "Cultural translation (translate the vibe)",
+        description: "Slang, references, and pacing adapt to each region—not just literal words.",
+    },
+    {
+        id: "4",
+        name: "Step 4",
+        title: "Multi-speaker support",
+        description: "Automatically separates host vs guests so voices stay consistent.",
+    },
+    {
+        id: "5",
+        name: "Step 5",
+        title: "Speed + timing controls",
+        description: "Handle language length differences by adjusting pacing without breaking the video.",
+    },
+    {
+        id: "6",
+        name: "Step 6",
+        title: "Auto-publish to regional channels",
+        description: "Send videos straight to YouTube/TikTok as drafts or posts—per channel.",
     },
 ] as const
 
@@ -572,7 +590,7 @@ export const OlleeyFeatureCarousel = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="absolute left-[12rem] top-5 z-50 h-full w-full cursor-pointer md:left-0"
+                className="hidden absolute left-[12rem] top-5 z-50 h-full w-full cursor-pointer md:left-0"
             >
                 <Steps current={step} onChange={() => { }} steps={steps} />
             </motion.div>
