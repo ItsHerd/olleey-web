@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -58,6 +58,8 @@ export const MinimalistHero = ({
     onSignUp,
     onGetStarted,
 }: MinimalistHeroProps) => {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     return (
         <div
             className={cn(
@@ -103,14 +105,47 @@ export const MinimalistHero = ({
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="flex flex-col space-y-1.5 md:hidden"
-                    aria-label="Open menu"
+                    className="flex flex-col space-y-1.5 md:hidden z-50"
+                    aria-label="Toggle menu"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 >
-                    <span className="block h-0.5 w-6 bg-foreground"></span>
-                    <span className="block h-0.5 w-6 bg-foreground"></span>
-                    <span className="block h-0.5 w-5 bg-foreground"></span>
+                    <span className={cn("block h-0.5 w-6 bg-foreground transition-transform", isMobileMenuOpen && "rotate-45 translate-y-2")}></span>
+                    <span className={cn("block h-0.5 w-6 bg-foreground transition-opacity", isMobileMenuOpen && "opacity-0")}></span>
+                    <span className={cn("block h-0.5 w-5 bg-foreground transition-transform", isMobileMenuOpen && "-rotate-45 -translate-y-2 w-6")}></span>
                 </motion.button>
             </header>
+
+            {/* Mobile Menu Overlay */}
+            {isMobileMenuOpen && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-background p-8 md:hidden"
+                >
+                    <div className="flex flex-col items-center space-y-8 text-xl font-medium tracking-widest text-foreground">
+                        {navLinks.map((link) => (
+                            <a
+                                key={link.label}
+                                href={link.href}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="transition-colors hover:text-foreground/60"
+                            >
+                                {link.label}
+                            </a>
+                        ))}
+                        <button onClick={() => { onSignIn?.(); setIsMobileMenuOpen(false); }} className="text-foreground/60 hover:text-foreground">
+                            SIGN IN
+                        </button>
+                        <button
+                            onClick={() => { onSignUp?.(); setIsMobileMenuOpen(false); }}
+                            className="text-foreground"
+                        >
+                            SIGN UP
+                        </button>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Main Content Area */}
             <div className="relative grid w-full max-w-7xl flex-grow grid-cols-1 items-center md:grid-cols-3">
@@ -165,7 +200,7 @@ export const MinimalistHero = ({
                     transition={{ duration: 0.6, delay: 1.2 }}
                     className="z-20 order-3 flex items-center justify-center text-center md:justify-start"
                 >
-                    <h1 className="text-7xl font-extrabold text-foreground md:text-8xl lg:text-9xl">
+                    <h1 className="text-5xl sm:text-6xl font-extrabold text-foreground md:text-8xl lg:text-9xl">
                         {overlayText.part1}
                         <br />
                         {overlayText.part2}

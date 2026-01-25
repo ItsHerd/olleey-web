@@ -214,8 +214,8 @@ export default function Index() {
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           <div className="max-w-5xl w-full pointer-events-auto px-4 md:px-8 relative">
             {/* Video Section - Overlapping top-right of carousel */}
-            <div className="absolute -top-16 -right-8 md:-top-20 md:-right-12 pointer-events-none z-20">
-              <div className="w-80 md:w-96">
+            <div className="absolute -top-16 right-0 sm:right-4 md:-top-20 md:-right-12 pointer-events-none z-20">
+              <div className="w-64 sm:w-80 md:w-96">
                 <div className="relative group">
                   <video
                     id="feature-video"
