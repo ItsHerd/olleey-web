@@ -305,8 +305,8 @@ function FeatureCard({
         >
             <div
                 className={clsx(
-                    "group relative w-full overflow-hidden rounded-3xl border border-gray-200 bg-white transition duration-300",
-                    "md:hover:border-gray-300 md:hover:shadow-xl",
+                    "group relative w-full overflow-hidden rounded-3xl border border-white/20 bg-transparent transition duration-300",
+                    "md:hover:border-white/30 md:hover:shadow-xl",
                     bgClass
                 )}
             >
@@ -324,7 +324,7 @@ function FeatureCard({
                             }}
                         >
                             <motion.h2
-                                className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl lg:text-5xl"
+                                className="text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-5xl"
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{
@@ -344,7 +344,7 @@ function FeatureCard({
                                     ease: [0.23, 1, 0.32, 1],
                                 }}
                             >
-                                <p className="text-base leading-6 text-gray-600 md:text-lg md:leading-7">
+                                <p className="text-base leading-6 text-gray-300 md:text-lg md:leading-7">
                                     <Balancer>{steps[step].description}</Balancer>
                                 </p>
                             </motion.div>

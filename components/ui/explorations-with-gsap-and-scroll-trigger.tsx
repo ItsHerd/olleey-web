@@ -647,11 +647,13 @@ export function NebulaCube() {
             tl.to(titles[index], { opacity: 1, y: 0, duration: 1, ease: 'power2.out' }, 0);
             tl.to(descriptions[index], { opacity: 1, y: 0, duration: 1, ease: 'power2.out', delay: 0.2 }, 0);
 
-            tl.to(
-                cubeGroupRef.current?.position,
-                { z: -1 * index, duration: 1 },
-                0
-            );
+            if (cubeGroupRef.current) {
+                tl.to(
+                    cubeGroupRef.current.position,
+                    { z: -1 * index, duration: 1 },
+                    0
+                );
+            }
         });
 
         // Resize handler
@@ -782,7 +784,9 @@ export function NebulaCube() {
                 const constellationGeometry = constellationSystem.geometry;
                 constellationGeometry.setAttribute('position', new THREE.Float32BufferAttribute(connectedPoints, 3));
                 constellationGeometry.attributes.position.needsUpdate = true;
-                constellationSystem.material.opacity = Math.max(0, scrollProgress - 0.6) * 0.15;
+                if (!Array.isArray(constellationSystem.material)) {
+                    constellationSystem.material.opacity = Math.max(0, scrollProgress - 0.6) * 0.15;
+                }
 
                 particleSystem.geometry.attributes.position.needsUpdate = true;
             }
