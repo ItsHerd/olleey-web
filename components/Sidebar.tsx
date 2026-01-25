@@ -30,7 +30,7 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
   ];
 
   const comingSoonItems = [
-    { name: "Dynamic Sponsor Swaps", icon: <SponsorIcon /> },
+    { name: "Dynamic Sponsors", icon: <SponsorIcon /> },
     { name: "Comment Mirroring", icon: <CommentsIcon /> }
   ];
 
@@ -83,7 +83,15 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
           </button>
         ))}
 
-        <div className={`my-2 mx-3 border-t ${borderClass}`} />
+        {isExpanded ? (
+          <div className="flex items-center gap-2 px-3 mt-8 mb-4">
+            <div className={`h-[1px] flex-1 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`} />
+            <span className={`text-[10px] font-medium ${textSecondaryClass} uppercase tracking-wider whitespace-nowrap`}>Coming Soon</span>
+            <div className={`h-[1px] flex-1 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`} />
+          </div>
+        ) : (
+          <div className={`my-2 mx-3 border-t ${borderClass}`} />
+        )}
 
         {comingSoonItems.map((item) => (
           <button

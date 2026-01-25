@@ -145,28 +145,31 @@ export function ChannelGraphView({ masters, onAddConnection }: { masters: Master
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
     return (
-        <div className={`w-full h-full min-h-[500px] ${bgClass} rounded-xl overflow-hidden`}>
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                nodeTypes={nodeTypes}
-                fitView
-                attributionPosition="bottom-right"
-            >
-                <Controls className={theme === "dark" ? "bg-gray-800 fill-gray-100 border-gray-700" : ""} />
-                <Background color={dotColor} gap={20} size={1} />
-                <Panel position="top-right">
-                    <button
-                        onClick={onAddConnection}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${theme === "light" ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-200"}`}
-                    >
-                        <Plus className="h-4 w-4" />
-                        Add Channel
-                    </button>
-                </Panel>
-            </ReactFlow>
+        <div className={`w-full h-full min-h-[500px] ${bgClass} rounded-xl overflow-hidden relative`}>
+            {/* Wrapper to clip the watermark by making ReactFlow slightly larger */}
+            <div className="absolute inset-0 w-[calc(100%+100px)] h-[calc(100%+50px)]">
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    nodeTypes={nodeTypes}
+                    fitView
+                    attributionPosition="bottom-right"
+                    proOptions={{ hideAttribution: false }} // Explicitly showing we aren't using the pro prop to hide it, but CSS instead
+                >
+                    <Background color={dotColor} gap={20} size={1} />
+                    <Panel position="top-right" className="pr-[120px]">
+                        <button
+                            onClick={onAddConnection}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${theme === "light" ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-200"}`}
+                        >
+                            <Plus className="h-4 w-4" />
+                            Add Channel
+                        </button>
+                    </Panel>
+                </ReactFlow>
+            </div>
         </div>
     );
 }
