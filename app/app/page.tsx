@@ -6,8 +6,9 @@ import ActivityQueue from "@/components/ActivityQueue";
 import ContentPage from "../ContentPage";
 import ChannelsPage from "../ChannelsPage";
 import AccountsPage from "../AccountsPage";
-import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings } from "lucide-react";
+import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings, Plus } from "lucide-react";
 import LanguagesPage from "../LanguagesPage";
+import JobsPage from "../JobsPage";
 import NotificationsPage from "../NotificationsPage";
 import AnalyticsPage from "../AnalyticsPage";
 import SettingsPage from "../SettingsPage";
@@ -21,6 +22,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -194,6 +196,7 @@ function AppContent() {
             case "Accounts":
                 return <AccountsPage onLogout={handleLogout} />;
             case "Queued Jobs":
+                return <JobsPage />;
             case "Languages":
                 return <LanguagesPage />;
             case "Notifications":
@@ -313,6 +316,20 @@ function AppContent() {
                                         No projects found
                                     </div>
                                 )}
+
+                                {/* Add Project Option */}
+                                {dashboard?.youtube_connections && dashboard.youtube_connections.length > 0 && (
+                                    <DropdownMenuSeparator />
+                                )}
+                                <DropdownMenuItem
+                                    onClick={() => setCurrentPage("Channels")}
+                                    className="gap-2 cursor-pointer text-indigo-600 dark:text-indigo-400 font-medium"
+                                >
+                                    <div className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                        <Plus className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                                    </div>
+                                    <span className="text-sm">Add Project</span>
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
 

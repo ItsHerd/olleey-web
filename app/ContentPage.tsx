@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DestinationCard } from "@/components/ui/DestinationCard";
+import { ManualProcessModal } from "@/components/ui/manual-process-modal";
 import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause, Sparkles } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
@@ -60,6 +61,7 @@ export default function ContentPage() {
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
   const [latestJob, setLatestJob] = useState<Job | null>(null);
   const [latestJobLoading, setLatestJobLoading] = useState(false);
+  const [isManualProcessModalOpen, setIsManualProcessModalOpen] = useState(false);
 
   const { selectedProject } = useProject();
   const { dashboard, loading: dashboardLoading } = useDashboard();
@@ -255,33 +257,33 @@ export default function ContentPage() {
         return {
           icon: CheckCircle,
           label: "Live",
-          color: "text-green-400",
-          bgColor: "bg-green-900/20",
-          borderColor: "border-green-700/30"
+          color: "text-green-300",
+          bgColor: "bg-green-500/30",
+          borderColor: "border-green-500/50"
         };
       case "draft":
         return {
           icon: AlertCircle,
           label: "Draft",
-          color: "text-yellow-400",
-          bgColor: "bg-yellow-900/20",
-          borderColor: "border-yellow-700/30"
+          color: "text-yellow-300",
+          bgColor: "bg-yellow-500/30",
+          borderColor: "border-yellow-500/50"
         };
       case "processing":
         return {
           icon: Loader2,
           label: "Processing",
-          color: "text-blue-400",
-          bgColor: "bg-blue-900/20",
-          borderColor: "border-blue-700/30"
+          color: "text-blue-300",
+          bgColor: "bg-blue-500/30",
+          borderColor: "border-blue-500/50"
         };
       case "not-started":
         return {
           icon: XCircle,
           label: "Not Started",
-          color: "text-gray-400",
-          bgColor: "bg-gray-900/20",
-          borderColor: "border-gray-700/30"
+          color: "text-gray-300",
+          bgColor: "bg-gray-500/30",
+          borderColor: "border-gray-500/50"
         };
     }
   };
@@ -310,30 +312,19 @@ export default function ContentPage() {
     <div className={`w-full h-full ${bgClass} flex flex-col overflow-hidden`}>
       {/* Header */}
       <div className={`flex-shrink-0 px-0 py-3 sm:py-4 md:py-6 border-b ${borderClass}`}>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal ${textClass} mb-1 sm:mb-2 truncate`}>Content Library</h1>
-            <p className={`text-xs sm:text-sm md:text-base ${textSecondaryClass} truncate`}>
-              Manage your videos and track translation progress across languages
-            </p>
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal ${textClass} mb-1 sm:mb-2 truncate`}>Content Library</h1>
+              <p className={`text-xs sm:text-sm md:text-base ${textSecondaryClass} truncate`}>
+                Manage your videos and track translation progress across languages
+              </p>
+            </div>
           </div>
-          <div className={`flex items-center gap-2 sm:gap-3 md:gap-6 text-xs sm:text-sm ${textClass}Secondary flex-shrink-0 flex-wrap`}>
-            <span className="whitespace-nowrap">Total Videos: <strong className={`${textClass}`}>{filteredVideos.length}</strong></span>
-            <span className="whitespace-nowrap">Translations: <strong className="text-indigo-400">
-              {filteredVideos.reduce((acc, video) => {
-                const localizations = video.localizations || {};
-                return acc + Object.values(localizations).filter(l => l.status === "live").length;
-              }, 0)}
-            </strong></span>
-          </div>
-        </div>
-      </div>
 
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="w-full flex flex-col px-2 sm:px-4">
           {/* Channel Selector */}
           {dashboard?.youtube_connections && dashboard.youtube_connections.length > 0 && (
-            <div className="mb-4 mt-4 relative channel-dropdown">
+            <div className="relative channel-dropdown">
               <button
                 onClick={() => setChannelDropdownOpen(!channelDropdownOpen)}
                 className={`w-full sm:w-auto flex items-center gap-3 ${cardClass} border ${borderClass} ${textClass} rounded-lg px-4 py-2.5 text-sm hover:${cardClass}Alt cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors`}
@@ -414,9 +405,25 @@ export default function ContentPage() {
             </div>
           )}
 
+          <div className={`flex items-center gap-2 sm:gap-3 md:gap-6 text-xs sm:text-sm ${textClass}Secondary flex-shrink-0 flex-wrap ml-auto`}>
+            <span className="whitespace-nowrap">Total Videos: <strong className={`${textClass}`}>{filteredVideos.length}</strong></span>
+            <span className="whitespace-nowrap">Translations: <strong className="text-indigo-400">
+              {filteredVideos.reduce((acc, video) => {
+                const localizations = video.localizations || {};
+                return acc + Object.values(localizations).filter(l => l.status === "live").length;
+              }, 0)}
+            </strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="w-full flex flex-col px-2 sm:px-4">
+
+
           {/* Listening Animation */}
           {!videosLoading && (
-            <div className={`mb-4 mt-4 flex items-center gap-4 px-6 py-4 ${cardClass}/50 border ${borderClass} rounded-lg`}>
+            <div className={`mb-4 mt-4 flex items-center gap-4 px-6 py-4 border ${borderClass} rounded-lg`} style={{ backgroundColor: '#EEB868' }}>
               {/* Radar Animation */}
               <div className="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
                 {/* Outer pulse ring */}
@@ -428,9 +435,9 @@ export default function ContentPage() {
               </div>
 
               {/* Micro-copy */}
-              <span className={`text-sm ${textSecondaryClass} flex-1`}>
+              <span className="text-sm text-black flex-1">
                 Watching{" "}
-                <span className={`${textClass}`}>
+                <span className="text-black font-semibold">
                   @{dashboard?.youtube_connections?.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name ||
                     dashboard?.youtube_connections?.find(c => c.is_primary)?.youtube_channel_name ||
                     "your channel"}
@@ -442,16 +449,13 @@ export default function ContentPage() {
               <div className="flex items-center gap-3 flex-shrink-0">
                 <button
                   onClick={() => refetchVideos()}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 font-normal transition-colors underline"
+                  className="text-sm bg-white text-black px-6 py-3 rounded-full font-medium border border-gray-300 hover:bg-gray-100 transition-colors"
                 >
                   Check Now
                 </button>
                 <button
-                  onClick={() => {
-                    // TODO: Implement manual process trigger
-                    console.log("Start manual process");
-                  }}
-                  className={`text-xs ${cardClass}Alt ${textClass} px-3 py-1.5 rounded-full font-normal hover:${cardClass}Alt transition-colors`}
+                  onClick={() => setIsManualProcessModalOpen(true)}
+                  className="text-sm bg-black text-white px-6 py-3 rounded-full font-medium hover:bg-gray-800 transition-colors"
                 >
                   Start Manual Process
                 </button>
@@ -895,6 +899,30 @@ export default function ContentPage() {
           </div>
         </div>
       </div>
+
+      {/* Manual Process Modal */}
+      <ManualProcessModal
+        isOpen={isManualProcessModalOpen}
+        onClose={() => setIsManualProcessModalOpen(false)}
+        availableChannels={
+          channelGraph.map((masterNode) => {
+            // Collect all unique language codes from language channels
+            const languageCodes = masterNode.language_channels
+              .flatMap(lc => lc.language_codes || [])
+              .filter((code, index, self) => self.indexOf(code) === index); // Remove duplicates
+
+            return {
+              id: masterNode.channel_id,
+              name: masterNode.channel_name,
+              languages: languageCodes,
+            };
+          })
+        }
+        projectId={selectedProject?.id}
+        onSuccess={() => {
+          refetchVideos();
+        }}
+      />
     </div>
   );
 }
