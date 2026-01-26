@@ -1,17 +1,20 @@
-// import { useState, useEffect, useCallback } from 'react';
 import { jobsAPI, type Job } from '@/lib/api';
 import { useJobEvents } from './useJobEvents';
+import { logger } from "@/lib/logger";
 
 export interface UseActiveJobsOptions {
   interval?: number;        // Poll every N milliseconds (default: 5000)
   enabled?: boolean;         // Can disable polling (default: true)
 }
 
-const ACTIVE_STATUSES = ['pending', 'downloading', 'processing', 'voice_cloning', 'lip_sync', 'uploading', 'ready'];
+const ACTIVE_STATUSES = ['pending', 'downloading', 'processing', 'voice_cloning', 'lip_sync', 'uploading', 'waiting_approval', 'ready'];
 
 export function useActiveJobs(options: UseActiveJobsOptions = {}) {
   // Options like interval are now ignored as we rely on SSE
   const { jobs, isConnected, refetch } = useJobEvents();
+
+  // Debug: Log all jobs passed to the hook
+  logger.debug("useActiveJobs", "Incoming jobs", { count: jobs.length, statuses: jobs.map(j => j.status) });
 
   const activeJobs = jobs.filter(j => ACTIVE_STATUSES.includes(j.status));
   const completedJobs = jobs.filter(j => j.status === 'completed');

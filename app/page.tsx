@@ -6,19 +6,11 @@ import Footer from "@/components/LandingPage/Footer";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { tokenStorage } from "@/lib/api";
-import { Typewriter } from "@/components/Typewriter";
-import FeatureShowcase from "@/components/FeatureShowcase";
-import VideoLibraryMockup from "@/components/LandingPage/VideoLibraryMockup";
-import IndustryTailored from "@/components/LandingPage/IndustryTailored";
-import HoverPlayCard from "@/components/ui/hover-play-card";
-import HeroOrbitDeck from "@/components/ui/hero-modern";
 import { MinimalistHero } from "@/components/ui/minimalist-hero";
 import { NebulaCube } from "@/components/ui/explorations-with-gsap-and-scroll-trigger";
-import OlleeyGallery from "@/components/ui/olleey-gallery";
 import { OlleeyFeatureCarousel } from "@/components/ui/feature-carousel";
 import { cn } from "@/lib/utils";
 
-// Pricing Calculator Component
 function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
   const [minutes, setMinutes] = useState(0);
 

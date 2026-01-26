@@ -1111,7 +1111,7 @@ export interface Job {
   job_id: string;
   source_video_id: string;
   source_channel_id?: string;
-  status: "pending" | "downloading" | "processing" | "voice_cloning" | "lip_sync" | "uploading" | "ready" | "completed" | "failed";
+  status: "pending" | "downloading" | "processing" | "voice_cloning" | "lip_sync" | "uploading" | "waiting_approval" | "ready" | "completed" | "failed";
   progress: number;
   target_languages: string[];
   created_at: string;
@@ -1124,6 +1124,15 @@ export interface Job {
 export interface JobListResponse {
   jobs: Job[];
   total: number;
+}
+
+export interface LocalizedVideo {
+  id: string;
+  job_id: string;
+  language_code: string;
+  storage_url: string; // URL for preview
+  status: string;
+  created_at: string;
 }
 
 export const jobsAPI = {
@@ -1202,6 +1211,40 @@ export const jobsAPI = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.detail || "Failed to get job");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get localized videos for a job
+   * GET /jobs/{job_id}/videos
+   */
+  getJobVideos: async (jobId: string): Promise<LocalizedVideo[]> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/videos`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get job videos");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Approve a job
+   * POST /jobs/{job_id}/approve
+   */
+  approveJob: async (jobId: string): Promise<{ message: string }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/approve`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to approve job");
     }
 
     return await response.json();

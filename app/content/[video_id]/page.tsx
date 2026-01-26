@@ -413,239 +413,215 @@ export default function VideoDetailPage() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Player Section */}
+        {/* Main Section */}
         <div className="flex-1 flex flex-col overflow-y-auto bg-dark-bg p-4 sm:p-6 md:p-8">
-          {/* Video Player */}
-          <div className="relative aspect-video bg-dark-bg rounded-xl overflow-hidden mb-6">
-            {video.thumbnail_url && (
-              <img
-                src={video.thumbnail_url}
-                alt={video.title}
-                className="w-full h-full object-cover"
-              />
-            )}
+          <div className="max-w-5xl w-full mx-auto space-y-8">
 
-            {/* Player Controls Overlay */}
-            <div className="absolute inset-0 flex flex-col justify-between p-4">
-              {/* Top Controls - Audio Toggle */}
-              {activeLanguage && (
-                <div className="flex justify-center">
-                  <div className="inline-flex items-center bg-dark-bg/80 backdrop-blur-sm rounded-full p-1">
-                    <button
-                      onClick={() => setAudioMode("original")}
-                      className={`px-4 py-2 rounded-full text-sm font-normal transition-colors ${audioMode === "original"
-                        ? "bg-white text-gray-900"
-                        : "text-dark-text hover:text-dark-textSecondary"
-                        }`}
-                    >
-                      Original
-                    </button>
-                    <button
-                      onClick={() => setAudioMode("dubbed")}
-                      className={`px-4 py-2 rounded-full text-sm font-normal transition-colors ${audioMode === "dubbed"
-                        ? "bg-white text-gray-900"
-                        : "text-dark-text hover:text-dark-textSecondary"
-                        }`}
-                    >
-                      Dubbed
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Center Play Button */}
-              <div className="flex items-center justify-center">
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
-                >
-                  {isPlaying ? (
-                    <Pause className="h-8 w-8 sm:h-10 sm:w-10 text-gray-900" />
-                  ) : (
-                    <Play className="h-8 w-8 sm:h-10 sm:w-10 text-gray-900 ml-1" />
+            {/* Top Row: Video & Metadata */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Video Player Section - constrained width */}
+              <div className="w-full">
+                <h2 className="text-lg font-medium text-dark-text mb-4">Preview</h2>
+                <div className="relative aspect-video bg-dark-bg rounded-xl overflow-hidden border border-dark-border shadow-lg">
+                  {video.thumbnail_url && (
+                    <img
+                      src={video.thumbnail_url}
+                      alt={video.title}
+                      className="w-full h-full object-cover"
+                    />
                   )}
-                </button>
-              </div>
 
-              {/* Bottom Controls */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button className="text-dark-text hover:text-dark-textSecondary transition-colors">
-                    <Volume2 className="h-5 w-5" />
-                  </button>
-                </div>
-                <button className="text-dark-text hover:text-dark-textSecondary transition-colors">
-                  <Maximize className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Global Performance (State 4) */}
-          {hasPublishedVersions && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="h-5 w-5 text-green-600" />
-                <h3 className="text-lg font-normal text-gray-900">Global Performance</h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="text-center p-4 bg-dark-card rounded-lg">
-                  <p className="text-2xl font-normal text-gray-900 mb-1">1.2M</p>
-                  <p className="text-sm text-dark-textSecondary">Total Views</p>
-                </div>
-                <div className="text-center p-4 bg-dark-card rounded-lg">
-                  <p className="text-2xl font-normal text-green-600 mb-1">+156%</p>
-                  <p className="text-sm text-dark-textSecondary">vs Original</p>
-                </div>
-                <div className="text-center p-4 bg-dark-card rounded-lg">
-                  <p className="text-2xl font-normal text-gray-900 mb-1">3</p>
-                  <p className="text-sm text-dark-textSecondary">Languages Live</p>
-                </div>
-              </div>
-
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-gray-900">
-                  💡 <strong>Insight:</strong> Your German dub is outperforming the Original by 15%
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Dubbing Matrix Sidebar */}
-        <aside className="w-80 sm:w-96 border-l border-dark-border bg-dark-bg overflow-y-auto">
-          <div className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base sm:text-lg font-normal text-dark-text">Dubbing Matrix</h3>
-              {languageCards.length > 0 && (
-                <span className="text-xs sm:text-sm text-dark-textSecondary">
-                  {languageCards.filter(l => l.state === "published").length}/{languageCards.length}
-                </span>
-              )}
-            </div>
-
-            {/* State 1: Empty State */}
-            {hasNoTranslations && (
-              <div className="text-center py-12">
-                <Sparkles className="h-12 w-12 text-dark-textSecondary mx-auto mb-4" />
-                <p className="text-dark-textSecondary mb-6">No dubbed versions created yet</p>
-                <button
-                  onClick={handleStartDubbing}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-dark-text px-6 py-3 rounded-full font-normal hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg"
-                >
-                  <Sparkles className="h-5 w-5" />
-                  Start New Dub
-                </button>
-              </div>
-            )}
-
-            {/* Language Cards */}
-            <div className="space-y-3">
-              {languageCards.map((card) => {
-                const lang = LANGUAGE_OPTIONS.find(l => l.code === card.code);
-                const config = getStateConfig(card.state);
-                const isActive = activeLanguage === card.code;
-
-                return (
-                  <button
-                    key={card.code}
-                    onClick={() => {
-                      if (card.state === "review" || card.state === "published") {
-                        setActiveLanguage(card.code);
-                        if (card.state === "review") {
-                          setShowScriptEditor(true);
-                        }
-                      }
-                    }}
-                    className={`w-full text-left border-2 ${config.border} ${config.bg} rounded-xl p-4 transition-all hover:shadow-md ${isActive ? "ring-2 ring-indigo-500" : ""
-                      }`}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{lang?.flag}</span>
-                        <span className="font-normal text-gray-900">{lang?.name}</span>
+                  {/* Player Controls Overlay */}
+                  <div className="absolute inset-0 flex flex-col justify-between p-4">
+                    {/* Top Controls - Audio Toggle */}
+                    {activeLanguage && (
+                      <div className="flex justify-center">
+                        <div className="inline-flex items-center bg-dark-bg/80 backdrop-blur-sm rounded-full p-1">
+                          <button
+                            onClick={() => setAudioMode("original")}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${audioMode === "original"
+                              ? "bg-white text-gray-900"
+                              : "text-dark-text hover:text-dark-textSecondary"
+                              }`}
+                          >
+                            Original
+                          </button>
+                          <button
+                            onClick={() => setAudioMode("dubbed")}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${audioMode === "dubbed"
+                              ? "bg-white text-gray-900"
+                              : "text-dark-text hover:text-dark-textSecondary"
+                              }`}
+                          >
+                            Dubbed
+                          </button>
+                        </div>
                       </div>
-                      {config.icon}
+                    )}
+
+                    {/* Center Play Button */}
+                    <div className="flex items-center justify-center">
+                      <button
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
+                      >
+                        {isPlaying ? (
+                          <Pause className="h-6 w-6 text-gray-900" />
+                        ) : (
+                          <Play className="h-6 w-6 text-gray-900 ml-1" />
+                        )}
+                      </button>
                     </div>
 
-                    {/* Processing State */}
-                    {card.state === "processing" && (
-                      <>
-                        <div className="text-xs text-dark-textSecondary mb-2">
-                          Phase 3/4: {card.phase}
-                        </div>
-                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-all duration-500"
-                            style={{ width: `${card.progress}%` }}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {/* Review State */}
-                    {card.state === "review" && (
-                      <div className="mt-2">
-                        <div className="text-xs text-yellow-700 mb-1">
-                          🟡 Needs Review
-                        </div>
-                        <div className="text-xs text-dark-textSecondary">
-                          Confidence: {card.confidenceScore}% Match
-                        </div>
+                    {/* Bottom Controls */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <button className="text-dark-text hover:text-dark-textSecondary transition-colors">
+                          <Volume2 className="h-4 w-4" />
+                        </button>
                       </div>
-                    )}
-
-                    {/* Published State */}
-                    {card.state === "published" && card.url && (
-                      <div className="mt-2 flex items-center justify-between">
-                        <div className="text-xs text-green-700">
-                          🟢 Published
-                        </div>
-                        <a
-                          href={card.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700"
-                        >
-                          View <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    )}
-                    {card.state === "published" && card.views && (
-                      <div className="text-xs text-dark-textSecondary mt-1">
-                        {formatViews(card.views)} views
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-
-              {/* Add New Language Card */}
-              {languageCards.length > 0 && (
-                <button
-                  onClick={handleStartDubbing}
-                  className="w-full border-2 border-dashed border-gray-300 bg-white rounded-xl p-4 hover:border-gray-400 hover:bg-dark-card transition-all"
-                >
-                  <div className="flex items-center justify-center gap-2 text-dark-textSecondary">
-                    <Plus className="h-5 w-5" />
-                    <span className="font-normal">Add Language</span>
+                      <button className="text-dark-text hover:text-dark-textSecondary transition-colors">
+                        <Maximize className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                </button>
-              )}
+                </div>
+
+                {/* Deployment Status Summary */}
+                <div className="mt-6">
+                  <h3 className="text-base font-normal text-dark-text mb-3">Deployment Coverage</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-dark-card border border-dark-border">
+                      <p className="text-sm text-dark-textSecondary">Languages Live</p>
+                      <p className="text-2xl font-semibold text-dark-text">
+                        {languageCards.filter(l => l.state === "published").length}
+                        <span className="text-sm text-dark-textSecondary font-normal ml-1">/ {languageCards.length}</span>
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-dark-card border border-dark-border">
+                      <p className="text-sm text-dark-textSecondary">Total Views</p>
+                      <div className="flex items-end gap-2">
+                        <p className="text-2xl font-semibold text-dark-text">1.2M</p>
+                        <span className="text-sm text-green-500 mb-1 flex items-center">
+                          <TrendingUp className="h-3 w-3 mr-0.5" /> +15%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Deployment Status (formerly Dubbing Matrix) */}
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-medium text-dark-text">Deployment Status</h2>
+                    <button
+                      onClick={handleStartDubbing}
+                      className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                    >
+                      <Plus className="h-4 w-4" /> New Language
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {hasNoTranslations && (
+                      <div className="text-center py-8 bg-dark-card rounded-xl border border-dashed border-dark-border">
+                        <p className="text-dark-textSecondary mb-4">No deployments yet</p>
+                        <button
+                          onClick={handleStartDubbing}
+                          className="px-4 py-2 bg-indigo-600 text-white rounded-full text-sm hover:bg-indigo-700"
+                        >
+                          Start Dubbing
+                        </button>
+                      </div>
+                    )}
+
+                    {languageCards.map((card) => {
+                      const lang = LANGUAGE_OPTIONS.find(l => l.code === card.code);
+                      const config = getStateConfig(card.state);
+                      const isActive = activeLanguage === card.code;
+
+                      return (
+                        <button
+                          key={card.code}
+                          onClick={() => {
+                            if (card.state === "review" || card.state === "published") {
+                              setActiveLanguage(card.code);
+                              if (card.state === "review") {
+                                setShowScriptEditor(true);
+                              }
+                            }
+                          }}
+                          className={`w-full text-left border ${config.border} ${config.bg} rounded-xl p-3 transition-all hover:shadow-md ${isActive ? "ring-2 ring-indigo-500" : ""}`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">{lang?.flag}</span>
+                              <div>
+                                <p className="font-medium text-gray-900 text-sm">{lang?.name}</p>
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-xs inline-flex items-center gap-1 ${card.state === 'published' ? 'text-green-600' :
+                                      card.state === 'processing' ? 'text-blue-600' :
+                                        card.state === 'review' ? 'text-yellow-600' : 'text-gray-500'
+                                    }`}>
+                                    {card.state === 'published' && <Check className="h-3 w-3" />}
+                                    {card.state === 'processing' && <Loader2 className="h-3 w-3 animate-spin" />}
+                                    {card.state === 'review' && <Edit2 className="h-3 w-3" />}
+                                    <span className="capitalize">{card.state}</span>
+                                  </span>
+                                  {card.state === 'processing' && (
+                                    <span className="text-xs text-gray-500">
+                                      {Math.round(card.progress || 0)}%
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Action/Info */}
+                            <div className="text-right">
+                              {card.state === 'published' && card.views && (
+                                <p className="text-xs text-gray-500">{formatViews(card.views)} views</p>
+                              )}
+                              {card.state === 'review' && (
+                                <span className="text-xs bg-black text-white px-2 py-1 rounded-full">Review</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Progress Bar for processing */}
+                          {card.state === "processing" && (
+                            <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-blue-500 transition-all duration-500"
+                                style={{ width: `${card.progress}%` }}
+                              />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Processing Toast */}
-            {processingJobs.length > 0 && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-gray-700">
-                  💡 You can leave this page. We'll email you when drafts are ready.
-                </p>
+            {hasPublishedVersions && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6 mt-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  <h3 className="text-lg font-normal text-gray-900">Analytics</h3>
+                </div>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-gray-900">
+                    💡 <strong>Insight:</strong> Your German dub is outperforming the Original by 15%
+                  </p>
+                </div>
               </div>
             )}
           </div>
-        </aside>
+        </div>
       </div>
 
       {/* Script Editor Panel (State 3) */}

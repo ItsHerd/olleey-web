@@ -1,20 +1,38 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Play, Loader2, Sparkles, Clock, Download, Mic, Smile, Upload, CheckCircle, XCircle } from "lucide-react";
+import { Play, Loader2, Sparkles, Clock, Download, Mic, Smile, Upload, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
 import { useActiveJobs } from "@/lib/useActiveJobs";
 import { useTheme } from "@/lib/useTheme";
+import { useProject } from "@/lib/ProjectContext";
+import { ReviewJobModal } from "@/components/ui/review-job-modal";
+import { useState } from "react";
+
+import { logger } from "@/lib/logger";
 
 export default function ActivityQueue() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { selectedProject } = useProject();
   const { dashboard, loading: dashboardLoading } = useDashboard();
   const { videos } = useVideos();
-  const { activeJobs, isLoading: jobsLoading, hasActiveJobs } = useActiveJobs({
+  const { jobs, activeJobs, isLoading: jobsLoading, hasActiveJobs } = useActiveJobs({
     enabled: true,
   });
+
+  // Debug logging
+  if (activeJobs.length > 0) {
+    logger.debug("ActivityQueue", "Rendering active jobs", {
+      count: activeJobs.length,
+      statuses: activeJobs.map(j => j.status)
+    });
+  } else {
+    logger.debug("ActivityQueue", "No active jobs to render");
+  }
+
+  const [reviewJobId, setReviewJobId] = useState<string | null>(null);
 
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
   const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
@@ -88,6 +106,13 @@ export default function ActivityQueue() {
         borderColor: theme === "light" ? "border-red-200" : "border-red-700/30",
         icon: XCircle,
         animated: false
+      },
+      waiting_approval: {
+        label: "Needs Review",
+        color: theme === "light" ? "text-amber-600 bg-amber-50" : "text-amber-400 bg-amber-900/20",
+        borderColor: theme === "light" ? "border-amber-200" : "border-amber-700/30",
+        icon: AlertCircle,
+        animated: true // Pulsing to attract attention
       },
     };
     return statusMap[status] || {
@@ -171,7 +196,9 @@ export default function ActivityQueue() {
                   <button
                     key={job.job_id}
                     onClick={() => {
-                      if (job.source_video_id) {
+                      if (job.status === "waiting_approval") {
+                        setReviewJobId(job.job_id);
+                      } else if (job.source_video_id) {
                         router.push(`/content/${job.source_video_id}`);
                       }
                     }}
@@ -239,6 +266,15 @@ export default function ActivityQueue() {
                           </div>
                         )}
                       </div>
+
+                      {/* Review Action Button for waiting_approval status */}
+                      {job.status === "waiting_approval" && (
+                        <div className="absolute right-3 bottom-3 sm:right-auto sm:bottom-auto sm:relative self-center">
+                          <span className="hidden sm:inline-block px-3 py-1 bg-black text-white text-xs rounded-full font-medium hover:bg-gray-800 transition-colors shadow-sm dark:bg-white dark:text-black dark:hover:bg-gray-200">
+                            Review
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Progress Bar */}
@@ -331,6 +367,32 @@ export default function ActivityQueue() {
           </div>
         </div>
       </div>
-    </aside>
+      <ReviewJobModal
+        isOpen={!!reviewJobId}
+        onClose={() => setReviewJobId(null)}
+        jobId={reviewJobId}
+        onApproved={() => {
+          // Refresh jobs list logic if needed, but polling should handle it eventually
+          // If we want immediate feedback we might need to refetchActiveJobs
+          // But useActiveJobs uses polling, so it will update.
+          setReviewJobId(null);
+        }}
+      />
+
+      {/* Temporary Debug Info */}
+      <div className="p-4 text-xs font-mono bg-black/5 dark:bg-white/5 border-t border-red-500 overflow-x-auto">
+        <p className="font-bold text-red-500">DEBUG INFO:</p>
+        <p>Selected Project: {selectedProject?.id || 'None'}</p>
+        <p>Total Jobs: {jobs?.length || 0}</p>
+        <p>Active Jobs: {activeJobs?.length || 0}</p>
+        <div className="mt-2 space-y-1">
+          {jobs?.map(j => (
+            <div key={j.job_id} className={j.status === 'waiting_approval' ? 'text-green-500 font-bold' : ''}>
+              [{j.status}] {j.job_id.slice(0, 8)}...
+            </div>
+          ))}
+        </div>
+      </div>
+    </aside >
   );
 }

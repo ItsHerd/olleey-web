@@ -3,8 +3,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { DestinationCard } from "@/components/ui/DestinationCard";
 import { ManualProcessModal } from "@/components/ui/manual-process-modal";
 import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause, Sparkles } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
@@ -13,8 +11,6 @@ import { useProject } from "@/lib/ProjectContext";
 import { youtubeAPI, jobsAPI, type MasterNode, type Video, type Job } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
-// Carousel imports removed as we switched to Grid layout
-
 
 type ViewMode = "carousel" | "table";
 
@@ -53,8 +49,6 @@ export default function ContentPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["es", "fr", "de", "pt", "ja"]);
   const [selectedChannelId, setSelectedChannelId] = useState<string>("");
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("carousel");
   const [activeTab, setActiveTab] = useState<"original" | "processed">("original");
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
@@ -178,8 +172,6 @@ export default function ContentPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [languageDropdownOpen, channelDropdownOpen]);
 
-  // Carousel effect removed
-
   // Process videos with real localization data from backend
   const videosWithLocalizations: VideoWithLocalizations[] = useMemo(() => {
     if (activeTab === "processed") {
@@ -203,8 +195,6 @@ export default function ContentPage() {
       // Build localization status for each selected language
       selectedLanguages.forEach(lang => {
         if (translatedLanguages.includes(lang)) {
-          // This language has been translated - mark as live
-          // In production, you could fetch the actual translated video details
           const translatedVideo = videos.find(v =>
             v.video_type === "translated" &&
             v.source_video_id === video.video_id &&
