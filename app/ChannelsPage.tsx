@@ -521,6 +521,23 @@ export default function ChannelsPage() {
     }
   };
 
+  const handleUnsetPrimary = async (connectionId: string, channelName: string) => {
+    if (!confirm(`Are you sure you want to unset ${channelName} as the primary channel? It will remain connected as a regular master channel.`)) {
+      return;
+    }
+
+    try {
+      await youtubeAPI.unsetPrimaryConnection(connectionId);
+      logger.info("Channels", `Unset ${channelName} as primary`);
+
+      // Reload the graph to reflect changes
+      await loadChannelGraph();
+    } catch (error) {
+      logger.error("Channels", `Failed to unset ${channelName} as primary`, error);
+      alert(`Failed to unset primary: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  };
+
   // Get all unique language channels across all masters (by channel ID)
   const allLanguageChannels = channelGraph.reduce((acc, master) => {
     master.language_channels.forEach(lang => {
@@ -1053,6 +1070,7 @@ export default function ChannelsPage() {
                   allMasters={channelGraph}
                   onAddChannel={handleAddChannel}
                   onSetPrimary={handleSetPrimary}
+                  onUnsetPrimary={handleUnsetPrimary}
                   onRemoveChannel={handleRemoveChannel}
                   onReloadGraph={loadChannelGraph}
                 />
@@ -1300,11 +1318,12 @@ interface MasterDetailViewProps {
   allMasters: MasterNode[];
   onAddChannel: (masterConnectionId?: string) => void;
   onSetPrimary: (connectionId: string, channelName: string) => void;
+  onUnsetPrimary: (connectionId: string, channelName: string) => void;
   onRemoveChannel: (connectionId: string, channelName: string) => void;
   onReloadGraph: () => Promise<void>;
 }
 
-function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, onSetPrimary, onRemoveChannel, onReloadGraph }: MasterDetailViewProps) {
+function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, onSetPrimary, onUnsetPrimary, onRemoveChannel, onReloadGraph }: MasterDetailViewProps) {
   const { theme } = useTheme();
   const [isPausing, setIsPausing] = useState(false);
   const status = master.status.status;
@@ -1411,13 +1430,21 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
               </div>
             </label>
 
-            {!master.is_primary && (
+            {!master.is_primary ? (
               <button
                 onClick={() => onSetPrimary(master.connection_id, master.channel_name)}
                 className={`inline-flex items-center gap-2 ${cardClass} ${textClass} border ${borderClass} px-4 py-2 rounded-full text-sm font-normal hover:${cardClass}Alt transition-colors`}
               >
                 <Star className="h-4 w-4" />
                 Set as Primary
+              </button>
+            ) : (
+              <button
+                onClick={() => onUnsetPrimary(master.connection_id, master.channel_name)}
+                className={`inline-flex items-center gap-2 bg-amber-900/20 text-amber-400 border border-amber-800/50 px-4 py-2 rounded-full text-sm font-normal hover:bg-amber-900/30 transition-colors`}
+              >
+                <Star className="h-4 w-4 fill-current" />
+                Unset Primary
               </button>
             )}
             <button

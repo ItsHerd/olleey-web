@@ -680,6 +680,23 @@ export const youtubeAPI = {
 
     return await response.json();
   },
+
+  /**
+   * Unset primary YouTube connection
+   * DELETE /youtube/connections/{connection_id}/unset-primary
+   */
+  unsetPrimaryConnection: async (connectionId: string): Promise<{ message: string }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/youtube/connections/${connectionId}/unset-primary`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to unset primary connection");
+    }
+
+    return await response.json();
+  },
 };
 
 /**
