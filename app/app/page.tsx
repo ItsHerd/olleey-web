@@ -7,12 +7,11 @@ import ContentPage from "../ContentPage";
 import ChannelsPage from "../ChannelsPage";
 import AccountsPage from "../AccountsPage";
 import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import LanguagesPage from "../LanguagesPage";
 import JobsPage from "../JobsPage";
 import NotificationsPage from "../NotificationsPage";
-import AnalyticsPage from "../AnalyticsPage";
 import SettingsPage from "../SettingsPage";
-import OnboardingPage from "../OnboardingPage";
 import LoginPage from "../LoginPage";
 import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
@@ -254,12 +253,14 @@ function AppContent() {
 
                     {/* Breadcrumb Header */}
                     <header className={`flex items-center h-14 px-4 border-b ${theme === 'light' ? 'border-gray-200 bg-white/50' : 'border-gray-800 bg-[#0f0f0f]/50'} shrink-0 gap-2 backdrop-blur-sm z-10`}>
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`p-2 rounded-md hover:${theme === 'light' ? 'bg-gray-100' : 'bg-white/10'}`}
+                            className={`h-9 w-9 ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10' : ''}`}
                         >
-                            <PanelLeft className={`h-4 w-4 ${textClass} transition-colors ${isSidebarOpen ? 'text-olleey-yellow' : ''}`} />
-                        </button>
+                            <PanelLeft className="h-4 w-4" />
+                        </Button>
 
                         <div className={`h-4 w-[1px] ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-800'} mx-1`} />
 
@@ -353,41 +354,60 @@ function AppContent() {
                         </div>
 
                         <div className="ml-auto flex items-center gap-1 sm:gap-2">
+                            {/* Add Channel Button */}
+                            <Button
+                                variant="ghost"
+                                onClick={() => router.push("/connections/add")}
+                                className="gap-2 px-3"
+                                title="Add Channel"
+                            >
+                                <div className="relative">
+                                    <Youtube className="h-4 w-4 flex-shrink-0" />
+                                    <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full w-2 h-2 border border-white dark:border-black flex items-center justify-center">
+                                        <Plus className="h-1.5 w-1.5 text-white" />
+                                    </div>
+                                </div>
+                                <span className="hidden md:inline text-sm font-medium">Add Channel</span>
+                            </Button>
+
                             {/* Notifications Link */}
-                            <button
+                            <Button
+                                variant={currentPage === "Notifications" ? "secondary" : "ghost"}
                                 onClick={() => setCurrentPage("Notifications")}
-                                className={`flex items-center gap-2 p-2 rounded-md transition-all duration-200 ${currentPage === "Notifications" ? (theme === 'light' ? 'bg-amber-50 text-amber-600 pr-3' : 'bg-amber-500/10 text-amber-400 pr-3') : `hover:${theme === 'light' ? 'bg-gray-100' : 'bg-white/10'} ${textClass}`}`}
+                                className={`gap-2 p-2 ${currentPage === "Notifications" ? 'text-olleey-yellow' : ''}`}
                                 title="Notifications"
                             >
                                 <Bell className="h-4 w-4 flex-shrink-0" />
                                 <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-200 ${currentPage === "Notifications" ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
                                     Notifications
                                 </span>
-                            </button>
+                            </Button>
 
                             {/* Settings Link */}
-                            <button
+                            <Button
+                                variant={currentPage === "Settings" ? "secondary" : "ghost"}
                                 onClick={() => setCurrentPage("Settings")}
-                                className={`flex items-center gap-2 p-2 rounded-md transition-all duration-200 ${currentPage === "Settings" ? (theme === 'light' ? 'bg-amber-50 text-amber-600 pr-3' : 'bg-amber-500/10 text-amber-400 pr-3') : `hover:${theme === 'light' ? 'bg-gray-100' : 'bg-white/10'} ${textClass}`}`}
+                                className={`gap-2 p-2 ${currentPage === "Settings" ? 'text-olleey-yellow' : ''}`}
                                 title="Settings"
                             >
                                 <Settings className="h-4 w-4 flex-shrink-0" />
                                 <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-200 ${currentPage === "Settings" ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
                                     Settings
                                 </span>
-                            </button>
+                            </Button>
 
                             {/* Account/User Link */}
-                            <button
+                            <Button
+                                variant={currentPage === "Accounts" ? "secondary" : "ghost"}
                                 onClick={() => setCurrentPage("Accounts")}
-                                className={`flex items-center gap-2 p-2 rounded-md transition-all duration-200 ${currentPage === "Accounts" ? (theme === 'light' ? 'bg-amber-50 text-amber-600 pr-3' : 'bg-amber-500/10 text-amber-400 pr-3') : `hover:${theme === 'light' ? 'bg-gray-100' : 'bg-white/10'} ${textClass}`}`}
+                                className={`gap-2 p-2 ${currentPage === "Accounts" ? 'text-olleey-yellow' : ''}`}
                                 title="Account"
                             >
                                 <User className="h-4 w-4 flex-shrink-0" />
                                 <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-200 ${currentPage === "Accounts" ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
                                     Account
                                 </span>
-                            </button>
+                            </Button>
                         </div>
                     </header>
 

@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { X, Loader2, CheckCircle, AlertCircle, Play, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/useTheme";
-import { jobsAPI, type LocalizedVideo } from "@/lib/api";
+import { StatusChip } from "@/components/ui/StatusChip";
+import { jobsAPI, videosAPI, channelsAPI, type LocalizedVideo, type Job, type Video, type LanguageChannel } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
 interface ReviewJobModalProps {
@@ -28,6 +29,9 @@ export function ReviewJobModal({
 }: ReviewJobModalProps) {
     const { theme } = useTheme();
     const [videos, setVideos] = useState<LocalizedVideo[]>([]);
+    const [job, setJob] = useState<Job | null>(null);
+    const [sourceVideo, setSourceVideo] = useState<Video | null>(null);
+    const [languageChannels, setLanguageChannels] = useState<LanguageChannel[]>([]);
     const [loading, setLoading] = useState(false);
     const [approving, setApproving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -47,6 +51,8 @@ export function ReviewJobModal({
             loadVideos(jobId);
         } else {
             setVideos([]);
+            setJob(null);
+            setSourceVideo(null);
             setError(null);
             setSuccess(false);
         }
@@ -56,11 +62,24 @@ export function ReviewJobModal({
         try {
             setLoading(true);
             setError(null);
-            const data = await jobsAPI.getJobVideos(id);
-            setVideos(data);
+
+            // Fetch job info first to get source_video_id
+            const jobData = await jobsAPI.getJobById(id);
+            setJob(jobData);
+
+            // Fetch everything else in parallel
+            const [videoData, sourceVideoData, channelsData] = await Promise.all([
+                jobsAPI.getJobVideos(id),
+                videosAPI.getVideoById(jobData.source_video_id),
+                channelsAPI.listChannels(jobData.project_id)
+            ]);
+
+            setVideos(videoData);
+            setSourceVideo(sourceVideoData);
+            setLanguageChannels(channelsData);
         } catch (err: any) {
-            logger.error("ReviewJobModal", "Failed to load videos", err);
-            setError("Failed to load video previews.");
+            logger.error("ReviewJobModal", "Failed to load job details", err);
+            setError("Failed to load job details and previews.");
         } finally {
             setLoading(false);
         }
@@ -104,13 +123,30 @@ export function ReviewJobModal({
             >
                 {/* Header */}
                 <div className={`flex-shrink-0 ${cardClass} border-b ${borderClass} px-6 py-4 flex items-center justify-between`}>
-                    <div>
+                    <div className="flex-1">
                         <h2 className={`text-xl font-semibold ${textClass}`}>
                             Review & Approve
                         </h2>
-                        <p className={`text-sm ${textSecondaryClass} mt-1`}>
-                            Review the localized videos before publishing
-                        </p>
+                        <div className="flex items-center gap-4 mt-1">
+                            <div className="flex items-center gap-1.5">
+                                <span className={`text-[10px] uppercase font-bold tracking-widest ${textSecondaryClass}`}>Source:</span>
+                                {sourceVideo?.channel_id ? (
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-4 h-4 rounded-full bg-olleey-yellow flex items-center justify-center text-[10px] font-bold">
+                                            {sourceVideo.channel_name?.charAt(0)}
+                                        </div>
+                                        <span className={`text-sm font-medium ${textClass}`}>{sourceVideo.channel_name}</span>
+                                    </div>
+                                ) : (
+                                    <span className={`text-sm font-medium ${textClass}`}>Manual Upload</span>
+                                )}
+                            </div>
+                            <div className="w-px h-3 bg-white/10" />
+                            <div className="flex items-center gap-1.5">
+                                <span className={`text-[10px] uppercase font-bold tracking-widest ${textSecondaryClass}`}>ID:</span>
+                                <span className={`text-sm font-mono ${textClass}`}>{jobId?.slice(0, 8)}</span>
+                            </div>
+                        </div>
                     </div>
                     <button
                         onClick={onClose}
@@ -139,70 +175,115 @@ export function ReviewJobModal({
                             <p className={textSecondaryClass}>No videos found for this job.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {videos.map((video) => (
-                                <div key={video.id} className={`${cardAltClass} rounded-xl overflow-hidden border ${borderClass}`}>
-                                    {/* Video Player */}
-                                    <div className="aspect-video bg-black relative group">
-                                        {video.storage_url ? (
-                                            <video
-                                                controls
-                                                className="w-full h-full"
-                                                src={video.storage_url}
-                                                poster={video.thumbnail_url}
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-white/50">
-                                                <p>Video not available</p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Info */}
-                                    <div className="p-4">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xl">
-                                                    {LANGUAGE_FLAGS[video.language_code] || "🌍"}
-                                                </span>
-                                                <span className={`font-medium ${textClass} capitalize`}>
-                                                    {video.language_code}
-                                                </span>
-                                            </div>
-                                            <span className={`text-xs px-2 py-1 rounded-full ${video.status === 'ready' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}>
-                                                {video.status}
-                                            </span>
-                                        </div>
-
-                                        {/* Translated Metadata */}
-                                        <div className="space-y-3">
-                                            <div>
-                                                <p className={`text-xs uppercase tracking-wider ${textSecondaryClass} mb-1`}>Translated Title</p>
-                                                <p className={`text-sm ${textClass} font-medium line-clamp-2`}>
-                                                    {video.title || "No title available"}
-                                                </p>
-                                            </div>
-
-                                            {video.description && (
-                                                <div>
-                                                    <p className={`text-xs uppercase tracking-wider ${textSecondaryClass} mb-1`}>Description</p>
-                                                    <p className={`text-xs ${textSecondaryClass} line-clamp-3`}>
-                                                        {video.description}
+                        <div className="space-y-8">
+                            {/* Deployment Targets Summary */}
+                            <div className={`${cardAltClass} p-4 rounded-xl border ${borderClass} shadow-sm`}>
+                                <h3 className={`text-xs font-bold uppercase tracking-widest ${textSecondaryClass} mb-4 flex items-center gap-2`}>
+                                    <Globe2 className="h-3.5 w-3.5" />
+                                    Deployment Destinations
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {job?.target_languages.map(langCode => {
+                                        const channel = languageChannels.find(c => c.language_code === langCode);
+                                        return (
+                                            <div key={langCode} className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-xl">
+                                                    {LANGUAGE_FLAGS[langCode] || "🌍"}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className={`text-[10px] font-bold uppercase tracking-wider ${textSecondaryClass}`}>
+                                                        {langCode} channel
+                                                    </p>
+                                                    <p className={`text-sm font-medium ${textClass} truncate`}>
+                                                        {channel?.channel_name || `${langCode.toUpperCase()} Content`}
                                                     </p>
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            ))}
+                            </div>
+
+                            {/* Video Previews */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {videos.map((video) => {
+                                    const targetChannel = languageChannels.find(c => c.language_code === video.language_code);
+
+                                    return (
+                                        <div key={video.id} className={`${cardAltClass} rounded-2xl overflow-hidden border ${borderClass} flex flex-col shadow-lg hover:shadow-xl transition-all duration-300`}>
+                                            {/* Video Player */}
+                                            <div className="aspect-video bg-black relative group">
+                                                {video.storage_url ? (
+                                                    <video
+                                                        controls
+                                                        className="w-full h-full"
+                                                        src={video.storage_url}
+                                                        poster={video.thumbnail_url}
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-white/50">
+                                                        <Loader2 className="h-8 w-8 animate-spin" />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Info */}
+                                            <div className="p-5 flex-1 flex flex-col">
+                                                <div className="flex items-start justify-between mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-2xl shadow-inner">
+                                                            {LANGUAGE_FLAGS[video.language_code] || "🌍"}
+                                                        </div>
+                                                        <div>
+                                                            <h4 className={`font-bold ${textClass} capitalize`}>
+                                                                {video.language_code} Version
+                                                            </h4>
+                                                            <p className={`text-[10px] font-medium ${textSecondaryClass} flex items-center gap-1`}>
+                                                                To: <span className="text-olleey-yellow">{targetChannel?.channel_name || "Assigned Channel"}</span>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <StatusChip status={video.status === "ready" ? "completed" : "draft"} size="xs" />
+                                                </div>
+
+                                                {/* Translated Metadata */}
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <p className={`text-[10px] uppercase font-bold tracking-widest ${textSecondaryClass} mb-1.5`}>Translated Title</p>
+                                                        <p className={`text-sm ${textClass} font-medium leading-relaxed`}>
+                                                            {video.title || "No title available"}
+                                                        </p>
+                                                    </div>
+
+                                                    {video.description && (
+                                                        <div>
+                                                            <p className={`text-[10px] uppercase font-bold tracking-widest ${textSecondaryClass} mb-1.5`}>Description</p>
+                                                            <p className={`text-xs ${textSecondaryClass} line-clamp-2 leading-relaxed italic bg-white/5 p-2 rounded-lg`}>
+                                                                "{video.description}"
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
                 </div>
 
                 {/* Footer */}
                 <div className={`flex-shrink-0 ${cardClass} border-t ${borderClass} px-6 py-4 flex items-center justify-between`}>
-                    <p className={`text-sm ${textSecondaryClass}`}>
-                        {videos.length} videos ready using {videos.length} credits
+                    <p className={`text-sm ${textSecondaryClass} flex items-center gap-2`}>
+                        <div className="flex items-center -space-x-2">
+                            {job?.target_languages.map((lang, idx) => (
+                                <div key={idx} className="w-6 h-6 rounded-full border border-white/10 bg-black flex items-center justify-center text-xs" style={{ zIndex: 10 - idx }}>
+                                    {LANGUAGE_FLAGS[lang] || "🌍"}
+                                </div>
+                            ))}
+                        </div>
+                        <span className="font-medium ml-1">Deploying {videos.length} videos</span>
                     </p>
                     <div className="flex items-center gap-3">
                         <Button

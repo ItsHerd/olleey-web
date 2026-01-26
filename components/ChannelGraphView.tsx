@@ -16,6 +16,7 @@ import dagre from 'dagre';
 import { MasterNode } from '@/lib/api'; // Import your types
 import { useTheme } from '@/lib/useTheme'; // Your theme hook
 import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // --- 1. Custom Node Component (The Card) ---
 const ChannelNode = ({ data }: { data: any }) => {
@@ -122,7 +123,7 @@ export function ChannelGraphView({ masters, onAddConnection }: { masters: Master
                         label: lang.channel_name,
                         avatar: lang.channel_avatar_url,
                         type: 'satellite',
-                        subLabel: lang.language_codes?.join(', ') || 'Global'
+                        subLabel: lang.language_name || 'Global'
                     },
                     position: { x: 0, y: 0 },
                 });
@@ -160,13 +161,13 @@ export function ChannelGraphView({ masters, onAddConnection }: { masters: Master
                 >
                     <Background color={dotColor} gap={20} size={1} />
                     <Panel position="top-right" className="pr-[120px]">
-                        <button
+                        <Button
                             onClick={onAddConnection}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${theme === "light" ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-200"}`}
+                            className="gap-2"
                         >
                             <Plus className="h-4 w-4" />
                             Add Channel
-                        </button>
+                        </Button>
                     </Panel>
                 </ReactFlow>
             </div>

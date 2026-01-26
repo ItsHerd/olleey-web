@@ -10,11 +10,15 @@ export interface UseActiveJobsOptions {
 const ACTIVE_STATUSES = ['pending', 'downloading', 'processing', 'voice_cloning', 'lip_sync', 'uploading', 'waiting_approval', 'ready'];
 
 export function useActiveJobs(options: UseActiveJobsOptions = {}) {
-  // Options like interval are now ignored as we rely on SSE
-  const { jobs, isConnected, refetch } = useJobEvents();
+  // Use the refined connection state from useJobEvents
+  const { jobs, isConnected, isSseActive, isPollingActive, refetch } = useJobEvents();
 
   // Debug: Log all jobs passed to the hook
-  logger.debug("useActiveJobs", "Incoming jobs", { count: jobs.length, statuses: jobs.map(j => j.status) });
+  logger.debug("useActiveJobs", "Incoming jobs", {
+    count: jobs.length,
+    statuses: jobs.map(j => j.status),
+    connection: isSseActive ? "SSE" : isPollingActive ? "Polling" : "Disconnected"
+  });
 
   const activeJobs = jobs.filter(j => ACTIVE_STATUSES.includes(j.status));
   const completedJobs = jobs.filter(j => j.status === 'completed');
@@ -27,9 +31,11 @@ export function useActiveJobs(options: UseActiveJobsOptions = {}) {
     completedJobs,
     failedJobs,
     hasActiveJobs,
-    isLoading: !isConnected && jobs.length === 0, // Loading if not connected and no jobs yet
+    isLoading: !isConnected && jobs.length === 0,
     error: null,
     refetch,
-    isPolling: isConnected, // Map connected state to isPolling for consumers
+    isPolling: isConnected,
+    isSseActive,
+    isPollingActive
   };
 }

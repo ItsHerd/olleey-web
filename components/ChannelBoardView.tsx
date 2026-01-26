@@ -24,6 +24,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useTheme } from '@/lib/useTheme';
 import { MasterNode, LanguageChannel } from '@/lib/api';
 import { Plus, GripVertical, Youtube } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // --- Types ---
 type BoardItem = {
@@ -114,12 +115,14 @@ const Column = ({ column, onAdd }: { column: BoardColumn; onAdd: () => void }) =
                         {column.items.length}
                     </span>
                 </div>
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onAdd}
-                    className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 transition-colors"
+                    className="h-8 w-8 rounded-md"
                 >
                     <Plus size={16} />
-                </button>
+                </Button>
             </div>
 
             <SortableContext
@@ -167,7 +170,7 @@ export function ChannelBoardView({ masters, onAddConnection }: { masters: Master
                 type: 'satellite',
                 label: l.channel_name,
                 avatar: l.channel_avatar_url || '',
-                subLabel: l.language_codes?.join(', ') || 'Linked',
+                subLabel: l.language_name || 'Linked',
                 parentId: m.connection_id,
                 raw: l
             }))

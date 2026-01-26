@@ -3,29 +3,28 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { ManualProcessModal } from "@/components/ui/manual-process-modal";
-import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause, Sparkles, RefreshCw } from "lucide-react";
+import { LanguageBadge } from "@/components/ui/LanguageBadge";
+import { StatusChip } from "@/components/ui/StatusChip";
+import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause, Sparkles, RefreshCw, Filter, SlidersHorizontal, Check } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { youtubeAPI, jobsAPI, type MasterNode, type Video, type Job } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
+import { SmartVideoTable } from "@/components/SmartTable/SmartVideoTable";
+import { QuickCheckModal } from "@/components/SmartTable/QuickCheckModal";
+import { JobTerminalPanel } from "@/components/JobTerminalPanel";
+import { useToast } from "@/components/ui/use-toast";
+// Removed duplicate StatusChip import
+
 
 type ViewMode = "carousel" | "table";
 
-const LANGUAGE_OPTIONS = [
-  { code: "es", name: "Spanish", flag: "🇪🇸" },
-  { code: "fr", name: "French", flag: "🇫🇷" },
-  { code: "de", name: "German", flag: "🇩🇪" },
-  { code: "pt", name: "Portuguese", flag: "🇵🇹" },
-  { code: "ja", name: "Japanese", flag: "🇯🇵" },
-  { code: "ko", name: "Korean", flag: "🇰🇷" },
-  { code: "hi", name: "Hindi", flag: "🇮🇳" },
-  { code: "ar", name: "Arabic", flag: "🇸🇦" },
-  { code: "ru", name: "Russian", flag: "🇷🇺" },
-  { code: "it", name: "Italian", flag: "🇮🇹" },
-];
+
 
 type LocalizationStatus = "live" | "draft" | "processing" | "not-started";
 
@@ -34,6 +33,7 @@ interface LocalizationInfo {
   url?: string;
   views?: number;
   video_id?: string;
+  confidence?: number;
 }
 
 interface VideoWithLocalizations extends Video {
@@ -49,17 +49,40 @@ export default function ContentPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["es", "fr", "de", "pt", "ja"]);
   const [selectedChannelId, setSelectedChannelId] = useState<string>("");
+  const [videoTypeFilter, setVideoTypeFilter] = useState<"all" | "original" | "processed">("all");
   const [viewMode, setViewMode] = useState<ViewMode>("carousel");
-  const [activeTab, setActiveTab] = useState<"original" | "processed">("original");
-  const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [channelDropdownOpen, setChannelDropdownOpen] = useState(false);
+  const [videoTypeDropdownOpen, setVideoTypeDropdownOpen] = useState(false);
+  const [additionalFiltersOpen, setAdditionalFiltersOpen] = useState(false);
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
   const [latestJob, setLatestJob] = useState<Job | null>(null);
   const [latestJobLoading, setLatestJobLoading] = useState(false);
   const [isManualProcessModalOpen, setIsManualProcessModalOpen] = useState(false);
 
+  // Quick Check Modal State
+  const [quickCheckState, setQuickCheckState] = useState<{
+    isOpen: boolean;
+    videoId: string | null;
+    languageCode: string | null;
+  }>({ isOpen: false, videoId: null, languageCode: null });
+
+  // Processing state for optimistic updates
+  const [processingId, setProcessingId] = useState<string | undefined>(undefined);
+
+  // Terminal Panel State
+  const [terminalState, setTerminalState] = useState<{
+    isOpen: boolean;
+    jobId: string | null;
+    videoTitle?: string;
+    language?: string;
+  }>({ isOpen: false, jobId: null });
+
+
+
+
   const { selectedProject } = useProject();
-  const { dashboard, loading: dashboardLoading } = useDashboard();
+  const { dashboard, loading: dashboardLoading, refetch: refetchDashboard } = useDashboard();
+  const { toast } = useToast();
   // Pass channel_id to useVideos for server-side filtering and per-channel caching
   const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
     selectedChannelId
@@ -156,12 +179,70 @@ export default function ContentPage() {
     setChannelDropdownOpen(false);
   };
 
+  // Smart Table Handlers
+  const handlePreview = (langCode: string, videoId?: string) => {
+    if (!videoId) return;
+    setQuickCheckState({ isOpen: true, videoId, languageCode: langCode });
+  };
+
+  const handlePublish = async (langCode: string, videoId?: string) => {
+    if (!videoId) return;
+    setProcessingId(videoId);
+
+    // Simulate API call
+    setTimeout(() => {
+      // Here we would call the API to publish
+      logger.info("ContentPage", `Published ${langCode} version of video ${videoId}`);
+      setProcessingId(undefined);
+      alert(`Successfully published ${LANGUAGE_OPTIONS.find(l => l.code === langCode)?.name} version! (Simulation)`);
+    }, 1500);
+  };
+
+  const handleUpdateTitle = (langCode: string, videoId: string, newTitle: string) => {
+    logger.info("ContentPage", `Updated title for ${videoId} (${langCode}): ${newTitle}`);
+    // Here we would call API to update metadata
+  };
+
+  const handleApproveQuickCheck = async () => {
+    const { videoId, languageCode } = quickCheckState;
+    if (videoId && languageCode) {
+      try {
+        // In simulation mode, videoId is the jobId
+        await jobsAPI.approveJob(videoId);
+        toast("Approved! Publishing to channel...", "success");
+        refetchDashboard();
+      } catch (err) {
+        // Fallback or handle error (might not be a job ID)
+        handlePublish(languageCode, videoId);
+      }
+      setQuickCheckState({ ...quickCheckState, isOpen: false });
+    }
+  };
+
+  const handleFlagQuickCheck = (reason: string) => {
+    logger.info("ContentPage", `Flagged video ${quickCheckState.videoId} (${quickCheckState.languageCode}): ${reason}`);
+    setQuickCheckState({ ...quickCheckState, isOpen: false });
+    alert("Issue reported to AI engine. We'll regenerate this segment. (Simulation)");
+  };
+
+  const handleShowTerminal = (jobId: string, videoTitle: string, language: string) => {
+    setTerminalState({
+      isOpen: true,
+      jobId,
+      videoTitle,
+      language
+    });
+  };
+
   // Close language dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (languageDropdownOpen && !target.closest('.language-dropdown')) {
-        setLanguageDropdownOpen(false);
+      if (additionalFiltersOpen && !target.closest('.additional-filters-dropdown')) {
+        setAdditionalFiltersOpen(false);
+      }
+      if (videoTypeDropdownOpen && !target.closest('.video-type-dropdown')) {
+        setVideoTypeDropdownOpen(false);
       }
       if (channelDropdownOpen && !target.closest('.channel-dropdown')) {
         setChannelDropdownOpen(false);
@@ -170,11 +251,11 @@ export default function ContentPage() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [languageDropdownOpen, channelDropdownOpen]);
+  }, [channelDropdownOpen, videoTypeDropdownOpen, additionalFiltersOpen]);
 
   // Process videos with real localization data from backend
   const videosWithLocalizations: VideoWithLocalizations[] = useMemo(() => {
-    if (activeTab === "processed") {
+    if (videoTypeFilter === "processed") {
       // Processed videos view - show videos that are results of translation
       const processedVideos = videos.filter(v => v.video_type === "translated");
       return processedVideos.map(video => ({
@@ -185,16 +266,36 @@ export default function ContentPage() {
       }));
     }
 
-    // Original videos view (default)
-    const originalVideos = videos.filter(v => v.video_type !== "translated");
+    // Filter based on videoTypeFilter
+    let baseVideos = videos;
+    if (videoTypeFilter === "original") {
+      baseVideos = videos.filter(v => v.video_type !== "translated");
+    } else if (videoTypeFilter === "all") {
+      // For "all", we might still want to mostly show originals as parents?
+      // Or literally everything. Let's assume originals for now to maintain the smart table logic.
+      baseVideos = videos.filter(v => v.video_type !== "translated");
+    }
 
-    return originalVideos.map(video => {
+    return baseVideos.map(video => {
       const localizations: Record<string, LocalizationInfo> = {};
       const translatedLanguages = video.translated_languages || [];
 
       // Build localization status for each selected language
       selectedLanguages.forEach(lang => {
-        if (translatedLanguages.includes(lang)) {
+        // Check for active job first
+        const activeJob = (dashboard?.recent_jobs || []).find(j =>
+          j.source_video_id === video.video_id &&
+          j.target_languages.includes(lang) &&
+          j.status !== "completed" && j.status !== "failed"
+        );
+
+        if (activeJob) {
+          localizations[lang] = {
+            status: activeJob.status === "waiting_approval" ? "draft" : "processing",
+            video_id: activeJob.job_id,
+            confidence: 94, // Mock confidence
+          };
+        } else if (translatedLanguages.includes(lang)) {
           const translatedVideo = videos.find(v =>
             v.video_type === "translated" &&
             v.source_video_id === video.video_id &&
@@ -226,7 +327,7 @@ export default function ContentPage() {
         global_views,
       };
     });
-  }, [videos, selectedLanguages, activeTab]);
+  }, [videos, selectedLanguages, videoTypeFilter]);
 
   const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): LocalizationStatus => {
     const statuses = Object.values(localizations).map(l => l.status);
@@ -266,42 +367,7 @@ export default function ContentPage() {
     return filtered;
   }, [videosWithLocalizations, selectedChannelId, searchQuery]);
 
-  const getStatusBadge = (status: LocalizationStatus) => {
-    switch (status) {
-      case "live":
-        return {
-          icon: CheckCircle,
-          label: "Live",
-          color: "text-green-300",
-          bgColor: "bg-green-500/30",
-          borderColor: "border-green-500/50"
-        };
-      case "draft":
-        return {
-          icon: AlertCircle,
-          label: "Draft",
-          color: "text-yellow-300",
-          bgColor: "bg-yellow-500/30",
-          borderColor: "border-yellow-500/50"
-        };
-      case "processing":
-        return {
-          icon: Loader2,
-          label: "Processing",
-          color: "text-blue-300",
-          bgColor: "bg-blue-500/30",
-          borderColor: "border-blue-500/50"
-        };
-      case "not-started":
-        return {
-          icon: XCircle,
-          label: "Not Started",
-          color: "text-gray-300",
-          bgColor: "bg-gray-500/30",
-          borderColor: "border-gray-500/50"
-        };
-    }
-  };
+
 
   const formatDuration = (seconds?: number) => {
     if (!seconds) return "0:00";
@@ -337,27 +403,29 @@ export default function ContentPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={() => refetchVideos()}
                 disabled={videosLoading}
-                className={`p-2 rounded-lg border ${borderClass} ${textClass} hover:${cardClass}Alt transition-colors disabled:opacity-50`}
+                className="h-10 w-10"
                 title="Refresh"
               >
                 <RefreshCw className={`h-5 w-5 ${videosLoading ? "animate-spin" : ""}`} />
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setIsManualProcessModalOpen(true)}
-                className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all shadow-sm`}
+                className="gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 border-none shadow-sm h-10 px-4"
               >
                 <Play className="h-4 w-4" />
                 <span className="hidden sm:inline">Start Manual Process</span>
                 <span className="sm:hidden">Start</span>
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* No Processed Videos Yet - Show right after subtitle when applicable */}
-          {!videosLoading && activeTab === "original" && filteredVideos.length > 0 && (() => {
+          {!videosLoading && (videoTypeFilter === "all" || videoTypeFilter === "original") && filteredVideos.length > 0 && (() => {
             // Find the most recently processed video (has at least one live localization)
             const videosWithLive = filteredVideos.filter(video => {
               const localizations = video.localizations || {};
@@ -382,18 +450,17 @@ export default function ContentPage() {
                         <p className={`text-sm ${textSecondaryClass} mb-3`}>
                           Start dubbing your videos to see your latest processed content here
                         </p>
-                        <button
+                        <Button
                           onClick={() => {
-                            // Navigate to first video to start processing
                             if (filteredVideos[0]) {
                               router.push(`/content/${filteredVideos[0].video_id}`);
                             }
                           }}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all"
+                          className="gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 border-none shadow-sm"
                         >
                           <Sparkles className="h-4 w-4" />
                           Start Processing
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -422,152 +489,174 @@ export default function ContentPage() {
 
 
 
-          {/* Tabs for Original / Processed */}
-          <div className="flex items-center gap-6 mb-6 border-b border-border/50">
-            <button
-              onClick={() => setActiveTab("original")}
-              className={`pb-3 px-1 text-sm font-medium transition-all relative ${activeTab === "original"
-                ? `${textClass}`
-                : `${textSecondaryClass} hover:${textClass}`
-                }`}
-            >
-              Original Videos
-              {activeTab === "original" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-t-full" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab("processed")}
-              className={`pb-3 px-1 text-sm font-medium transition-all relative ${activeTab === "processed"
-                ? `${textClass}`
-                : `${textSecondaryClass} hover:${textClass}`
-                }`}
-            >
-              Processed Videos
-              {activeTab === "processed" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-t-full" />
-              )}
-            </button>
-          </div>
 
-          {/* Search Bar & View Toggle - Combined Row */}
-          <div className="flex items-center justify-between gap-3 mb-4">
-            {/* Channel Selector */}
+
+          {/* Search Bar & Primary Filters - Reorganized Row */}
+          <div className="flex items-center gap-3 mb-6">
+            {/* 1. Search Bar */}
+            <div className="flex-1">
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Search your library..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`w-full ${cardClass} ${borderClass} ${textClass} placeholder:${textSecondaryClass} text-sm h-11 pl-10 rounded-xl shadow-sm focus:ring-olleey-yellow`}
+                />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                  <Eye className={`h-4 w-4 ${textSecondaryClass}`} />
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Channel Selector */}
             {dashboard?.youtube_connections && dashboard.youtube_connections.length > 0 && (
-              <div className="relative channel-dropdown z-10 w-full sm:w-auto">
-                <button
+              <div className="relative channel-dropdown">
+                <Button
+                  variant="outline"
                   onClick={() => setChannelDropdownOpen(!channelDropdownOpen)}
-                  className={`w-full sm:w-auto flex items-center gap-3 ${cardClass} border ${borderClass} ${textClass} rounded-lg px-3 py-2 text-sm hover:${cardClass}Alt cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors h-10`}
+                  className={`flex items-center gap-2 rounded-xl px-4 h-11 text-sm shadow-sm ${channelDropdownOpen ? "border-olleey-yellow ring-1 ring-olleey-yellow/20" : ""}`}
                 >
                   {selectedChannelId && getChannelAvatar(selectedChannelId) ? (
                     <img
                       src={getChannelAvatar(selectedChannelId)}
                       alt="Channel"
-                      className="w-5 h-5 rounded-full object-cover"
+                      className="w-5 h-5 rounded-full object-cover border border-white/10"
                     />
                   ) : (
-                    <div className={`w-5 h-5 rounded-full ${cardClass}Alt flex items-center justify-center`}>
-                      <Youtube className={`h-3 w-3 ${textClass}Secondary`} />
-                    </div>
+                    <Youtube className={`h-4 w-4 ${textSecondaryClass}`} />
                   )}
-                  <span className="flex-1 text-left truncate max-w-[150px]">
-                    {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name ||
-                      dashboard.youtube_connections.find(c => c.is_primary)?.youtube_channel_name ||
-                      "Select Channel"}
+                  <span className="font-medium truncate max-w-[120px]">
+                    {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name || "Channel"}
                   </span>
-                  <ChevronDown className={`h-4 w-4 ${textClass}Secondary transition-transform ${channelDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
+                  <ChevronDown className={`h-4 w-4 ${textSecondaryClass} transition-transform ${channelDropdownOpen ? 'rotate-180' : ''}`} />
+                </Button>
 
-                {/* Channel Dropdown */}
                 {channelDropdownOpen && (
-                  <div className={`absolute top-full left-0 mt-1 w-64 ${cardClass} border ${borderClass} rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto`}>
-                    <div className="py-1">
-                      {dashboard.youtube_connections.map((channel) => {
-                        const avatarUrl = getChannelAvatar(channel.youtube_channel_id);
-                        const isSelected = channel.youtube_channel_id === selectedChannelId;
-
-                        return (
-                          <button
-                            key={channel.youtube_channel_id}
-                            onClick={() => {
-                              handleChannelSelect(channel.youtube_channel_id);
-                            }}
-                            className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm transition-colors ${isSelected
-                              ? `${cardClass}Alt ${textClass}`
-                              : `${textClass}Secondary hover:${cardClass}Alt hover:${textClass}`
-                              }`}
-                          >
-                            {avatarUrl ? (
-                              <img
-                                src={avatarUrl}
-                                alt={channel.youtube_channel_name}
-                                className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-                              />
-                            ) : (
-                              <div className={`w-6 h-6 rounded-full ${cardClass}Alt flex items-center justify-center flex-shrink-0`}>
-                                <Youtube className={`h-4 w-4 ${textClass}Secondary`} />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="truncate">{channel.youtube_channel_name || channel.youtube_channel_id}</span>
-                                {channel.is_primary && (
-                                  <span className="text-xs bg-white text-black px-1.5 py-0.5 rounded-full flex-shrink-0">
-                                    Primary
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            {isSelected && (
-                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })}
+                  <div className={`absolute top-full left-0 mt-2 w-72 ${cardClass} border ${borderClass} rounded-xl shadow-2xl z-50 overflow-hidden backdrop-blur-md`}>
+                    <div className="p-1 focus:outline-none">
+                      {dashboard.youtube_connections.map((channel) => (
+                        <Button
+                          key={channel.youtube_channel_id}
+                          variant={channel.youtube_channel_id === selectedChannelId ? "secondary" : "ghost"}
+                          onClick={() => handleChannelSelect(channel.youtube_channel_id)}
+                          className="w-full flex items-center justify-start gap-3 px-3 py-6 text-sm rounded-lg"
+                        >
+                          <img src={getChannelAvatar(channel.youtube_channel_id)} className="w-6 h-6 rounded-full" />
+                          <span className="truncate">{channel.youtube_channel_name}</span>
+                          {channel.youtube_channel_id === selectedChannelId && <Check className="h-4 w-4 ml-auto text-olleey-yellow" />}
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Search Bar - Left Side */}
-            <div className="flex-1 max-w-md">
-              <Input
-                type="text"
-                placeholder="Search videos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full ${cardClass} ${borderClass} ${textClass} placeholder:${textSecondaryClass} text-sm h-10`}
+            {/* 3. Video Type Selector */}
+            <div className="relative video-type-dropdown">
+              <StatusChip
+                status={videoTypeFilter === "all" ? "queued" : videoTypeFilter === "processed" ? "translated" : "original"}
+                label={videoTypeFilter === "all" ? "All Videos" : videoTypeFilter === "original" ? "Original" : "Processed"}
+                onClick={() => setVideoTypeDropdownOpen(!videoTypeDropdownOpen)}
+                className="h-11 shadow-sm px-4"
               />
+
+              {videoTypeDropdownOpen && (
+                <div className={`absolute top-full left-0 mt-2 w-48 ${cardClass} border ${borderClass} rounded-xl shadow-2xl z-50 overflow-hidden`}>
+                  <div className="p-1">
+                    {[
+                      { id: "all", label: "All Videos", status: "queued" },
+                      { id: "original", label: "Original Videos", status: "original" },
+                      { id: "processed", label: "Processed Videos", status: "translated" }
+                    ].map((type) => (
+                      <button
+                        key={type.id}
+                        onClick={() => { setVideoTypeFilter(type.id as any); setVideoTypeDropdownOpen(false); }}
+                        className={`w-full flex items-center px-1 py-1 rounded-lg transition-colors ${videoTypeFilter === type.id ? `${cardAltClass}` : `hover:${cardAltClass}`}`}
+                      >
+                        <StatusChip
+                          status={type.status}
+                          label={type.label}
+                          size="sm"
+                          variant={videoTypeFilter === type.id ? "solid" : "light"}
+                          className="w-full border-none shadow-none"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* View Mode Toggle - Right Side */}
-            <div className={`flex items-center gap-1 ${cardClass} border ${borderClass} rounded-lg p-1`}>
-              <button
+            {/* 4. Additional Filters Dropdown */}
+            <div className="relative additional-filters-dropdown">
+              <Button
+                variant="outline"
+                onClick={() => setAdditionalFiltersOpen(!additionalFiltersOpen)}
+                className={`flex items-center gap-2 rounded-xl px-4 h-11 text-sm shadow-sm ${additionalFiltersOpen ? "border-olleey-yellow ring-1 ring-olleey-yellow/20" : ""}`}
+              >
+                <SlidersHorizontal className={`h-4 w-4 ${additionalFiltersOpen ? "text-olleey-yellow" : textSecondaryClass}`} />
+                <span className="font-medium">Filters</span>
+                {selectedLanguages.length > 0 && (
+                  <span className="ml-1 bg-olleey-yellow text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {selectedLanguages.length}
+                  </span>
+                )}
+              </Button>
+
+              {additionalFiltersOpen && (
+                <div className={`absolute top-full right-0 mt-2 w-80 ${cardClass} border ${borderClass} rounded-2xl shadow-2xl z-50 p-5 backdrop-blur-md`}>
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className={`text-xs font-bold uppercase tracking-widest ${textSecondaryClass} mb-3`}>Target Languages</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        {LANGUAGE_OPTIONS.map((lang) => (
+                          <LanguageBadge
+                            key={lang.code}
+                            flag={lang.flag}
+                            name={lang.name}
+                            isSelected={selectedLanguages.includes(lang.code)}
+                            onClick={() => {
+                              setSelectedLanguages(prev =>
+                                prev.includes(lang.code)
+                                  ? prev.filter(c => c !== lang.code)
+                                  : [...prev, lang.code]
+                              );
+                            }}
+                            size="sm"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 5. View Mode Buttons */}
+            <div className={`flex items-center gap-1 ${cardClass} border ${borderClass} rounded-xl p-1 shadow-sm`}>
+              <Button
+                variant={viewMode === "carousel" ? "default" : "ghost"}
+                size="icon"
                 onClick={() => setViewMode("carousel")}
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm font-normal transition-colors ${viewMode === "carousel"
-                  ? "bg-white text-black"
-                  : `${textSecondaryClass} hover:${textClass}`
-                  }`}
+                className="h-9 w-9"
               >
-                <Grid3x3 className="h-4 w-4" />
-                Gallery
-              </button>
-              <button
+                <Grid3x3 className="h-5 w-5" />
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "default" : "ghost"}
+                size="icon"
                 onClick={() => setViewMode("table")}
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm font-normal transition-colors ${viewMode === "table"
-                  ? "bg-white text-black"
-                  : `${textSecondaryClass} hover:${textClass}`
-                  }`}
+                className="h-9 w-9"
               >
-                <List className="h-4 w-4" />
-                Table
-              </button>
+                <List className="h-5 w-5" />
+              </Button>
             </div>
           </div>
 
           {/* Latest Video Processed Card - Only for Original Tab */}
-          {!videosLoading && activeTab === "original" && filteredVideos.length > 0 && (() => {
+          {!videosLoading && (videoTypeFilter === "all" || videoTypeFilter === "original") && filteredVideos.length > 0 && (() => {
             // Find the most recently processed video (has at least one live localization)
             const videosWithLive = filteredVideos.filter(video => {
               const localizations = video.localizations || {};
@@ -686,214 +775,16 @@ export default function ContentPage() {
                 </p>
               </div>
             ) : viewMode === "table" ? (
-              /* Table View */
-              <div className={`${cardClass} rounded-xl overflow-hidden`}>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className={`${bgClass}`}>
-                      <tr className="border-b border-border/50">
-                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Video</th>
-                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Status</th>
-                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Processing</th>
-                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Languages</th>
-                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Channels</th>
-                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Progress</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredVideos.map((video, index) => {
-                        const localizations = video.localizations || {};
-                        const completedCount = Object.values(localizations).filter(l => l.status === "live").length;
-                        const totalCount = selectedLanguages.length;
-                        const overallStatus = getOverallVideoStatus(localizations);
-                        const overallBadge = getStatusBadge(overallStatus);
-
-                        // Get live language flags for display
-                        const liveLanguages = selectedLanguages
-                          .filter(langCode => localizations[langCode]?.status === "live")
-                          .map(langCode => LANGUAGE_OPTIONS.find(l => l.code === langCode))
-                          .filter(Boolean);
-
-                        // Calculate target channels based on active localizations
-                        const targetChannels = (() => {
-                          const channels: { id: string; name: string; avatar?: string }[] = [];
-                          // Get all languages that have any activity (not just live)
-                          const activeLangCodes = Object.entries(localizations)
-                            .filter(([_, loc]) => loc.status !== "not-started")
-                            .map(([code]) => code);
-
-                          if (activeLangCodes.length === 0) return [];
-
-                          channelGraph.forEach(master => {
-                            master.language_channels.forEach(channel => {
-                              // Check if this channel supports any of the active languages
-                              const hasOverlap = channel.language_codes?.some(code => activeLangCodes.includes(code));
-                              if (hasOverlap) {
-                                if (!channels.some(c => c.id === channel.channel_id)) {
-                                  channels.push({
-                                    id: channel.channel_id,
-                                    name: channel.channel_name,
-                                    avatar: channel.channel_avatar_url
-                                  });
-                                }
-                              }
-                            });
-                          });
-                          return channels;
-                        })();
-
-                        return (
-                          <tr
-                            key={video.video_id}
-                            onClick={() => router.push(`/content/${video.video_id}`)}
-                            className={`hover:bg-white/5 cursor-pointer transition-colors ${index !== filteredVideos.length - 1 ? 'border-b border-border/30' : ''}`}
-                          >
-                            {/* Video Column */}
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-3">
-                                <div className={`relative w-24 h-14 flex-shrink-0 rounded-md overflow-hidden ${cardClass}Alt`}>
-                                  {video.thumbnail_url ? (
-                                    <img
-                                      src={video.thumbnail_url}
-                                      alt={video.title}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                      <Play className={`h-6 w-6 ${textSecondaryClass}`} />
-                                    </div>
-                                  )}
-                                  <div className={`absolute bottom-0.5 right-0.5 ${bgClass}/90 ${textClass} text-[10px] px-1 py-0.5 rounded`}>
-                                    {formatDuration(video.duration)}
-                                  </div>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h3 className={`font-medium ${textClass} text-sm mb-0.5 line-clamp-1`}>
-                                    {video.title}
-                                  </h3>
-                                  <p className={`text-xs ${textSecondaryClass}`}>{video.channel_name}</p>
-                                </div>
-                              </div>
-                            </td>
-
-                            {/* Status Column */}
-                            <td className="px-4 py-3">
-                              <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold ${overallBadge.bgColor} ${overallBadge.color} border-2 ${overallBadge.borderColor}`}>
-                                <overallBadge.icon className="h-3.5 w-3.5" />
-                                {overallBadge.label}
-                              </span>
-                            </td>
-
-                            {/* Processing Column - Show active processing languages */}
-                            <td className="px-4 py-3">
-                              {(() => {
-                                const processingLanguages = Object.entries(localizations)
-                                  .filter(([_, loc]) => loc.status === "processing")
-                                  .map(([code]) => LANGUAGE_OPTIONS.find(l => l.code === code))
-                                  .filter(Boolean);
-
-                                if (processingLanguages.length === 0) {
-                                  return <span className={`text-xs ${textSecondaryClass}`}>—</span>;
-                                }
-
-                                return (
-                                  <div className="flex items-center gap-2">
-                                    <Loader2 className="h-3.5 w-3.5 text-blue-500 animate-spin" />
-                                    <div className="flex items-center gap-1">
-                                      {processingLanguages.slice(0, 3).map((lang, idx) => (
-                                        <span key={idx} className="text-sm" title={lang?.name}>
-                                          {lang?.flag}
-                                        </span>
-                                      ))}
-                                      {processingLanguages.length > 3 && (
-                                        <span className={`text-xs ${textSecondaryClass}`}>
-                                          +{processingLanguages.length - 3}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })()}
-                            </td>
-
-                            {/* Languages Column - Show 2 avatars + count */}
-                            <td className="px-4 py-3">
-                              <div className="flex items-center -space-x-2">
-                                {liveLanguages.slice(0, 2).map((lang, idx) => (
-                                  <div
-                                    key={lang?.code || idx}
-                                    className={`relative flex items-center justify-center w-7 h-7 rounded-full border-2 border-green-500/50 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm`}
-                                    title={lang?.name}
-                                    style={{ zIndex: 2 - idx }}
-                                  >
-                                    <span className="text-sm">{lang?.flag}</span>
-                                  </div>
-                                ))}
-                                {liveLanguages.length > 2 && (
-                                  <div
-                                    className={`relative flex items-center justify-center w-7 h-7 rounded-full border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/20 to-orange-500/20 backdrop-blur-sm`}
-                                    title={`${liveLanguages.length - 2} more languages`}
-                                  >
-                                    <span className="text-[10px] font-bold text-amber-400">+{liveLanguages.length - 2}</span>
-                                  </div>
-                                )}
-                                {liveLanguages.length === 0 && (
-                                  <span className={`text-xs ${textSecondaryClass} italic`}>None</span>
-                                )}
-                              </div>
-                            </td>
-
-                            {/* Channels Column */}
-                            <td className="px-4 py-3">
-                              <div className="flex items-center -space-x-2">
-                                {targetChannels.slice(0, 3).map((channel, idx) => (
-                                  <div
-                                    key={channel.id}
-                                    className={`relative w-6 h-6 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden cursor-help`}
-                                    title={channel.name}
-                                    style={{ zIndex: 3 - idx }}
-                                  >
-                                    {channel.avatar ? (
-                                      <img src={channel.avatar} alt={channel.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <div className={`w-full h-full ${cardClass}Alt flex items-center justify-center text-[8px] font-bold`}>
-                                        {channel.name.charAt(0)}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                                {targetChannels.length > 3 && (
-                                  <div className="relative w-6 h-6 rounded-full ring-2 ring-white dark:ring-gray-900 bg-gray-100 flex items-center justify-center text-[10px] text-gray-600 font-medium" style={{ zIndex: 0 }}>
-                                    +{targetChannels.length - 3}
-                                  </div>
-                                )}
-                                {targetChannels.length === 0 && (
-                                  <span className={`text-xs ${textSecondaryClass}`}>-</span>
-                                )}
-                              </div>
-                            </td>
-
-                            {/* Progress Column */}
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <div className={`flex-1 h-2 rounded-full bg-white/5 overflow-hidden`}>
-                                  <div
-                                    className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
-                                    style={{ width: `${(completedCount / totalCount) * 100}%` }}
-                                  />
-                                </div>
-                                <span className={`text-xs ${textSecondaryClass} font-medium w-10 text-right`}>
-                                  {completedCount}/{totalCount}
-                                </span>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              /* Smart Table View */
+              <SmartVideoTable
+                videos={filteredVideos}
+                languageOptions={LANGUAGE_OPTIONS}
+                onPreview={handlePreview}
+                onPublish={handlePublish}
+                onUpdateTitle={handleUpdateTitle}
+                isProcessingId={processingId}
+                onViewDetails={handleShowTerminal}
+              />
             ) : (
               /* Grid View (formerly Carousel) */
               <div className="w-full">
@@ -904,7 +795,6 @@ export default function ContentPage() {
                     const completedCount = Object.values(localizations).filter(l => l.status === "live").length;
                     const totalCount = selectedLanguages.length;
                     const overallStatus = getOverallVideoStatus(localizations);
-                    const overallBadge = getStatusBadge(overallStatus);
 
                     // Identify flags to show
                     const flags: string[] = [];
@@ -945,10 +835,7 @@ export default function ContentPage() {
                           </div>
                           {/* Status Badge */}
                           <div className="absolute top-2 left-2">
-                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-medium ${overallBadge.bgColor} ${overallBadge.borderColor} ${overallBadge.color}`}>
-                              <overallBadge.icon className="h-2.5 w-2.5" />
-                              {overallBadge.label}
-                            </span>
+                            <StatusChip status={overallStatus} size="xs" />
                           </div>
                         </div>
 
@@ -1014,32 +901,57 @@ export default function ContentPage() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      </div>
+          </div >
+        </div >
+      </div >
 
       {/* Manual Process Modal */}
-      <ManualProcessModal
+      < ManualProcessModal
         isOpen={isManualProcessModalOpen}
         onClose={() => setIsManualProcessModalOpen(false)}
         availableChannels={
-          channelGraph.map((masterNode) => {
-            // Collect all unique language codes from language channels
-            const languageCodes = masterNode.language_channels
-              .flatMap(lc => lc.language_codes || [])
-              .filter((code, index, self) => self.indexOf(code) === index); // Remove duplicates
-
-            return {
-              id: masterNode.channel_id,
-              name: masterNode.channel_name,
-              languages: languageCodes,
-            };
-          })
+          channelGraph.flatMap(master =>
+            master.language_channels.map(lc => ({
+              id: lc.channel_id,
+              name: lc.channel_name,
+              language_code: lc.language_code,
+              language_name: lc.language_name
+            }))
+          )
         }
         projectId={selectedProject?.id}
         onSuccess={() => {
           refetchVideos();
         }}
+      />
+      <QuickCheckModal
+        isOpen={quickCheckState.isOpen}
+        onClose={() => setQuickCheckState({ ...quickCheckState, isOpen: false })}
+        languageName={LANGUAGE_OPTIONS.find(l => l.code === quickCheckState.languageCode)?.name || ""}
+        originalVideoUrl={quickCheckState.videoId ? (
+          videos.find(v => v.video_id === quickCheckState.videoId)?.thumbnail_url ||
+          videos.find(v => {
+            const job = (dashboard?.recent_jobs || []).find(j => j.job_id === quickCheckState.videoId);
+            return job?.source_video_id === v.video_id;
+          })?.thumbnail_url
+        ) : undefined}
+        dubbedVideoUrl={quickCheckState.videoId ? (
+          videos.find(v => v.video_id === quickCheckState.videoId)?.thumbnail_url ||
+          videos.find(v => {
+            const job = (dashboard?.recent_jobs || []).find(j => j.job_id === quickCheckState.videoId);
+            return job?.source_video_id === v.video_id;
+          })?.thumbnail_url
+        ) : undefined}
+        onApprove={handleApproveQuickCheck}
+        onFlag={handleFlagQuickCheck}
+      />
+
+      <JobTerminalPanel
+        isOpen={terminalState.isOpen}
+        onClose={() => setTerminalState(prev => ({ ...prev, isOpen: false }))}
+        jobId={terminalState.jobId || ""}
+        videoTitle={terminalState.videoTitle}
+        language={terminalState.language}
       />
     </div >
   );

@@ -57,6 +57,8 @@ export interface YouTubeConnection {
   connection_id: string;
   youtube_channel_id: string;
   youtube_channel_name: string;
+  language_code?: string;
+  language_name?: string;
   is_primary: boolean;
   connected_at: string;
   connection_type?: "master" | "satellite"; // Type of connection
@@ -75,10 +77,8 @@ export interface LanguageChannel {
   channel_id: string;
   channel_name: string;
   channel_avatar_url?: string;
-  language_code?: string; // Optional for backward compatibility (first language)
-  language_name?: string; // Optional for backward compatibility (first language)
-  language_codes: string[]; // Array of all language codes (e.g., ["es", "fr", "de"])
-  language_names?: string[]; // Human-readable names (e.g., ["Spanish", "French", "German"])
+  language_code: string;
+  language_name: string;
   created_at: string;
   status: {
     status: "active" | "expired" | "restricted" | "disconnected";
@@ -94,6 +94,8 @@ export interface MasterNode {
   channel_id: string;
   channel_name: string;
   channel_avatar_url?: string;
+  language_code?: string;
+  language_name?: string;
   is_primary: boolean;
   is_paused?: boolean;
   connected_at: string;
@@ -697,6 +699,27 @@ export const youtubeAPI = {
 
     return await response.json();
   },
+
+  /**
+   * Update YouTube connection (e.g., change language)
+   * PATCH /youtube/connections/{connection_id}
+   */
+  updateConnection: async (connectionId: string, data: { language_code?: string }): Promise<YouTubeConnection> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/youtube/connections/${connectionId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to update connection");
+    }
+
+    return await response.json();
+  },
 };
 
 /**
@@ -990,8 +1013,7 @@ export const preferencesAPI = {
  */
 export interface CreateLanguageChannelRequest {
   channel_id: string; // YouTube channel ID
-  language_code?: string; // Single language (backward compatibility)
-  language_codes?: string[]; // Multiple languages
+  language_code: string;
   channel_name?: string;
   master_connection_id: string; // Master connection ID to associate with
   project_id: string;
@@ -1078,7 +1100,7 @@ export const channelsAPI = {
    * Update language channel
    * PATCH /channels/{channel_id}
    */
-  updateChannel: async (channelId: string, data: { channel_name?: string; is_paused?: boolean }): Promise<LanguageChannel> => {
+  updateChannel: async (channelId: string, data: { channel_name?: string; is_paused?: boolean; language_code?: string }): Promise<LanguageChannel> => {
     const response = await authenticatedFetch(`${API_BASE_URL}/channels/${channelId}`, {
       method: "PATCH",
       headers: {
@@ -1122,6 +1144,7 @@ export interface CreateJobRequest {
   source_channel_id: string;
   target_languages: string[];
   project_id: string;
+  is_simulation?: boolean;
 }
 
 export interface Job {

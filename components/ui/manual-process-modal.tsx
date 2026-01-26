@@ -5,28 +5,20 @@ import { X, Upload as UploadIcon, Loader2, CheckCircle, AlertCircle, Youtube, Li
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/lib/useTheme";
+import { useToast } from "@/components/ui/use-toast";
 import { jobsAPI, videosAPI, type Video } from "@/lib/api";
 import { logger } from "@/lib/logger";
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
 
-const LANGUAGE_OPTIONS = [
-    { code: "es", name: "Spanish", flag: "🇪🇸" },
-    { code: "fr", name: "French", flag: "🇫🇷" },
-    { code: "de", name: "German", flag: "🇩🇪" },
-    { code: "pt", name: "Portuguese", flag: "🇵🇹" },
-    { code: "ja", name: "Japanese", flag: "🇯🇵" },
-    { code: "ko", name: "Korean", flag: "🇰🇷" },
-    { code: "hi", name: "Hindi", flag: "🇮🇳" },
-    { code: "ar", name: "Arabic", flag: "🇸🇦" },
-    { code: "ru", name: "Russian", flag: "🇷🇺" },
-    { code: "it", name: "Italian", flag: "🇮🇹" },
-];
+
 
 type SourceTab = "channel" | "url" | "upload";
 
 interface ChannelWithLanguages {
     id: string;
     name: string;
-    languages?: string[]; // Language codes like ["es", "fr", "de"]
+    language_code?: string;
+    language_name?: string;
 }
 
 interface ManualProcessModalProps {
@@ -55,8 +47,11 @@ export function ManualProcessModal({
     const [isDragging, setIsDragging] = useState(false);
     const [selectedTargetChannel, setSelectedTargetChannel] = useState<string>(""); // Changed to single selection
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccessState, setIsSuccessState] = useState(false); // New state for Green Button
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const { toast } = useToast();
+    const [isVisible, setIsVisible] = useState(false); // For fade-in/out animation
 
     // Theme-aware classes
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -68,16 +63,24 @@ export function ManualProcessModal({
 
     // Reset form when modal opens/closes
     useEffect(() => {
-        if (!isOpen) {
-            setActiveTab("channel");
-            setSourceVideoUrl("");
-            setSourceChannelId("");
-            setSelectedVideoId("");
-            setChannelVideos([]);
-            setUploadedFile(null);
-            setSelectedTargetChannel("");
-            setError(null);
-            setSuccess(false);
+        if (isOpen) {
+            setIsVisible(true);
+        } else {
+            setIsVisible(false);
+            // Reset state after animation completes
+            const timeout = setTimeout(() => {
+                setActiveTab("channel");
+                setSourceVideoUrl("");
+                setSourceChannelId("");
+                setSelectedVideoId("");
+                setChannelVideos([]);
+                setUploadedFile(null);
+                setSelectedTargetChannel("");
+                setError(null);
+                setSuccess(false);
+                setIsSuccessState(false);
+            }, 300);
+            return () => clearTimeout(timeout);
         }
     }, [isOpen]);
 
@@ -231,35 +234,54 @@ export function ManualProcessModal({
                 source_channel_id: sourceChannelId,
                 target_languages: selectedTargetChannel === "none" ? [] : [selectedTargetChannel], // TODO: Backend should accept target_channel_ids
                 project_id: projectId,
+                is_simulation: true, // Enable backend simulation mode
             });
 
             logger.info("ManualProcessModal", "Job created successfully", response);
-            setSuccess(true);
 
-            // Close modal after a brief delay
+            // Phase 1: Success State (Green Check)
+            // Wait roughly 1 sec to show "Initializing" logic (simulated by network request time + small delay if fast)
             setTimeout(() => {
-                onClose();
-                if (onSuccess) {
-                    onSuccess();
-                }
-            }, 1500);
+                setIsSubmitting(false);
+                setIsSuccessState(true); // Turns button green
+
+                // Trigger Toast
+                const videoTitle = activeTab === "channel"
+                    ? channelVideos.find(v => v.video_id === videoId)?.title
+                    : "Video";
+                const targetLangName = selectedTargetChannel !== "none"
+                    ? availableChannels.find(c => c.id === selectedTargetChannel)?.language_name?.toUpperCase()
+                    : "Target";
+
+                toast(`🚀 Job Started: "${videoTitle}" is processing.`, "success");
+
+                // Delay before closing modal to let user see green check
+                setTimeout(() => {
+                    setIsVisible(false); // Trigger fade out
+                    setTimeout(() => {
+                        onClose();
+                        if (onSuccess) onSuccess();
+                    }, 300); // 300ms fade out
+                }, 1200);
+            }, 800); // Ensure at least 800ms of "Initializing..."
+
         } catch (err: any) {
             logger.error("ManualProcessModal", "Failed to create job", err);
             setError(err.message || "Failed to create job. Please try again.");
-        } finally {
             setIsSubmitting(false);
         }
     };
 
-    if (!isOpen) return null;
+    if (!isOpen && !isVisible) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
             />
+
 
             {/* Modal */}
             <div
@@ -531,8 +553,8 @@ export function ManualProcessModal({
                             {availableChannels
                                 .filter((channel) => channel.id !== sourceChannelId) // Don't show source channel
                                 .map((channel) => {
-                                    const languageDisplay = channel.languages && channel.languages.length > 0
-                                        ? ` (${channel.languages.join(', ').toUpperCase()})`
+                                    const languageDisplay = channel.language_name
+                                        ? ` (${channel.language_name})`
                                         : '';
                                     return (
                                         <option key={channel.id} value={channel.id}>
@@ -548,32 +570,28 @@ export function ManualProcessModal({
                         {/* Show selected channel's languages with flags */}
                         {selectedTargetChannel && (() => {
                             const selectedChannel = availableChannels.find(c => c.id === selectedTargetChannel);
-                            if (selectedChannel?.languages && selectedChannel.languages.length > 0) {
+                            if (selectedChannel?.language_code) {
+                                const langInfo = LANGUAGE_OPTIONS.find(l => l.code === selectedChannel.language_code);
                                 return (
                                     <div className={`mt-3 p-3 ${cardAltClass} border ${borderClass} rounded-lg`}>
                                         <p className={`text-xs font-medium ${textClass} mb-2`}>
                                             This channel will dub to:
                                         </p>
                                         <div className="flex flex-wrap gap-2">
-                                            {selectedChannel.languages.map((langCode) => {
-                                                const langInfo = LANGUAGE_OPTIONS.find(l => l.code === langCode);
-                                                return langInfo ? (
-                                                    <span
-                                                        key={langCode}
-                                                        className={`inline-flex items-center gap-1.5 px-2 py-1 ${cardClass} border ${borderClass} rounded text-xs ${textClass}`}
-                                                    >
-                                                        <span className="text-base">{langInfo.flag}</span>
-                                                        {langInfo.name}
-                                                    </span>
-                                                ) : (
-                                                    <span
-                                                        key={langCode}
-                                                        className={`inline-flex items-center gap-1.5 px-2 py-1 ${cardClass} border ${borderClass} rounded text-xs ${textClass}`}
-                                                    >
-                                                        {langCode.toUpperCase()}
-                                                    </span>
-                                                );
-                                            })}
+                                            {langInfo ? (
+                                                <span
+                                                    className={`inline-flex items-center gap-1.5 px-2 py-1 ${cardClass} border ${borderClass} rounded text-xs ${textClass}`}
+                                                >
+                                                    <span className="text-base">{langInfo.flag}</span>
+                                                    {langInfo.name}
+                                                </span>
+                                            ) : (
+                                                <span
+                                                    className={`inline-flex items-center gap-1.5 px-2 py-1 ${cardClass} border ${borderClass} rounded text-xs ${textClass}`}
+                                                >
+                                                    {selectedChannel.language_code.toUpperCase()}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -628,15 +646,18 @@ export function ManualProcessModal({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={isSubmitting || success}
-                            className="px-6 bg-black text-white hover:bg-gray-800"
+                            disabled={isSubmitting || isSuccessState}
+                            className={`px-6 transition-all duration-300 ${isSuccessState
+                                ? "bg-green-500 hover:bg-green-600 text-white min-w-[140px]"
+                                : "bg-black text-white hover:bg-gray-800"
+                                }`}
                         >
                             {isSubmitting ? (
                                 <>
                                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Creating Job...
+                                    Initializing...
                                 </>
-                            ) : success ? (
+                            ) : isSuccessState ? (
                                 <>
                                     <CheckCircle className="h-4 w-4 mr-2" />
                                     Success!

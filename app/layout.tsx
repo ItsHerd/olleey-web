@@ -4,6 +4,7 @@ import { Montserrat } from "next/font/google";
 import ThemeProviderWrapper from "./ThemeProviderWrapper";
 
 import { ReduxProvider } from "@/components/ReduxProvider";
+import { ToastProvider } from "@/components/ui/use-toast";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 
@@ -21,7 +22,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={montserrat.className}>
         <ReduxProvider>
-          <ThemeProviderWrapper>{children}</ThemeProviderWrapper>
+          <ThemeProviderWrapper>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </ThemeProviderWrapper>
         </ReduxProvider>
       </body>
     </html>

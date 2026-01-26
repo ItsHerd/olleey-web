@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { Button } from './button';
 
 // --- HELPER COMPONENTS (ICONS) ---
 
@@ -90,9 +91,15 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 <GlassInputWrapper>
                   <div className="relative">
                     <input name="password" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-3 flex items-center">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-3 flex items-center h-full hover:bg-transparent"
+                    >
                       {showPassword ? <EyeOff className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" /> : <Eye className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />}
-                    </button>
+                    </Button>
                   </div>
                 </GlassInputWrapper>
               </div>
@@ -105,9 +112,12 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 <a href="#" onClick={(e) => { e.preventDefault(); onResetPassword?.(); }} className="hover:underline text-violet-400 transition-colors">Reset password</a>
               </div>
 
-              <button type="submit" className="animate-element animate-delay-600 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+              <Button
+                type="submit"
+                className="animate-element animate-delay-600 w-full rounded-2xl py-7 font-medium"
+              >
                 Sign In
-              </button>
+              </Button>
             </form>
 
             <div className="animate-element animate-delay-700 relative flex items-center justify-center">
@@ -115,13 +125,14 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               <span className="px-4 text-sm text-muted-foreground bg-background absolute">Or continue with</span>
             </div>
 
-            <button
+            <Button
+              variant="outline"
               onClick={onGoogleSignIn}
-              className="animate-element animate-delay-800 w-full flex items-center justify-center gap-3 border border-border rounded-2xl py-4 hover:bg-secondary transition-all hover:shadow-lg active:scale-[0.98]"
+              className="animate-element animate-delay-800 w-full flex items-center justify-center gap-3 rounded-2xl py-7 hover:shadow-lg active:scale-[0.98]"
             >
               <GoogleIcon />
               <span className="font-medium">Continue with Google</span>
-            </button>
+            </Button>
 
             <p className="animate-element animate-delay-900 text-center text-sm text-muted-foreground">
               New to our platform? <a href="#" onClick={(e) => { e.preventDefault(); onCreateAccount?.(); }} className="text-violet-400 hover:underline transition-colors">Create Account</a>

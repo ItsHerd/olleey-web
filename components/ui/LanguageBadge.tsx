@@ -7,26 +7,38 @@ interface LanguageBadgeProps {
     isSelected?: boolean;
     onClick?: () => void;
     className?: string;
+    size?: "sm" | "md";
 }
 
-export function LanguageBadge({ flag, name, isSelected, onClick, className }: LanguageBadgeProps) {
+export function LanguageBadge({
+    flag,
+    name,
+    isSelected,
+    onClick,
+    className,
+    size = "md"
+}: LanguageBadgeProps) {
     return (
         <button
             onClick={onClick}
             className={cn(
-                "group flex items-center gap-2 pr-4 pl-1 py-1 rounded-full border transition-all duration-200",
+                "group flex items-center gap-2 rounded-full border transition-all duration-300 select-none shadow-sm",
+                size === "md" ? "h-10 pr-4 pl-1" : "h-8 pr-3 pl-1",
                 isSelected
-                    ? "bg-gray-100 border-gray-200 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700"
-                    : "bg-transparent border-transparent hover:bg-gray-50 dark:hover:bg-gray-900",
+                    ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400"
+                    : "bg-white border-slate-100 hover:border-slate-200 dark:bg-slate-900 dark:border-slate-800 text-slate-600 dark:text-slate-400",
                 className
             )}
         >
-            <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-700 shadow-sm flex items-center justify-center text-lg leading-none border border-gray-100 dark:border-gray-600 group-hover:scale-105 transition-transform">
+            <div className={cn(
+                "rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center leading-none border border-slate-100 dark:border-slate-700 group-hover:scale-105 transition-transform shrink-0",
+                size === "md" ? "w-8 h-8 text-lg" : "w-6 h-6 text-sm"
+            )}>
                 {flag}
             </div>
             <span className={cn(
-                "text-sm font-medium",
-                isSelected ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"
+                "font-bold truncate",
+                size === "md" ? "text-sm" : "text-xs"
             )}>
                 {name}
             </span>

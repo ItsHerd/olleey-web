@@ -9,29 +9,11 @@ import { useTheme } from "@/lib/useTheme";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChannelGraphView } from "@/components/ChannelGraphView";
 import { ChannelBoardView } from "@/components/ChannelBoardView";
+import { Button } from "@/components/ui/button";
 import { Loader2, Youtube, Plus, RefreshCw, CheckCircle, XCircle, AlertCircle, Radio, ChevronRight, ChevronDown, Video, Globe2, Pause, Play, Trash2, Star, List, GitGraph, Kanban } from "lucide-react";
+import { LANGUAGE_OPTIONS, getLanguageFlag } from "@/lib/languages";
 
 type ConnectionStatus = "active" | "expired" | "restricted" | "disconnected";
-
-const LANGUAGE_FLAGS: Record<string, string> = {
-  en: "🇺🇸",
-  es: "🇪🇸",
-  fr: "🇫🇷",
-  de: "🇩🇪",
-  pt: "🇵🇹",
-  ja: "🇯🇵",
-  ko: "🇰🇷",
-  hi: "🇮🇳",
-  ar: "🇸🇦",
-  ru: "🇷🇺",
-  it: "🇮🇹",
-  zh: "🇨🇳",
-};
-
-
-const getLanguageFlag = (langCode: string): string => {
-  return LANGUAGE_FLAGS[langCode] || "🌍";
-};
 
 type ChannelFilter = "all" | "primary" | "unassigned";
 
@@ -91,23 +73,10 @@ export default function ChannelsPage() {
     channel_name: string;
     master_connection_id: string;
   } | null>(null);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [selectedLanguageCode, setSelectedLanguageCode] = useState<string | null>(null);
   const [isCreatingLanguageChannel, setIsCreatingLanguageChannel] = useState(false);
 
-  // Language options for selection
-  const LANGUAGE_OPTIONS = [
-    { code: "es", name: "Spanish", flag: "🇪🇸" },
-    { code: "fr", name: "French", flag: "🇫🇷" },
-    { code: "de", name: "German", flag: "🇩🇪" },
-    { code: "pt", name: "Portuguese", flag: "🇵🇹" },
-    { code: "ja", name: "Japanese", flag: "🇯🇵" },
-    { code: "ko", name: "Korean", flag: "🇰🇷" },
-    { code: "hi", name: "Hindi", flag: "🇮🇳" },
-    { code: "ar", name: "Arabic", flag: "🇸🇦" },
-    { code: "ru", name: "Russian", flag: "🇷🇺" },
-    { code: "it", name: "Italian", flag: "🇮🇹" },
-    { code: "zh", name: "Chinese", flag: "🇨🇳" },
-  ];
+
 
   // Find unassigned channels (not primary, not assigned as satellite to any master)
   const unassignedChannels = (() => {
@@ -271,7 +240,8 @@ export default function ChannelsPage() {
               languageChannels: masterToSelect.language_channels.map(lc => ({
                 id: lc.id,
                 channel_name: lc.channel_name,
-                language_codes: lc.language_codes
+                language_code: lc.language_code,
+                language_name: lc.language_name,
               }))
             });
             // Clear the stored master ID
@@ -409,10 +379,10 @@ export default function ChannelsPage() {
   };
 
   const handleCreateLanguageChannel = async () => {
-    if (!pendingChannelData || selectedLanguages.length === 0) {
+    if (!pendingChannelData || !selectedLanguageCode) {
       logger.error("Channels", "Cannot create language channel: missing data", {
         pendingChannelData,
-        selectedLanguages
+        selectedLanguageCode
       });
       return;
     }
@@ -422,14 +392,14 @@ export default function ChannelsPage() {
 
       logger.info("Channels", "Creating language channel", {
         channelId: pendingChannelData.channel_id,
-        languageCodes: selectedLanguages,
+        languageCode: selectedLanguageCode,
         masterConnectionId: pendingChannelData.master_connection_id
       });
 
       // Create language channel via API
       await channelsAPI.createLanguageChannel({
         channel_id: pendingChannelData.channel_id,
-        language_codes: selectedLanguages, // Use language_codes for multi-language support
+        language_code: selectedLanguageCode || "",
         channel_name: pendingChannelData.channel_name,
         master_connection_id: pendingChannelData.master_connection_id,
         project_id: selectedProject?.id || "",
@@ -442,7 +412,7 @@ export default function ChannelsPage() {
 
       // Clear pending data
       setPendingChannelData(null);
-      setSelectedLanguages([]);
+      setSelectedLanguageCode(null);
       setShowLanguageChannelModal(false);
 
       // Store master_connection_id for loadChannelGraph to use
@@ -646,37 +616,43 @@ export default function ChannelsPage() {
             </div>
 
             <div className={`flex items-center p-1 rounded-lg border ${borderClass} mr-2`}>
-              <button
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="icon"
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded ${viewMode === "list" ? "bg-gray-200 text-black dark:bg-gray-700 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
+                className="h-8 w-8 rounded-md"
                 title="List View"
               >
                 <List className="h-4 w-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant={viewMode === "graph" ? "default" : "ghost"}
+                size="icon"
                 onClick={() => setViewMode("graph")}
-                className={`p-2 rounded ${viewMode === "graph" ? "bg-gray-200 text-black dark:bg-gray-700 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
+                className="h-8 w-8 rounded-md"
                 title="Graph View"
               >
                 <GitGraph className="h-4 w-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant={viewMode === "board" ? "default" : "ghost"}
+                size="icon"
                 onClick={() => setViewMode("board")}
-                className={`p-2 rounded ${viewMode === "board" ? "bg-gray-200 text-black dark:bg-gray-700 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
+                className="h-8 w-8 rounded-md"
                 title="Board View"
               >
                 <Kanban className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
 
-            <button
+            <Button
               onClick={() => handleAddChannel()}
-              className={`inline-flex items-center justify-center gap-2 ${cardClass} ${textClass} px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-xs sm:text-sm md:text-base font-normal hover:${cardClass}Alt transition-colors whitespace-nowrap`}
+              className="gap-2"
             >
-              <Plus className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+              <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Add Connection</span>
               <span className="sm:hidden">Add</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -689,13 +665,14 @@ export default function ChannelsPage() {
             <p className={`text-sm sm:text-base ${textClass}Secondary mb-6`}>
               Connect your YouTube channels to start managing your global content distribution.
             </p>
-            <button
+            <Button
               onClick={() => handleAddChannel()}
-              className={`inline-flex items-center gap-2 ${cardClass} ${textClass} px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-normal hover:${cardClass}Alt transition-colors`}
+              className="gap-2 px-8"
+              size="lg"
             >
               <Plus className="h-5 w-5" />
               Connect First Channel
-            </button>
+            </Button>
           </div>
         </div>
       ) : viewMode === "graph" ? (
@@ -713,43 +690,42 @@ export default function ChannelsPage() {
             {/* Collapse Toggle */}
             <div className="mb-4 flex items-center justify-between">
               {!isChannelListCollapsed && (
-                <div className={`flex items-center gap-1 ${bgClass} border ${borderClass} rounded-lg p-1 flex-1`}>
-                  <button
+                <div className={`flex items-center gap-1 ${bgClass} border ${borderClass} rounded-full p-1 flex-1`}>
+                  <Button
+                    variant={channelFilter === "all" ? "default" : "ghost"}
+                    size="sm"
                     onClick={() => setChannelFilter("all")}
-                    className={`flex-1 px-3 py-1.5 rounded text-xs font-normal transition-colors ${channelFilter === "all"
-                      ? "bg-white text-black"
-                      : `${textSecondaryClass} hover:${textClass}`
-                      }`}
+                    className="flex-1 rounded-full h-8"
                   >
                     All
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant={channelFilter === "primary" ? "default" : "ghost"}
+                    size="sm"
                     onClick={() => setChannelFilter("primary")}
-                    className={`flex-1 px-3 py-1.5 rounded text-xs font-normal transition-colors ${channelFilter === "primary"
-                      ? "bg-white text-black"
-                      : `${textSecondaryClass} hover:${textClass}`
-                      }`}
+                    className="flex-1 rounded-full h-8"
                   >
                     Primary
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant={channelFilter === "unassigned" ? "default" : "ghost"}
+                    size="sm"
                     onClick={() => setChannelFilter("unassigned")}
-                    className={`flex-1 px-3 py-1.5 rounded text-xs font-normal transition-colors ${channelFilter === "unassigned"
-                      ? "bg-white text-black"
-                      : `${textSecondaryClass} hover:${textClass}`
-                      }`}
+                    className="flex-1 rounded-full h-8"
                   >
                     Unassigned
-                  </button>
+                  </Button>
                 </div>
               )}
-              <button
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={() => setIsChannelListCollapsed(!isChannelListCollapsed)}
-                className={`${isChannelListCollapsed ? "w-full" : "ml-2"} p-2 rounded-lg ${cardClass} border ${borderClass} hover:${cardClass}Alt transition-colors flex items-center justify-center`}
+                className={`${isChannelListCollapsed ? "w-full" : "ml-2"} h-10 w-10`}
                 title={isChannelListCollapsed ? "Expand" : "Collapse"}
               >
-                <ChevronRight className={`h-4 w-4 ${textClass}Secondary transition-transform ${isChannelListCollapsed ? "" : "rotate-180"}`} />
-              </button>
+                <ChevronRight className={`h-4 w-4 transition-transform ${isChannelListCollapsed ? "" : "rotate-180"}`} />
+              </Button>
             </div>
 
             {/* Unified Channel List */}
@@ -988,7 +964,7 @@ export default function ChannelsPage() {
                           {channel.language_channel && (
                             <span className="flex items-center gap-1">
                               <Globe2 className="h-3 w-3" />
-                              {channel.language_channel.language_codes?.length || 0} languages
+                              {channel.language_channel.language_name || "Unknown"}
                             </span>
                           )}
                         </div>
@@ -1107,17 +1083,18 @@ export default function ChannelsPage() {
             <div className={`${cardClass} border ${borderClass} rounded-xl p-4 sm:p-6 max-w-md w-full my-auto max-h-[90vh] overflow-y-auto`}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className={`text-xl font-normal ${textClass}`}>Assign Channel</h2>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => {
                     setShowAssignChannelModal(false);
                     setPendingConnectionData(null);
                     setAssignAsPrimary(false);
                     setSelectedParentMasterId("");
                   }}
-                  className={`${textClass}Secondary hover:${textClass}`}
                 >
                   <XCircle className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
 
               <div className="mb-6">
@@ -1196,21 +1173,22 @@ export default function ChannelsPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setShowAssignChannelModal(false);
                     setPendingConnectionData(null);
                     setAssignAsPrimary(false);
                     setSelectedParentMasterId("");
                   }}
-                  className={`flex-1 px-4 py-2 ${cardClass}Alt ${textClass} rounded-full hover:${cardClass}Alt transition-colors`}
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleAssignChannel}
                   disabled={(!assignAsPrimary && !selectedParentMasterId) || isAssigningChannel}
-                  className={`flex-1 px-4 py-2 bg-olleey-yellow ${textClass} rounded-full hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                  className="flex-1 gap-2"
                 >
                   {isAssigningChannel ? (
                     <>
@@ -1223,7 +1201,7 @@ export default function ChannelsPage() {
                       Assign Channel
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1237,16 +1215,17 @@ export default function ChannelsPage() {
             <div className={`${cardClass} border ${borderClass} rounded-xl p-4 sm:p-6 max-w-md w-full my-auto max-h-[90vh] overflow-y-auto`}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className={`text-xl font-normal ${textClass}`}>Create Language Channel</h2>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => {
                     setShowLanguageChannelModal(false);
                     setPendingChannelData(null);
-                    setSelectedLanguages([]);
+                    setSelectedLanguageCode(null);
                   }}
-                  className={`${textClass}Secondary hover:${textClass}`}
                 >
                   <XCircle className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
 
               <div className="mb-4">
@@ -1255,23 +1234,18 @@ export default function ChannelsPage() {
               </div>
 
               <div className="mb-6">
-                <p className={`text-sm ${textClass}Secondary mb-3`}>Select Languages:</p>
+                <p className={`text-sm ${textClass}Secondary mb-3`}>Select Language:</p>
                 <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
                   {LANGUAGE_OPTIONS.map((lang) => {
-                    const isSelected = selectedLanguages.includes(lang.code);
+                    const isSelected = selectedLanguageCode === lang.code;
                     return (
-                      <button
+                      <Button
                         key={lang.code}
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedLanguages(selectedLanguages.filter(l => l !== lang.code));
-                          } else {
-                            setSelectedLanguages([...selectedLanguages, lang.code]);
-                          }
-                        }}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${isSelected
-                          ? "bg-olleey-yellow ${textClass}"
-                          : "${cardClass}Alt ${textClass}Secondary hover:${cardClass}Alt"
+                        variant={isSelected ? "default" : "ghost"}
+                        onClick={() => setSelectedLanguageCode(lang.code)}
+                        className={`flex items-center justify-start gap-2 h-auto py-2.5 px-3 rounded-xl transition-all ${isSelected
+                          ? "bg-olleey-yellow text-black hover:bg-yellow-500 shadow-md"
+                          : ""
                           }`}
                       >
                         <span className="text-lg">{lang.flag}</span>
@@ -1279,27 +1253,28 @@ export default function ChannelsPage() {
                         {isSelected && (
                           <CheckCircle className="h-4 w-4 ml-auto" />
                         )}
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setShowLanguageChannelModal(false);
                     setPendingChannelData(null);
-                    setSelectedLanguages([]);
+                    setSelectedLanguageCode(null);
                   }}
-                  className={`flex-1 px-4 py-2 ${cardClass}Alt ${textClass} rounded-full hover:${cardClass}Alt transition-colors`}
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleCreateLanguageChannel}
-                  disabled={selectedLanguages.length === 0 || isCreatingLanguageChannel}
-                  className={`flex-1 px-4 py-2 bg-olleey-yellow ${textClass} rounded-full hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                  disabled={!selectedLanguageCode || isCreatingLanguageChannel}
+                  className="flex-1 gap-2"
                 >
                   {isCreatingLanguageChannel ? (
                     <>
@@ -1312,7 +1287,7 @@ export default function ChannelsPage() {
                       Create Language Channel
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1402,6 +1377,32 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
                 isPaused={master.is_paused}
                 size="md"
               />
+              <div className="mt-4 flex items-center gap-3">
+                <div className={`p-1 rounded-lg border ${borderClass} flex items-center gap-2 pr-4`}>
+                  <div className="flex items-center gap-2 pl-2">
+                    <Globe2 className={`h-4 w-4 ${textClass}Secondary`} />
+                    <span className={`text-sm ${textClass}Secondary`}>Channel Language:</span>
+                  </div>
+                  <select
+                    value={master.language_code || (master.is_primary ? "en" : "")}
+                    onChange={async (e) => {
+                      try {
+                        await youtubeAPI.updateConnection(master.connection_id, { language_code: e.target.value });
+                        await onReloadGraph();
+                      } catch (error) {
+                        logger.error("Channels", "Failed to update master language", error);
+                        alert("Failed to update language");
+                      }
+                    }}
+                    className={`bg-transparent ${textClass} text-sm font-medium focus:outline-none cursor-pointer`}
+                  >
+                    <option value="" disabled>Select language...</option>
+                    {LANGUAGE_OPTIONS.map(lang => (
+                      <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1441,29 +1442,35 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
             </label>
 
             {!master.is_primary ? (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => onSetPrimary(master.connection_id, master.channel_name)}
-                className={`inline-flex items-center gap-2 ${cardClass} ${textClass} border ${borderClass} px-4 py-2 rounded-full text-sm font-normal hover:${cardClass}Alt transition-colors`}
+                className="gap-2"
               >
                 <Star className="h-4 w-4" />
                 Set as Primary
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => onUnsetPrimary(master.connection_id, master.channel_name)}
-                className={`inline-flex items-center gap-2 bg-amber-900/20 text-amber-400 border border-amber-800/50 px-4 py-2 rounded-full text-sm font-normal hover:bg-amber-900/30 transition-colors`}
+                className="gap-2 bg-amber-900/10 text-amber-500 border-amber-800/20 hover:bg-amber-900/20"
               >
                 <Star className="h-4 w-4 fill-current" />
                 Unset Primary
-              </button>
+              </Button>
             )}
-            <button
+            <Button
+              variant="destructive"
+              size="sm"
               onClick={() => onRemoveChannel(master.connection_id, master.channel_name)}
-              className="inline-flex items-center gap-2 bg-red-900/20 text-red-400 border border-red-800/50 px-4 py-2 rounded-full text-sm font-normal hover:bg-red-900/30 transition-colors"
+              className="gap-2"
             >
               <Trash2 className="h-4 w-4" />
               Remove
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -1493,13 +1500,15 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
               Connected Language Channels ({master.language_channels.length})
             </h3>
             {master.language_channels.length === 0 && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => onAddChannel(master.connection_id)}
-                className={`inline-flex items-center gap-2 ${cardClass} ${textClass} border ${borderClass} px-4 py-2 rounded-full text-sm font-normal hover:${cardClass}Alt transition-colors`}
+                className="gap-2"
               >
                 <Plus className="h-4 w-4" />
                 Add Connection
-              </button>
+              </Button>
             )}
           </div>
 
@@ -1510,13 +1519,13 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
               <p className={`${textClass}Secondary mb-6 max-w-md mx-auto`}>
                 Connect additional YouTube channels for different languages to start dubbing your content globally.
               </p>
-              <button
+              <Button
                 onClick={() => onAddChannel(master.connection_id)}
-                className={`inline-flex items-center gap-2 ${cardClass} ${textClass} border ${borderClass} px-6 py-3 rounded-full text-sm font-normal hover:${cardClass}Alt transition-colors`}
+                className="gap-2 px-8"
               >
                 <Plus className="h-4 w-4" />
                 Add Connection
-              </button>
+              </Button>
             </div>
           ) : (
             <div className={`${cardClass} border ${borderClass} rounded-xl overflow-hidden`}>
@@ -1533,8 +1542,8 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
                 <tbody>
                   {master.language_channels.map((lang) => {
                     const langStatus = lang.status.status;
-                    const languageCodes = lang.language_codes || (lang.language_code ? [lang.language_code] : []);
-                    const languageNames = lang.language_names || (lang.language_name ? [lang.language_name] : []);
+                    const languageCode = lang.language_code;
+                    const languageName = lang.language_name;
 
                     return (
                       <tr
@@ -1568,14 +1577,12 @@ function MasterDetailView({ master, onSelectLanguage, allMasters, onAddChannel, 
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2 flex-wrap">
-                            {languageCodes.map((code, idx) => (
-                              <div key={idx} className="flex items-center gap-1">
-                                <span className="text-lg">{getLanguageFlag(code)}</span>
-                                {languageNames[idx] && (
-                                  <span className={`text-sm ${textClass}Secondary`}>{languageNames[idx]}</span>
-                                )}
-                              </div>
-                            ))}
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{getLanguageFlag(languageCode)}</span>
+                              {languageName && (
+                                <span className={`text-sm ${textClass}Secondary`}>{languageName}</span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="py-4 px-4">
@@ -1653,19 +1660,20 @@ function LanguageDetailView({ channelId, allMasters, onBack, onReloadGraph }: La
   if (!firstConnection) return null;
 
   const { langChannel } = firstConnection;
-  // Get all languages for this channel
-  const languageCodes = langChannel.language_codes || (langChannel.language_code ? [langChannel.language_code] : []);
-  const languageNames = langChannel.language_names || (langChannel.language_name ? [langChannel.language_name] : []);
+  // Get language for this channel
+  const languageCode = langChannel.language_code;
+  const languageName = langChannel.language_name;
 
   return (
     <div>
-      <button
+      <Button
+        variant="ghost"
         onClick={onBack}
-        className={`inline-flex items-center gap-2 ${textClass}Secondary hover:${textClass} mb-6`}
+        className="gap-2 -ml-2 mb-6"
       >
         <ChevronRight className="h-4 w-4 rotate-180" />
         Back to Master Channel
-      </button>
+      </Button>
 
       <div className="mb-8">
         <div className="flex items-start justify-between mb-4">
@@ -1679,33 +1687,21 @@ function LanguageDetailView({ channelId, allMasters, onBack, onReloadGraph }: La
                 />
                 {/* Show all language flags */}
                 <div className="absolute -bottom-1 -right-1 flex gap-0.5 flex-wrap max-w-[80px]">
-                  {languageCodes.slice(0, 3).map((code, idx) => (
-                    <span key={idx} className="text-2xl">
-                      {getLanguageFlag(code)}
-                    </span>
-                  ))}
-                  {languageCodes.length > 3 && (
-                    <span className={`text-xs ${textClass}Secondary`}>+{languageCodes.length - 3}</span>
-                  )}
+                  <span className="text-2xl">
+                    {getLanguageFlag(languageCode)}
+                  </span>
                 </div>
               </div>
             ) : (
               <div className="flex gap-1">
-                {languageCodes.slice(0, 2).map((code, idx) => (
-                  <span key={idx} className="text-5xl">
-                    {getLanguageFlag(code)}
-                  </span>
-                ))}
-                {languageCodes.length > 2 && (
-                  <span className={`text-sm ${textClass}Secondary self-end`}>+{languageCodes.length - 2}</span>
-                )}
+                <span className="text-5xl">
+                  {getLanguageFlag(languageCode)}
+                </span>
               </div>
             )}
             <div>
               <h2 className={`text-2xl font-normal ${textClass} mb-1`}>
-                {languageNames.length > 0
-                  ? `${languageNames.join(", ")} Dubbing`
-                  : `${languageCodes.map(c => c.toUpperCase()).join(", ")} Dubbing`}
+                {languageName || languageCode.toUpperCase()} Dubbing
               </h2>
               <p className={`${textClass}Secondary`}>{langChannel.channel_name}</p>
               {langChannel.is_paused && (
@@ -1834,13 +1830,14 @@ function UnassignedChannelDetailView({ channel, onBack, onAssign, onRemove, allM
 
   return (
     <div>
-      <button
+      <Button
+        variant="ghost"
         onClick={onBack}
-        className={`inline-flex items-center gap-2 ${textSecondaryClass} hover:${textClass} mb-6`}
+        className="gap-2 -ml-2 mb-6"
       >
         <ChevronRight className="h-4 w-4 rotate-180" />
         Back
-      </button>
+      </Button>
 
       <div className="mb-8">
         <div className="flex items-start gap-4 mb-6">
@@ -1877,14 +1874,14 @@ function UnassignedChannelDetailView({ channel, onBack, onAssign, onRemove, allM
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 group relative">
-              <button
+              <Button
                 onClick={() => onAssign(true)}
                 disabled={allMasters.some(m => m.is_primary)}
-                className={`w-full inline-flex items-center justify-center gap-2 bg-white text-black px-4 py-3 rounded-full text-sm font-normal hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                className="w-full gap-2 py-6"
               >
                 <Star className="h-4 w-4" />
                 Make Primary Channel
-              </button>
+              </Button>
               {allMasters.some(m => m.is_primary) && (
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-black text-white text-xs rounded shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity text-center z-10">
                   A primary channel already exists. Unassign it first.
@@ -1918,13 +1915,14 @@ function UnassignedChannelDetailView({ channel, onBack, onAssign, onRemove, allM
 
         {/* Remove Button */}
         <div className="flex justify-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => onRemove(channel.connection_id, channel.channel_name)}
-            className="inline-flex items-center gap-2 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors text-sm font-medium"
+            className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-500/10 gap-2"
           >
             <Trash2 className="h-4 w-4" />
             Remove Channel
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -1951,8 +1949,8 @@ interface SatelliteChannelDetailViewProps {
 function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters, projectId }: SatelliteChannelDetailViewProps) {
   const { theme } = useTheme();
   const [editingLanguages, setEditingLanguages] = useState(false);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
-    channel.language_channel?.language_codes || []
+  const [selectedLanguageCode, setSelectedLanguageCode] = useState<string | null>(
+    channel.language_channel?.language_code || null
   );
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -1965,30 +1963,16 @@ function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters
   const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
   const [isUnassigning, setIsUnassigning] = useState(false);
 
-  const LANGUAGE_OPTIONS = [
-    { code: "es", name: "Spanish", flag: "🇪🇸" },
-    { code: "fr", name: "French", flag: "🇫🇷" },
-    { code: "de", name: "German", flag: "🇩🇪" },
-    { code: "pt", name: "Portuguese", flag: "🇵🇹" },
-    { code: "ja", name: "Japanese", flag: "🇯🇵" },
-    { code: "ko", name: "Korean", flag: "🇰🇷" },
-    { code: "hi", name: "Hindi", flag: "🇮🇳" },
-    { code: "ar", name: "Arabic", flag: "🇸🇦" },
-    { code: "ru", name: "Russian", flag: "🇷🇺" },
-    { code: "it", name: "Italian", flag: "🇮🇹" },
-    { code: "zh", name: "Chinese", flag: "🇨🇳" },
-  ];
+
 
   const handleUpdateLanguages = async () => {
     if (!channel.language_channel || !channel.parent_master) return;
 
-    // Check if languages actually changed
-    const currentLanguages = channel.language_channel.language_codes || [];
-    const languagesChanged =
-      selectedLanguages.length !== currentLanguages.length ||
-      selectedLanguages.some(lang => !currentLanguages.includes(lang));
+    // Check if language actually changed
+    const currentLanguage = channel.language_channel.language_code;
+    const languageChanged = selectedLanguageCode !== currentLanguage;
 
-    if (!languagesChanged) {
+    if (!languageChanged) {
       setEditingLanguages(false);
       return;
     }
@@ -2003,7 +1987,7 @@ function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters
       await channelsAPI.createLanguageChannel({
         project_id: projectId,
         channel_id: channel.channel_id,
-        language_codes: selectedLanguages,
+        language_code: selectedLanguageCode || "",
         channel_name: channel.channel_name,
         master_connection_id: channel.parent_master.connection_id
       });
@@ -2042,13 +2026,14 @@ function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters
 
   return (
     <div>
-      <button
+      <Button
+        variant="ghost"
         onClick={onBack}
-        className={`inline-flex items-center gap-2 ${textClass}Secondary hover:${textClass} mb-6`}
+        className="gap-2 -ml-2 mb-6"
       >
         <ChevronRight className="h-4 w-4 rotate-180" />
         Back
-      </button>
+      </Button>
 
       <div className="mb-8">
         <div className="flex items-start justify-between mb-6">
@@ -2082,12 +2067,14 @@ function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters
           <div className="flex items-center justify-between mb-4">
             <h3 className={`text-lg font-normal ${textClass}`}>Assigned Languages</h3>
             {!editingLanguages && (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setEditingLanguages(true)}
-                className="text-sm text-olleey-yellow hover:text-yellow-500"
+                className="text-olleey-yellow hover:text-yellow-500 hover:bg-yellow-500/10"
               >
                 Edit
-              </button>
+              </Button>
             )}
           </div>
 
@@ -2095,35 +2082,28 @@ function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters
             <div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-4">
                 {LANGUAGE_OPTIONS.map((lang) => {
-                  const isSelected = selectedLanguages.includes(lang.code);
+                  const isSelected = selectedLanguageCode === lang.code;
                   return (
-                    <button
+                    <Button
                       key={lang.code}
-                      onClick={() => {
-                        if (isSelected) {
-                          if (selectedLanguages.length > 1) {
-                            setSelectedLanguages(selectedLanguages.filter(l => l !== lang.code));
-                          }
-                        } else {
-                          setSelectedLanguages([...selectedLanguages, lang.code]);
-                        }
-                      }}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${isSelected
-                        ? "bg-olleey-yellow ${textClass}"
-                        : "${cardClass}Alt ${textClass}Secondary hover:${cardClass}Alt"
+                      variant={isSelected ? "default" : "ghost"}
+                      onClick={() => setSelectedLanguageCode(lang.code)}
+                      className={`flex items-center justify-start gap-2 h-auto py-2.5 px-3 rounded-xl transition-all ${isSelected
+                        ? "bg-olleey-yellow text-black hover:bg-yellow-500 shadow-md"
+                        : ""
                         }`}
                     >
                       <span>{lang.flag}</span>
                       <span>{lang.name}</span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
               <div className="flex items-center gap-3">
-                <button
+                <Button
                   onClick={handleUpdateLanguages}
-                  disabled={isUpdating}
-                  className={`px-4 py-2 bg-olleey-yellow ${textClass} rounded-full text-sm hover:bg-yellow-500 transition-colors disabled:opacity-50 flex items-center gap-2`}
+                  disabled={isUpdating || !selectedLanguageCode}
+                  className="gap-2"
                 >
                   {isUpdating ? (
                     <>
@@ -2133,60 +2113,64 @@ function SatelliteChannelDetailView({ channel, onBack, onReloadGraph, allMasters
                   ) : (
                     "Save Changes"
                   )}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setEditingLanguages(false);
-                    setSelectedLanguages(channel.language_channel?.language_codes || []);
+                    setSelectedLanguageCode(channel.language_channel?.language_code || null);
                   }}
-                  className={`px-4 py-2 ${cardClass}Alt ${textClass} rounded-full text-sm hover:${cardClass}Alt transition-colors`}
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {selectedLanguages.length > 0 ? (
-                selectedLanguages.map((langCode) => {
-                  const lang = LANGUAGE_OPTIONS.find(l => l.code === langCode);
-                  return lang ? (
-                    <div
-                      key={langCode}
-                      className={`flex items-center gap-2 px-3 py-2 ${cardClass}Alt rounded-lg`}
-                    >
-                      <span className="text-lg">{lang.flag}</span>
-                      <span className={`text-sm ${textClass}`}>{lang.name}</span>
-                    </div>
-                  ) : null;
-                })
-              ) : (
-                <p className={`${textClass}Secondary text-sm`}>No languages assigned</p>
+              {selectedLanguageCode ? (() => {
+                const lang = LANGUAGE_OPTIONS.find(l => l.code === selectedLanguageCode);
+                return lang ? (
+                  <div
+                    className={`flex items-center gap-2 px-3 py-2 ${cardClass}Alt rounded-lg`}
+                  >
+                    <span className="text-lg">{lang.flag}</span>
+                    <span className={`text-sm ${textClass}`}>{lang.name}</span>
+                  </div>
+                ) : (
+                  <div
+                    className={`flex items-center gap-2 px-3 py-2 ${cardClass}Alt rounded-lg`}
+                  >
+                    <span className={`text-sm ${textClass}`}>{selectedLanguageCode.toUpperCase()}</span>
+                  </div>
+                );
+              })() : (
+                <p className={`${textClass}Secondary text-sm`}>No language assigned</p>
               )}
             </div>
           )}
         </div>
+      </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleUnassignFromParent}
-            disabled={isUnassigning}
-            className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-full text-sm hover:bg-red-500/30 transition-colors disabled:opacity-50 flex items-center gap-2"
-          >
-            {isUnassigning ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Unassigning...
-              </>
-            ) : (
-              <>
-                <XCircle className="h-4 w-4" />
-                Unassign from Parent
-              </>
-            )}
-          </button>
-        </div>
+      {/* Actions */}
+      <div className="flex items-center gap-3">
+        <Button
+          variant="destructive"
+          onClick={handleUnassignFromParent}
+          disabled={isUnassigning}
+          className="gap-2"
+        >
+          {isUnassigning ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Unassigning...
+            </>
+          ) : (
+            <>
+              <XCircle className="h-4 w-4" />
+              Unassign from Parent
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );
