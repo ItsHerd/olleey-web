@@ -152,6 +152,8 @@ function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
   );
 }
 
+import CreatorsShowcase from "@/components/LandingPage/CreatorsShowcase";
+
 export default function Index() {
   const router = useRouter();
 
@@ -298,6 +300,8 @@ export default function Index() {
         </div>
       </div>
 
+      <CreatorsShowcase />
+
       {/* Pricing Section */}
       <section id="pricing" className="bg-white pb-20 mb-20 mt-10">
         <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px]">
@@ -316,6 +320,7 @@ export default function Index() {
       </section>
 
       <Footer />
-    </div >
+    </div>
   );
 }
+

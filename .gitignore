@@ -19,3 +19,4 @@ build/
 # Cloudflare / Vercel
 .vercel
 .wrangler
+.env
