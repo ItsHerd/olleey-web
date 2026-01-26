@@ -524,85 +524,138 @@ export default function VideoDetailPage() {
                     </button>
                   </div>
 
-                  <div className="space-y-3">
-                    {hasNoTranslations && (
-                      <div className="text-center py-8 bg-dark-card rounded-xl border border-dashed border-dark-border">
-                        <p className="text-dark-textSecondary mb-4">No deployments yet</p>
-                        <button
-                          onClick={handleStartDubbing}
-                          className="px-4 py-2 bg-indigo-600 text-white rounded-full text-sm hover:bg-indigo-700"
-                        >
-                          Start Dubbing
-                        </button>
-                      </div>
-                    )}
+                  {hasNoTranslations ? (
+                    <div className="text-center py-8 bg-dark-card rounded-xl border border-dashed border-dark-border">
+                      <p className="text-dark-textSecondary mb-4">No deployments yet</p>
+                      <button
+                        onClick={handleStartDubbing}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-full text-sm hover:bg-indigo-700"
+                      >
+                        Start Dubbing
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+                      <table className="w-full">
+                        <thead className="bg-dark-cardAlt border-b border-dark-border">
+                          <tr>
+                            <th className="text-left px-4 py-3 text-xs font-medium text-dark-textSecondary uppercase tracking-wider">
+                              Language
+                            </th>
+                            <th className="text-left px-4 py-3 text-xs font-medium text-dark-textSecondary uppercase tracking-wider">
+                              Status
+                            </th>
+                            <th className="text-right px-4 py-3 text-xs font-medium text-dark-textSecondary uppercase tracking-wider">
+                              Views
+                            </th>
+                            <th className="text-right px-4 py-3 text-xs font-medium text-dark-textSecondary uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-dark-border">
+                          {languageCards.map((card) => {
+                            const lang = LANGUAGE_OPTIONS.find(l => l.code === card.code);
+                            const isActive = activeLanguage === card.code;
 
-                    {languageCards.map((card) => {
-                      const lang = LANGUAGE_OPTIONS.find(l => l.code === card.code);
-                      const config = getStateConfig(card.state);
-                      const isActive = activeLanguage === card.code;
+                            return (
+                              <tr
+                                key={card.code}
+                                className={`hover:bg-dark-cardAlt transition-colors ${isActive ? 'bg-indigo-900/20' : ''}`}
+                              >
+                                {/* Language Column */}
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xl">{lang?.flag}</span>
+                                    <span className="text-sm font-medium text-dark-text">{lang?.name}</span>
+                                  </div>
+                                </td>
 
-                      return (
-                        <button
-                          key={card.code}
-                          onClick={() => {
-                            if (card.state === "review" || card.state === "published") {
-                              setActiveLanguage(card.code);
-                              if (card.state === "review") {
-                                setShowScriptEditor(true);
-                              }
-                            }
-                          }}
-                          className={`w-full text-left border ${config.border} ${config.bg} rounded-xl p-3 transition-all hover:shadow-md ${isActive ? "ring-2 ring-indigo-500" : ""}`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className="text-xl">{lang?.flag}</span>
-                              <div>
-                                <p className="font-medium text-gray-900 text-sm">{lang?.name}</p>
-                                <div className="flex items-center gap-2">
-                                  <span className={`text-xs inline-flex items-center gap-1 ${card.state === 'published' ? 'text-green-600' :
-                                      card.state === 'processing' ? 'text-blue-600' :
-                                        card.state === 'review' ? 'text-yellow-600' : 'text-gray-500'
-                                    }`}>
-                                    {card.state === 'published' && <Check className="h-3 w-3" />}
-                                    {card.state === 'processing' && <Loader2 className="h-3 w-3 animate-spin" />}
-                                    {card.state === 'review' && <Edit2 className="h-3 w-3" />}
-                                    <span className="capitalize">{card.state}</span>
-                                  </span>
+                                {/* Status Column */}
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    {card.state === 'published' && (
+                                      <>
+                                        <Check className="h-4 w-4 text-green-500" />
+                                        <span className="text-sm text-green-500 font-medium">Published</span>
+                                      </>
+                                    )}
+                                    {card.state === 'processing' && (
+                                      <>
+                                        <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                                        <div className="flex-1">
+                                          <span className="text-sm text-blue-500 font-medium">Processing</span>
+                                          <div className="mt-1 w-32 h-1.5 bg-dark-bg rounded-full overflow-hidden">
+                                            <div
+                                              className="h-full bg-blue-500 transition-all duration-500"
+                                              style={{ width: `${card.progress}%` }}
+                                            />
+                                          </div>
+                                        </div>
+                                      </>
+                                    )}
+                                    {card.state === 'review' && (
+                                      <>
+                                        <Edit2 className="h-4 w-4 text-yellow-500" />
+                                        <span className="text-sm text-yellow-500 font-medium">Needs Review</span>
+                                      </>
+                                    )}
+                                    {card.state === 'empty' && (
+                                      <>
+                                        <Plus className="h-4 w-4 text-gray-500" />
+                                        <span className="text-sm text-gray-500">Not Started</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </td>
+
+                                {/* Views Column */}
+                                <td className="px-4 py-3 text-right">
+                                  {card.state === 'published' && card.views ? (
+                                    <span className="text-sm text-dark-text font-medium">
+                                      {formatViews(card.views)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-dark-textSecondary">—</span>
+                                  )}
+                                </td>
+
+                                {/* Actions Column */}
+                                <td className="px-4 py-3 text-right">
+                                  {card.state === 'review' && (
+                                    <button
+                                      onClick={() => {
+                                        setActiveLanguage(card.code);
+                                        setShowScriptEditor(true);
+                                      }}
+                                      className="text-xs bg-yellow-500/20 text-yellow-400 px-3 py-1.5 rounded-full hover:bg-yellow-500/30 transition-colors"
+                                    >
+                                      Review
+                                    </button>
+                                  )}
+                                  {card.state === 'published' && card.url && (
+                                    <a
+                                      href={card.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
+                                    >
+                                      View <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  )}
                                   {card.state === 'processing' && (
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs text-dark-textSecondary">
                                       {Math.round(card.progress || 0)}%
                                     </span>
                                   )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Action/Info */}
-                            <div className="text-right">
-                              {card.state === 'published' && card.views && (
-                                <p className="text-xs text-gray-500">{formatViews(card.views)} views</p>
-                              )}
-                              {card.state === 'review' && (
-                                <span className="text-xs bg-black text-white px-2 py-1 rounded-full">Review</span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Progress Bar for processing */}
-                          {card.state === "processing" && (
-                            <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-blue-500 transition-all duration-500"
-                                style={{ width: `${card.progress}%` }}
-                              />
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

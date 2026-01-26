@@ -144,6 +144,11 @@ export default function ChannelsPage() {
     if (selectedProject) {
       loadChannelGraph();
     } else {
+      // Clear channel graph when no project is selected
+      setChannelGraph([]);
+      setSelectedMaster(null);
+      setSelectedChannel(null);
+      setSelectedLanguage(null);
       setIsLoadingConnections(false);
     }
   }, [selectedProject?.id, isProjectLoading]); // Depend on ID to avoid loop if object ref changes
@@ -293,8 +298,11 @@ export default function ChannelsPage() {
               // Update with fresh data
               masterToSelect = updatedSelected;
             } else {
-              // Selected channel was removed, select first available
+              // Selected channel was removed or belongs to different project, select first available
               masterToSelect = masterNodes[0];
+              // Clear the selected channel since it's not in this project
+              setSelectedChannel(null);
+              setSelectedLanguage(null);
             }
           } else {
             // No selection yet, auto-select first
@@ -306,6 +314,8 @@ export default function ChannelsPage() {
       } else {
         // No channels available
         setSelectedMaster(null);
+        setSelectedChannel(null);
+        setSelectedLanguage(null);
       }
     } catch (error) {
       logger.error("Channels", "Failed to load channel graph", error);
