@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { tokenStorage } from "@/lib/api";
 import { MinimalistHero } from "@/components/ui/minimalist-hero";
 import { NebulaCube } from "@/components/ui/explorations-with-gsap-and-scroll-trigger";
-import { OlleeyFeatureCarousel } from "@/components/ui/feature-carousel";
+import { FlowchartAnimation } from "@/components/FlowchartAnimation";
 import { cn } from "@/lib/utils";
 
 function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
@@ -173,13 +173,13 @@ export default function Index() {
     <div className="min-h-screen bg-white font-sans">
       {/* Hero Section - Minimalist Design */}
       <MinimalistHero
-        logoText="olleey.com"
+        logoText=""
         navLinks={[
           { label: 'HOME', href: '#' },
           { label: 'PRODUCT', href: '#product' },
           { label: 'PRICING', href: '#pricing' },
         ]}
-        mainText="Break language barriers with AI-powered video dubbing. One upload, endless languages. Transform your content into a global phenomenon."
+        mainText="Build automated workflows that clone, translate, and distribute your content to 10+ languages instantly."
         readMoreLink="#product"
         imageSrc="/hero-image.png"
         imageAlt="Professional content creator"
@@ -200,106 +200,7 @@ export default function Index() {
         onGetStarted={handleNavigation}
       />
 
-      {/* What Can You Do - 3D Cube with Feature Carousel */}
-      <div id="product" className="relative bg-black">
-        <NebulaCube />
-
-        {/* Feature Carousel Overlay */}
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <div className="max-w-5xl w-full pointer-events-auto px-4 md:px-8 relative">
-            {/* Video Section - Overlapping top-right of carousel */}
-            <div className="absolute -top-16 right-0 sm:right-4 md:-top-20 md:-right-12 pointer-events-none z-20">
-              <div className="w-64 sm:w-80 md:w-96">
-                <div className="relative group">
-                  <video
-                    id="feature-video"
-                    loop
-                    playsInline
-                    className="w-full h-auto rounded-2xl shadow-2xl pointer-events-auto border-2 border-white/30"
-                  >
-                    <source src="/speaker.mp4" type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-
-                  {/* Play Button Overlay */}
-                  <button
-                    onClick={(e) => {
-                      const video = document.getElementById('feature-video') as HTMLVideoElement;
-                      if (video.paused) {
-                        video.play();
-                        e.currentTarget.style.opacity = '0';
-                      } else {
-                        video.pause();
-                        e.currentTarget.style.opacity = '1';
-                      }
-                    }}
-                    className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl transition-opacity hover:bg-black/40 pointer-events-auto"
-                    style={{ opacity: 1 }}
-                  >
-                    <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center shadow-xl transition-transform hover:scale-110">
-                      <svg
-                        className="w-8 h-8 md:w-10 md:h-10 text-black ml-1"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Get Started Button */}
-                <div className="text-center mt-4">
-                  <button
-                    onClick={handleNavigation}
-                    className="pointer-events-auto px-6 py-3 bg-white text-black rounded-full font-semibold text-sm hover:bg-gray-100 transition-all hover:scale-105 shadow-lg"
-                  >
-                    Get Started
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <OlleeyFeatureCarousel
-              title="What We Do"
-              description="Transform your content with AI-powered dubbing"
-              step1img1Class={cn(
-                "pointer-events-none w-[50%] border border-gray-200 transition-all duration-500",
-                "max-md:scale-[160%] max-md:rounded-[24px] rounded-[24px] left-[25%] top-[57%] md:left-[35px] md:top-[29%]",
-                "md:group-hover:translate-y-2"
-              )}
-              step1img2Class={cn(
-                "pointer-events-none w-[60%] border border-gray-200 transition-all duration-500 overflow-hidden",
-                "max-md:scale-[160%] rounded-2xl max-md:rounded-[24px] left-[69%] top-[53%] md:top-[21%] md:left-[calc(50%+35px+1rem)]",
-                "md:group-hover:-translate-y-6"
-              )}
-              step2img1Class={cn(
-                "pointer-events-none w-[50%] rounded-t-[24px] overflow-hidden border border-gray-200 transition-all duration-500",
-                "max-md:scale-[160%] left-[25%] top-[69%] md:left-[35px] md:top-[30%]",
-                "md:group-hover:translate-y-2"
-              )}
-              step2img2Class={cn(
-                "pointer-events-none w-[40%] rounded-t-[24px] border border-gray-200 transition-all duration-500 rounded-2xl overflow-hidden",
-                "max-md:scale-[140%] left-[70%] top-[53%] md:top-[25%] md:left-[calc(50%+27px+1rem)]",
-                "md:group-hover:-translate-y-6"
-              )}
-              step3imgClass={cn(
-                "pointer-events-none w-[90%] border border-gray-200 rounded-t-[24px] transition-all duration-500 overflow-hidden",
-                "left-[5%] top-[50%] md:top-[30%] md:left-[68px]"
-              )}
-              image={{
-                step1light1: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1200&q=80",
-                step1light2: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1200&q=80",
-                step2light1: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1200&q=80",
-                step2light2: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&q=80",
-                step3light: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=1200&q=80",
-                alt: "Video dubbing features",
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
+      <FlowchartAnimation />
       <CreatorsShowcase />
 
       {/* Pricing Section */}

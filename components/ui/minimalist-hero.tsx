@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { NebulaCube } from './explorations-with-gsap-and-scroll-trigger';
+import { FlowingWaves } from './flowing-waves';
 
 // Define the props interface for type safety and reusability
 interface MinimalistHeroProps {
@@ -149,14 +151,14 @@ export const MinimalistHero = ({
 
             {/* Main Content Area */}
             <div className="relative grid w-full max-w-7xl flex-grow grid-cols-1 items-center md:grid-cols-3">
-                {/* Left Text Content */}
+
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 1 }}
                     className="z-20 order-2 md:order-1 text-center md:text-left"
                 >
-                    <p className="mx-auto max-w-xs text-sm leading-relaxed text-foreground/80 md:mx-0">{mainText}</p>
+                    <p className="mx-auto max-w-xs text-md leading-relaxed text-foreground/80 md:mx-0">{mainText}</p>
                     <div className="mt-6 flex flex-col sm:flex-row gap-4 items-center md:items-start">
 
                         <a

@@ -3,10 +3,10 @@ import { Instagram, Facebook, Twitter, Linkedin } from "lucide-react";
 export default function Footer() {
     return (
         <footer className="bg-black py-20">
-            <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px]">
+            <div className="max-w-[1920px] mx-auto px-2 md:px-8 lg:px-[40px]">
                 <div className="text-center">
                     <h2 className="text-[80px] md:text-[120px] lg:text-[160px] font-bold tracking-tighter text-white leading-none mb-8">
-                        olleey
+                        olleey.com
                     </h2>
                     <p className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
                         One upload, endless languages. Reach global audiences instantly with AI-powered localization.

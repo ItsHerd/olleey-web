@@ -17,9 +17,7 @@ export default function Header({ onLoginClick, onGetStartedClick }: HeaderProps)
                 <div className="flex justify-between items-center h-20">
                     {/* Logo */}
                     <div className="flex items-center gap-2">
-                        <span className="text-3xl font-normal tracking-tighter text-black flex items-center">
-                            olleey.com
-                        </span>
+
                     </div>
 
                     {/* Desktop Navigation */}

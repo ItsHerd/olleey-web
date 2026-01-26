@@ -245,6 +245,10 @@ function AppContent() {
                         isLocked={false}
                         onLogout={handleLogout}
                         isOpen={isSidebarOpen}
+                        projects={projects}
+                        selectedProject={selectedProject}
+                        onProjectSelect={setSelectedProject}
+                        onCreateProject={() => setIsCreateProjectModalOpen(true)}
                     />
                 </div>
 
@@ -262,96 +266,10 @@ function AppContent() {
                             <PanelLeft className="h-4 w-4" />
                         </Button>
 
-                        <div className={`h-4 w-[1px] ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-800'} mx-1`} />
-
-                        {/* Project Breadcrumb / Selector */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <div className="flex items-center gap-1 group cursor-pointer outline-none">
-                                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${theme === 'light' ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white/5 hover:bg-white/10'} border ${theme === 'light' ? 'border-gray-200' : 'border-white/10'} transition-all duration-200`}>
-                                        <div className="w-5 h-5 rounded-md bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-[10px] text-white font-bold shadow-sm">
-                                            {selectedProject?.name?.charAt(0) || "P"}
-                                        </div>
-                                        <span className={`text-sm ${textClass} font-medium truncate max-w-[150px] sm:max-w-xs ml-1`}>
-                                            {selectedProject?.name || "Select Project"}
-                                        </span>
-                                        <ChevronDown className={`h-4 w-4 ${textClass} opacity-50 ml-2 transition-transform duration-200 group-data-[state=open]:rotate-180`} />
-                                    </div>
-                                </div>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className={`w-[240px] p-2 ${bgClass} ${borderClass} ${textClass}`}>
-                                {projects.map((project) => (
-                                    <DropdownMenuItem
-                                        key={project.id}
-                                        onClick={() => setSelectedProject(project)}
-                                        className="gap-2 cursor-pointer py-2.5 focus:bg-yellow-50 dark:focus:bg-yellow-900/20"
-                                    >
-                                        <div className="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
-                                            <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400">{project.name.charAt(0)}</span>
-                                        </div>
-                                        <div className="flex flex-col flex-1 min-w-0">
-                                            <span className="truncate text-sm font-medium">{project.name}</span>
-                                        </div>
-                                        {selectedProject?.id === project.id && (
-                                            <Check className="w-4 h-4 text-yellow-500 ml-auto" />
-                                        )}
-                                    </DropdownMenuItem>
-                                ))}
-
-                                {projects.length === 0 && (
-                                    <div className="p-2 text-xs text-muted-foreground text-center">
-                                        No projects found
-                                    </div>
-                                )}
-
-                                <DropdownMenuSeparator />
-
-                                {/* Add Project Option */}
-                                <DropdownMenuItem
-                                    onClick={() => setIsCreateProjectModalOpen(true)}
-                                    className="gap-2 cursor-pointer text-yellow-600 dark:text-yellow-400 font-medium py-2.5 focus:bg-yellow-50 dark:focus:bg-yellow-900/20"
-                                >
-                                    <div className="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
-                                        <Plus className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                                    </div>
-                                    <span className="text-sm">Add Project</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <span className={`${theme === 'light' ? 'text-gray-400' : 'text-gray-600'}`}>/</span>
-
-                        {/* Master Channel Breadcrumb (if project selected and has master channel) */}
-                        {(() => {
-                            if (!selectedProject) return null;
-
-                            const masterChannel = dashboard?.youtube_connections?.find(
-                                c => c.connection_id === selectedProject.master_connection_id
-                            );
-
-                            if (!masterChannel) return null;
-
-                            return (
-                                <>
-                                    <div className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm ${textClass}`}>
-                                        {getChannelAvatar(masterChannel.youtube_channel_id) && (
-                                            <img
-                                                src={getChannelAvatar(masterChannel.youtube_channel_id)}
-                                                alt={masterChannel.youtube_channel_name}
-                                                className="w-4 h-4 rounded-full object-cover"
-                                            />
-                                        )}
-                                        <span>{masterChannel.youtube_channel_name}</span>
-                                    </div>
-                                    <span className={`${theme === 'light' ? 'text-gray-400' : 'text-gray-600'}`}>/</span>
-                                </>
-                            );
-                        })()}
-
-                        {/* Current Page Breadcrumb */}
-                        <div className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm ${textClass}`}>
+                        {/* Page Name */}
+                        <h2 className={`text-lg font-semibold ${textClass} ml-2`}>
                             {currentPage}
-                        </div>
+                        </h2>
 
                         <div className="ml-auto flex items-center gap-1 sm:gap-2">
                             {/* Add Channel Button */}

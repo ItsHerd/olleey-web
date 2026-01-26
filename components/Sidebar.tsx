@@ -1,6 +1,9 @@
 "use client";
 
 import { useTheme } from "@/lib/useTheme";
+import { ChevronDown, Check, Plus } from "lucide-react";
+import { useState } from "react";
+import type { Project } from "@/lib/api";
 
 
 type SidebarProps = {
@@ -9,10 +12,15 @@ type SidebarProps = {
   isLocked?: boolean;
   onLogout?: () => void;
   isOpen?: boolean;
+  projects?: Project[];
+  selectedProject?: Project | null;
+  onProjectSelect?: (project: Project) => void;
+  onCreateProject?: () => void;
 };
 
-export default function Sidebar({ currentPage, onNavigate, isLocked = false, onLogout, isOpen = false }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, isLocked = false, onLogout, isOpen = false, projects = [], selectedProject, onProjectSelect, onCreateProject }: SidebarProps) {
   const { theme } = useTheme();
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
 
   // Sidebar is expanded only when forced open (pinned)
   const isExpanded = isOpen;
@@ -59,6 +67,79 @@ export default function Sidebar({ currentPage, onNavigate, isLocked = false, onL
           </div>
         )}
       </div>
+
+      {/* Project Selector */}
+      {projects.length > 0 && (
+        <div className="px-2 sm:px-3 pb-3">
+          <div className="relative">
+            <button
+              onClick={() => isExpanded && setProjectDropdownOpen(!projectDropdownOpen)}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${isExpanded
+                ? `${cardClass} border ${borderClass} hover:${cardClass} cursor-pointer`
+                : 'justify-center'
+                }`}
+            >
+              <div className={`w-6 h-6 rounded-md bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-[10px] text-white font-bold shadow-sm flex-shrink-0`}>
+                {selectedProject?.name?.charAt(0) || "P"}
+              </div>
+              {isExpanded && (
+                <>
+                  <span className={`text-sm ${textClass} font-medium truncate flex-1 text-left`}>
+                    {selectedProject?.name || "Select Project"}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 ${textClass} opacity-50 transition-transform ${projectDropdownOpen ? 'rotate-180' : ''}`} />
+                </>
+              )}
+            </button>
+
+            {/* Project Dropdown */}
+            {isExpanded && projectDropdownOpen && (
+              <div className={`absolute top-full left-0 right-0 mt-1 ${cardClass} border ${borderClass} rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto`}>
+                <div className="p-1">
+                  {projects.map((project) => (
+                    <button
+                      key={project.id}
+                      onClick={() => {
+                        onProjectSelect?.(project);
+                        setProjectDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${selectedProject?.id === project.id
+                        ? `${cardClass} ${textClass} font-medium`
+                        : `${textSecondaryClass} hover:${cardClass} hover:${textClass}`
+                        }`}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400">{project.name.charAt(0)}</span>
+                      </div>
+                      <span className="truncate flex-1 text-left">{project.name}</span>
+                      {selectedProject?.id === project.id && (
+                        <Check className="w-4 h-4 text-yellow-500" />
+                      )}
+                    </button>
+                  ))}
+
+                  {/* Divider */}
+                  <div className={`my-1 border-t ${borderClass}`} />
+
+                  {/* Add Project */}
+                  <button
+                    onClick={() => {
+                      onCreateProject?.();
+                      setProjectDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm ${textSecondaryClass} hover:${cardClass} hover:${textClass} transition-colors`}
+                  >
+                    <div className="w-6 h-6 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
+                      <Plus className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                    </div>
+                    <span className="flex-1 text-left">Add Project</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Navigation - Centered Vertically */}
       <nav className="flex-1 px-2 sm:px-3 flex flex-col justify-center space-y-1 overflow-y-auto">
