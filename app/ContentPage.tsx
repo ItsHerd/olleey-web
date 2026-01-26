@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { ManualProcessModal } from "@/components/ui/manual-process-modal";
-import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause, Sparkles } from "lucide-react";
+import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause, Sparkles, RefreshCw } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
@@ -335,90 +335,75 @@ export default function ContentPage() {
                 Manage your videos and track translation progress across languages
               </p>
             </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => refetchVideos()}
+                disabled={videosLoading}
+                className={`p-2 rounded-lg border ${borderClass} ${textClass} hover:${cardClass}Alt transition-colors disabled:opacity-50`}
+                title="Refresh"
+              >
+                <RefreshCw className={`h-5 w-5 ${videosLoading ? "animate-spin" : ""}`} />
+              </button>
+              <button
+                onClick={() => setIsManualProcessModalOpen(true)}
+                className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all shadow-sm`}
+              >
+                <Play className="h-4 w-4" />
+                <span className="hidden sm:inline">Start Manual Process</span>
+                <span className="sm:hidden">Start</span>
+              </button>
+            </div>
           </div>
 
-          {/* Channel Selector */}
-          {dashboard?.youtube_connections && dashboard.youtube_connections.length > 0 && (
-            <div className="relative channel-dropdown">
-              <button
-                onClick={() => setChannelDropdownOpen(!channelDropdownOpen)}
-                className={`w-full sm:w-auto flex items-center gap-3 ${cardClass} border ${borderClass} ${textClass} rounded-lg px-4 py-2.5 text-sm hover:${cardClass}Alt cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors`}
-              >
-                {selectedChannelId && getChannelAvatar(selectedChannelId) ? (
-                  <img
-                    src={getChannelAvatar(selectedChannelId)}
-                    alt="Channel"
-                    className="w-6 h-6 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className={`w-6 h-6 rounded-full ${cardClass}Alt flex items-center justify-center`}>
-                    <Youtube className={`h-3 w-3 ${textClass}Secondary`} />
-                  </div>
-                )}
-                <span className="flex-1 text-left">
-                  {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name ||
-                    dashboard.youtube_connections.find(c => c.is_primary)?.youtube_channel_name ||
-                    "Select Channel"}
-                  {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.is_primary && (
-                    <span className={`ml-2 text-xs ${textClass}Secondary`}>(Main)</span>
-                  )}
-                </span>
-                <ChevronDown className={`h-4 w-4 ${textClass}Secondary transition-transform ${channelDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
+          {/* No Processed Videos Yet - Show right after subtitle when applicable */}
+          {!videosLoading && activeTab === "original" && filteredVideos.length > 0 && (() => {
+            // Find the most recently processed video (has at least one live localization)
+            const videosWithLive = filteredVideos.filter(video => {
+              const localizations = video.localizations || {};
+              return Object.values(localizations).some(l => l.status === "live");
+            });
 
-              {/* Channel Dropdown */}
-              {channelDropdownOpen && (
-                <div className={`absolute top-full left-0 mt-1 w-full sm:w-64 ${cardClass} border ${borderClass} rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto`}>
-                  <div className="py-1">
-                    {dashboard.youtube_connections.map((channel) => {
-                      const avatarUrl = getChannelAvatar(channel.youtube_channel_id);
-                      const isSelected = channel.youtube_channel_id === selectedChannelId;
+            const latestProcessed = videosWithLive[0];
 
-                      return (
+            // Show empty state if no processed videos
+            if (!latestProcessed) {
+              return (
+                <div className="mt-6">
+                  <div className={`${cardClass} rounded-xl border-2 border-dashed ${borderClass} overflow-hidden relative`}>
+                    <div className="flex flex-col md:flex-row gap-4 p-6 items-center text-center md:text-left">
+                      <div className={`w-24 h-24 rounded-full ${cardAltClass} flex items-center justify-center flex-shrink-0`}>
+                        <Sparkles className={`h-12 w-12 ${textSecondaryClass}`} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-semibold ${textClass} text-base mb-2`}>
+                          No Processed Videos Yet
+                        </h3>
+                        <p className={`text-sm ${textSecondaryClass} mb-3`}>
+                          Start dubbing your videos to see your latest processed content here
+                        </p>
                         <button
-                          key={channel.youtube_channel_id}
                           onClick={() => {
-                            handleChannelSelect(channel.youtube_channel_id);
+                            // Navigate to first video to start processing
+                            if (filteredVideos[0]) {
+                              router.push(`/content/${filteredVideos[0].video_id}`);
+                            }
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${isSelected
-                            ? "${cardClass}Alt ${textClass}"
-                            : "${textClass}Secondary hover:${cardClass}Alt hover:${textClass}"
-                            }`}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all"
                         >
-                          {avatarUrl ? (
-                            <img
-                              src={avatarUrl}
-                              alt={channel.youtube_channel_name}
-                              className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                            />
-                          ) : (
-                            <div className={`w-8 h-8 rounded-full ${cardClass}Alt flex items-center justify-center flex-shrink-0`}>
-                              <Youtube className={`h-4 w-4 ${textClass}Secondary`} />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate">{channel.youtube_channel_name || channel.youtube_channel_id}</span>
-                              {channel.is_primary && (
-                                <span className="text-xs bg-white text-black px-1.5 py-0.5 rounded-full flex-shrink-0">
-                                  PRIMARY
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <div className="w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0">
-                              <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                            </div>
-                          )}
+                          <Sparkles className="h-4 w-4" />
+                          Start Processing
                         </button>
-                      );
-                    })}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+              );
+            }
+            return null;
+          })()}
+
+
 
           <div className={`flex items-center gap-2 sm:gap-3 md:gap-6 text-xs sm:text-sm ${textClass}Secondary flex-shrink-0 flex-wrap ml-auto`}>
             <span className="whitespace-nowrap">Total Videos: <strong className={`${textClass}`}>{filteredVideos.length}</strong></span>
@@ -435,55 +420,7 @@ export default function ContentPage() {
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="w-full flex flex-col px-2 sm:px-4">
 
-          {/* Listening Animation - Moved above search bar */}
-          {!videosLoading && (
-            <div className={`mb-4 mt-4 flex items-center gap-4 px-6 py-4 border ${borderClass} rounded-lg`} style={{ backgroundColor: '#EEB868' }}>
-              {/* Radar Animation */}
-              <div className="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
-                {/* Outer pulse ring */}
-                <div className="absolute w-5 h-5 rounded-full border-2 border-indigo-500/30 animate-ping"></div>
-                {/* Inner pulse ring */}
-                <div className="absolute w-3 h-3 rounded-full border border-indigo-500/50 animate-ping"></div>
-                {/* Center dot */}
-                <div className="relative w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-              </div>
 
-              {/* Micro-copy */}
-              <span className="text-sm text-black flex-1">
-                {filteredVideos.length === 0 ? (
-                  <>
-                    <span className="font-semibold">Add a channel</span> to get started with video dubbing
-                  </>
-                ) : (
-                  <>
-                    Watching{" "}
-                    <span className="text-black font-semibold">
-                      @{dashboard?.youtube_connections?.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name ||
-                        dashboard?.youtube_connections?.find(c => c.is_primary)?.youtube_channel_name ||
-                        "your channel"}
-                    </span>
-                    {" "}for new uploads...
-                  </>
-                )}
-              </span>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <button
-                  onClick={() => refetchVideos()}
-                  className="text-sm bg-white text-black px-6 py-3 rounded-full font-medium border border-gray-300 hover:bg-gray-100 transition-colors"
-                >
-                  Check Now
-                </button>
-                <button
-                  onClick={() => setIsManualProcessModalOpen(true)}
-                  className="text-sm bg-black text-white px-6 py-3 rounded-full font-medium hover:bg-gray-800 transition-colors"
-                >
-                  Start Manual Process
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Tabs for Original / Processed */}
           <div className="flex items-center gap-6 mb-6 border-b border-border/50">
@@ -515,6 +452,84 @@ export default function ContentPage() {
 
           {/* Search Bar & View Toggle - Combined Row */}
           <div className="flex items-center justify-between gap-3 mb-4">
+            {/* Channel Selector */}
+            {dashboard?.youtube_connections && dashboard.youtube_connections.length > 0 && (
+              <div className="relative channel-dropdown z-10 w-full sm:w-auto">
+                <button
+                  onClick={() => setChannelDropdownOpen(!channelDropdownOpen)}
+                  className={`w-full sm:w-auto flex items-center gap-3 ${cardClass} border ${borderClass} ${textClass} rounded-lg px-3 py-2 text-sm hover:${cardClass}Alt cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors h-10`}
+                >
+                  {selectedChannelId && getChannelAvatar(selectedChannelId) ? (
+                    <img
+                      src={getChannelAvatar(selectedChannelId)}
+                      alt="Channel"
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className={`w-5 h-5 rounded-full ${cardClass}Alt flex items-center justify-center`}>
+                      <Youtube className={`h-3 w-3 ${textClass}Secondary`} />
+                    </div>
+                  )}
+                  <span className="flex-1 text-left truncate max-w-[150px]">
+                    {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name ||
+                      dashboard.youtube_connections.find(c => c.is_primary)?.youtube_channel_name ||
+                      "Select Channel"}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 ${textClass}Secondary transition-transform ${channelDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Channel Dropdown */}
+                {channelDropdownOpen && (
+                  <div className={`absolute top-full left-0 mt-1 w-64 ${cardClass} border ${borderClass} rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto`}>
+                    <div className="py-1">
+                      {dashboard.youtube_connections.map((channel) => {
+                        const avatarUrl = getChannelAvatar(channel.youtube_channel_id);
+                        const isSelected = channel.youtube_channel_id === selectedChannelId;
+
+                        return (
+                          <button
+                            key={channel.youtube_channel_id}
+                            onClick={() => {
+                              handleChannelSelect(channel.youtube_channel_id);
+                            }}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm transition-colors ${isSelected
+                              ? `${cardClass}Alt ${textClass}`
+                              : `${textClass}Secondary hover:${cardClass}Alt hover:${textClass}`
+                              }`}
+                          >
+                            {avatarUrl ? (
+                              <img
+                                src={avatarUrl}
+                                alt={channel.youtube_channel_name}
+                                className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <div className={`w-6 h-6 rounded-full ${cardClass}Alt flex items-center justify-center flex-shrink-0`}>
+                                <Youtube className={`h-4 w-4 ${textClass}Secondary`} />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="truncate">{channel.youtube_channel_name || channel.youtube_channel_id}</span>
+                                {channel.is_primary && (
+                                  <span className="text-xs bg-white text-black px-1.5 py-0.5 rounded-full flex-shrink-0">
+                                    Primary
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Search Bar - Left Side */}
             <div className="flex-1 max-w-md">
               <Input
@@ -563,37 +578,7 @@ export default function ContentPage() {
 
             // Show empty state if no processed videos
             if (!latestProcessed) {
-              return (
-                <div className="mb-6">
-                  <div className={`${cardClass} rounded-xl border-2 border-dashed ${borderClass} overflow-hidden relative`}>
-                    <div className="flex flex-col md:flex-row gap-4 p-6 items-center text-center md:text-left">
-                      <div className={`w-24 h-24 rounded-full ${cardAltClass} flex items-center justify-center flex-shrink-0`}>
-                        <Sparkles className={`h-12 w-12 ${textSecondaryClass}`} />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className={`font-semibold ${textClass} text-base mb-2`}>
-                          No Processed Videos Yet
-                        </h3>
-                        <p className={`text-sm ${textSecondaryClass} mb-3`}>
-                          Start dubbing your videos to see your latest processed content here
-                        </p>
-                        <button
-                          onClick={() => {
-                            // Navigate to first video to start processing
-                            if (filteredVideos[0]) {
-                              router.push(`/content/${filteredVideos[0].video_id}`);
-                            }
-                          }}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all"
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          Start Processing
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
+              return null;
             }
 
             const localizations = latestProcessed.localizations || {};
@@ -618,7 +603,7 @@ export default function ContentPage() {
 
                   <div className="flex flex-col md:flex-row gap-4 p-4 relative">
                     {/* Thumbnail */}
-                    <div className="relative aspect-video md:w-64 flex-shrink-0 rounded-lg overflow-hidden bg-gray-900">
+                    <div className="relative aspect-[4/3] md:w-64 flex-shrink-0 rounded-lg overflow-hidden bg-gray-900">
                       {latestProcessed.thumbnail_url ? (
                         <img
                           src={latestProcessed.thumbnail_url}
@@ -709,6 +694,7 @@ export default function ContentPage() {
                       <tr className="border-b border-border/50">
                         <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Video</th>
                         <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Status</th>
+                        <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Processing</th>
                         <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Languages</th>
                         <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Channels</th>
                         <th className={`text-left px-4 py-3 text-xs font-medium ${textSecondaryClass} uppercase tracking-wider`}>Progress</th>
@@ -796,6 +782,38 @@ export default function ContentPage() {
                                 <overallBadge.icon className="h-3.5 w-3.5" />
                                 {overallBadge.label}
                               </span>
+                            </td>
+
+                            {/* Processing Column - Show active processing languages */}
+                            <td className="px-4 py-3">
+                              {(() => {
+                                const processingLanguages = Object.entries(localizations)
+                                  .filter(([_, loc]) => loc.status === "processing")
+                                  .map(([code]) => LANGUAGE_OPTIONS.find(l => l.code === code))
+                                  .filter(Boolean);
+
+                                if (processingLanguages.length === 0) {
+                                  return <span className={`text-xs ${textSecondaryClass}`}>—</span>;
+                                }
+
+                                return (
+                                  <div className="flex items-center gap-2">
+                                    <Loader2 className="h-3.5 w-3.5 text-blue-500 animate-spin" />
+                                    <div className="flex items-center gap-1">
+                                      {processingLanguages.slice(0, 3).map((lang, idx) => (
+                                        <span key={idx} className="text-sm" title={lang?.name}>
+                                          {lang?.flag}
+                                        </span>
+                                      ))}
+                                      {processingLanguages.length > 3 && (
+                                        <span className={`text-xs ${textSecondaryClass}`}>
+                                          +{processingLanguages.length - 3}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </td>
 
                             {/* Languages Column - Show 2 avatars + count */}
@@ -909,7 +927,7 @@ export default function ContentPage() {
                         onClick={() => router.push(`/content/${video.video_id}`)}
                       >
                         {/* Thumbnail */}
-                        <div className="relative aspect-video w-full bg-gray-900">
+                        <div className="relative aspect-[4/3] w-full bg-gray-900">
                           {video.thumbnail_url ? (
                             <img
                               src={video.thumbnail_url}

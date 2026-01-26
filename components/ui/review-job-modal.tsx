@@ -149,6 +149,7 @@ export function ReviewJobModal({
                                                 controls
                                                 className="w-full h-full"
                                                 src={video.storage_url}
+                                                poster={video.thumbnail_url}
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-white/50">
@@ -158,19 +159,38 @@ export function ReviewJobModal({
                                     </div>
 
                                     {/* Info */}
-                                    <div className="p-4 flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-2xl">
-                                                {LANGUAGE_FLAGS[video.language_code] || "🌍"}
-                                            </span>
-                                            <div>
-                                                <p className={`font-medium ${textClass} capitalize`}>
+                                    <div className="p-4">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl">
+                                                    {LANGUAGE_FLAGS[video.language_code] || "🌍"}
+                                                </span>
+                                                <span className={`font-medium ${textClass} capitalize`}>
                                                     {video.language_code}
-                                                </p>
-                                                <p className={`text-xs ${textSecondaryClass}`}>
-                                                    {video.status}
+                                                </span>
+                                            </div>
+                                            <span className={`text-xs px-2 py-1 rounded-full ${video.status === 'ready' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}>
+                                                {video.status}
+                                            </span>
+                                        </div>
+
+                                        {/* Translated Metadata */}
+                                        <div className="space-y-3">
+                                            <div>
+                                                <p className={`text-xs uppercase tracking-wider ${textSecondaryClass} mb-1`}>Translated Title</p>
+                                                <p className={`text-sm ${textClass} font-medium line-clamp-2`}>
+                                                    {video.title || "No title available"}
                                                 </p>
                                             </div>
+
+                                            {video.description && (
+                                                <div>
+                                                    <p className={`text-xs uppercase tracking-wider ${textSecondaryClass} mb-1`}>Description</p>
+                                                    <p className={`text-xs ${textSecondaryClass} line-clamp-3`}>
+                                                        {video.description}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

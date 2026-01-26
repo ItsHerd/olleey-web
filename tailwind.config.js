@@ -81,8 +81,8 @@ module.exports = {
           accentAlt: "#F05D5E",
           accentSecondary: "#e4b363",
           accentSecondaryAlt: "#d4a353",
-          border: "#343a40",
-          borderAlt: "#3a4149",
+          border: "#e2e8f0",
+          borderAlt: "#cbd5e1",
         },
         // Dark Theme
         dark: {

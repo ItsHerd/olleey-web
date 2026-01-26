@@ -1150,6 +1150,9 @@ export interface LocalizedVideo {
   storage_url: string; // URL for preview
   status: string;
   created_at: string;
+  thumbnail_url?: string;
+  title?: string;
+  description?: string;
 }
 
 export const jobsAPI = {
