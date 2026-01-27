@@ -7,8 +7,8 @@ import { ReduxProvider } from "@/components/ReduxProvider";
 import { ToastProvider } from "@/components/ui/use-toast";
 
 export const metadata: Metadata = {
-  title: "Olleey Dashboard",
-  description: "Multi-language content management platform"
+  title: "Olleey | AI-Powered Global Content Automation",
+  description: "Clone your voice, translate your videos, and reach a global audience with automated content workflows."
 };
 
 export default function RootLayout({

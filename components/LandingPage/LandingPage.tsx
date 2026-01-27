@@ -8,6 +8,7 @@ import { FlowchartAnimation } from "@/components/FlowchartAnimation";
 import CreatorsShowcase from "./CreatorsShowcase";
 import AIProductsShowcase from "./AIProductsShowcase";
 import { PricingCalculator } from "./PricingCalculator";
+import { SEO } from "@/components/SEO";
 
 interface LandingPageProps {
     onNavigation: () => void;
@@ -16,6 +17,10 @@ interface LandingPageProps {
 export default function LandingPage({ onNavigation }: LandingPageProps) {
     return (
         <div className="min-h-screen bg-white font-sans">
+            <SEO
+                title="Olleey | Clone, Translate & Distribute Your Content Globally"
+                description="The ultimate AI-powered workflow for creators. Build automated pipelines that clone your voice, translate videos, and distribute to 10+ languages instantly."
+            />
             {/* Hero Section - Minimalist Design */}
             <MinimalistHero
                 logoText=""

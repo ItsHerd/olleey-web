@@ -18,6 +18,7 @@ import { useTheme } from "@/lib/useTheme";
 import { QuickCheckModal } from "@/components/SmartTable/QuickCheckModal";
 import { JobTerminalPanel } from "@/components/JobTerminalPanel";
 import { useToast } from "@/components/ui/use-toast";
+import { SEO } from "@/components/SEO";
 
 type ViewMode = "carousel" | "table";
 
@@ -429,6 +430,10 @@ export default function DashboardPage() {
 
   return (
     <div className={`w-full h-full ${bgClass} flex flex-col overflow-hidden`}>
+      <SEO
+        title="Dashboard | Olleey"
+        description="Manage your global content production, monitor translation jobs, and distribute to international channels from your creative command center."
+      />
       {/* Header */}
       <div className={`flex-shrink-0 px-0 py-3 sm:py-4 md:py-6`}>
         <div className="flex flex-col gap-3 sm:gap-4">
