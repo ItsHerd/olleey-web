@@ -10,6 +10,7 @@ type LocalizationStatus = "live" | "draft" | "processing" | "not-started" | "fai
 
 interface LocalizationInfo {
     status: LocalizationStatus;
+    progress: number;
     url?: string;
     views?: number;
     video_id?: string;
@@ -126,6 +127,7 @@ export function SmartVideoTable({
                                         // If localization object exists, use it. If not, create a dummy one for "Not Started"
                                         const effectiveLoc: LocalizationInfo = localization || {
                                             status: "not-started",
+                                            progress: 0,
                                             originalTitle: video.title
                                         };
 

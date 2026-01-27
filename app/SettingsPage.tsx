@@ -167,18 +167,18 @@ export default function SettingsPage() {
                     <div className="mt-2 flex gap-3">
                       <button
                         onClick={() => setTheme("light")}
-                        className={`px-4 py-2 rounded-full text-sm font-normal border transition-colors ${theme === "light"
+                        className={`px-4 py-2 rounded-full text-sm font-normal border-2 transition-colors ${theme === "light"
                           ? "bg-light-accent text-white border-light-accent"
-                          : `${cardClass} text-light-textSecondary border-light-border hover:text-light-text`
+                          : `${cardClass} ${textSecondaryClass} ${borderClass} hover:${textClass} hover:border-indigo-500/30`
                           }`}
                       >
                         Light
                       </button>
                       <button
                         onClick={() => setTheme("dark")}
-                        className={`px-4 py-2 rounded-full text-sm font-normal border transition-colors ${theme === "dark"
+                        className={`px-4 py-2 rounded-full text-sm font-normal border-2 transition-colors ${theme === "dark"
                           ? `${accentClass} text-white ${borderClass}`
-                          : `${cardClass} ${textSecondaryClass} ${borderClass} hover:${textClass}`
+                          : `${cardClass} ${textSecondaryClass} ${borderClass} hover:${textClass} hover:border-indigo-500/30`
                           }`}
                       >
                         Dark
@@ -224,11 +224,11 @@ export default function SettingsPage() {
                       onClick={() =>
                         setNotifications((prev) => ({ ...prev, email: !prev.email }))
                       }
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${notifications.email ? "bg-indigo-500" : cardAltClass
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border ${notifications.email ? "bg-indigo-500 border-indigo-600" : `${cardAltClass} ${borderClass}`
                         }`}
                     >
                       <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notifications.email ? "translate-x-6" : "translate-x-1"
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${notifications.email ? "translate-x-6" : "translate-x-1"
                           }`}
                       />
                     </button>
@@ -248,11 +248,11 @@ export default function SettingsPage() {
                           distribution: !prev.distribution,
                         }))
                       }
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${notifications.distribution ? "bg-indigo-500" : cardAltClass
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border ${notifications.distribution ? "bg-indigo-500 border-indigo-600" : `${cardAltClass} ${borderClass}`
                         }`}
                     >
                       <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notifications.distribution ? "translate-x-6" : "translate-x-1"
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${notifications.distribution ? "translate-x-6" : "translate-x-1"
                           }`}
                       />
                     </button>
@@ -269,11 +269,11 @@ export default function SettingsPage() {
                       onClick={() =>
                         setNotifications((prev) => ({ ...prev, errors: !prev.errors }))
                       }
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${notifications.errors ? "bg-indigo-500" : cardAltClass
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border ${notifications.errors ? "bg-indigo-500 border-indigo-600" : `${cardAltClass} ${borderClass}`
                         }`}
                     >
                       <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notifications.errors ? "translate-x-6" : "translate-x-1"
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${notifications.errors ? "translate-x-6" : "translate-x-1"
                           }`}
                       />
                     </button>
@@ -303,11 +303,11 @@ export default function SettingsPage() {
                     onClick={() =>
                       setExperimentalFeatures((prev) => ({ ...prev, aiVoiceCloning: !prev.aiVoiceCloning }))
                     }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${experimentalFeatures.aiVoiceCloning ? "bg-indigo-500" : cardAltClass
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border ${experimentalFeatures.aiVoiceCloning ? "bg-indigo-500 border-indigo-600" : `${cardAltClass} ${borderClass}`
                       }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${experimentalFeatures.aiVoiceCloning ? "translate-x-6" : "translate-x-1"
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${experimentalFeatures.aiVoiceCloning ? "translate-x-6" : "translate-x-1"
                         }`}
                     />
                   </button>
@@ -324,11 +324,11 @@ export default function SettingsPage() {
                     onClick={() =>
                       setExperimentalFeatures((prev) => ({ ...prev, autoTranslation: !prev.autoTranslation }))
                     }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${experimentalFeatures.autoTranslation ? "bg-indigo-500" : cardAltClass
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border ${experimentalFeatures.autoTranslation ? "bg-indigo-500 border-indigo-600" : `${cardAltClass} ${borderClass}`
                       }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${experimentalFeatures.autoTranslation ? "translate-x-6" : "translate-x-1"
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${experimentalFeatures.autoTranslation ? "translate-x-6" : "translate-x-1"
                         }`}
                     />
                   </button>
@@ -345,11 +345,11 @@ export default function SettingsPage() {
                     onClick={() =>
                       setExperimentalFeatures((prev) => ({ ...prev, advancedAnalytics: !prev.advancedAnalytics }))
                     }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${experimentalFeatures.advancedAnalytics ? "bg-indigo-500" : cardAltClass
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border ${experimentalFeatures.advancedAnalytics ? "bg-indigo-500 border-indigo-600" : `${cardAltClass} ${borderClass}`
                       }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${experimentalFeatures.advancedAnalytics ? "translate-x-6" : "translate-x-1"
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${experimentalFeatures.advancedAnalytics ? "translate-x-6" : "translate-x-1"
                         }`}
                     />
                   </button>
@@ -366,11 +366,11 @@ export default function SettingsPage() {
                     onClick={() =>
                       setExperimentalFeatures((prev) => ({ ...prev, betaFeatures: !prev.betaFeatures }))
                     }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${experimentalFeatures.betaFeatures ? "bg-indigo-500" : cardAltClass
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors border ${experimentalFeatures.betaFeatures ? "bg-indigo-500 border-indigo-600" : `${cardAltClass} ${borderClass}`
                       }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${experimentalFeatures.betaFeatures ? "translate-x-6" : "translate-x-1"
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${experimentalFeatures.betaFeatures ? "translate-x-6" : "translate-x-1"
                         }`}
                     />
                   </button>

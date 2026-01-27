@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { authAPI } from "@/lib/api";
 import { useTheme } from "@/lib/useTheme";
-import { Eye, EyeOff, LogOut, User } from "lucide-react";
+import { CreditCard, Eye, EyeOff, LogOut, TrendingUp, User, Zap } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 
 interface AccountsPageProps {
@@ -121,6 +121,66 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
             </div>
           </div>
 
+          {/* Plan & Usage */}
+          <div className={`${cardClass} border ${borderClass} rounded-xl p-6`}>
+            <h3 className={`text-lg font-normal ${textClass} mb-4 flex items-center gap-2`}>
+              <CreditCard className="w-5 h-5" />
+              Plan & Usage
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={`p-4 rounded-xl ${cardAltClass} border ${borderClass}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <span className={`text-xs font-bold ${textSecondaryClass} uppercase tracking-widest`}>Current Plan</span>
+                  <span className="px-2 py-1 rounded bg-indigo-500/10 text-indigo-500 text-[10px] font-bold uppercase">Pro</span>
+                </div>
+                <div className="flex items-end gap-2 mb-1">
+                  <span className={`text-2xl font-bold ${textClass}`}>$49</span>
+                  <span className={`text-sm ${textSecondaryClass} mb-1`}>/month</span>
+                </div>
+                <p className={`text-xs ${textSecondaryClass}`}>Renews on Feb 26, 2026</p>
+              </div>
+
+              <div className={`p-4 rounded-xl ${cardAltClass} border ${borderClass}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-xs font-bold ${textSecondaryClass} uppercase tracking-widest`}>Credit Balance</span>
+                  <Zap className="w-4 h-4 text-olleey-yellow fill-olleey-yellow/20" />
+                </div>
+                <div className="flex items-end gap-2 mb-2">
+                  <span className={`text-2xl font-bold ${textClass}`}>
+                    {dashboard?.credits_summary ? Math.round(dashboard.credits_summary.remaining_credits / 60) : 0}h
+                  </span>
+                  <span className={`text-xs ${textSecondaryClass} mb-1.5`}>
+                    of {dashboard?.credits_summary ? Math.round((dashboard.credits_summary.used_credits + dashboard.credits_summary.remaining_credits) / 60) : 100}h total
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-olleey-yellow rounded-full"
+                    style={{
+                      width: `${dashboard?.credits_summary ? (dashboard.credits_summary.used_credits / (dashboard.credits_summary.used_credits + dashboard.credits_summary.remaining_credits)) * 100 : 0}%`
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Weekly Stats Insight */}
+            <div className={`mt-6 p-4 rounded-xl border border-dashed ${borderClass} flex items-center gap-4`}>
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className={`text-sm font-medium ${textClass}`}>
+                  Your video output increased by <span className="text-emerald-500">+{dashboard?.weekly_stats?.growth_percentage || 0}%</span> this week.
+                </p>
+                <p className={`text-xs ${textSecondaryClass}`}>
+                  You've processed {dashboard?.weekly_stats?.videos_completed || 0} videos across {dashboard?.weekly_stats?.languages_added || 0} new languages.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Change Password */}
           <div className={`${cardClass} border ${borderClass} rounded-xl p-6`}>
             <h3 className={`text-lg font-normal ${textClass} mb-4`}>Change Password</h3>
@@ -220,7 +280,7 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
               <button
                 type="submit"
                 disabled={isChangingPassword}
-                className={`w-full px-4 py-2 bg-indigo-500 ${textClass} rounded-full text-sm font-normal hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                className={`w-full px-4 py-2 bg-indigo-500 text-white rounded-full text-sm font-normal hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
               >
                 {isChangingPassword ? (
                   <>
@@ -248,7 +308,7 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
             </p>
             <button
               onClick={handleLogout}
-              className={`w-full px-4 py-2 ${cardAltClass} ${textClass} rounded-full text-sm font-normal border ${borderClass} hover:bg-red-900/20 hover:border-red-700 hover:text-red-400 transition-colors flex items-center justify-center gap-2`}
+              className={`w-full px-4 py-2 ${cardAltClass} ${textClass} rounded-full text-sm font-normal border ${borderClass} hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-500 transition-colors flex items-center justify-center gap-2`}
             >
               <LogOut className="w-4 h-4" />
               Sign Out

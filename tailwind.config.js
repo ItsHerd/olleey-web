@@ -71,10 +71,10 @@ module.exports = {
       colors: {
         // Light Theme
         light: {
-          bg: "#ffffffff",
-          bgAlt: "#ffffffff",
-          card: "#ffffffff",
-          cardAlt: "#ffffffff",
+          bg: "#F9FAFB",
+          bgAlt: "#F3F4F6",
+          card: "#ffffff",
+          cardAlt: "#F9FAFB",
           text: "#000000",
           textSecondary: "#4a5568",
           accent: "#F05D5E",
