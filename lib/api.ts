@@ -534,7 +534,7 @@ export const youtubeAPI = {
    * @param options - Optional parameters for OAuth connection
    * @param options.master_connection_id - Master connection ID to associate language channel with (for satellite connections)
    */
-  initiateConnection: async (options?: { master_connection_id?: string }): Promise<{ auth_url: string }> => {
+  initiateConnection: async (options?: string | { master_connection_id?: string; redirect_to?: string }): Promise<{ auth_url: string }> => {
     const token = tokenStorage.getAccessToken();
     if (!token) {
       throw new Error("No access token available");
@@ -545,9 +545,16 @@ export const youtubeAPI = {
     const url = new URL(`${API_BASE_URL}/youtube/connect`);
     url.searchParams.set("token", token);
 
-    // Add master_connection_id if provided (for language channel association)
-    if (options?.master_connection_id) {
-      url.searchParams.set("master_connection_id", options.master_connection_id);
+    // Handle options (either string redirect_to or object with options)
+    if (typeof options === "string") {
+      url.searchParams.set("redirect_to", options);
+    } else if (options) {
+      if (options.master_connection_id) {
+        url.searchParams.set("master_connection_id", options.master_connection_id);
+      }
+      if (options.redirect_to) {
+        url.searchParams.set("redirect_to", options.redirect_to);
+      }
     }
 
     const backendUrl = url.toString();

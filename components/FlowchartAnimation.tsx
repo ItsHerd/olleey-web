@@ -18,47 +18,60 @@ import 'reactflow/dist/style.css';
 // Custom node component for workflow nodes
 const WorkflowNode = ({ data }: any) => {
     return (
-        <div className="bg-gray-900 rounded-xl overflow-hidden shadow-lg w-[180px]">
-            <Handle type="target" position={Position.Left} style={{ background: '#6b7280' }} />
-            <Handle type="source" position={Position.Right} style={{ background: '#6b7280' }} />
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] w-[220px] transition-all hover:shadow-[0_8px_30px_-10px_rgba(0,0,0,0.15)] group">
+            <Handle type="target" position={Position.Left} className="!bg-blue-500 !w-2 !h-2 !border-none !-translate-x-1" />
+            <Handle type="source" position={Position.Right} className="!bg-blue-500 !w-2 !h-2 !border-none !translate-x-1" />
 
-            <div className="bg-black text-white p-2 flex justify-between items-center">
-                <span className="text-xs font-semibold">{data.label}</span>
-                {data.hasMenu && <button className="text-white">⋯</button>}
+            <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="p-1 px-2.5 bg-blue-50 text-blue-600 rounded-lg text-[9px] font-bold uppercase tracking-widest">{data.category || 'Workflow'}</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                </div>
+
+                <h4 className="text-sm font-bold text-gray-900 mb-1">{data.label}</h4>
+                {data.oneLiner && (
+                    <p className="text-[10px] text-gray-500 mb-3 font-medium leading-relaxed italic border-l-2 border-blue-100 pl-2">
+                        {data.oneLiner}
+                    </p>
+                )}
+
+                {data.image && (
+                    <div className="aspect-video relative bg-gray-100 rounded-xl overflow-hidden mb-3 border border-gray-100">
+                        {data.videoUrl ? (
+                            <video
+                                src={data.videoUrl}
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+                                <span className="text-3xl">{data.emoji}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {data.content && (
+                    <p className="text-[11px] text-gray-600 leading-tight mb-2">
+                        {data.content}
+                    </p>
+                )}
             </div>
-            {data.content && (
-                <div className="p-3 text-xs text-white/80">
-                    {data.content}
-                </div>
-            )}
-            {data.image && (
-                <div className="aspect-square bg-gray-800 flex items-center justify-center overflow-hidden">
-                    {data.videoUrl ? (
-                        <video
-                            src={data.videoUrl}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="w-full h-full object-cover"
-                        />
-                    ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center">
-                            <span className="text-4xl">{data.emoji}</span>
-                        </div>
-                    )}
-                </div>
-            )}
-            {data.footer && (
-                <div className="bg-black text-white text-[10px] p-2 flex justify-between items-center">
-                    <span>{data.footer}</span>
+
+            <div className="bg-gray-50/50 p-3 flex justify-between items-center border-t border-gray-100 group-hover:bg-gray-50 transition-colors">
+                <span className="text-[9px] font-bold uppercase text-gray-400 tracking-tighter">{data.actionLabel || 'Status'}</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold text-blue-600 uppercase">{data.status || 'Ready'}</span>
                     {data.hasRun && (
-                        <button className="px-2 py-0.5 bg-white text-black rounded text-[10px] font-semibold">
-                            Run
+                        <button className="px-3 py-1 bg-blue-600 text-white rounded-full text-[9px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-colors shadow-sm">
+                            Execute
                         </button>
                     )}
                 </div>
-            )}
+            </div>
         </div>
     );
 };
@@ -69,165 +82,143 @@ const nodeTypes = {
 
 const initialNodes: Node[] = [
     {
-        id: 'text-input-1',
+        id: 'source-input',
         type: 'workflow',
-        position: { x: 0, y: 0 },
+        position: { x: 0, y: 150 },
         data: {
-            label: 'Video Description',
-            content: 'The flower arrangement is in the middle of the street at night in New York City, on 5 to 8 by street lamps.',
+            label: 'Source Video (EN)',
+            category: 'INPUT',
+            oneLiner: 'Automatic ingestion from YouTube...',
+            content: 'High-quality 4K master file uploaded to Olleey cloud.',
+            emoji: '📺',
+            image: true,
+            status: 'Synced',
+            actionLabel: 'SOURCE',
         },
     },
     {
-        id: 'image-input',
+        id: 'clone-audio',
         type: 'workflow',
-        position: { x: 0, y: 250 },
+        position: { x: 300, y: 0 },
         data: {
-            label: 'PewDiePie Channel',
+            label: 'Neural Voice Clone',
+            category: 'ENGINE',
+            oneLiner: 'Instant 1:1 vocal replication...',
+            content: 'Capturing pitch, frequency and emotive nuances.',
+            emoji: '🎙️',
             image: true,
-            videoUrl: '/speaker.mp4',
-            footer: 'English 🇺🇲',
-        },
-    },
-    {
-        id: 'gen3-image',
-        type: 'workflow',
-        position: { x: 350, y: 250 },
-        data: {
-            label: 'PewDiePie Spain',
-            hasMenu: true,
-            image: true,
-            videoUrl: '/speaker.mp4',
-            footer: 'Spanish 🇪🇸',
+            status: 'Active',
             hasRun: true,
+            actionLabel: 'ANALYZE',
         },
     },
     {
-        id: 'gen3-video',
+        id: 'translate',
         type: 'workflow',
-        position: { x: 650, y: 100 },
+        position: { x: 300, y: 300 },
         data: {
-            label: 'PewDiePie Germany',
-            hasMenu: true,
+            label: 'AI Translation',
+            category: 'PROCESS',
+            oneLiner: 'Context-aware native rewrite...',
+            content: 'Localizing nuance and slang for native feel.',
+            emoji: '🌍',
+            image: true,
+            status: '24/40',
+            actionLabel: 'SYNC',
+        },
+    },
+    {
+        id: 'lip-sync',
+        type: 'workflow',
+        position: { x: 600, y: 150 },
+        data: {
+            label: 'Visual Lip-Sync',
+            category: 'RENDER',
+            oneLiner: 'Zero-artifact mouth regeneration...',
+            content: 'Regenerating mouth movements with zero artifacts.',
+            emoji: '🎬',
             image: true,
             videoUrl: '/speaker.mp4',
-            footer: 'German 🇩🇪',
+            status: 'In Progress',
             hasRun: true,
+            actionLabel: 'INGEST',
         },
     },
     {
-        id: 'text-input-2',
+        id: 'brand-swap',
         type: 'workflow',
-        position: { x: 950, y: 0 },
+        position: { x: 900, y: 50 },
         data: {
-            label: 'Sponsor',
-            content: 'Adding a sponsor to the video.',
-        },
-    },
-    {
-        id: 'align',
-        type: 'workflow',
-        position: { x: 950, y: 200 },
-        data: {
-            label: 'PewDiePie Arabia',
-            hasMenu: true,
+            label: 'Dynamic Sponsor',
+            category: 'LOCALIZE',
+            oneLiner: 'Regional ad injection...',
+            content: 'Injecting regional sponsors into video segments.',
+            emoji: '🏷️',
             image: true,
-            videoUrl: '/speaker.mp4',
-            footer: 'Arabic 🇸🇦',
+            status: 'Ready',
+            actionLabel: 'SWAP',
+        },
+    },
+    {
+        id: 'global-dist',
+        type: 'workflow',
+        position: { x: 900, y: 250 },
+        data: {
+            label: 'Global Release',
+            category: 'OUTPUT',
+            oneLiner: 'Multichannel worldwide blast...',
+            content: 'Pushing localized masters to satellite hubs.',
+            emoji: '🚀',
+            image: true,
+            status: 'Queue',
             hasRun: true,
+            actionLabel: 'PUSH',
         },
     },
 ];
 
 const initialEdges: Edge[] = [
     {
-        id: 'e1',
-        source: 'text-input-1',
-        target: 'gen3-image',
-        type: 'default',
-        animated: false,
-        style: {
-            stroke: '#3b82f6',
-            strokeWidth: 2.5,
-            strokeLinecap: 'round',
-        },
-        markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#3b82f6',
-            width: 20,
-            height: 20,
-        },
+        id: 'e-src-clone',
+        source: 'source-input',
+        target: 'clone-audio',
+        type: 'straight',
+        style: { stroke: '#3b82f6', strokeWidth: 1.5, opacity: 0.5 },
     },
     {
-        id: 'e2',
-        source: 'image-input',
-        target: 'gen3-image',
-        type: 'default',
-        animated: false,
-        style: {
-            stroke: '#3b82f6',
-            strokeWidth: 2.5,
-            strokeLinecap: 'round',
-        },
-        markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#3b82f6',
-            width: 20,
-            height: 20,
-        },
+        id: 'e-src-trans',
+        source: 'source-input',
+        target: 'translate',
+        type: 'straight',
+        style: { stroke: '#3b82f6', strokeWidth: 1.5, opacity: 0.5 },
     },
     {
-        id: 'e3',
-        source: 'gen3-image',
-        target: 'gen3-video',
-        type: 'default',
-        animated: false,
-        style: {
-            stroke: '#3b82f6',
-            strokeWidth: 2.5,
-            strokeLinecap: 'round',
-        },
-        markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#3b82f6',
-            width: 20,
-            height: 20,
-        },
+        id: 'e-clone-sync',
+        source: 'clone-audio',
+        target: 'lip-sync',
+        type: 'straight',
+        style: { stroke: '#3b82f6', strokeWidth: 1.5, opacity: 0.5 },
     },
     {
-        id: 'e4',
-        source: 'text-input-2',
-        target: 'align',
-        type: 'default',
-        animated: false,
-        style: {
-            stroke: '#3b82f6',
-            strokeWidth: 2.5,
-            strokeLinecap: 'round',
-        },
-        markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#3b82f6',
-            width: 20,
-            height: 20,
-        },
+        id: 'e-trans-sync',
+        source: 'translate',
+        target: 'lip-sync',
+        type: 'straight',
+        style: { stroke: '#3b82f6', strokeWidth: 1.5, opacity: 0.5 },
     },
     {
-        id: 'e5',
-        source: 'gen3-video',
-        target: 'align',
-        type: 'default',
-        animated: false,
-        style: {
-            stroke: '#3b82f6',
-            strokeWidth: 2.5,
-            strokeLinecap: 'round',
-        },
-        markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#3b82f6',
-            width: 20,
-            height: 20,
-        },
+        id: 'e-sync-brand',
+        source: 'lip-sync',
+        target: 'brand-swap',
+        type: 'straight',
+        style: { stroke: '#3b82f6', strokeWidth: 1.5, opacity: 0.5 },
+    },
+    {
+        id: 'e-sync-dist',
+        source: 'lip-sync',
+        target: 'global-dist',
+        type: 'straight',
+        style: { stroke: '#3b82f6', strokeWidth: 1.5, opacity: 0.5 },
     },
 ];
 
@@ -259,16 +250,11 @@ export function FlowchartAnimation() {
                     onEdgesChange={onEdgesChange}
                     nodeTypes={nodeTypes}
                     defaultEdgeOptions={{
-                        type: 'default',
-                        animated: false,
+                        type: 'straight',
                         style: {
                             stroke: '#3b82f6',
-                            strokeWidth: 2.5,
-                            strokeLinecap: 'round',
-                        },
-                        markerEnd: {
-                            type: MarkerType.ArrowClosed,
-                            color: '#3b82f6',
+                            strokeWidth: 1.5,
+                            opacity: 0.5,
                         },
                     }}
                     fitView
@@ -285,7 +271,7 @@ export function FlowchartAnimation() {
                     panOnDrag={false}
                     preventScrolling={false}
                 >
-                    <Background color="#e5e7eb" gap={16} />
+                    <Background color="#f1f5f9" gap={20} />
                 </ReactFlow>
             </div>
         </div>
