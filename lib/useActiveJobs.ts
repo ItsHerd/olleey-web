@@ -13,13 +13,6 @@ export function useActiveJobs(options: UseActiveJobsOptions = {}) {
   // Use the refined connection state from useJobEvents
   const { jobs, isConnected, isSseActive, isPollingActive, refetch } = useJobEvents();
 
-  // Debug: Log all jobs passed to the hook
-  logger.debug("useActiveJobs", "Incoming jobs", {
-    count: jobs.length,
-    statuses: jobs.map(j => j.status),
-    connection: isSseActive ? "SSE" : isPollingActive ? "Polling" : "Disconnected"
-  });
-
   const activeJobs = jobs.filter(j => ACTIVE_STATUSES.includes(j.status));
   const completedJobs = jobs.filter(j => j.status === 'completed');
   const failedJobs = jobs.filter(j => j.status === 'failed');

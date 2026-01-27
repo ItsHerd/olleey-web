@@ -42,7 +42,7 @@ interface VideoWithLocalizations extends Video {
   global_views?: number;
 }
 
-export default function ContentPage() {
+export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme } = useTheme();
@@ -105,7 +105,7 @@ export default function ContentPage() {
         const graph = await youtubeAPI.getChannelGraph();
         setChannelGraph(graph.master_nodes || []);
       } catch (error) {
-        logger.error("ContentPage", "Failed to load channel graph", error);
+        logger.error("DashboardPage", "Failed to load channel graph", error);
       }
     };
     loadChannelGraph();
@@ -126,7 +126,7 @@ export default function ContentPage() {
           }
         }
       } catch (error) {
-        logger.error("ContentPage", "Failed to load latest job", error);
+        logger.error("DashboardPage", "Failed to load latest job", error);
       } finally {
         setLatestJobLoading(false);
       }
@@ -192,14 +192,14 @@ export default function ContentPage() {
     // Simulate API call
     setTimeout(() => {
       // Here we would call the API to publish
-      logger.info("ContentPage", `Published ${langCode} version of video ${videoId}`);
+      logger.info("DashboardPage", `Published ${langCode} version of video ${videoId}`);
       setProcessingId(undefined);
       alert(`Successfully published ${LANGUAGE_OPTIONS.find(l => l.code === langCode)?.name} version! (Simulation)`);
     }, 1500);
   };
 
   const handleUpdateTitle = (langCode: string, videoId: string, newTitle: string) => {
-    logger.info("ContentPage", `Updated title for ${videoId} (${langCode}): ${newTitle}`);
+    logger.info("DashboardPage", `Updated title for ${videoId} (${langCode}): ${newTitle}`);
     // Here we would call API to update metadata
   };
 
@@ -220,7 +220,7 @@ export default function ContentPage() {
   };
 
   const handleFlagQuickCheck = (reason: string) => {
-    logger.info("ContentPage", `Flagged video ${quickCheckState.videoId} (${quickCheckState.languageCode}): ${reason}`);
+    logger.info("DashboardPage", `Flagged video ${quickCheckState.videoId} (${quickCheckState.languageCode}): ${reason}`);
     setQuickCheckState({ ...quickCheckState, isOpen: false });
     alert("Issue reported to AI engine. We'll regenerate this segment. (Simulation)");
   };
@@ -383,10 +383,32 @@ export default function ContentPage() {
     return views.toString();
   };
 
+  // Get relative time
+  const getRelativeTime = (timestamp: string) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffMs = now.getTime() - time.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
+  };
+
   // Get channel avatar from channel graph
   const getChannelAvatar = (channelId: string) => {
     const masterNode = channelGraph.find(m => m.channel_id === channelId);
     return masterNode?.channel_avatar_url;
+  };
+
+  const getJobVideoInfo = (job: any) => {
+    const video = videos.find(v => v.video_id === job.source_video_id);
+    return {
+      title: video?.title || `Video ${job.source_video_id?.slice(0, 8) || 'Unknown'}`,
+      thumbnail: video?.thumbnail_url
+    };
   };
 
   return (
@@ -396,7 +418,9 @@ export default function ContentPage() {
         <div className="flex flex-col gap-3 sm:gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div className="min-w-0 flex-1">
-              <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal ${textClass} mb-1 sm:mb-2 truncate`}>Content Library</h1>
+              <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal ${textClass} mb-1 sm:mb-2 truncate`}>
+                Dashboard
+              </h1>
               <p className={`text-xs sm:text-sm md:text-base ${textSecondaryClass} truncate`}>
                 Manage your videos and track translation progress across languages
               </p>
@@ -486,6 +510,94 @@ export default function ContentPage() {
 
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="w-full flex flex-col px-2 sm:px-4">
+
+          {/* Recent Workflow Runs */}
+          {!dashboardLoading && dashboard?.recent_jobs && dashboard.recent_jobs.length > 0 && (
+            <div className="mb-8 pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-lg font-semibold ${textClass} flex items-center gap-2`}>
+                  <Sparkles className="h-5 w-5 text-olleey-yellow" />
+                  Recent Workflows
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push('/workflows')}
+                  className={`${textSecondaryClass} hover:${textClass}`}
+                >
+                  View All
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {dashboard.recent_jobs.slice(0, 5).map((job) => {
+                  const videoInfo = getJobVideoInfo(job);
+                  const flags = (job.target_languages || []).map(code =>
+                    LANGUAGE_OPTIONS.find(l => l.code === code)?.flag || "🌍"
+                  );
+
+                  return (
+                    <div
+                      key={job.job_id}
+                      className={`${cardClass} border ${borderClass} rounded-2xl p-4 hover:shadow-lg hover:border-olleey-yellow/30 transition-all cursor-pointer group flex flex-col h-full`}
+                      onClick={() => handleShowTerminal(job.job_id, videoInfo.title, job.target_languages?.[0])}
+                    >
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className={`w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 ${cardAltClass} border ${borderClass} shadow-inner`}>
+                          {videoInfo.thumbnail ? (
+                            <img src={videoInfo.thumbnail} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Play className={`h-5 w-5 ${textSecondaryClass}`} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className={`text-sm font-semibold ${textClass} truncate leading-snug mb-1.5`}>
+                            {videoInfo.title}
+                          </h4>
+                          <div className="flex items-center gap-2">
+                            <StatusChip status={job.status} size="xs" />
+                            {job.progress !== undefined && job.progress > 0 && job.status !== 'completed' && job.status !== 'failed' && (
+                              <span className={`text-[10px] font-bold ${textSecondaryClass}`}>{job.progress}%</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
+                        <div className="flex items-center -space-x-1">
+                          {flags.slice(0, 3).map((flag, idx) => (
+                            <div key={idx} className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-white/5 border border-white/10`} title={job.target_languages?.[idx]} style={{ zIndex: 10 - idx }}>
+                              {flag}
+                            </div>
+                          ))}
+                          {flags.length > 3 && (
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${textSecondaryClass} bg-white/5 border border-white/10 z-0`}>
+                              +{flags.length - 3}
+                            </div>
+                          )}
+                        </div>
+                        <span className={`text-[10px] ${textSecondaryClass} font-medium`}>
+                          {job.created_at ? getRelativeTime(job.created_at) : ""}
+                        </span>
+                      </div>
+
+                      {job.progress !== undefined && job.progress > 0 && job.status !== 'completed' && job.status !== 'failed' && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full overflow-hidden px-4 pb-1">
+                          <div className="w-full h-full bg-gray-200/5 dark:bg-gray-800/10 overflow-hidden rounded-full">
+                            <div
+                              className="h-full bg-olleey-yellow transition-all duration-500 shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                              style={{ width: `${job.progress}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
 
 

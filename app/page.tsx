@@ -153,6 +153,7 @@ function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
 }
 
 import CreatorsShowcase from "@/components/LandingPage/CreatorsShowcase";
+import AIProductsShowcase from "@/components/LandingPage/AIProductsShowcase";
 
 export default function Index() {
   const router = useRouter();
@@ -202,6 +203,7 @@ export default function Index() {
 
       <FlowchartAnimation />
       <CreatorsShowcase />
+      <AIProductsShowcase />
 
       {/* Pricing Section */}
       <section id="pricing" className="bg-white pb-20 mb-20 mt-10">

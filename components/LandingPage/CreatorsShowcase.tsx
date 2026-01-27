@@ -5,7 +5,27 @@ import Image from "next/image";
 import { ArrowUpRight, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const features = [
+interface Feature {
+  id: string;
+  title: string;
+  description: string;
+  media: {
+    type: "image" | "video" | "custom_podcast";
+    src: string;
+    alt?: string;
+    poster?: string;
+  };
+  footer: {
+    text: string;
+    link?: string;
+    action?: string;
+    isBrandLogo?: boolean;
+    brand?: string;
+    icon?: string;
+  };
+}
+
+const features: Feature[] = [
   {
     id: "zero-touch",
     title: "ZERO-TOUCH INGESTION",

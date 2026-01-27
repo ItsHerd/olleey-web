@@ -11,6 +11,7 @@ import ReactFlow, {
     useEdgesState,
     Handle,
     Position,
+    MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -142,41 +143,91 @@ const initialEdges: Edge[] = [
         id: 'e1',
         source: 'text-input-1',
         target: 'gen3-image',
-        type: 'smoothstep',
+        type: 'default',
         animated: false,
-        style: { stroke: '#6b7280', strokeWidth: 2 },
+        style: {
+            stroke: '#3b82f6',
+            strokeWidth: 2.5,
+            strokeLinecap: 'round',
+        },
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#3b82f6',
+            width: 20,
+            height: 20,
+        },
     },
     {
         id: 'e2',
         source: 'image-input',
         target: 'gen3-image',
-        type: 'smoothstep',
+        type: 'default',
         animated: false,
-        style: { stroke: '#6b7280', strokeWidth: 2 },
+        style: {
+            stroke: '#3b82f6',
+            strokeWidth: 2.5,
+            strokeLinecap: 'round',
+        },
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#3b82f6',
+            width: 20,
+            height: 20,
+        },
     },
     {
         id: 'e3',
         source: 'gen3-image',
         target: 'gen3-video',
-        type: 'smoothstep',
+        type: 'default',
         animated: false,
-        style: { stroke: '#6b7280', strokeWidth: 2 },
+        style: {
+            stroke: '#3b82f6',
+            strokeWidth: 2.5,
+            strokeLinecap: 'round',
+        },
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#3b82f6',
+            width: 20,
+            height: 20,
+        },
     },
     {
         id: 'e4',
         source: 'text-input-2',
         target: 'align',
-        type: 'smoothstep',
+        type: 'default',
         animated: false,
-        style: { stroke: '#6b7280', strokeWidth: 2 },
+        style: {
+            stroke: '#3b82f6',
+            strokeWidth: 2.5,
+            strokeLinecap: 'round',
+        },
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#3b82f6',
+            width: 20,
+            height: 20,
+        },
     },
     {
         id: 'e5',
         source: 'gen3-video',
         target: 'align',
-        type: 'smoothstep',
+        type: 'default',
         animated: false,
-        style: { stroke: '#6b7280', strokeWidth: 2 },
+        style: {
+            stroke: '#3b82f6',
+            strokeWidth: 2.5,
+            strokeLinecap: 'round',
+        },
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#3b82f6',
+            width: 20,
+            height: 20,
+        },
     },
 ];
 
@@ -208,9 +259,17 @@ export function FlowchartAnimation() {
                     onEdgesChange={onEdgesChange}
                     nodeTypes={nodeTypes}
                     defaultEdgeOptions={{
-                        type: 'smoothstep',
+                        type: 'default',
                         animated: false,
-                        style: { stroke: '#6b7280', strokeWidth: 2 },
+                        style: {
+                            stroke: '#3b82f6',
+                            strokeWidth: 2.5,
+                            strokeLinecap: 'round',
+                        },
+                        markerEnd: {
+                            type: MarkerType.ArrowClosed,
+                            color: '#3b82f6',
+                        },
                     }}
                     fitView
                     fitViewOptions={{ padding: 0.2 }}

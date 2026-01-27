@@ -3,12 +3,13 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActivityQueue from "@/components/ActivityQueue";
-import ContentPage from "../ContentPage";
+import DashboardPage from "../DashboardPage";
 import ChannelsPage from "../ChannelsPage";
 import AccountsPage from "../AccountsPage";
-import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings, Plus } from "lucide-react";
+import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings, Plus, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguagesPage from "../LanguagesPage";
+import GuardrailsPage from "../GuardrailsPage";
 import JobsPage from "../JobsPage";
 import NotificationsPage from "../NotificationsPage";
 import SettingsPage from "../SettingsPage";
@@ -21,8 +22,9 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
+    DropdownMenuSeparator,
+    DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { CreateProjectModal } from "@/components/ui/create-project-modal";
 import { ComingSoonPage } from "@/components/ComingSoonPage";
@@ -31,15 +33,27 @@ function AppContent() {
     const { theme } = useTheme();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [currentPage, setCurrentPage] = useState("Content");
+    const [currentPage, setCurrentPage] = useState("Dashboard");
     // Determine if authenticated from token storage initially
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     // Always treat onboarding as complete to allow access to dashboard
     const [onboardingComplete, setOnboardingComplete] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
+
+    // Persist sidebar state
+    useEffect(() => {
+        const savedState = localStorage.getItem("sidebarOpen");
+        if (savedState !== null) {
+            setIsSidebarOpen(savedState === "true");
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem("sidebarOpen", String(isSidebarOpen));
+    }, [isSidebarOpen]);
 
     // Use the dashboard hook for data - only enabled when authenticated
     const { dashboard, loading: dashboardLoading } = useDashboard({ enabled: isAuthenticated });
@@ -50,6 +64,8 @@ function AppContent() {
     const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
     const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
     const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
+    const isDark = theme === "dark";
+    const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
 
     const getChannelAvatar = (channelId?: string) => {
         if (!channelId) return undefined;
@@ -64,7 +80,7 @@ function AppContent() {
         const params = new URLSearchParams(window.location.search);
         const pageParam = params.get("page");
         if (!pageParam) {
-            setCurrentPage("Content");
+            setCurrentPage("Dashboard");
         }
     };
 
@@ -136,12 +152,12 @@ function AppContent() {
         const pageParam = searchParams?.get("page");
         if (pageParam) {
             // Map page param to valid page names
-            const validPages = ["Content", "Channels", "Accounts", "Queued Jobs", "Notifications", "Dynamic Sponsors", "Comment Mirroring", "Settings"];
+            const validPages = ["Dashboard", "Channels", "Accounts", "Workflows", "Notifications", "Dynamic Sponsors", "Comment Mirroring", "Settings"];
             if (validPages.includes(pageParam)) {
                 setCurrentPage(pageParam);
-            } else if (pageParam === "Languages") {
-                // Handle legacy "Languages" page name
-                setCurrentPage("Queued Jobs");
+            } else if (pageParam === "Languages" || pageParam === "Queued Jobs") {
+                // Handle legacy page names
+                setCurrentPage("Workflows");
             }
         }
     }, [searchParams]);
@@ -169,21 +185,23 @@ function AppContent() {
         authAPI.logout();
         setIsAuthenticated(false);
         setOnboardingComplete(false);
-        setCurrentPage("Content");
+        setCurrentPage("Dashboard");
         setIsSidebarOpen(false);
     };
 
     const renderPage = () => {
         // Pass selectedChannelId to the page if needed, though they might read from URL independently
         switch (currentPage) {
-            case "Content":
-                return <ContentPage />;
+            case "Dashboard":
+                return <DashboardPage />;
             case "Channels":
                 return <ChannelsPage />;
             case "Accounts":
                 return <AccountsPage onLogout={handleLogout} />;
-            case "Queued Jobs":
+            case "Workflows":
                 return <JobsPage />;
+            case "Guardrails":
+                return <GuardrailsPage />;
             case "Languages":
                 return <LanguagesPage />;
             case "Notifications":
@@ -209,7 +227,7 @@ function AppContent() {
             case "Settings":
                 return <SettingsPage />;
             default:
-                return <ContentPage />;
+                return <DashboardPage />;
         }
     };
 
@@ -233,6 +251,8 @@ function AppContent() {
         return <LoginPage onLoginSuccess={handleLoginSuccess} />;
     }
 
+    const selectedProjectChannelName = channelGraph.find(m => m.connection_id === selectedProject?.master_connection_id)?.channel_name;
+
     // Show main app (with onboarding or content)
     return (
         <div className={`h-screen ${bgClass} overflow-hidden`}>
@@ -247,6 +267,7 @@ function AppContent() {
                         isOpen={isSidebarOpen}
                         projects={projects}
                         selectedProject={selectedProject}
+                        selectedProjectChannelName={selectedProjectChannelName}
                         onProjectSelect={setSelectedProject}
                         onCreateProject={() => setIsCreateProjectModalOpen(true)}
                     />
@@ -256,75 +277,115 @@ function AppContent() {
                 <div className={`flex-1 flex flex-col overflow-hidden ${bgClass} relative min-w-0`}>
 
                     {/* Breadcrumb Header */}
-                    <header className={`flex items-center h-14 px-4 border-b ${theme === 'light' ? 'border-gray-200 bg-white/50' : 'border-gray-800 bg-[#0f0f0f]/50'} shrink-0 gap-2 backdrop-blur-sm z-10`}>
+                    <header className={`flex items-center h-14 px-4 border-b ${theme === 'light' ? 'border-light-border bg-white/80' : 'border-dark-border bg-dark-bg/80'} shrink-0 gap-2 backdrop-blur-sm z-10`}>
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`h-9 w-9 ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10' : ''}`}
+                            className={`h-9 w-9 ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10' : textClass}`}
                         >
                             <PanelLeft className="h-4 w-4" />
                         </Button>
 
-                        {/* Page Name */}
-                        <h2 className={`text-lg font-semibold ${textClass} ml-2`}>
-                            {currentPage}
-                        </h2>
+                        {/* Breadcrumbs */}
+                        <div className="flex items-center gap-1 sm:gap-2 ml-2 overflow-hidden">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button
+                                        className={`flex items-center gap-1 text-sm font-medium ${textSecondaryClass} hover:${textClass} transition-colors truncate max-w-[150px] outline-none group`}
+                                        title={selectedProject?.name || "All Projects"}
+                                    >
+                                        <span className="truncate">{selectedProject?.name || "All Projects"}</span>
+                                        <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-xl shadow-xl overflow-hidden z-[100]`}>
+                                    <DropdownMenuLabel className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest px-3 py-2`}>
+                                        Select Project
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                    {projects.map((project) => (
+                                        <DropdownMenuItem
+                                            key={project.id}
+                                            onClick={() => setSelectedProject(project)}
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${selectedProject?.id === project.id
+                                                    ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/5 text-olleey-yellow font-bold')
+                                                    : (isDark ? 'text-dark-textSecondary hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-black')
+                                                }`}
+                                        >
+                                            <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === project.id ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-transparent'}`} />
+                                            <span className="truncate text-sm">{project.name}</span>
+                                        </DropdownMenuItem>
+                                    ))}
+                                    <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                    <DropdownMenuItem
+                                        onClick={() => setIsCreateProjectModalOpen(true)}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${isDark ? 'text-olleey-yellow hover:bg-olleey-yellow/10' : 'text-olleey-yellow hover:bg-olleey-yellow/5'} font-bold transition-colors`}
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        <span className="text-sm">New Project</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            <ChevronRight className={`h-3 w-3 ${textSecondaryClass} opacity-40 shrink-0`} />
+
+                            <h1 className={`text-sm sm:text-base font-bold ${textClass} truncate`}>
+                                {currentPage}
+                            </h1>
+                        </div>
 
                         <div className="ml-auto flex items-center gap-1 sm:gap-2">
-                            {/* Add Channel Button */}
+                            {/* Add Channel Button - Compact */}
                             <Button
                                 variant="ghost"
+                                size="sm"
                                 onClick={() => router.push("/connections/add")}
-                                className="gap-2 px-3"
+                                className={`h-9 px-2 sm:px-3 gap-2 ${isDark ? 'hover:bg-rolleey-yellow/10 text-olleey-yellow' : 'hover:bg-olleey-yellow/5 text-olleey-yellow'} transition-all`}
                                 title="Add Channel"
                             >
                                 <div className="relative">
-                                    <Youtube className="h-4 w-4 flex-shrink-0" />
-                                    <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full w-2 h-2 border border-white dark:border-black flex items-center justify-center">
-                                        <Plus className="h-1.5 w-1.5 text-white" />
+                                    <Youtube className="h-4 w-4" />
+                                    <div className="absolute -top-1 -right-1 bg-olleey-yellow rounded-full w-2 h-2 border border-black flex items-center justify-center">
+                                        <Plus className="h-1.5 w-1.5 text-black" />
                                     </div>
                                 </div>
-                                <span className="hidden md:inline text-sm font-medium">Add Channel</span>
+                                <span className="hidden lg:inline text-xs font-bold uppercase tracking-wider">Add Connection</span>
                             </Button>
+
+                            <div className={`h-4 w-[1px] ${borderClass} mx-1 hidden sm:block`} />
 
                             {/* Notifications Link */}
                             <Button
-                                variant={currentPage === "Notifications" ? "secondary" : "ghost"}
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setCurrentPage("Notifications")}
-                                className={`gap-2 p-2 ${currentPage === "Notifications" ? 'text-olleey-yellow' : ''}`}
+                                className={`h-9 w-9 rounded-lg transition-all ${currentPage === "Notifications" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
                                 title="Notifications"
                             >
-                                <Bell className="h-4 w-4 flex-shrink-0" />
-                                <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-200 ${currentPage === "Notifications" ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
-                                    Notifications
-                                </span>
+                                <Bell className="h-4 w-4" />
                             </Button>
 
                             {/* Settings Link */}
                             <Button
-                                variant={currentPage === "Settings" ? "secondary" : "ghost"}
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setCurrentPage("Settings")}
-                                className={`gap-2 p-2 ${currentPage === "Settings" ? 'text-olleey-yellow' : ''}`}
+                                className={`h-9 w-9 rounded-lg transition-all ${currentPage === "Settings" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
                                 title="Settings"
                             >
-                                <Settings className="h-4 w-4 flex-shrink-0" />
-                                <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-200 ${currentPage === "Settings" ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
-                                    Settings
-                                </span>
+                                <Settings className="h-4 w-4" />
                             </Button>
 
                             {/* Account/User Link */}
                             <Button
-                                variant={currentPage === "Accounts" ? "secondary" : "ghost"}
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setCurrentPage("Accounts")}
-                                className={`gap-2 p-2 ${currentPage === "Accounts" ? 'text-olleey-yellow' : ''}`}
+                                className={`h-9 w-9 rounded-lg transition-all ${currentPage === "Accounts" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
                                 title="Account"
                             >
-                                <User className="h-4 w-4 flex-shrink-0" />
-                                <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-200 ${currentPage === "Accounts" ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
-                                    Account
-                                </span>
+                                <User className="h-4 w-4" />
                             </Button>
                         </div>
                     </header>
@@ -334,11 +395,6 @@ function AppContent() {
                     </main>
 
                     {/* Onboarding Overlay - REMOVED */}
-                </div>
-
-                {/* Activity Queue - Hidden on smaller screens, shown on xl+ */}
-                <div className="flex-shrink-0 hidden xl:block">
-                    <ActivityQueue />
                 </div>
             </div>
 

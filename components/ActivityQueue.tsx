@@ -23,16 +23,6 @@ export default function ActivityQueue() {
     enabled: true,
   });
 
-  // Debug logging
-  if (activeJobs.length > 0) {
-    logger.debug("ActivityQueue", "Rendering active jobs", {
-      count: activeJobs.length,
-      statuses: activeJobs.map(j => j.status)
-    });
-  } else {
-    logger.debug("ActivityQueue", "No active jobs to render");
-  }
-
   const [reviewJobId, setReviewJobId] = useState<string | null>(null);
 
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";

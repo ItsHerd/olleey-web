@@ -2,6 +2,7 @@
 
 import Header from "./Header";
 import Hero from "./Hero";
+import AIProductsShowcase from "./AIProductsShowcase";
 
 interface LandingPageProps {
     onLoginClick: () => void;
@@ -13,6 +14,7 @@ export default function LandingPage({ onLoginClick, onGetStartedClick }: Landing
         <div className="min-h-screen bg-white font-sans selection:bg-black selection:text-white">
             <Header onLoginClick={onLoginClick} onGetStartedClick={onGetStartedClick} />
             <Hero onGetStartedClick={onGetStartedClick} />
+            <AIProductsShowcase />
 
             {/* Footer Placeholder */}
             <footer className="bg-gray-50 border-t border-gray-100 py-12 md:py-20">

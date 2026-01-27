@@ -1,12 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import ThemeProviderWrapper from "./ThemeProviderWrapper";
 
 import { ReduxProvider } from "@/components/ReduxProvider";
 import { ToastProvider } from "@/components/ui/use-toast";
-
-const montserrat = Montserrat({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Olleey Dashboard",
@@ -20,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={montserrat.className}>
+      <body className={GeistSans.className}>
         <ReduxProvider>
           <ThemeProviderWrapper>
             <ToastProvider>

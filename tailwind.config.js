@@ -71,10 +71,10 @@ module.exports = {
       colors: {
         // Light Theme
         light: {
-          bg: "#F5F7FA",
-          bgAlt: "#ffffff",
-          card: "#ffffff",
-          cardAlt: "#f0f2f5",
+          bg: "#ffffffff",
+          bgAlt: "#ffffffff",
+          card: "#ffffffff",
+          cardAlt: "#ffffffff",
           text: "#000000",
           textSecondary: "#4a5568",
           accent: "#F05D5E",
@@ -120,38 +120,38 @@ module.exports = {
           muted: "#9aa0a6",
           accent: "#3ea6ff"
         },
-        border: "hsl(214.3 31.8% 91.4%)",
-        input: "hsl(214.3 31.8% 91.4%)",
-        ring: "hsl(221.2 83.2% 53.3%)",
-        background: "hsl(0 0% 100%)",
-        foreground: "hsl(222.2 84% 4.9%)",
+        border: "var(--theme-border)",
+        input: "var(--theme-border)",
+        ring: "var(--theme-accent)",
+        background: "var(--theme-bg)",
+        foreground: "var(--theme-text)",
         primary: {
-          DEFAULT: "hsl(221.2 83.2% 53.3%)",
-          foreground: "hsl(210 40% 98%)",
+          DEFAULT: "var(--theme-accent)",
+          foreground: "#ffffff",
         },
         secondary: {
-          DEFAULT: "hsl(210 40% 96.1%)",
-          foreground: "hsl(222.2 47.4% 11.2%)",
+          DEFAULT: "var(--theme-accent-secondary)",
+          foreground: "#ffffff",
         },
         destructive: {
           DEFAULT: "hsl(0 84.2% 60.2%)",
           foreground: "hsl(210 40% 98%)",
         },
         muted: {
-          DEFAULT: "hsl(210 40% 96.1%)",
-          foreground: "hsl(215.4 16.3% 46.9%)",
+          DEFAULT: "var(--theme-bg-alt)",
+          foreground: "var(--theme-text-secondary)",
         },
         accent: {
-          DEFAULT: "hsl(210 40% 96.1%)",
-          foreground: "hsl(222.2 47.4% 11.2%)",
+          DEFAULT: "var(--theme-accent)",
+          foreground: "#ffffff",
         },
         popover: {
-          DEFAULT: "hsl(0 0% 100%)",
-          foreground: "hsl(222.2 84% 4.9%)",
+          DEFAULT: "var(--theme-card)",
+          foreground: "var(--theme-text)",
         },
         card: {
-          DEFAULT: "hsl(0 0% 100%)",
-          foreground: "hsl(222.2 84% 4.9%)",
+          DEFAULT: "var(--theme-card)",
+          foreground: "var(--theme-text)",
         },
       },
     }

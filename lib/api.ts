@@ -72,6 +72,13 @@ export interface ChannelStatus {
   permissions: string[];
 }
 
+export interface ChannelStatistics {
+  subscriberCount: string;
+  videoCount: string;
+  viewCount: string;
+  hiddenSubscriberCount: boolean;
+}
+
 export interface LanguageChannel {
   id: string;
   channel_id: string;
@@ -84,6 +91,7 @@ export interface LanguageChannel {
     status: "active" | "expired" | "restricted" | "disconnected";
     permissions: string[];
   };
+  statistics?: ChannelStatistics;
   videos_count: number;
   last_upload: string | null;
   is_paused?: boolean;
@@ -100,6 +108,7 @@ export interface MasterNode {
   is_paused?: boolean;
   connected_at: string;
   status: ChannelStatus;
+  statistics?: ChannelStatistics;
   language_channels: LanguageChannel[];
   total_videos: number;
   total_translations: number;
@@ -1147,6 +1156,38 @@ export interface CreateJobRequest {
   is_simulation?: boolean;
 }
 
+export interface JobWorkflowState {
+  metadata_extraction: {
+    status: "pending" | "processing" | "completed" | "failed";
+    title?: string;
+    description?: string;
+    completed_at?: string;
+  };
+  translations: Record<string, {
+    title_status: "pending" | "processing" | "completed" | "failed";
+    description_status: "pending" | "processing" | "completed" | "failed";
+    title_text?: string;
+    description_text?: string;
+    completed_at?: string;
+  }>;
+  video_dubbing: Record<string, {
+    status: "pending" | "downloading" | "transcribing" | "voice_cloning" | "lip_sync" | "completed" | "failed";
+    progress: number;
+    video_url?: string;
+    completed_at?: string;
+  }>;
+  thumbnails: Record<string, {
+    status: "pending" | "generating" | "completed" | "failed";
+    thumbnail_url?: string;
+    completed_at?: string;
+  }>;
+  approval_status: {
+    requires_review: boolean;
+    approved_languages: string[];
+    rejected_languages: string[];
+  };
+}
+
 export interface Job {
   job_id: string;
   source_video_id: string;
@@ -1159,6 +1200,7 @@ export interface Job {
   completed_at?: string;
   error_message?: string;
   project_id?: string;
+  workflow_state?: JobWorkflowState;
 }
 
 export interface JobListResponse {
