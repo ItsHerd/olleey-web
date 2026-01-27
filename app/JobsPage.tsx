@@ -247,6 +247,7 @@ export default function JobsPage() {
                     targetLanguages={jobs.find(j => j.job_id === selectedGraphJobId)?.target_languages || []}
                     channelName={videos.find(v => v.video_id === jobs.find(j => j.job_id === selectedGraphJobId)?.source_video_id)?.channel_name}
                     videoTitle={videos.find(v => v.video_id === jobs.find(j => j.job_id === selectedGraphJobId)?.source_video_id)?.title}
+                    videoThumbnail={videos.find(v => v.video_id === jobs.find(j => j.job_id === selectedGraphJobId)?.source_video_id)?.thumbnail_url}
                     onApprove={(lang: string) => console.log('Approved via modal:', lang)}
                     onReject={(lang: string) => console.log('Rejected via modal:', lang)}
                     onRetry={() => console.log('Retry via modal')}

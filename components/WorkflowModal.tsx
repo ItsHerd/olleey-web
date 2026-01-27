@@ -6,6 +6,7 @@ import ReactFlow, {
     Node,
     Edge,
     Background,
+    BackgroundVariant,
     Controls,
     MarkerType,
     Position,
@@ -40,6 +41,7 @@ interface WorkflowModalProps {
     targetLanguages: string[];
     channelName?: string;
     videoTitle?: string;
+    videoThumbnail?: string;
     onApprove?: (language: string) => void;
     onReject?: (language: string) => void;
     onRetry?: () => void;
@@ -49,85 +51,132 @@ interface WorkflowModalProps {
 // Custom node component for workflow stages
 const WorkflowStageNode = ({ data }: any) => {
     const { theme } = useTheme();
-    const getStatusColor = (status: string) => {
-        const isDark = theme === 'dark';
+    const isDark = theme === 'dark';
+
+    const getStatusColors = (status: string) => {
         switch (status) {
             case 'completed':
-                return isDark
-                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                    : 'border-emerald-500 bg-emerald-50 text-emerald-700';
+                return {
+                    border: 'border-emerald-500/50',
+                    bg: isDark ? 'bg-emerald-500/5' : 'bg-emerald-50',
+                    text: 'text-emerald-500',
+                    pulse: 'bg-emerald-500',
+                    badge: 'bg-emerald-500/10 text-emerald-500'
+                };
             case 'processing':
-                return isDark
-                    ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                    : 'border-blue-500 bg-blue-50 text-blue-700';
+                return {
+                    border: 'border-blue-500/50',
+                    bg: isDark ? 'bg-blue-500/5' : 'bg-blue-50',
+                    text: 'text-blue-500',
+                    pulse: 'bg-blue-500 animate-pulse',
+                    badge: 'bg-blue-500/10 text-blue-500'
+                };
             case 'failed':
-                return isDark
-                    ? 'border-red-500 bg-red-500/10 text-red-400'
-                    : 'border-red-500 bg-red-50 text-red-700';
+                return {
+                    border: 'border-red-500/50',
+                    bg: isDark ? 'bg-red-500/5' : 'bg-red-50',
+                    text: 'text-red-500',
+                    pulse: 'bg-red-500',
+                    badge: 'bg-red-500/20 text-red-500'
+                };
             case 'review':
-                return isDark
-                    ? 'border-amber-500 bg-amber-500/10 text-amber-400'
-                    : 'border-amber-500 bg-amber-50 text-amber-700';
+                return {
+                    border: 'border-amber-500/50',
+                    bg: isDark ? 'bg-amber-500/5' : 'bg-amber-50',
+                    text: 'text-amber-500',
+                    pulse: 'bg-amber-500 animate-pulse',
+                    badge: 'bg-amber-500/10 text-amber-500'
+                };
             default:
-                return isDark
-                    ? 'border-gray-700 bg-gray-800/10 text-gray-400'
-                    : 'border-gray-300 bg-gray-50 text-gray-500';
+                return {
+                    border: isDark ? 'border-gray-800' : 'border-gray-200',
+                    bg: isDark ? 'bg-gray-900/40' : 'bg-gray-50',
+                    text: isDark ? 'text-gray-400' : 'text-gray-500',
+                    pulse: 'bg-gray-300',
+                    badge: isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-200 text-gray-500'
+                };
         }
     };
 
+    const colors = getStatusColors(data.status);
     const Icon = data.icon;
-    const isCompleted = data.status === 'completed';
-    const colorClass = getStatusColor(data.status);
 
     return (
-        <div className="relative">
-            <Handle type="target" position={Position.Top} style={{ background: '#6b7280', opacity: 0 }} />
-            <Handle type="source" position={Position.Bottom} style={{ background: '#6b7280', opacity: 0 }} />
+        <div className={`${isDark ? 'bg-[#1a1c20] border-gray-800' : 'bg-white border-gray-200'} border rounded-2xl overflow-hidden shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] w-[200px] transition-all hover:shadow-[0_8px_30px_-10px_rgba(0,0,0,0.15)] group relative`}>
+            <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-blue-500 !border-none !-translate-x-1" />
+            <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-blue-500 !border-none !translate-x-1" />
 
-            <div className={`relative ${theme === 'dark' ? 'bg-[#1a1c20] shadow-[0_10px_30px_rgba(0,0,0,0.5)]' : 'bg-white shadow-lg'} rounded-xl border-2 ${colorClass} p-4 min-w-[180px] transition-all duration-300`}>
-                {/* Icon and Title */}
-                <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-10 h-10 rounded-lg ${colorClass} flex items-center justify-center`}>
-                        <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <h4 className={`font-semibold text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-900'} truncate`}>{data.label}</h4>
-                        <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} truncate`}>{data.subtitle}</p>
-                    </div>
+            {/* Inner Content */}
+            <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <span className={`p-1 px-2.5 rounded-lg text-[9px] font-bold uppercase tracking-widest ${colors.badge}`}>
+                        {data.category || 'Workflow'}
+                    </span>
+                    <div className={`w-1.5 h-1.5 rounded-full ${colors.pulse}`} />
                 </div>
 
-                {/* Status Badge */}
-                <div className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${colorClass}`}>
-                    {data.status}
+                <div className="flex items-center gap-2 mb-1">
+                    <div className={`w-6 h-6 rounded flex items-center justify-center ${colors.badge}`}>
+                        <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <h4 className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'} truncate`}>{data.label}</h4>
                 </div>
 
-                {/* Completion Checkmark */}
-                {isCompleted && (
-                    <div className="absolute -top-2 -right-2 bg-emerald-500 rounded-full p-1 border-2 border-white shadow-lg">
-                        <CheckCircle className="w-4 h-4 text-white" />
-                    </div>
+                {data.oneLiner && (
+                    <p className={`text-[9px] ${isDark ? 'text-gray-400 border-gray-800' : 'text-gray-500 border-blue-100'} mb-2 font-medium leading-relaxed italic border-l-2 pl-2`}>
+                        {data.oneLiner}
+                    </p>
                 )}
 
-                {/* Action Buttons for Review Status */}
-                {data.status === 'review' && data.showActions && (
-                    <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
-                        <button
-                            onClick={() => data.onApprove?.()}
-                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition-colors border border-emerald-200"
-                        >
-                            <ThumbsUp className="w-3 h-3" />
-                            Approve
-                        </button>
-                        <button
-                            onClick={() => data.onReject?.()}
-                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-xs font-semibold transition-colors border border-red-200"
-                        >
-                            <ThumbsDown className="w-3 h-3" />
-                            Reject
-                        </button>
-                    </div>
+                <div className="aspect-[2/1] relative bg-gray-100 dark:bg-black/20 rounded-xl overflow-hidden mb-2 flex items-center justify-center border border-gray-100 dark:border-gray-800">
+                    {data.imageUrl ? (
+                        <img src={data.imageUrl} alt={data.label} className="w-full h-full object-cover" />
+                    ) : (
+                        <span className="text-2xl">{data.emoji || '⚙️'}</span>
+                    )}
+                </div>
+
+                {data.subtitle && (
+                    <p className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-tight mb-1`}>
+                        {data.subtitle}
+                    </p>
                 )}
             </div>
+
+            {/* Footer / Status */}
+            <div className={`${isDark ? 'bg-black/20 border-gray-800/50' : 'bg-gray-50/50 border-gray-100'} p-2 px-3 flex justify-between items-center border-t group-hover:bg-opacity-80 transition-colors`}>
+                <span className={`text-[8px] font-bold uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'} tracking-tighter`}>{data.actionLabel || 'STATUS'}</span>
+                <span className={`text-[9px] font-bold uppercase ${colors.text}`}>{data.status || 'Ready'}</span>
+            </div>
+
+            {/* Completion Checkmark Overlay */}
+            {data.status === 'completed' && (
+                <div className="absolute top-2 right-2 -mr-1 -mt-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="bg-emerald-500 rounded-full p-0.5 shadow-lg">
+                        <CheckCircle className="w-3 h-3 text-white" />
+                    </div>
+                </div>
+            )}
+
+            {/* Action Buttons for Review Status */}
+            {data.status === 'review' && data.showActions && (
+                <div className={`flex gap-1 p-2 border-t ${isDark ? 'border-gray-800 bg-black/40' : 'border-gray-100 bg-white'}`}>
+                    <button
+                        onClick={() => data.onApprove?.()}
+                        className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-emerald-500 text-white hover:bg-emerald-600 rounded-lg text-[9px] font-bold transition-colors shadow-sm"
+                    >
+                        <ThumbsUp className="w-2.5 h-2.5" />
+                        APPROVE
+                    </button>
+                    <button
+                        onClick={() => data.onReject?.()}
+                        className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-red-500 text-white hover:bg-red-600 rounded-lg text-[9px] font-bold transition-colors shadow-sm"
+                    >
+                        <ThumbsDown className="w-2.5 h-2.5" />
+                        REJECT
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
@@ -141,6 +190,7 @@ export function WorkflowModal({
     targetLanguages,
     channelName,
     videoTitle,
+    videoThumbnail,
     onApprove,
     onReject,
     onRetry,
@@ -188,24 +238,33 @@ export function WorkflowModal({
             {
                 id: 'metadata',
                 type: 'workflowStage',
-                position: { x: 400, y: 0 },
+                position: { x: 0, y: 150 },
                 data: {
                     icon: FileText,
                     label: 'Metadata Extraction',
+                    category: 'INPUT',
+                    oneLiner: 'Automatic ingestion of source data...',
+                    emoji: '📑',
+                    imageUrl: videoThumbnail,
                     subtitle: 'Extracting title & description',
                     status: workflowState.metadata_extraction?.status || 'pending',
+                    actionLabel: 'EXTRACT',
                 },
             },
             {
                 id: 'translation',
                 type: 'workflowStage',
-                position: { x: 100, y: 200 },
+                position: { x: 300, y: 0 },
                 data: {
-                    icon: Mic,
-                    label: 'Translation',
+                    icon: Globe,
+                    label: 'AI Translation',
+                    category: 'PROCESS',
+                    oneLiner: 'Context-aware native rewrite...',
+                    emoji: '🌍',
                     subtitle: 'Multi-lingual scripts',
                     status: translationStatus,
                     showActions: translationStatus === 'review',
+                    actionLabel: 'LOCALIZE',
                     onApprove: () => onApprove?.('all'),
                     onReject: () => onReject?.('all'),
                 },
@@ -213,34 +272,47 @@ export function WorkflowModal({
             {
                 id: 'assets',
                 type: 'workflowStage',
-                position: { x: 400, y: 200 },
+                position: { x: 300, y: 300 },
                 data: {
                     icon: ImageIcon,
-                    label: 'Assets',
-                    subtitle: 'Thumbnails',
+                    label: 'Visual Assets',
+                    category: 'ASSET',
+                    oneLiner: 'High-impact localized media...',
+                    emoji: '🎨',
+                    subtitle: 'Thumbnails & static media',
                     status: assetsStatus,
+                    actionLabel: 'GENERATE',
                 },
             },
             {
                 id: 'dubbing',
                 type: 'workflowStage',
-                position: { x: 700, y: 200 },
+                position: { x: 600, y: 150 },
                 data: {
                     icon: Video,
                     label: 'AI Dubbing',
+                    category: 'ENGINE',
+                    oneLiner: 'Neural voice & lip-sync...',
+                    emoji: '🎙️',
                     subtitle: 'Voice cloning & lip-sync',
                     status: dubbingStatus,
+                    actionLabel: 'RENDER',
                 },
             },
             {
                 id: 'distribution',
                 type: 'workflowStage',
-                position: { x: 400, y: 400 },
+                position: { x: 900, y: 150 },
                 data: {
                     icon: Sparkles,
-                    label: 'Distribution',
+                    label: 'Global Release',
+                    category: 'OUTPUT',
+                    oneLiner: 'Multichannel worldwide blast...',
+                    emoji: '🚀',
+                    imageUrl: videoThumbnail,
                     subtitle: 'Ready for publishing',
                     status: jobStatus === 'completed' ? 'completed' : 'pending',
+                    actionLabel: 'PUBLISH',
                 },
             },
         ];
@@ -250,54 +322,45 @@ export function WorkflowModal({
                 id: 'e-metadata-translation',
                 source: 'metadata',
                 target: 'translation',
-                type: 'default',
+                type: 'smoothstep',
                 animated: translationStatus === 'processing',
-                style: { stroke: '#3b82f6', strokeWidth: 2.5 },
+                style: { stroke: '#3b82f6', strokeWidth: 2, opacity: 0.6 },
                 markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' },
             },
             {
                 id: 'e-metadata-assets',
                 source: 'metadata',
                 target: 'assets',
-                type: 'default',
+                type: 'smoothstep',
                 animated: assetsStatus === 'processing',
-                style: { stroke: '#3b82f6', strokeWidth: 2.5 },
+                style: { stroke: '#3b82f6', strokeWidth: 2, opacity: 0.6 },
                 markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' },
             },
             {
-                id: 'e-metadata-dubbing',
-                source: 'metadata',
-                target: 'dubbing',
-                type: 'default',
-                animated: dubbingStatus === 'processing',
-                style: { stroke: '#3b82f6', strokeWidth: 2.5 },
-                markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' },
-            },
-            {
-                id: 'e-translation-distribution',
+                id: 'e-translation-dubbing',
                 source: 'translation',
-                target: 'distribution',
-                type: 'default',
-                animated: false,
-                style: { stroke: '#3b82f6', strokeWidth: 2.5 },
+                target: 'dubbing',
+                type: 'smoothstep',
+                animated: dubbingStatus === 'processing' && translationStatus === 'completed',
+                style: { stroke: '#3b82f6', strokeWidth: 2, opacity: 0.6 },
                 markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' },
             },
             {
-                id: 'e-assets-distribution',
+                id: 'e-assets-dubbing',
                 source: 'assets',
-                target: 'distribution',
-                type: 'default',
-                animated: false,
-                style: { stroke: '#3b82f6', strokeWidth: 2.5 },
+                target: 'dubbing',
+                type: 'smoothstep',
+                animated: dubbingStatus === 'processing' && assetsStatus === 'completed',
+                style: { stroke: '#3b82f6', strokeWidth: 2, opacity: 0.6 },
                 markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' },
             },
             {
                 id: 'e-dubbing-distribution',
                 source: 'dubbing',
                 target: 'distribution',
-                type: 'default',
-                animated: false,
-                style: { stroke: '#3b82f6', strokeWidth: 2.5 },
+                type: 'smoothstep',
+                animated: jobStatus === 'processing' && dubbingStatus === 'completed',
+                style: { stroke: '#3b82f6', strokeWidth: 2, opacity: 0.6 },
                 markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' },
             },
         ];
@@ -366,7 +429,7 @@ export function WorkflowModal({
                             minZoom={0.1}
                             maxZoom={2}
                         >
-                            <Background color={isDark ? "#333" : "#e5e7eb"} gap={16} />
+                            <Background color={isDark ? "#1a1c20" : "#f1f5f9"} gap={20} variant={BackgroundVariant.Dots} />
                             <Controls className={isDark ? "bg-gray-800 border-gray-700 fill-white" : ""} />
                         </ReactFlow>
                     </div>

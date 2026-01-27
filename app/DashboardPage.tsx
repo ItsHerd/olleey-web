@@ -743,16 +743,13 @@ export default function DashboardPage() {
                       </div>
                     ) : activities.length > 0 ? (
                       activities.map((activity, idx) => (
-                        <div key={activity.id} className="flex gap-4 relative">
-                          {idx !== activities.length - 1 && (
-                            <div className={`absolute left-[13px] top-7 bottom-[-24px] w-[1px] ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
-                          )}
-                          <div className={`w-7 h-7 rounded-full ${activity.color || 'bg-olleey-yellow'} flex items-center justify-center text-white shrink-0 z-10 shadow-lg shadow-black/10`}>
-                            {activity.icon === 'check' ? <CheckCircle className="w-3.5 h-3.5" /> :
-                              activity.icon === 'upload' ? <Radio className="w-3.5 h-3.5" /> :
-                                activity.icon === 'plus' ? <Plus className="w-3.5 h-3.5" /> :
-                                  activity.icon === 'youtube' ? <Youtube className="w-3.5 h-3.5" /> :
-                                    <Zap className="w-3.5 h-3.5" />}
+                        <div key={activity.id} className="flex gap-4 items-start">
+                          <div className={`w-8 h-8 flex items-center justify-center shrink-0`}>
+                            {activity.icon === 'check' ? <CheckCircle className="w-4 h-4 text-green-500" /> :
+                              activity.icon === 'upload' ? <Radio className="w-4 h-4 text-olleey-yellow" /> :
+                                activity.icon === 'plus' ? <Plus className="w-4 h-4 text-blue-500" /> :
+                                  activity.icon === 'youtube' ? <Youtube className="w-4 h-4 text-red-500" /> :
+                                    <Zap className="w-4 h-4 text-purple-500" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className={`text-sm ${textClass} font-medium leading-snug mb-1`}>
