@@ -155,6 +155,25 @@ export interface DashboardData {
   recent_jobs: ProcessingJob[];
   language_channels: LanguageChannel[];
   total_language_channels: number;
+  weekly_stats?: {
+    videos_completed: number;
+    languages_added: number;
+    growth_percentage: number;
+  };
+  credits_summary?: {
+    total_credits: number;
+    used_credits: number;
+    remaining_credits: number;
+  };
+}
+
+export interface ActivityItem {
+  id: string;
+  message: string;
+  time: string;
+  icon: string;
+  color: string;
+  type?: string;
 }
 
 // Token Management
@@ -421,8 +440,12 @@ export const dashboardAPI = {
   /**
    * Get dashboard data
    */
-  getDashboard: async (): Promise<DashboardData> => {
-    const response = await authenticatedFetch(`${API_BASE_URL}/dashboard`, {
+  getDashboard: async (projectId?: string): Promise<DashboardData> => {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.append("project_id", projectId);
+
+    const url = `${API_BASE_URL}/dashboard${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedFetch(url, {
       method: "GET",
     });
 
@@ -436,24 +459,53 @@ export const dashboardAPI = {
 
     return await response.json();
   },
+
+  /**
+   * Get global activity feed
+   */
+  getActivity: async (projectId?: string): Promise<ActivityItem[]> => {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.append("project_id", projectId);
+
+    const url = `${API_BASE_URL}/dashboard/activity${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to load activity feed");
+    }
+
+    return await response.json();
+  },
 };
 
 // Video Types
+export interface LocalizationInfo {
+  status: "not-started" | "processing" | "draft" | "live";
+  progress: number;
+  video_url?: string;
+  job_id?: string;
+}
+
 export interface Video {
   video_id: string;
   title: string;
   description?: string;
   channel_id: string;
-  channel_name: string;
+  channel_name?: string;
   thumbnail_url?: string;
   duration?: number;
   published_at: string;
   view_count?: number;
+  global_views?: number;
   like_count?: number;
   status?: string;
   video_type?: "original" | "translated";
   source_video_id?: string | null;
   translated_languages?: string[];
+  localizations?: Record<string, LocalizationInfo>;
 }
 
 export interface VideoListResponse {
@@ -669,7 +721,7 @@ export const youtubeAPI = {
     const queryParams = new URLSearchParams();
     if (projectId) queryParams.append("project_id", projectId);
 
-    const url = `${API_BASE_URL}/channels/graph${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const url = `${API_BASE_URL}/youtube/channel_graph${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     const response = await authenticatedFetch(url, {
       method: "GET",
     });
@@ -747,12 +799,13 @@ export const videosAPI = {
    * List videos
    * GET /videos/list
    */
-  listVideos: async (params?: { page?: number; page_size?: number; channel_id?: string; project_id?: string }): Promise<VideoListResponse> => {
+  listVideos: async (params?: { page?: number; page_size?: number; channel_id?: string; project_id?: string; video_type?: "all" | "original" | "translated" }): Promise<VideoListResponse> => {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.page_size) queryParams.append("page_size", params.page_size.toString());
     if (params?.channel_id) queryParams.append("channel_id", params.channel_id);
     if (params?.project_id) queryParams.append("project_id", params.project_id);
+    if (params?.video_type) queryParams.append("video_type", params.video_type);
 
     const url = `${API_BASE_URL}/videos/list${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     const response = await authenticatedFetch(url, {

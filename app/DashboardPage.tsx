@@ -12,35 +12,21 @@ import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { ManualProcessView } from "@/components/ui/manual-process-view";
-import { youtubeAPI, jobsAPI, type MasterNode, type Video, type Job } from "@/lib/api";
+import { youtubeAPI, jobsAPI, dashboardAPI, type MasterNode, type Video, type Job, type ActivityItem, type LocalizationInfo } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
-import { SmartVideoTable } from "@/components/SmartTable/SmartVideoTable";
 import { QuickCheckModal } from "@/components/SmartTable/QuickCheckModal";
 import { JobTerminalPanel } from "@/components/JobTerminalPanel";
 import { useToast } from "@/components/ui/use-toast";
-// Removed duplicate StatusChip import
-
 
 type ViewMode = "carousel" | "table";
 
-
+interface VideoWithLocalizations extends Video {
+  estimated_credits?: number;
+}
 
 type LocalizationStatus = "live" | "draft" | "processing" | "not-started";
 
-interface LocalizationInfo {
-  status: LocalizationStatus;
-  url?: string;
-  views?: number;
-  video_id?: string;
-  confidence?: number;
-}
-
-interface VideoWithLocalizations extends Video {
-  localizations?: Record<string, LocalizationInfo>;
-  estimated_credits?: number;
-  global_views?: number;
-}
 
 const DASHBOARD_ACTIVITIES = [
   { id: 1, type: 'detection', message: 'Your video "The Future of AI" was detected', time: '5m ago', icon: <Youtube className="w-3.5 h-3.5" />, color: 'bg-red-500' },
@@ -66,6 +52,8 @@ export default function DashboardPage() {
   const [latestJob, setLatestJob] = useState<Job | null>(null);
   const [latestJobLoading, setLatestJobLoading] = useState(false);
   const [showManualProcessView, setShowManualProcessView] = useState(false);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
 
   // Quick Check Modal State
   const [quickCheckState, setQuickCheckState] = useState<{
@@ -144,7 +132,26 @@ export default function DashboardPage() {
     if (selectedProject) {
       loadLatestJob();
     }
-  }, [selectedProject]);
+  }, [selectedProject?.id]);
+
+  // Fetch Activity Feed
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        setActivitiesLoading(true);
+        const data = await dashboardAPI.getActivity(selectedProject?.id);
+        setActivities(data);
+      } catch (err) {
+        logger.error("DashboardPage", "Failed to fetch activities", err);
+      } finally {
+        setActivitiesLoading(false);
+      }
+    };
+
+    if (dashboard) {
+      fetchActivities();
+    }
+  }, [dashboard, selectedProject?.id]);
 
   // Update channel selection when project changes
   useEffect(() => {
@@ -269,7 +276,7 @@ export default function DashboardPage() {
       const processedVideos = videos.filter(v => v.video_type === "translated");
       return processedVideos.map(video => ({
         ...video,
-        localizations: { 'processed': { status: 'live' } }, // Dummy localization to show "Live" status
+        localizations: { 'processed': { status: 'live', progress: 100 } }, // Dummy localization to show "Live" status
         estimated_credits: 0,
         global_views: video.view_count,
       }));
@@ -301,8 +308,8 @@ export default function DashboardPage() {
         if (activeJob) {
           localizations[lang] = {
             status: activeJob.status === "waiting_approval" ? "draft" : "processing",
-            video_id: activeJob.job_id,
-            confidence: 94, // Mock confidence
+            progress: activeJob.progress || 0,
+            job_id: activeJob.job_id,
           };
         } else if (translatedLanguages.includes(lang)) {
           const translatedVideo = videos.find(v =>
@@ -313,21 +320,21 @@ export default function DashboardPage() {
 
           localizations[lang] = {
             status: "live",
-            url: translatedVideo ? `https://youtube.com/watch?v=${translatedVideo.video_id}` : undefined,
-            views: translatedVideo?.view_count,
-            video_id: translatedVideo?.video_id,
+            progress: 100,
+            job_id: translatedVideo?.video_id,
           };
         } else {
           // Not yet translated - mark as not started
           localizations[lang] = {
             status: "not-started",
+            progress: 0,
           };
         }
       });
 
       const duration = video.duration || 600; // Default 10 minutes
       const estimated_credits = Math.ceil(duration / 60); // 1 credit per minute
-      const global_views = Object.values(localizations).reduce((sum, loc) => sum + (loc.views || 0), 0);
+      const global_views = video.global_views || 0;
 
       return {
         ...video,
@@ -408,7 +415,7 @@ export default function DashboardPage() {
 
   // Get channel avatar from channel graph
   const getChannelAvatar = (channelId: string) => {
-    const masterNode = channelGraph.find(m => m.channel_id === channelId);
+    const masterNode = channelGraph.find((m: MasterNode) => m.channel_id === channelId);
     return masterNode?.channel_avatar_url;
   };
 
@@ -468,51 +475,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* No Processed Videos Yet - Show right after subtitle when applicable */}
-          {!videosLoading && (videoTypeFilter === "all" || videoTypeFilter === "original") && filteredVideos.length > 0 && (() => {
-            // Find the most recently processed video (has at least one live localization)
-            const videosWithLive = filteredVideos.filter(video => {
-              const localizations = video.localizations || {};
-              return Object.values(localizations).some(l => l.status === "live");
-            });
 
-            const latestProcessed = videosWithLive[0];
-
-            // Show empty state if no processed videos
-            if (!latestProcessed) {
-              return (
-                <div className="mt-6">
-                  <div className={`${cardClass} rounded-xl border-2 border-dashed ${borderClass} overflow-hidden relative`}>
-                    <div className="flex flex-col md:flex-row gap-4 p-6 items-center text-center md:text-left">
-                      <div className={`w-24 h-24 rounded-full ${cardAltClass} flex items-center justify-center flex-shrink-0`}>
-                        <Sparkles className={`h-12 w-12 ${textSecondaryClass}`} />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className={`font-semibold ${textClass} text-base mb-2`}>
-                          No Processed Videos Yet
-                        </h3>
-                        <p className={`text-sm ${textSecondaryClass} mb-3`}>
-                          Start dubbing your videos to see your latest processed content here
-                        </p>
-                        <Button
-                          onClick={() => {
-                            if (filteredVideos[0]) {
-                              router.push(`/content/${filteredVideos[0].video_id}`);
-                            }
-                          }}
-                          className="gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 border-none shadow-sm"
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          Start Processing
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-            return null;
-          })()}
 
 
 
@@ -534,8 +497,8 @@ export default function DashboardPage() {
           {showManualProcessView ? (
             <ManualProcessView
               availableChannels={
-                channelGraph.flatMap(master =>
-                  master.language_channels.map(lc => ({
+                channelGraph.flatMap((master: MasterNode) =>
+                  master.language_channels.map((lc: any) => ({
                     id: lc.channel_id,
                     name: lc.channel_name,
                     language_code: lc.language_code,
@@ -774,24 +737,38 @@ export default function DashboardPage() {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-olleey-yellow/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none" />
 
                   <div className="relative space-y-6">
-                    {DASHBOARD_ACTIVITIES.map((activity, idx) => (
-                      <div key={activity.id} className="flex gap-4 relative">
-                        {idx !== DASHBOARD_ACTIVITIES.length - 1 && (
-                          <div className={`absolute left-[13px] top-7 bottom-[-24px] w-[1px] ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
-                        )}
-                        <div className={`w-7 h-7 rounded-full ${activity.color} flex items-center justify-center text-white shrink-0 z-10 shadow-lg shadow-black/10`}>
-                          {activity.icon}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm ${textClass} font-medium leading-snug mb-1`}>
-                            {activity.message}
-                          </p>
-                          <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-tight`}>
-                            {activity.time}
-                          </span>
-                        </div>
+                    {activitiesLoading ? (
+                      <div className="flex justify-center py-10">
+                        <Loader2 className="w-6 h-6 animate-spin text-olleey-yellow opacity-40" />
                       </div>
-                    ))}
+                    ) : activities.length > 0 ? (
+                      activities.map((activity, idx) => (
+                        <div key={activity.id} className="flex gap-4 relative">
+                          {idx !== activities.length - 1 && (
+                            <div className={`absolute left-[13px] top-7 bottom-[-24px] w-[1px] ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                          )}
+                          <div className={`w-7 h-7 rounded-full ${activity.color || 'bg-olleey-yellow'} flex items-center justify-center text-white shrink-0 z-10 shadow-lg shadow-black/10`}>
+                            {activity.icon === 'check' ? <CheckCircle className="w-3.5 h-3.5" /> :
+                              activity.icon === 'upload' ? <Radio className="w-3.5 h-3.5" /> :
+                                activity.icon === 'plus' ? <Plus className="w-3.5 h-3.5" /> :
+                                  activity.icon === 'youtube' ? <Youtube className="w-3.5 h-3.5" /> :
+                                    <Zap className="w-3.5 h-3.5" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm ${textClass} font-medium leading-snug mb-1`}>
+                              {activity.message}
+                            </p>
+                            <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-tight`}>
+                              {activity.time}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-10">
+                        <p className={`text-xs ${textSecondaryClass}`}>No recent activity</p>
+                      </div>
+                    )}
                   </div>
 
                   <Button variant="ghost" className={`w-full text-xs font-bold ${textSecondaryClass} hover:${textClass} mt-4`}>
@@ -801,21 +778,32 @@ export default function DashboardPage() {
 
                 {/* Quick Stats Mini-Widget */}
                 <div className={`mt-6 ${cardClass} border ${borderClass} rounded-2xl p-4 bg-gradient-to-br from-rolleey-yellow/5 to-transparent`}>
-                  <h4 className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest mb-3`}>This Week</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>This Week</h4>
+                    {dashboard?.weekly_stats?.growth_percentage && (
+                      <span className="text-[9px] font-bold text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded-md">
+                        +{dashboard.weekly_stats.growth_percentage}%
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="text-center">
-                      <p className={`text-lg font-bold ${textClass}`}>12</p>
+                      <p className={`text-lg font-bold ${textClass}`}>{dashboard?.weekly_stats?.videos_completed || 0}</p>
                       <p className={`text-[9px] ${textSecondaryClass} uppercase`}>Videos</p>
                     </div>
                     <div className="h-8 w-[1px] bg-white/5" />
                     <div className="text-center">
-                      <p className={`text-lg font-bold text-olleey-yellow`}>48</p>
+                      <p className={`text-lg font-bold text-olleey-yellow`}>{dashboard?.weekly_stats?.languages_added || 0}</p>
                       <p className={`text-[9px] ${textSecondaryClass} uppercase`}>Langs</p>
                     </div>
                     <div className="h-8 w-[1px] bg-white/5" />
                     <div className="text-center">
-                      <p className={`text-lg font-bold text-indigo-400`}>1.2M</p>
-                      <p className={`text-[9px] ${textSecondaryClass} uppercase`}>Views</p>
+                      <p className={`text-lg font-bold text-indigo-400`}>
+                        {dashboard?.credits_summary
+                          ? `${Math.round(dashboard.credits_summary.used_credits / 60)}h`
+                          : '0h'}
+                      </p>
+                      <p className={`text-[9px] ${textSecondaryClass} uppercase`}>Usage</p>
                     </div>
                   </div>
                 </div>
