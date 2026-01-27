@@ -339,15 +339,15 @@ export default function ChannelsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className={`${bgClass} border-b ${borderClass}`}>
-                      <th className={`px-6 py-4 text-xs font-semibold ${textSecondaryClass} uppercase tracking-wider`}>Channel</th>
-                      <th className={`px-6 py-4 text-xs font-semibold ${textSecondaryClass} uppercase tracking-wider`}>Role</th>
-                      <th className={`px-6 py-4 text-xs font-semibold ${textSecondaryClass} uppercase tracking-wider`}>Status</th>
-                      <th className={`px-6 py-4 text-xs font-semibold ${textSecondaryClass} uppercase tracking-wider text-center`}>Content</th>
-                      <th className={`px-6 py-4 text-xs font-semibold ${textSecondaryClass} uppercase tracking-wider text-right`}>Actions</th>
+                    <tr className={`${isDark ? 'bg-white/5' : 'bg-gray-50'} border-b ${borderClass}`}>
+                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Channel</th>
+                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Role</th>
+                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Status</th>
+                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest text-center`}>Content</th>
+                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest text-right`}>Actions</th>
                     </tr>
                   </thead>
-                  <tbody className={`divide-y ${borderClass}`}>
+                  <tbody className={`divide-y ${borderClass} ${textClass}`}>
                     {tableData.map((item: any) => {
                       const statusConfig = getStatusConfig(item.status);
                       const isMaster = item.type === "master";

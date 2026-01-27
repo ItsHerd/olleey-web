@@ -119,7 +119,7 @@ export default function GuardrailsPage() {
                                     max="100"
                                     value={qualityThreshold}
                                     onChange={(e) => setQualityThreshold(parseInt(e.target.value))}
-                                    className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-olleey-yellow"
+                                    className={`w-full h-1.5 ${isDark ? 'bg-white/10' : 'bg-gray-200'} rounded-lg appearance-none cursor-pointer accent-olleey-yellow`}
                                 />
                             </div>
                         </div>

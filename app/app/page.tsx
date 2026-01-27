@@ -277,12 +277,12 @@ function AppContent() {
                 <div className={`flex-1 flex flex-col overflow-hidden ${bgClass} relative min-w-0`}>
 
                     {/* Breadcrumb Header */}
-                    <header className={`flex items-center h-14 px-4 border-b ${theme === 'light' ? 'border-light-border bg-white/80' : 'border-dark-border bg-dark-bg/80'} shrink-0 gap-2 backdrop-blur-sm z-10`}>
+                    <header className={`flex items-center h-14 px-4 border-b ${isDark ? 'border-dark-border bg-dark-bg/80' : 'border-light-border bg-white/80'} shrink-0 gap-2 backdrop-blur-md z-20`}>
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`h-9 w-9 ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10' : textClass}`}
+                            className={`h-9 w-9 rounded-lg transition-all ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10' : `${textClass} hover:bg-white/5`}`}
                         >
                             <PanelLeft className="h-4 w-4" />
                         </Button>
@@ -309,15 +309,14 @@ function AppContent() {
                                             key={project.id}
                                             onClick={() => setSelectedProject(project)}
                                             className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${selectedProject?.id === project.id
-                                                    ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/5 text-olleey-yellow font-bold')
-                                                    : (isDark ? 'text-dark-textSecondary hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-black')
+                                                ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/5 text-olleey-yellow font-bold')
+                                                : (isDark ? 'text-dark-textSecondary hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-black')
                                                 }`}
                                         >
                                             <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === project.id ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-transparent'}`} />
                                             <span className="truncate text-sm">{project.name}</span>
                                         </DropdownMenuItem>
                                     ))}
-                                    <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
                                     <DropdownMenuItem
                                         onClick={() => setIsCreateProjectModalOpen(true)}
                                         className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${isDark ? 'text-olleey-yellow hover:bg-olleey-yellow/10' : 'text-olleey-yellow hover:bg-olleey-yellow/5'} font-bold transition-colors`}
@@ -393,8 +392,6 @@ function AppContent() {
                     <main className={`flex-1 overflow-y-auto ${bgClass} px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 lg:py-10 min-w-0`}>
                         {renderPage()}
                     </main>
-
-                    {/* Onboarding Overlay - REMOVED */}
                 </div>
             </div>
 

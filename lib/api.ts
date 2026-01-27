@@ -1153,6 +1153,9 @@ export interface CreateJobRequest {
   source_channel_id: string;
   target_languages: string[];
   project_id: string;
+  title?: string;
+  description?: string;
+  thumbnail_url?: string;
   is_simulation?: boolean;
 }
 

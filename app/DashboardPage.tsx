@@ -4,14 +4,14 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ManualProcessModal } from "@/components/ui/manual-process-modal";
 import { LanguageBadge } from "@/components/ui/LanguageBadge";
 import { StatusChip } from "@/components/ui/StatusChip";
-import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause, Sparkles, RefreshCw, Filter, SlidersHorizontal, Check } from "lucide-react";
+import { Play, Globe2, Eye, Clock, ChevronDown, Plus, Loader2, ArrowLeft, ArrowRight, Grid3x3, List, X, Radio, Youtube, CheckCircle, XCircle, AlertCircle, Pause, Sparkles, RefreshCw, Filter, SlidersHorizontal, Check, MessageSquare, Star, Zap, History, FileCheck, Search, Menu, TrendingUp, ChevronRight } from "lucide-react";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
+import { ManualProcessView } from "@/components/ui/manual-process-view";
 import { youtubeAPI, jobsAPI, type MasterNode, type Video, type Job } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
@@ -42,6 +42,14 @@ interface VideoWithLocalizations extends Video {
   global_views?: number;
 }
 
+const DASHBOARD_ACTIVITIES = [
+  { id: 1, type: 'detection', message: 'Your video "The Future of AI" was detected', time: '5m ago', icon: <Youtube className="w-3.5 h-3.5" />, color: 'bg-red-500' },
+  { id: 2, type: 'completion', message: 'Spanish version completed', time: '12m ago', icon: <CheckCircle className="w-3.5 h-3.5" />, color: 'bg-green-500' },
+  { id: 3, type: 'review', message: '3 languages require review', time: '45m ago', icon: <FileCheck className="w-3.5 h-3.5" />, color: 'bg-olleey-yellow' },
+  { id: 4, type: 'published', message: 'Portuguese published to @CreatorBR', time: '1h ago', icon: <Globe2 className="w-3.5 h-3.5" />, color: 'bg-indigo-500' },
+  { id: 5, type: 'update', message: 'Lip-sync model updated – rerender recommended', time: '2h ago', icon: <Zap className="w-3.5 h-3.5" />, color: 'bg-purple-500' },
+];
+
 export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,7 +65,7 @@ export default function DashboardPage() {
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
   const [latestJob, setLatestJob] = useState<Job | null>(null);
   const [latestJobLoading, setLatestJobLoading] = useState(false);
-  const [isManualProcessModalOpen, setIsManualProcessModalOpen] = useState(false);
+  const [showManualProcessView, setShowManualProcessView] = useState(false);
 
   // Quick Check Modal State
   const [quickCheckState, setQuickCheckState] = useState<{
@@ -97,6 +105,7 @@ export default function DashboardPage() {
   const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
   const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
   const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
+  const isDark = theme === "dark";
 
   // Load channel graph for avatars
   useEffect(() => {
@@ -414,7 +423,7 @@ export default function DashboardPage() {
   return (
     <div className={`w-full h-full ${bgClass} flex flex-col overflow-hidden`}>
       {/* Header */}
-      <div className={`flex-shrink-0 px-0 py-3 sm:py-4 md:py-6 border-b ${borderClass}`}>
+      <div className={`flex-shrink-0 px-0 py-3 sm:py-4 md:py-6`}>
         <div className="flex flex-col gap-3 sm:gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div className="min-w-0 flex-1">
@@ -432,18 +441,29 @@ export default function DashboardPage() {
                 size="icon"
                 onClick={() => refetchVideos()}
                 disabled={videosLoading}
-                className="h-10 w-10"
+                className={`h-10 w-10 ${isDark ? 'border-white/10 hover:bg-white/5' : 'border-gray-200'}`}
                 title="Refresh"
               >
                 <RefreshCw className={`h-5 w-5 ${videosLoading ? "animate-spin" : ""}`} />
               </Button>
               <Button
-                onClick={() => setIsManualProcessModalOpen(true)}
-                className="gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 border-none shadow-sm h-10 px-4"
+                onClick={() => setShowManualProcessView(!showManualProcessView)}
+                className={`gap-2 h-10 px-4 transition-all duration-300 ${showManualProcessView
+                  ? (isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-black')
+                  : 'bg-olleey-yellow text-black font-bold hover:shadow-[0_0_15px_rgba(251,191,36,0.4)]'
+                  }`}
               >
-                <Play className="h-4 w-4" />
-                <span className="hidden sm:inline">Start Manual Process</span>
-                <span className="sm:hidden">Start</span>
+                {showManualProcessView ? (
+                  <>
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to Dashboard
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4" />
+                    Start Manual Process
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -511,531 +531,232 @@ export default function DashboardPage() {
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="w-full flex flex-col px-2 sm:px-4">
 
-          {/* Recent Workflow Runs */}
-          {!dashboardLoading && dashboard?.recent_jobs && dashboard.recent_jobs.length > 0 && (
-            <div className="mb-8 pt-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className={`text-lg font-semibold ${textClass} flex items-center gap-2`}>
-                  <Sparkles className="h-5 w-5 text-olleey-yellow" />
-                  Recent Workflows
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => router.push('/workflows')}
-                  className={`${textSecondaryClass} hover:${textClass}`}
-                >
-                  View All
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                {dashboard.recent_jobs.slice(0, 5).map((job) => {
-                  const videoInfo = getJobVideoInfo(job);
-                  const flags = (job.target_languages || []).map(code =>
-                    LANGUAGE_OPTIONS.find(l => l.code === code)?.flag || "🌍"
-                  );
+          {showManualProcessView ? (
+            <ManualProcessView
+              availableChannels={
+                channelGraph.flatMap(master =>
+                  master.language_channels.map(lc => ({
+                    id: lc.channel_id,
+                    name: lc.channel_name,
+                    language_code: lc.language_code,
+                    language_name: lc.language_name
+                  }))
+                )
+              }
+              projectId={selectedProject?.id}
+              onSuccess={() => {
+                setShowManualProcessView(false);
+                refetchVideos();
+              }}
+              onCancel={() => setShowManualProcessView(false)}
+            />
+          ) : (
+            /* Main Dashboard Grid */
+            <div className="flex flex-col lg:flex-row gap-8 mb-8">
 
-                  return (
-                    <div
-                      key={job.job_id}
-                      className={`${cardClass} border ${borderClass} rounded-2xl p-4 hover:shadow-lg hover:border-olleey-yellow/30 transition-all cursor-pointer group flex flex-col h-full`}
-                      onClick={() => handleShowTerminal(job.job_id, videoInfo.title, job.target_languages?.[0])}
-                    >
-                      <div className="flex items-start gap-3 mb-4">
-                        <div className={`w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 ${cardAltClass} border ${borderClass} shadow-inner`}>
-                          {videoInfo.thumbnail ? (
-                            <img src={videoInfo.thumbnail} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Play className={`h-5 w-5 ${textSecondaryClass}`} />
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className={`text-sm font-semibold ${textClass} truncate leading-snug mb-1.5`}>
-                            {videoInfo.title}
-                          </h4>
-                          <div className="flex items-center gap-2">
-                            <StatusChip status={job.status} size="xs" />
-                            {job.progress !== undefined && job.progress > 0 && job.status !== 'completed' && job.status !== 'failed' && (
-                              <span className={`text-[10px] font-bold ${textSecondaryClass}`}>{job.progress}%</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
-                        <div className="flex items-center -space-x-1">
-                          {flags.slice(0, 3).map((flag, idx) => (
-                            <div key={idx} className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-white/5 border border-white/10`} title={job.target_languages?.[idx]} style={{ zIndex: 10 - idx }}>
-                              {flag}
-                            </div>
-                          ))}
-                          {flags.length > 3 && (
-                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${textSecondaryClass} bg-white/5 border border-white/10 z-0`}>
-                              +{flags.length - 3}
-                            </div>
-                          )}
-                        </div>
-                        <span className={`text-[10px] ${textSecondaryClass} font-medium`}>
-                          {job.created_at ? getRelativeTime(job.created_at) : ""}
-                        </span>
-                      </div>
-
-                      {job.progress !== undefined && job.progress > 0 && job.status !== 'completed' && job.status !== 'failed' && (
-                        <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full overflow-hidden px-4 pb-1">
-                          <div className="w-full h-full bg-gray-200/5 dark:bg-gray-800/10 overflow-hidden rounded-full">
-                            <div
-                              className="h-full bg-olleey-yellow transition-all duration-500 shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-                              style={{ width: `${job.progress}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
+              {/* Left Column: Queue & Reviews */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className={`text-xl font-bold ${textClass} flex items-center gap-2`}>
+                    <Clock className="w-5 h-5 text-olleey-yellow" />
+                    Queue & Review
+                  </h2>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-rolleey-yellow animate-pulse" />
+                      <span className={`text-xs font-bold ${textClass}`}>{dashboard?.active_jobs || 0} Active</span>
                     </div>
-                  );
-                })}
+                    <span className={`text-xs font-medium ${textSecondaryClass}`}>
+                      {filteredVideos.length} total videos
+                    </span>
+                  </div>
+                </div>
+
+                {videosLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                    <Loader2 className={`h-8 w-8 animate-spin text-olleey-yellow`} />
+                    <p className={`text-sm ${textSecondaryClass}`}>Syncing your library...</p>
+                  </div>
+                ) : filteredVideos.length === 0 ? (
+                  <div className={`${cardClass} border-2 border-dashed ${borderClass} rounded-2xl p-12 text-center`}>
+                    <p className={`${textSecondaryClass} text-lg mb-2`}>No videos found</p>
+                    <p className={`text-sm ${textSecondaryClass}`}>
+                      Your YouTube content will appear here once connected.
+                    </p>
+                  </div>
+                ) : (
+                  <div className={`${cardClass} border ${borderClass} rounded-2xl overflow-hidden shadow-sm`}>
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className={`${isDark ? 'bg-white/5' : 'bg-gray-50/50'} border-b ${borderClass}`}>
+                          <th className={`px-4 py-3 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Video</th>
+                          <th className={`px-4 py-3 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Status</th>
+                          <th className={`px-4 py-3 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Languages</th>
+                          <th className={`px-4 py-3 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest text-right`}>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {/* Combined & Sorted Videos: Priority to Needs Review and Processing */}
+                        {[
+                          ...filteredVideos.filter(v => getOverallVideoStatus(v.localizations || {}) === "draft"),
+                          ...filteredVideos.filter(v => getOverallVideoStatus(v.localizations || {}) === "processing"),
+                          ...filteredVideos.filter(v => getOverallVideoStatus(v.localizations || {}) !== "draft" && getOverallVideoStatus(v.localizations || {}) !== "processing").slice(0, 10)
+                        ].map((video) => {
+                          const status = getOverallVideoStatus(video.localizations || {});
+                          const isReview = status === "draft";
+                          const isProcessing = status === "processing";
+
+                          return (
+                            <tr
+                              key={video.video_id}
+                              className={`group hover:${isDark ? 'bg-white/[0.02]' : 'bg-gray-50'} transition-colors cursor-pointer`}
+                              onClick={() => router.push(`/content/${video.video_id}`)}
+                            >
+                              <td className="px-4 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative w-16 aspect-video rounded-md overflow-hidden bg-gray-900 shrink-0 shadow-sm" style={{ zIndex: 0 }}>
+                                    {video.thumbnail_url && <img src={video.thumbnail_url} className={`w-full h-full object-cover ${isProcessing ? 'opacity-50' : ''}`} alt="" />}
+                                    {isProcessing && (
+                                      <div className="absolute inset-0 flex items-center justify-center">
+                                        <RefreshCw className="w-3 h-3 text-olleey-yellow animate-spin" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className={`text-sm font-semibold ${textClass} truncate max-w-[200px] mb-0.5`}>
+                                      {video.title}
+                                    </p>
+                                    <p className={`text-[10px] ${textSecondaryClass} truncate`}>
+                                      {video.channel_name} • {getRelativeTime(video.published_at)}
+                                    </p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4">
+                                {isReview ? (
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-olleey-yellow/10 text-olleey-yellow text-[10px] font-bold uppercase tracking-wider border border-olleey-yellow/20">
+                                    <FileCheck className="w-3 h-3" />
+                                    Needs Review
+                                  </span>
+                                ) : isProcessing ? (
+                                  <div className="flex flex-col gap-1.5">
+                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-wider border border-blue-500/20">
+                                      <RefreshCw className="w-3 h-3 animate-spin" />
+                                      Processing
+                                    </span>
+                                    <div className="w-16 h-1 bg-white/5 rounded-full overflow-hidden">
+                                      <div className="h-full bg-olleey-yellow animate-[shimmer_2s_infinite_linear] bg-[length:200%_100%] bg-gradient-to-r from-transparent via-white/30 to-transparent w-full" />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-wider border border-green-500/20">
+                                    <CheckCircle className="w-3 h-3" />
+                                    Published
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-4">
+                                <div className="flex items-center -space-x-1">
+                                  {Object.keys(video.localizations || {})
+                                    .filter(l => video.localizations?.[l].status === 'live' || video.localizations?.[l].status === 'draft')
+                                    .slice(0, 4)
+                                    .map(lang => (
+                                      <div
+                                        key={lang}
+                                        className={`w-6 h-6 rounded-full border-2 ${isDark ? 'border-dark-card' : 'border-white'} ${video.localizations?.[lang].status === 'draft' ? 'bg-olleey-yellow/20 ring-1 ring-olleey-yellow' : 'bg-white/5'} flex items-center justify-center shadow-sm`}
+                                        title={LANGUAGE_OPTIONS.find(l => l.code === lang)?.name}
+                                      >
+                                        <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
+                                      </div>
+                                    ))}
+                                  {Object.keys(video.localizations || {}).length > 4 && (
+                                    <div className={`w-6 h-6 rounded-full border-2 ${isDark ? 'border-dark-card' : 'border-white'} bg-white/5 flex items-center justify-center text-[8px] font-bold ${textSecondaryClass}`}>
+                                      +{Object.keys(video.localizations || {}).length - 4}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 text-right">
+                                <Button
+                                  variant={isReview ? "default" : "ghost"}
+                                  size="sm"
+                                  className={`h-8 px-3 text-[10px] font-bold uppercase tracking-wider ${isReview ? 'bg-olleey-yellow text-black hover:bg-olleey-yellow/90' : `${textSecondaryClass} hover:${textClass}`}`}
+                                >
+                                  {isReview ? "Review" : "Details"}
+                                  <ArrowRight className="w-3 h-3 ml-1.5" />
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Activity Feed */}
+              <div className="w-full lg:w-80 shrink-0">
+                <div className="flex items-center gap-2 mb-6">
+                  <History className="w-5 h-5 text-olleey-yellow" />
+                  <h2 className={`text-xl font-bold ${textClass}`}>Activity Feed</h2>
+                </div>
+
+                <div className={`${cardClass} border ${borderClass} rounded-2xl p-5 space-y-6 relative overflow-hidden`}>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-olleey-yellow/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none" />
+
+                  <div className="relative space-y-6">
+                    {DASHBOARD_ACTIVITIES.map((activity, idx) => (
+                      <div key={activity.id} className="flex gap-4 relative">
+                        {idx !== DASHBOARD_ACTIVITIES.length - 1 && (
+                          <div className={`absolute left-[13px] top-7 bottom-[-24px] w-[1px] ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                        )}
+                        <div className={`w-7 h-7 rounded-full ${activity.color} flex items-center justify-center text-white shrink-0 z-10 shadow-lg shadow-black/10`}>
+                          {activity.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm ${textClass} font-medium leading-snug mb-1`}>
+                            {activity.message}
+                          </p>
+                          <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-tight`}>
+                            {activity.time}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button variant="ghost" className={`w-full text-xs font-bold ${textSecondaryClass} hover:${textClass} mt-4`}>
+                    View Full History
+                  </Button>
+                </div>
+
+                {/* Quick Stats Mini-Widget */}
+                <div className={`mt-6 ${cardClass} border ${borderClass} rounded-2xl p-4 bg-gradient-to-br from-rolleey-yellow/5 to-transparent`}>
+                  <h4 className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest mb-3`}>This Week</h4>
+                  <div className="flex items-center justify-between">
+                    <div className="text-center">
+                      <p className={`text-lg font-bold ${textClass}`}>12</p>
+                      <p className={`text-[9px] ${textSecondaryClass} uppercase`}>Videos</p>
+                    </div>
+                    <div className="h-8 w-[1px] bg-white/5" />
+                    <div className="text-center">
+                      <p className={`text-lg font-bold text-olleey-yellow`}>48</p>
+                      <p className={`text-[9px] ${textSecondaryClass} uppercase`}>Langs</p>
+                    </div>
+                    <div className="h-8 w-[1px] bg-white/5" />
+                    <div className="text-center">
+                      <p className={`text-lg font-bold text-indigo-400`}>1.2M</p>
+                      <p className={`text-[9px] ${textSecondaryClass} uppercase`}>Views</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
-
-
-
-
-
-          {/* Search Bar & Primary Filters - Reorganized Row */}
-          <div className="flex items-center gap-3 mb-6">
-            {/* 1. Search Bar */}
-            <div className="flex-1">
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="Search your library..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full ${cardClass} ${borderClass} ${textClass} placeholder:${textSecondaryClass} text-sm h-11 pl-10 rounded-xl shadow-sm focus:ring-olleey-yellow`}
-                />
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Eye className={`h-4 w-4 ${textSecondaryClass}`} />
-                </div>
-              </div>
-            </div>
-
-            {/* 2. Channel Selector */}
-            {dashboard?.youtube_connections && dashboard.youtube_connections.length > 0 && (
-              <div className="relative channel-dropdown">
-                <Button
-                  variant="outline"
-                  onClick={() => setChannelDropdownOpen(!channelDropdownOpen)}
-                  className={`flex items-center gap-2 rounded-xl px-4 h-11 text-sm shadow-sm ${channelDropdownOpen ? "border-olleey-yellow ring-1 ring-olleey-yellow/20" : ""}`}
-                >
-                  {selectedChannelId && getChannelAvatar(selectedChannelId) ? (
-                    <img
-                      src={getChannelAvatar(selectedChannelId)}
-                      alt="Channel"
-                      className="w-5 h-5 rounded-full object-cover border border-white/10"
-                    />
-                  ) : (
-                    <Youtube className={`h-4 w-4 ${textSecondaryClass}`} />
-                  )}
-                  <span className="font-medium truncate max-w-[120px]">
-                    {dashboard.youtube_connections.find(c => c.youtube_channel_id === selectedChannelId)?.youtube_channel_name || "Channel"}
-                  </span>
-                  <ChevronDown className={`h-4 w-4 ${textSecondaryClass} transition-transform ${channelDropdownOpen ? 'rotate-180' : ''}`} />
-                </Button>
-
-                {channelDropdownOpen && (
-                  <div className={`absolute top-full left-0 mt-2 w-72 ${cardClass} border ${borderClass} rounded-xl shadow-2xl z-50 overflow-hidden backdrop-blur-md`}>
-                    <div className="p-1 focus:outline-none">
-                      {dashboard.youtube_connections.map((channel) => (
-                        <Button
-                          key={channel.youtube_channel_id}
-                          variant={channel.youtube_channel_id === selectedChannelId ? "secondary" : "ghost"}
-                          onClick={() => handleChannelSelect(channel.youtube_channel_id)}
-                          className="w-full flex items-center justify-start gap-3 px-3 py-6 text-sm rounded-lg"
-                        >
-                          <img src={getChannelAvatar(channel.youtube_channel_id)} className="w-6 h-6 rounded-full" />
-                          <span className="truncate">{channel.youtube_channel_name}</span>
-                          {channel.youtube_channel_id === selectedChannelId && <Check className="h-4 w-4 ml-auto text-olleey-yellow" />}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 3. Video Type Selector */}
-            <div className="relative video-type-dropdown">
-              <StatusChip
-                status={videoTypeFilter === "all" ? "queued" : videoTypeFilter === "processed" ? "translated" : "original"}
-                label={videoTypeFilter === "all" ? "All Videos" : videoTypeFilter === "original" ? "Original" : "Processed"}
-                onClick={() => setVideoTypeDropdownOpen(!videoTypeDropdownOpen)}
-                className="h-11 shadow-sm px-4"
-              />
-
-              {videoTypeDropdownOpen && (
-                <div className={`absolute top-full left-0 mt-2 w-48 ${cardClass} border ${borderClass} rounded-xl shadow-2xl z-50 overflow-hidden`}>
-                  <div className="p-1">
-                    {[
-                      { id: "all", label: "All Videos", status: "queued" },
-                      { id: "original", label: "Original Videos", status: "original" },
-                      { id: "processed", label: "Processed Videos", status: "translated" }
-                    ].map((type) => (
-                      <button
-                        key={type.id}
-                        onClick={() => { setVideoTypeFilter(type.id as any); setVideoTypeDropdownOpen(false); }}
-                        className={`w-full flex items-center px-1 py-1 rounded-lg transition-colors ${videoTypeFilter === type.id ? `${cardAltClass}` : `hover:${cardAltClass}`}`}
-                      >
-                        <StatusChip
-                          status={type.status}
-                          label={type.label}
-                          size="sm"
-                          variant={videoTypeFilter === type.id ? "solid" : "light"}
-                          className="w-full border-none shadow-none"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 4. Additional Filters Dropdown */}
-            <div className="relative additional-filters-dropdown">
-              <Button
-                variant="outline"
-                onClick={() => setAdditionalFiltersOpen(!additionalFiltersOpen)}
-                className={`flex items-center gap-2 rounded-xl px-4 h-11 text-sm shadow-sm ${additionalFiltersOpen ? "border-olleey-yellow ring-1 ring-olleey-yellow/20" : ""}`}
-              >
-                <SlidersHorizontal className={`h-4 w-4 ${additionalFiltersOpen ? "text-olleey-yellow" : textSecondaryClass}`} />
-                <span className="font-medium">Filters</span>
-                {selectedLanguages.length > 0 && (
-                  <span className="ml-1 bg-olleey-yellow text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                    {selectedLanguages.length}
-                  </span>
-                )}
-              </Button>
-
-              {additionalFiltersOpen && (
-                <div className={`absolute top-full right-0 mt-2 w-80 ${cardClass} border ${borderClass} rounded-2xl shadow-2xl z-50 p-5 backdrop-blur-md`}>
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className={`text-xs font-bold uppercase tracking-widest ${textSecondaryClass} mb-3`}>Target Languages</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {LANGUAGE_OPTIONS.map((lang) => (
-                          <LanguageBadge
-                            key={lang.code}
-                            flag={lang.flag}
-                            name={lang.name}
-                            isSelected={selectedLanguages.includes(lang.code)}
-                            onClick={() => {
-                              setSelectedLanguages(prev =>
-                                prev.includes(lang.code)
-                                  ? prev.filter(c => c !== lang.code)
-                                  : [...prev, lang.code]
-                              );
-                            }}
-                            size="sm"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 5. View Mode Buttons */}
-            <div className={`flex items-center gap-1 ${cardClass} border ${borderClass} rounded-xl p-1 shadow-sm`}>
-              <Button
-                variant={viewMode === "carousel" ? "default" : "ghost"}
-                size="icon"
-                onClick={() => setViewMode("carousel")}
-                className="h-9 w-9"
-              >
-                <Grid3x3 className="h-5 w-5" />
-              </Button>
-              <Button
-                variant={viewMode === "table" ? "default" : "ghost"}
-                size="icon"
-                onClick={() => setViewMode("table")}
-                className="h-9 w-9"
-              >
-                <List className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Latest Video Processed Card - Only for Original Tab */}
-          {!videosLoading && (videoTypeFilter === "all" || videoTypeFilter === "original") && filteredVideos.length > 0 && (() => {
-            // Find the most recently processed video (has at least one live localization)
-            const videosWithLive = filteredVideos.filter(video => {
-              const localizations = video.localizations || {};
-              return Object.values(localizations).some(l => l.status === "live");
-            });
-
-            const latestProcessed = videosWithLive[0];
-
-            // Show empty state if no processed videos
-            if (!latestProcessed) {
-              return null;
-            }
-
-            const localizations = latestProcessed.localizations || {};
-            const liveCount = Object.values(localizations).filter(l => l.status === "live").length;
-
-            return (
-              <div className="mb-6">
-                <div
-                  className={`${cardClass} rounded-xl border-2 border-indigo-500/30 overflow-hidden cursor-pointer transition-all hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/20 relative group`}
-                  onClick={() => router.push(`/content/${latestProcessed.video_id}`)}
-                >
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent pointer-events-none" />
-
-                  {/* Badge */}
-                  <div className="absolute top-3 left-3 z-10">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg">
-                      <Sparkles className="h-3 w-3" />
-                      Latest Processed
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col md:flex-row gap-4 p-4 relative">
-                    {/* Thumbnail */}
-                    <div className="relative aspect-[4/3] md:w-64 flex-shrink-0 rounded-lg overflow-hidden bg-gray-900">
-                      {latestProcessed.thumbnail_url ? (
-                        <img
-                          src={latestProcessed.thumbnail_url}
-                          alt={latestProcessed.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Play className={`h-12 w-12 ${textSecondaryClass}`} />
-                        </div>
-                      )}
-                      {/* Duration Badge */}
-                      <div className={`absolute bottom-2 right-2 ${bgClass}/90 ${textClass} text-xs px-2 py-0.5 rounded`}>
-                        {formatDuration(latestProcessed.duration)}
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 flex flex-col justify-between min-w-0">
-                      <div>
-                        <h3 className={`font-semibold ${textClass} text-base mb-2 line-clamp-2`}>
-                          {latestProcessed.title}
-                        </h3>
-                        <p className={`text-sm ${textSecondaryClass} mb-3`}>
-                          {latestProcessed.channel_name}
-                        </p>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="space-y-2">
-                        <div className={`flex items-center gap-4 text-sm ${textSecondaryClass}`}>
-                          <div className="flex items-center gap-1.5">
-                            <Eye className="h-4 w-4" />
-                            <span>{formatViews(latestProcessed.view_count)}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Globe2 className="h-4 w-4 text-indigo-400" />
-                            <span className="text-indigo-400 font-medium">{liveCount} {liveCount === 1 ? 'language' : 'languages'}</span>
-                          </div>
-                        </div>
-
-                        {/* Language Flags */}
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {Object.keys(localizations)
-                            .filter(langCode => localizations[langCode]?.status === "live")
-                            .slice(0, 6)
-                            .map(langCode => {
-                              const lang = LANGUAGE_OPTIONS.find(l => l.code === langCode);
-                              return lang ? (
-                                <span key={langCode} className="text-lg" title={lang.name}>
-                                  {lang.flag}
-                                </span>
-                              ) : null;
-                            })}
-                          {liveCount > 6 && (
-                            <span className={`text-xs ${textSecondaryClass} ml-1`}>
-                              +{liveCount - 6} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Content Area - Carousel or Table */}
-          <div className="flex-1 overflow-hidden">
-            {videosLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className={`h-8 w-8 animate-spin ${textClass}Secondary`} />
-              </div>
-            ) : filteredVideos.length === 0 ? (
-              <div className={`${cardClass} rounded-2xl border ${borderClass} p-12 text-center`}>
-                <p className={`${textClass}Secondary text-lg mb-2`}>No videos found</p>
-                <p className={`text-sm ${textClass}Secondary`}>
-                  {searchQuery ? "Try a different search term" : "Your videos will appear here once synced"}
-                </p>
-              </div>
-            ) : viewMode === "table" ? (
-              /* Smart Table View */
-              <SmartVideoTable
-                videos={filteredVideos}
-                languageOptions={LANGUAGE_OPTIONS}
-                onPreview={handlePreview}
-                onPublish={handlePublish}
-                onUpdateTitle={handleUpdateTitle}
-                isProcessingId={processingId}
-                onViewDetails={handleShowTerminal}
-              />
-            ) : (
-              /* Grid View (formerly Carousel) */
-              <div className="w-full">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-                  {/* Regular Video Cards */}
-                  {filteredVideos.map((video) => {
-                    const localizations = video.localizations || {};
-                    const completedCount = Object.values(localizations).filter(l => l.status === "live").length;
-                    const totalCount = selectedLanguages.length;
-                    const overallStatus = getOverallVideoStatus(localizations);
-
-                    // Identify flags to show
-                    const flags: string[] = [];
-
-                    // Assume original content is English
-                    flags.push("🇺🇸");
-
-                    // Add flags for live localizations
-                    Object.keys(localizations).forEach(langCode => {
-                      const match = LANGUAGE_OPTIONS.find(l => l.code === langCode);
-                      if (match && localizations[langCode]?.status === "live") {
-                        flags.push(match.flag);
-                      }
-                    });
-
-                    return (
-                      <div
-                        key={video.video_id}
-                        className={`${cardClass} rounded-xl border ${borderClass} overflow-hidden cursor-pointer transition-colors hover:${cardClass}Alt`}
-                        onClick={() => router.push(`/content/${video.video_id}`)}
-                      >
-                        {/* Thumbnail */}
-                        <div className="relative aspect-[4/3] w-full bg-gray-900">
-                          {video.thumbnail_url ? (
-                            <img
-                              src={video.thumbnail_url}
-                              alt={video.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Play className={`h-12 w-12 ${textClass}Secondary`} />
-                            </div>
-                          )}
-                          {/* Duration Badge */}
-                          <div className={`absolute bottom-2 right-2 ${bgClass}/90 ${textClass} text-xs px-2 py-0.5 rounded`}>
-                            {formatDuration(video.duration)}
-                          </div>
-                          {/* Status Badge */}
-                          <div className="absolute top-2 left-2">
-                            <StatusChip status={overallStatus} size="xs" />
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="p-3 space-y-2">
-                          {/* Title */}
-                          <h3 className={`font-medium ${textClass} text-sm line-clamp-2 leading-tight`}>
-                            {video.title}
-                          </h3>
-
-                          {/* Channel Name */}
-                          <p className={`text-xs ${textClass}Secondary truncate`}>
-                            {video.channel_name}
-                          </p>
-
-                          {/* Stats Row */}
-                          <div className={`flex items-center gap-3 text-xs ${textClass}Secondary`}>
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              <span>{formatViews(video.view_count)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span>{formatDuration(video.duration)}</span>
-                            </div>
-                          </div>
-
-                          {/* Language Flags */}
-                          {flags.length > 0 && (
-                            <div className="flex items-center gap-1">
-                              {flags.slice(0, 5).map((flag, index) => (
-                                <div
-                                  key={index}
-                                  className={`flex items-center justify-center w-6 h-6 rounded-full ${cardClass}Alt border ${borderClass}`}
-                                >
-                                  <span className="text-sm">{flag}</span>
-                                </div>
-                              ))}
-                              {flags.length > 5 && (
-                                <div className={`flex items-center justify-center w-6 h-6 rounded-full ${cardClass}Alt border ${borderClass}`}>
-                                  <span className="text-xs font-medium">+{flags.length - 5}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Progress Bar */}
-                          <div className="flex items-center gap-2">
-                            <div className={`flex-1 h-1.5 rounded-full ${cardClass}Alt overflow-hidden`}>
-                              <div
-                                className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
-                                style={{ width: `${(completedCount / totalCount) * 100}%` }}
-                              />
-                            </div>
-                            <span className={`text-xs ${textClass}Secondary font-medium`}>
-                              {completedCount}/{totalCount}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div >
         </div >
       </div >
 
-      {/* Manual Process Modal */}
-      < ManualProcessModal
-        isOpen={isManualProcessModalOpen}
-        onClose={() => setIsManualProcessModalOpen(false)}
-        availableChannels={
-          channelGraph.flatMap(master =>
-            master.language_channels.map(lc => ({
-              id: lc.channel_id,
-              name: lc.channel_name,
-              language_code: lc.language_code,
-              language_name: lc.language_name
-            }))
-          )
-        }
-        projectId={selectedProject?.id}
-        onSuccess={() => {
-          refetchVideos();
-        }}
-      />
       <QuickCheckModal
         isOpen={quickCheckState.isOpen}
         onClose={() => setQuickCheckState({ ...quickCheckState, isOpen: false })}

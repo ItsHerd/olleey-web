@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { NebulaCube } from './explorations-with-gsap-and-scroll-trigger';
-import { FlowingWaves } from './flowing-waves';
 
 // Define the props interface for type safety and reusability
 interface MinimalistHeroProps {
@@ -30,7 +28,7 @@ interface MinimalistHeroProps {
 const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
     <a
         href={href}
-        className="text-sm font-medium tracking-widest text-foreground/60 transition-colors hover:text-foreground"
+        className="text-sm font-medium tracking-widest text-black/60 transition-colors hover:text-black"
     >
         {children}
     </a>
@@ -38,7 +36,7 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 
 // Helper component for social media icons
 const SocialIcon = ({ href, icon: Icon }: { href: string; icon: LucideIcon }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="text-foreground/60 transition-colors hover:text-foreground">
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-black/60 transition-colors hover:text-black">
         <Icon className="h-5 w-5" />
     </a>
 );
@@ -65,7 +63,7 @@ export const MinimalistHero = ({
     return (
         <div
             className={cn(
-                'relative flex h-screen w-full flex-col items-center justify-between overflow-hidden bg-background p-8 font-sans md:p-12',
+                'relative flex h-screen w-full flex-col items-center justify-between overflow-hidden bg-white text-black p-8 font-sans md:p-12',
                 className
             )}
         >
@@ -92,13 +90,13 @@ export const MinimalistHero = ({
                 <div className="hidden items-center gap-4 md:flex">
                     <button
                         onClick={onSignIn}
-                        className="text-sm font-medium tracking-widest text-foreground/60 transition-colors hover:text-foreground"
+                        className="text-sm font-medium tracking-widest text-black/60 transition-colors hover:text-black"
                     >
                         SIGN IN
                     </button>
                     <button
                         onClick={onSignUp}
-                        className="rounded-full bg-foreground px-6 py-2 text-sm font-medium tracking-widest text-background transition-opacity hover:opacity-90"
+                        className="rounded-full bg-black px-6 py-2 text-sm font-medium tracking-widest text-white transition-opacity hover:opacity-90"
                     >
                         SIGN UP
                     </button>
@@ -111,9 +109,9 @@ export const MinimalistHero = ({
                     aria-label="Toggle menu"
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 >
-                    <span className={cn("block h-0.5 w-6 bg-foreground transition-transform", isMobileMenuOpen && "rotate-45 translate-y-2")}></span>
-                    <span className={cn("block h-0.5 w-6 bg-foreground transition-opacity", isMobileMenuOpen && "opacity-0")}></span>
-                    <span className={cn("block h-0.5 w-5 bg-foreground transition-transform", isMobileMenuOpen && "-rotate-45 -translate-y-2 w-6")}></span>
+                    <span className={cn("block h-0.5 w-6 bg-black transition-transform", isMobileMenuOpen && "rotate-45 translate-y-2")}></span>
+                    <span className={cn("block h-0.5 w-6 bg-black transition-opacity", isMobileMenuOpen && "opacity-0")}></span>
+                    <span className={cn("block h-0.5 w-5 bg-black transition-transform", isMobileMenuOpen && "-rotate-45 -translate-y-2 w-6")}></span>
                 </motion.button>
             </header>
 
@@ -123,25 +121,25 @@ export const MinimalistHero = ({
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-background p-8 md:hidden"
+                    className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-white p-8 md:hidden"
                 >
-                    <div className="flex flex-col items-center space-y-8 text-xl font-medium tracking-widest text-foreground">
+                    <div className="flex flex-col items-center space-y-8 text-xl font-medium tracking-widest text-black">
                         {navLinks.map((link) => (
                             <a
                                 key={link.label}
                                 href={link.href}
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className="transition-colors hover:text-foreground/60"
+                                className="transition-colors hover:text-black/60"
                             >
                                 {link.label}
                             </a>
                         ))}
-                        <button onClick={() => { onSignIn?.(); setIsMobileMenuOpen(false); }} className="text-foreground/60 hover:text-foreground">
+                        <button onClick={() => { onSignIn?.(); setIsMobileMenuOpen(false); }} className="text-black/60 hover:text-black">
                             SIGN IN
                         </button>
                         <button
                             onClick={() => { onSignUp?.(); setIsMobileMenuOpen(false); }}
-                            className="text-foreground"
+                            className="text-black"
                         >
                             SIGN UP
                         </button>
@@ -158,16 +156,16 @@ export const MinimalistHero = ({
                     transition={{ duration: 0.6, delay: 1 }}
                     className="z-20 order-2 md:order-1 text-center md:text-left"
                 >
-                    <p className="mx-auto max-w-xs text-md leading-relaxed text-foreground/80 md:mx-0">{mainText}</p>
+                    <p className="mx-auto max-w-xs text-md leading-relaxed text-black/80 md:mx-0">{mainText}</p>
                     <div className="mt-6 flex flex-col sm:flex-row gap-4 items-center md:items-start">
 
                         <a
                             href="https://cal.com/ahmad-moltafet-q8mgvt"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="rounded-full border-2 border-foreground px-8 py-3 text-sm font-medium tracking-widest text-foreground transition-all hover:bg-foreground hover:text-background"
+                            className="rounded-full border-2 border-black px-8 py-3 text-sm font-medium tracking-widest text-black transition-all hover:bg-black hover:text-white"
                         >
-                            TALK TO FOUNDER
+                            SCHEDULE A DEMO
                         </a>
                     </div>
                 </motion.div>
@@ -202,7 +200,7 @@ export const MinimalistHero = ({
                     transition={{ duration: 0.6, delay: 1.2 }}
                     className="z-20 order-3 flex items-center justify-center text-center md:justify-start"
                 >
-                    <h1 className="text-5xl sm:text-6xl font-extrabold text-foreground md:text-8xl lg:text-9xl">
+                    <h1 className="text-5xl sm:text-6xl font-extrabold text-black md:text-8xl lg:text-9xl">
                         {overlayText.part1}
                         <br />
                         {overlayText.part2}

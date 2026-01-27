@@ -1,32 +1,72 @@
 "use client";
 
-import Header from "./Header";
-import Hero from "./Hero";
+import React from "react";
+import { Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
+import Footer from "./Footer";
+import { MinimalistHero } from "@/components/ui/minimalist-hero";
+import { FlowchartAnimation } from "@/components/FlowchartAnimation";
+import CreatorsShowcase from "./CreatorsShowcase";
 import AIProductsShowcase from "./AIProductsShowcase";
+import { PricingCalculator } from "./PricingCalculator";
 
 interface LandingPageProps {
-    onLoginClick: () => void;
-    onGetStartedClick: () => void;
+    onNavigation: () => void;
 }
 
-export default function LandingPage({ onLoginClick, onGetStartedClick }: LandingPageProps) {
+export default function LandingPage({ onNavigation }: LandingPageProps) {
     return (
-        <div className="min-h-screen bg-white font-sans selection:bg-black selection:text-white">
-            <Header onLoginClick={onLoginClick} onGetStartedClick={onGetStartedClick} />
-            <Hero onGetStartedClick={onGetStartedClick} />
+        <div className="min-h-screen bg-white font-sans">
+            {/* Hero Section - Minimalist Design */}
+            <MinimalistHero
+                logoText=""
+                navLinks={[
+                    { label: 'HOME', href: '#' },
+                    { label: 'PRODUCT', href: '#product' },
+                    { label: 'PRICING', href: '#pricing' },
+                ]}
+                mainText="Build automated workflows that clone, translate, and distribute your content to 10+ languages instantly."
+                readMoreLink="#product"
+                imageSrc="/hero-image.png"
+                imageAlt="Professional content creator"
+                overlayText={{
+                    part1: 'speak',
+                    part2: 'global.',
+                }}
+                socialLinks={[
+                    { icon: Facebook, href: '#' },
+                    { icon: Instagram, href: '#' },
+                    { icon: Twitter, href: '#' },
+                    { icon: Linkedin, href: '#' },
+                ]}
+                languageFlags={['🇺🇸', '🇪🇸', '🇫🇷', '🇩🇪']}
+                totalLanguages={40}
+                onSignIn={onNavigation}
+                onSignUp={onNavigation}
+                onGetStarted={onNavigation}
+            />
+
+            <FlowchartAnimation />
+            <CreatorsShowcase />
             <AIProductsShowcase />
 
-            {/* Footer Placeholder */}
-            <footer className="bg-gray-50 border-t border-gray-100 py-12 md:py-20">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row justify-between items-center">
-                        <div className="text-2xl font-bold tracking-tighter text-black mb-4 md:mb-0">olleey</div>
-                        <div className="text-sm text-gray-500">
-                            &copy; 2026 Olleey Inc. All rights reserved.
-                        </div>
+            {/* Pricing Section */}
+            <section id="pricing" className="bg-white pb-20 mb-20 mt-10">
+                <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px]">
+                    <div className="text-center mb-16">
+                        <p className="text-sm text-gray-500 mb-2 uppercase tracking-wide text-center font-bold">Pricing</p>
+                        <h2 className="text-[50px] md:text-[60px] leading-tight font-normal text-black mt-4 mb-6 text-center">
+                            One price, all the things
+                        </h2>
+                        <p className="text-xl text-gray-600 max-w-2xl mx-auto text-center leading-relaxed">
+                            Scale your content globally with transparent pricing based on your usage.
+                        </p>
                     </div>
+
+                    <PricingCalculator onGetStarted={onNavigation} />
                 </div>
-            </footer>
+            </section>
+
+            <Footer />
         </div>
     );
 }
