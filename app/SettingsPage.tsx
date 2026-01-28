@@ -103,7 +103,7 @@ export default function SettingsPage() {
   const accentClass = currentTheme === "light" ? "bg-light-accent" : "bg-dark-accent";
 
   return (
-    <div className={`flex-1 p-6 ${bgClass}`}>
+    <div className={`flex-1 p-6 overflow-y-auto h-full ${bgClass}`}>
       <div className="max-w-3xl mx-auto w-full">
         <div className="mb-4 flex items-center justify-between">
           <div>

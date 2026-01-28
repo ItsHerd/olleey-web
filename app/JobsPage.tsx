@@ -52,6 +52,10 @@ export default function JobsPage() {
 
     useEffect(() => {
         loadJobs();
+
+        const handleRefresh = () => loadJobs();
+        window.addEventListener('olleey-refresh', handleRefresh);
+        return () => window.removeEventListener('olleey-refresh', handleRefresh);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedProject?.id]);
 
@@ -107,7 +111,7 @@ export default function JobsPage() {
     }
 
     return (
-        <div className={`w-full h-full ${bgClass} flex flex-col overflow-hidden`}>
+        <div className={`w-full h-full ${bgClass} overflow-y-auto`}>
             {/* Header */}
             <div className={`relative px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12 border-b ${borderClass} overflow-hidden`}>
                 {/* Background Image with Overlay */}
@@ -123,14 +127,6 @@ export default function JobsPage() {
                 <div className="relative z-10">
                     <div className="flex items-center justify-between mb-2">
                         <h1 className={`text-xl sm:text-2xl md:text-3xl font-300 ${textClass} tracking-tight`}>Workflows</h1>
-                        <button
-                            onClick={loadJobs}
-                            disabled={loading}
-                            className={`flex items-center gap-2 px-4 py-2 ${cardClass} border ${borderClass} rounded-lg hover:opacity-80 transition-all shadow-sm disabled:opacity-50`}
-                        >
-                            <RefreshCw className={`h-4 w-4 ${textSecondaryClass} ${loading ? 'animate-spin' : ''}`} />
-                            <span className={`text-sm font-medium ${textClass}`}>Refresh</span>
-                        </button>
                     </div>
                     <p className={`text-sm sm:text-base ${textSecondaryClass} max-w-2xl`}>
                         Monitor processing status and manage your global dubbing pipeline from a centralized production hub.
@@ -138,7 +134,7 @@ export default function JobsPage() {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-auto px-4 md:px-6 py-6">
+            <div className="px-4 md:px-6 py-6">
                 {/* Error State */}
                 {error && (
                     <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">

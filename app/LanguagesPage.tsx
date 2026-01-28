@@ -166,8 +166,8 @@ export default function QueuedJobsPage() {
   };
 
   return (
-    <div className={`flex-1 ${bgClass}`}>
-      <div className="w-full h-full py-4 sm:py-6 md:py-8">
+    <div className={`flex-1 overflow-y-auto h-full px-8 py-8 ${bgClass}`}>
+      <div className="w-full">
         <div className="mb-4 sm:mb-6">
           <h2 className={`text-xl sm:text-2xl md:text-3xl font-normal ${textClass} mb-2`}>Queued Jobs</h2>
           <p className={`text-sm sm:text-base ${textClass}Secondary`}>

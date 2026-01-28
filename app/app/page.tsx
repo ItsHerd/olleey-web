@@ -6,7 +6,7 @@ import ActivityQueue from "@/components/ActivityQueue";
 import DashboardPage from "../DashboardPage";
 import ChannelsPage from "../ChannelsPage";
 import AccountsPage from "../AccountsPage";
-import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings, Plus, ChevronRight, Zap, LogOut } from "lucide-react";
+import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings, Plus, ChevronRight, Zap, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguagesPage from "../LanguagesPage";
 import GuardrailsPage from "../GuardrailsPage";
@@ -16,6 +16,7 @@ import SettingsPage from "../SettingsPage";
 import LoginPage from "../LoginPage";
 import UsagePage from "../UsagePage";
 import SupportPage from "../SupportPage";
+import ManualUploadPage from "../ManualUploadPage";
 import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
@@ -242,6 +243,8 @@ function AppContent() {
                 return <SettingsPage />;
             case "Support":
                 return <SupportPage />;
+            case "Manual Upload":
+                return <ManualUploadPage />;
             default:
                 return <DashboardPage />;
         }
@@ -345,17 +348,19 @@ function AppContent() {
 
                             <ChevronRight className={`h-3 w-3 ${textSecondaryClass} opacity-40 shrink-0`} />
 
-                            <h1 className={`text-sm sm:text-base font-bold ${textClass} truncate`}>
+                            <button
+                                className={`text-sm sm:text-base font-bold ${textClass} truncate cursor-default transition-opacity`}
+                            >
                                 {currentPage}
-                            </h1>
+                            </button>
                         </div>
 
                         <div className="ml-auto flex items-center gap-1 sm:gap-2">
                             {/* Manual Process Button */}
                             <Button
                                 onClick={() => {
-                                    setCurrentPage("Dashboard");
-                                    router.push("/app?page=Dashboard&action=manual");
+                                    setCurrentPage("Manual Upload");
+                                    router.push("/app?page=Manual Upload");
                                 }}
                                 className={`h-9 px-4 gap-2 bg-olleey-yellow hover:bg-white text-black font-black uppercase tracking-wider text-[10px] rounded-none transition-all shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] mr-2`}
                             >
@@ -381,6 +386,19 @@ function AppContent() {
                             </Button>
 
                             <div className={`h-4 w-[1px] ${borderClass} mx-1 hidden sm:block`} />
+
+                            {/* Global Refresh Button */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                    window.dispatchEvent(new CustomEvent('olleey-refresh'));
+                                }}
+                                className={`h-9 w-9 rounded-none transition-all ${textSecondaryClass} hover:${textClass} hover:bg-white/5`}
+                                title="Refresh Page Data"
+                            >
+                                <RefreshCw className="h-4 w-4" />
+                            </Button>
 
                             {/* Notifications Link */}
                             <Button

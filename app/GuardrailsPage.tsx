@@ -34,7 +34,7 @@ export default function GuardrailsPage() {
     const [qualityThreshold, setQualityThreshold] = useState(85);
 
     return (
-        <div className={`h-full flex flex-col ${bgClass}`}>
+        <div className={`h-full overflow-y-auto ${bgClass}`}>
             {/* Header */}
             <div className={`relative px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12 border-b ${borderClass} overflow-hidden`}>
                 {/* Background Image with Overlay */}
@@ -68,7 +68,7 @@ export default function GuardrailsPage() {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-auto px-4 md:px-6 py-8">
+            <div className="px-4 md:px-6 py-8">
                 <div className="max-w-4xl mx-auto space-y-8">
 
                     {/* Scheduling & Automation */}

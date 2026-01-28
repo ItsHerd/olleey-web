@@ -49,17 +49,17 @@ export function GridDashboard({
     totalVideos,
     totalTranslations
 }: GridDashboardProps) {
-    // Generic Skeleton
-    const CardSkeleton = () => (
-        <div className="flex flex-col gap-4 w-full h-full">
-            {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center gap-6 w-full">
-                    <div className={`w-16 h-10 ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-none shrink-0 animate-pulse`} />
-                    <div className="flex-1 space-y-3">
-                        <div className={`h-3 ${isDark ? "bg-white/20" : "bg-gray-300"} rounded-full w-1/3 animate-pulse`} />
-                        <div className={`h-2 ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-full w-1/2 animate-pulse`} />
+    // Specialized Row-based Skeleton for lists/tables
+    const RowSkeleton = ({ count = 5 }) => (
+        <div className="flex flex-col w-full divide-y divide-white/[0.02]">
+            {Array.from({ length: count }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 w-full py-4 px-6">
+                    <div className={`w-16 h-10 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-none shrink-0 animate-pulse border border-white/5 opacity-40`} />
+                    <div className="flex-1 space-y-2 min-w-0">
+                        <div className={`h-2.5 ${isDark ? "bg-white/10" : "bg-gray-300"} rounded-none w-1/4 animate-pulse`} />
+                        <div className={`h-1.5 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-none w-1/3 animate-pulse opacity-30`} />
                     </div>
-                    <div className={`w-24 h-8 ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-full shrink-0 animate-pulse`} />
+                    <div className={`w-20 h-7 ${isDark ? "bg-white/5" : "bg-gray-100"} rounded-none shrink-0 animate-pulse border border-white/5`} />
                 </div>
             ))}
         </div>
@@ -67,13 +67,16 @@ export function GridDashboard({
 
     // Specialized Video Grid Skeleton (9:14 aspect, 4 columns)
     const MediaGridSkeleton = () => (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full h-full">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 w-full p-6">
             {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex flex-col gap-3 h-full">
-                    <div className={`aspect-[9/14] ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-none w-full border ${isDark ? "border-white/5" : "border-gray-100"} animate-pulse`} />
-                    <div className="space-y-2 mt-2 px-1">
-                        <div className={`h-3 ${isDark ? "bg-white/20" : "bg-gray-300"} rounded-full w-3/4 animate-pulse`} />
-                        <div className={`h-2 ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-full w-1/2 animate-pulse`} />
+                <div key={i} className={`flex flex-col gap-3 p-4 border ${borderClass} bg-white/5 rounded-none animate-pulse`}>
+                    <div className={`aspect-video xl:aspect-[9/14] ${isDark ? "bg-white/5" : "bg-gray-100"} rounded-none w-full border border-white/5`} />
+                    <div className="space-y-2 mt-auto border-t border-white/[0.04] pt-3">
+                        <div className={`h-2.5 ${isDark ? "bg-white/10" : "bg-gray-300"} rounded-none w-3/4`} />
+                        <div className="flex justify-between items-center">
+                            <div className={`h-1.5 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-none w-1/3 opacity-30`} />
+                            <div className={`w-5 h-5 ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-full opacity-25`} />
+                        </div>
                     </div>
                 </div>
             ))}
@@ -81,13 +84,13 @@ export function GridDashboard({
     );
 
     return (
-        <div className="flex-1 w-full flex flex-col min-h-0 pt-1">
-            <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 grid-rows-[auto_1fr_auto_1fr] gap-x-5 gap-y-4 flex-1 min-h-0 overflow-hidden relative">
+        <div className="w-full h-auto pt-1 pb-20">
+            <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-6 relative">
 
-                {/* --- Row 1 & 2: Top Sections --- */}
+                {/* --- Row 1: Top Sections --- */}
 
-                {/* 1. Profile Hero Card - Spans 2 cols, 2 rows (Left) */}
-                <div className="col-span-1 md:col-span-2 row-start-1 row-end-3 relative rounded-none overflow-hidden group border border-white/5 shadow-2xl flex flex-col h-full bg-black/20">
+                {/* 1. Profile Hero Card - Spans 2 cols (Left) */}
+                <div className="col-span-1 md:col-span-2 relative rounded-none overflow-hidden group border border-white/5 shadow-2xl flex flex-col min-h-[400px] bg-black/20">
                     <img
                         src="https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&q=80&w=2000"
                         className="absolute inset-0 w-full h-full object-cover brightness-[0.35] group-hover:scale-105 transition-transform duration-1000"
@@ -149,39 +152,80 @@ export function GridDashboard({
                     </div>
                 </div>
 
-                {/* 2. Queue & Review TITLE */}
-                <div className="col-span-1 md:col-span-2 flex items-center justify-between px-2 pt-1">
-                    <h3 className={`text-lg md:text-xl lg:text-2xl font-300 ${textClass} tracking-tight`}>Queue & Review</h3>
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-3 py-1 bg-olleey-yellow/10 rounded-none border border-olleey-yellow/20">
-                            <div className="w-2.5 h-2.5 rounded-full bg-olleey-yellow animate-pulse" />
-                            <span className="text-[11px] font-black text-olleey-yellow uppercase tracking-widest">Active Jobs</span>
+                {/* 2. Queue & Review Container */}
+                <div className="col-span-1 md:col-span-2 flex flex-col gap-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className={`text-lg md:text-xl lg:text-2xl font-300 ${textClass} tracking-tight`}>Queue & Review</h3>
+                        <div className="flex items-center gap-3">
+                            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-olleey-yellow/10 rounded-none border border-olleey-yellow/20">
+                                <div className="w-2.5 h-2.5 rounded-full bg-olleey-yellow animate-pulse" />
+                                <span className="text-[11px] font-black text-olleey-yellow uppercase tracking-widest">Active Jobs</span>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
+                            >
+                                Full Queue
+                            </Button>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
-                        >
-                            Full Queue
-                        </Button>
+                    </div>
+
+                    <div className={`rounded-none border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col min-h-[350px] z-10`}>
+                        <div className="flex-1">
+                            {!videosLoading && (videos.length === 0 || !videos.some(v => ["draft", "processing"].includes(getOverallVideoStatus(v.localizations || {})))) ? (
+                                <div className="flex flex-col h-full opacity-30">
+                                    <RowSkeleton />
+                                </div>
+                            ) : videosLoading ? (
+                                <RowSkeleton />
+                            ) : (
+                                <div className="h-full">
+                                    <QueueAndReview
+                                        videosLoading={videosLoading}
+                                        filteredVideos={videos.slice(0, 4)}
+                                        isDark={isDark}
+                                        textClass={textClass}
+                                        textSecondaryClass={textSecondaryClass}
+                                        cardClass="bg-transparent"
+                                        borderClass="border-none"
+                                        getOverallVideoStatus={getOverallVideoStatus}
+                                        onNavigate={onNavigate}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                {/* 2. Queue & Review CARD */}
-                <div className={`col-span-1 md:col-span-2 lg:col-start-3 lg:col-end-5 row-start-2 row-end-3 rounded-none border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col h-full z-10`}>
-                    <div className="flex-1 overflow-y-auto">
-                        {!videosLoading && (videos.length === 0 || !videos.some(v => ["draft", "processing"].includes(getOverallVideoStatus(v.localizations || {})))) ? (
-                            <div className="flex flex-col h-full opacity-25">
-                                <CardSkeleton />
-                            </div>
-                        ) : videosLoading ? (
-                            <CardSkeleton />
-                        ) : (
-                            <div className="h-full">
-                                <QueueAndReview
-                                    videosLoading={videosLoading}
+                {/* --- Row 2: Bottom Sections --- */}
+
+                {/* 3. Released Media Container */}
+                <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className={`text-lg md:text-xl lg:text-2xl font-300 ${textClass} tracking-tight`}>Released Media</h3>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
+                            >
+                                Studio Library
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className={`rounded-none border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col min-h-[400px] z-10`}>
+                        <div className="flex-1">
+                            {!videosLoading && (videos.length === 0 || !videos.some(v => getOverallVideoStatus(v.localizations || {}) === "live")) ? (
+                                <div className="flex flex-col h-full opacity-25">
+                                    <MediaGridSkeleton />
+                                </div>
+                            ) : videosLoading ? (
+                                <MediaGridSkeleton />
+                            ) : (
+                                <ReleasedMedia
                                     filteredVideos={videos.slice(0, 4)}
-                                    isDark={isDark}
                                     textClass={textClass}
                                     textSecondaryClass={textSecondaryClass}
                                     cardClass="bg-transparent"
@@ -189,88 +233,43 @@ export function GridDashboard({
                                     getOverallVideoStatus={getOverallVideoStatus}
                                     onNavigate={onNavigate}
                                 />
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                {/* --- Row 3 & 4: Bottom Sections --- */}
-
-                {/* 3. Released Media TITLE */}
-                <div className="col-span-1 md:col-span-2 flex items-center justify-between px-2 pt-3">
-                    <h3 className={`text-lg md:text-xl lg:text-2xl font-300 ${textClass} tracking-tight`}>Released Media</h3>
-                    <div className="flex items-center gap-3">
+                {/* 4. Activity Feed Container */}
+                <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className={`text-lg md:text-xl lg:text-2xl font-300 ${textClass} tracking-tight`}>Activity Feed</h3>
                         <Button
                             variant="ghost"
                             size="sm"
                             className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
                         >
-                            Archive View
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
-                        >
-                            Studio Library
+                            View Logs
                         </Button>
                     </div>
-                </div>
 
-                {/* 4. Activity Feed TITLE */}
-                <div className="col-span-1 md:col-span-2 flex items-center justify-between px-2 pt-3">
-                    <h3 className={`text-lg md:text-xl lg:text-2xl font-300 ${textClass} tracking-tight`}>Activity Feed</h3>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
-                    >
-                        View Logs
-                    </Button>
-                </div>
-
-                {/* 3. Released Media CARD */}
-                <div className={`col-span-1 md:col-span-2 lg:col-start-1 lg:col-end-3 row-start-4 row-end-5 rounded-none border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col h-full z-10`}>
-                    <div className="flex-1 overflow-y-auto">
-                        {!videosLoading && (videos.length === 0 || !videos.some(v => getOverallVideoStatus(v.localizations || {}) === "live")) ? (
-                            <div className="flex flex-col h-full opacity-25">
-                                <MediaGridSkeleton />
-                            </div>
-                        ) : videosLoading ? (
-                            <MediaGridSkeleton />
-                        ) : (
-                            <ReleasedMedia
-                                filteredVideos={videos.slice(0, 4)}
-                                textClass={textClass}
-                                textSecondaryClass={textSecondaryClass}
-                                cardClass="bg-transparent"
-                                borderClass="border-none"
-                                getOverallVideoStatus={getOverallVideoStatus}
-                                onNavigate={onNavigate}
-                            />
-                        )}
-                    </div>
-                </div>
-
-                {/* 4. Activity Feed CARD */}
-                <div className={`col-span-1 md:col-span-2 lg:col-start-3 lg:col-end-5 row-start-4 row-end-5 rounded-none border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col h-full z-10`}>
-                    <div className="flex-1 overflow-y-auto">
-                        {!activitiesLoading && activities.length === 0 ? (
-                            <div className="flex flex-col h-full opacity-25">
-                                <CardSkeleton />
-                            </div>
-                        ) : activitiesLoading ? (
-                            <CardSkeleton />
-                        ) : (
-                            <ActivityFeed
-                                activitiesLoading={activitiesLoading}
-                                activities={activities.slice(0, 4)}
-                                textClass={textClass}
-                                textSecondaryClass={textSecondaryClass}
-                                cardClass="bg-transparent"
-                                borderClass="border-none"
-                            />
-                        )}
+                    <div className={`rounded-none border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col min-h-[400px] z-10`}>
+                        <div className="flex-1">
+                            {!activitiesLoading && activities.length === 0 ? (
+                                <div className="flex flex-col h-full opacity-30">
+                                    <RowSkeleton />
+                                </div>
+                            ) : activitiesLoading ? (
+                                <RowSkeleton />
+                            ) : (
+                                <ActivityFeed
+                                    activitiesLoading={activitiesLoading}
+                                    activities={activities.slice(0, 4)}
+                                    textClass={textClass}
+                                    textSecondaryClass={textSecondaryClass}
+                                    cardClass="bg-transparent"
+                                    borderClass="border-none"
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -278,11 +277,11 @@ export function GridDashboard({
             {/* Custom Styles to make sub-components fit better in grid */}
             <style jsx global>{`
                 .dashboard-grid section {
-                    padding: 1rem !important;
+                    padding: 1.5rem !important;
                 }
                 @media (min-width: 768px) {
                     .dashboard-grid section {
-                        padding: 2rem !important;
+                        padding: 1.5rem !important;
                     }
                 }
                 .dashboard-grid section > div:first-child {

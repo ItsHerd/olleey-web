@@ -7,8 +7,7 @@ import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
-import { ManualProcessView } from "@/components/ui/manual-process-view";
-import { youtubeAPI, jobsAPI, dashboardAPI, type MasterNode, type Video, type Job, type ActivityItem, type LocalizationInfo } from "@/lib/api";
+import { youtubeAPI, jobsAPI, dashboardAPI, type MasterNode, type Video, type ActivityItem, type LocalizationInfo } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
 import { QuickCheckModal } from "@/components/SmartTable/QuickCheckModal";
@@ -38,7 +37,6 @@ export default function DashboardPage() {
   const [selectedChannelId, setSelectedChannelId] = useState<string>("");
   const [videoTypeFilter] = useState<"all" | "original" | "processed">("all");
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
-  const [showManualProcessView, setShowManualProcessView] = useState(false);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
@@ -131,13 +129,25 @@ export default function DashboardPage() {
   }, [dashboard?.youtube_connections?.length, searchParams]);
 
   useEffect(() => {
-    const action = searchParams.get("action");
-    if (action === "manual") {
-      setShowManualProcessView(true);
-    } else {
-      setShowManualProcessView(false);
-    }
-  }, [searchParams]);
+    const handleRefresh = () => {
+      refetchDashboard();
+      refetchVideos();
+      // Also reload channel graph
+      const loadChannelGraph = async () => {
+        try {
+          const graph = await youtubeAPI.getChannelGraph();
+          setChannelGraph(graph.master_nodes || []);
+        } catch (error) {
+          logger.error("DashboardPage", "Failed to load channel graph", error);
+        }
+      };
+      loadChannelGraph();
+    };
+
+    window.addEventListener('olleey-refresh', handleRefresh);
+    return () => window.removeEventListener('olleey-refresh', handleRefresh);
+  }, [refetchDashboard, refetchVideos]);
+
 
   const handleApproveQuickCheck = async () => {
     const { videoId, languageCode } = quickCheckState;
@@ -245,82 +255,54 @@ export default function DashboardPage() {
   }, [videosWithLocalizations, selectedChannelId]);
 
   return (
-    <div className={`w-full h-full ${bgClass} flex flex-col overflow-hidden pl-3 pr-6 pb-4`}>
+    <div className={`w-full h-full ${bgClass} flex flex-col pl-3 pr-6 pb-4`}>
       <SEO
         title="Dashboard | Olleey"
         description="Manage your global content production, monitor translation jobs, and distribute to international channels from your creative command center."
       />
 
-      <DashboardHeader
-        textClass={textClass}
-        textSecondaryClass={textSecondaryClass}
-        isDark={isDark}
-        userName={dashboard?.name}
-        videosLoading={videosLoading}
-        showManualProcessView={showManualProcessView}
-        refetchVideos={refetchVideos}
-        setShowManualProcessView={(show) => {
-          if (!show) {
-            router.push("/app?page=Dashboard");
-          } else {
-            setShowManualProcessView(true);
-          }
-        }}
-        totalVideos={filteredVideos.length}
-        totalTranslations={filteredVideos.reduce((acc, video) => {
-          const localizations = video.localizations || {};
-          return acc + Object.values(localizations).filter(l => l.status === "live").length;
-        }, 0)}
-      />
-
       <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="w-full flex-1 flex flex-col px-0 py-4">
-          {showManualProcessView ? (
-            <div className="w-full max-w-7xl mx-auto">
-              <ManualProcessView
-                availableChannels={
-                  channelGraph.flatMap((master: MasterNode) =>
-                    master.language_channels.map((lc: any) => ({
-                      id: lc.channel_id,
-                      name: lc.channel_name,
-                      language_code: lc.language_code,
-                      language_name: lc.language_name
-                    }))
-                  )
-                }
-                projectId={selectedProject?.id}
-                onSuccess={() => {
-                  router.push("/app?page=Dashboard");
-                  refetchVideos();
-                }}
-                onCancel={() => router.push("/app?page=Dashboard")}
-              />
-            </div>
-          ) : (
-            <GridDashboard
-              userName={dashboard?.name || "Creator"}
-              userEmail={dashboard?.email || "creator@olleey.com"}
-              projects={[]} // Replace with actual projects if available
-              selectedProject={selectedProject}
-              videos={filteredVideos}
-              videosLoading={videosLoading}
-              activities={activities}
-              activitiesLoading={activitiesLoading}
-              getOverallVideoStatus={getOverallVideoStatus}
-              isDark={isDark}
-              textClass={textClass}
-              textSecondaryClass={textSecondaryClass}
-              cardClass={cardClass}
-              borderClass={borderClass}
-              onNavigate={(id) => router.push(`/content/${id}`)}
-              onCreateProject={() => setShowManualProcessView(true)}
-              totalVideos={filteredVideos.length}
-              totalTranslations={filteredVideos.reduce((acc, video) => {
-                const localizations = video.localizations || {};
-                return acc + Object.values(localizations).filter(l => l.status === "live").length;
-              }, 0)}
-            />
-          )}
+        <div className="w-full flex-1 flex flex-col px-0">
+          <DashboardHeader
+            textClass={textClass}
+            textSecondaryClass={textSecondaryClass}
+            isDark={isDark}
+            userName={dashboard?.name}
+            videosLoading={videosLoading}
+            showManualProcessView={false}
+            refetchVideos={refetchVideos}
+            setShowManualProcessView={() => {
+              router.push("/app?page=Manual Upload");
+            }}
+            totalVideos={filteredVideos.length}
+            totalTranslations={filteredVideos.reduce((acc, video) => {
+              const localizations = video.localizations || {};
+              return acc + Object.values(localizations).filter(l => l.status === "live").length;
+            }, 0)}
+          />
+          <GridDashboard
+            userName={dashboard?.name || "Creator"}
+            userEmail={dashboard?.email || "creator@olleey.com"}
+            projects={[]} // Replace with actual projects if available
+            selectedProject={selectedProject}
+            videos={filteredVideos}
+            videosLoading={videosLoading}
+            activities={activities}
+            activitiesLoading={activitiesLoading}
+            getOverallVideoStatus={getOverallVideoStatus}
+            isDark={isDark}
+            textClass={textClass}
+            textSecondaryClass={textSecondaryClass}
+            cardClass={cardClass}
+            borderClass={borderClass}
+            onNavigate={(id) => router.push(`/content/${id}`)}
+            onCreateProject={() => router.push("/app?page=Manual Upload")}
+            totalVideos={filteredVideos.length}
+            totalTranslations={filteredVideos.reduce((acc, video) => {
+              const localizations = video.localizations || {};
+              return acc + Object.values(localizations).filter(l => l.status === "live").length;
+            }, 0)}
+          />
         </div>
       </div>
 

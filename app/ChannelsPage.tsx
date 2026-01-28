@@ -254,7 +254,7 @@ export default function ChannelsPage() {
   }
 
   return (
-    <div className={`h-full flex flex-col ${bgClass}`}>
+    <div className={`h-full overflow-y-auto ${bgClass}`}>
       {/* Header */}
       <div className={`relative px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12 border-b ${borderClass} overflow-hidden`}>
         {/* Background Image with Overlay */}
@@ -299,7 +299,7 @@ export default function ChannelsPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto px-4 md:px-6 py-4">
+      <div className="px-4 md:px-6 py-4">
         {channelGraph.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center max-w-md mx-auto">
             <Youtube className={`h-16 w-16 ${textSecondaryClass} mb-4`} />

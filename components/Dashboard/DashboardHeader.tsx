@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Zap, ArrowLeft } from "lucide-react";
+import { RefreshCw, Zap, ArrowLeft, ChevronRight } from "lucide-react";
 
 interface DashboardHeaderProps {
     textClass: string;
@@ -32,7 +32,21 @@ export function DashboardHeader({
     return (
         <div className={`flex-shrink-0 px-0 pt-5 pb-0`}>
             <div className="flex flex-col gap-3 sm:gap-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-4 sm:gap-6">
+                    {showManualProcessView && (
+                        <div className="flex-shrink-0">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowManualProcessView(false)}
+                                className={`h-11 px-4 bg-white/5 border-white/10 text-white hover:bg-white/10 transition-all rounded-none group`}
+                                title="Back to Dashboard"
+                            >
+                                <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                            </Button>
+                        </div>
+                    )}
+
                     <div className="min-w-0 flex-1">
                         {!showManualProcessView ? (
                             <div>
@@ -44,8 +58,8 @@ export function DashboardHeader({
                                 </p>
                             </div>
                         ) : (
-                            <div>
-                                <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-300 ${textClass} mb-1 sm:mb-2 truncate uppercase tracking-widest`}>
+                            <div className="space-y-1">
+                                <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-300 ${textClass} truncate uppercase tracking-widest`}>
                                     Manual Process Pipeline
                                 </h1>
                                 <p className={`text-xs sm:text-sm md:text-base ${textSecondaryClass} truncate uppercase tracking-tight opacity-60`}>
@@ -54,30 +68,7 @@ export function DashboardHeader({
                             </div>
                         )}
                     </div>
-
-                    <div className="flex items-center gap-2">
-                        {showManualProcessView && (
-                            <Button
-                                onClick={() => setShowManualProcessView(false)}
-                                className={`h-11 px-6 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-none hover:bg-white/10 transition-all mr-2`}
-                            >
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                Exit Manual Mode
-                            </Button>
-                        )}
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={refetchVideos}
-                            disabled={videosLoading}
-                            className={`h-11 w-11 rounded-none ${isDark ? 'border-white/10 bg-white/5 hover:bg-white/10' : 'border-gray-200'}`}
-                            title="Refresh"
-                        >
-                            <RefreshCw className={`h-5 w-5 ${videosLoading ? "animate-spin" : ""}`} />
-                        </Button>
-                    </div>
                 </div>
-
             </div>
         </div>
     );
