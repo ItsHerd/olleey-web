@@ -39,75 +39,67 @@ export default function UsagePage() {
                     </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                    {/* Plan Details */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    {/* Subscription Tier: Free */}
                     <div className={`${cardClass} border ${borderClass} rounded-2xl p-8 flex flex-col justify-between group hover:border-olleey-yellow/30 transition-all`}>
+                        <div>
+                            <div className="flex items-center justify-between mb-8">
+                                <span className={`text-[10px] font-black ${textSecondaryClass} uppercase tracking-[0.2em]`}>Subscription</span>
+                                <span className="px-3 py-1 rounded-full bg-white/5 text-white/40 text-[10px] font-black uppercase tracking-widest border border-white/10">Free Tier</span>
+                            </div>
+                            <div className="flex items-baseline gap-2 mb-2">
+                                <span className={`text-5xl font-normal ${textClass}`}>$0</span>
+                                <span className={`text-lg ${textSecondaryClass}`}>/month</span>
+                            </div>
+                            <p className={`text-sm ${textSecondaryClass}`}>Starter access • Standard processing</p>
+                        </div>
+
+                        <div className={`mt-8 pt-8 border-t ${borderClass}`}>
+                            <Button variant="ghost" className="w-full text-olleey-yellow hover:bg-olleey-yellow/10 font-bold uppercase tracking-widest text-xs">
+                                Current Plan
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Subscription Tier: Pro */}
+                    <div className={`${cardClass} border-olleey-yellow/30 bg-olleey-yellow/[0.02] rounded-2xl p-8 flex flex-col justify-between group hover:border-olleey-yellow/60 transition-all relative overflow-hidden`}>
+                        <div className="absolute top-0 right-0 bg-olleey-yellow px-4 py-1 text-[10px] font-black text-black uppercase tracking-widest">Growth</div>
                         <div>
                             <div className="flex items-center justify-between mb-8">
                                 <span className={`text-[10px] font-black ${textSecondaryClass} uppercase tracking-[0.2em]`}>Subscription</span>
                                 <span className="px-3 py-1 rounded-full bg-olleey-yellow/10 text-olleey-yellow text-[10px] font-black uppercase tracking-widest border border-olleey-yellow/20">Pro Tier</span>
                             </div>
                             <div className="flex items-baseline gap-2 mb-2">
-                                <span className={`text-5xl font-normal ${textClass}`}>$49</span>
-                                <span className={`text-lg ${textSecondaryClass}`}>/month</span>
+                                <span className={`text-5xl font-normal ${textClass}`}>PAYG</span>
                             </div>
-                            <p className={`text-sm ${textSecondaryClass}`}>Billed monthly • Next renewal: Feb 26, 2026</p>
+                            <p className={`text-sm ${textSecondaryClass}`}>Pay-as-you-go • Priority access</p>
                         </div>
 
-                        <div className={`mt-8 pt-8 border-t ${borderClass} flex items-center justify-between`}>
-                            <div className="flex flex-col">
-                                <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase`}>Payment Method</span>
-                                <span className={`text-sm ${textClass} font-medium`}>•••• 4242</span>
-                            </div>
-                            <Button variant="ghost" size="sm" className="text-olleey-yellow hover:text-olleey-yellow hover:bg-olleey-yellow/10">
-                                Update
+                        <div className={`mt-8 pt-8 border-t ${borderClass}`}>
+                            <Button className="w-full bg-olleey-yellow text-black hover:bg-white transition-all font-black uppercase tracking-widest text-xs">
+                                Upgrade to Pro
                             </Button>
                         </div>
                     </div>
 
-                    {/* Usage Metrics */}
-                    <div className={`${cardClass} border ${borderClass} rounded-2xl p-8 group hover:border-olleey-yellow/30 transition-all`}>
-                        <div className="flex items-center justify-between mb-8">
-                            <span className={`text-[10px] font-black ${textSecondaryClass} uppercase tracking-[0.2em]`}>Credit Utilization</span>
-                            <Zap className="w-5 h-5 text-olleey-yellow" />
+                    {/* Subscription Tier: Max */}
+                    <div className={`${cardClass} border ${borderClass} rounded-2xl p-8 flex flex-col justify-between group hover:border-olleey-yellow/30 transition-all`}>
+                        <div>
+                            <div className="flex items-center justify-between mb-8">
+                                <span className={`text-[10px] font-black ${textSecondaryClass} uppercase tracking-[0.2em]`}>Subscription</span>
+                                <span className="px-3 py-1 rounded-full bg-white/5 text-white text-[10px] font-black uppercase tracking-widest border border-white/10">Max Tier</span>
+                            </div>
+                            <div className="flex items-baseline gap-2 mb-2">
+                                <span className={`text-5xl font-normal ${textClass}`}>$200</span>
+                                <span className={`text-lg ${textSecondaryClass}`}>/month</span>
+                            </div>
+                            <p className={`text-sm ${textSecondaryClass}`}>High volume production • API access</p>
                         </div>
 
-                        <div className="flex items-end gap-3 mb-6">
-                            <span className={`text-5xl font-normal ${textClass}`}>
-                                {dashboard?.credits_summary ? Math.round(dashboard.credits_summary.remaining_credits / 60) : 0}h
-                            </span>
-                            <div className="flex flex-col mb-1.5">
-                                <span className={`text-sm font-bold ${textClass}`}>Remaining</span>
-                                <span className={`text-[10px] ${textSecondaryClass} uppercase`}>
-                                    of {dashboard?.credits_summary ? Math.round((dashboard.credits_summary.used_credits + dashboard.credits_summary.remaining_credits) / 60) : 100}h total
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden mb-8 relative">
-                            <div
-                                className="absolute inset-0 bg-olleey-yellow/10 blur-md"
-                                style={{ width: `${dashboard?.credits_summary ? (dashboard.credits_summary.used_credits / (dashboard.credits_summary.used_credits + dashboard.credits_summary.remaining_credits)) * 100 : 0}%` }}
-                            />
-                            <div
-                                className="h-full bg-olleey-yellow rounded-full shadow-[0_0_15px_rgba(251,191,36,0.6)] relative z-10"
-                                style={{
-                                    width: `${dashboard?.credits_summary ? (dashboard.credits_summary.used_credits / (dashboard.credits_summary.used_credits + dashboard.credits_summary.remaining_credits)) * 100 : 0}%`
-                                }}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className={`p-4 rounded-xl ${bgClass} border ${borderClass}`}>
-                                <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase block mb-1`}>Time Spent</span>
-                                <span className={`text-xl font-normal ${textClass}`}>
-                                    {dashboard?.credits_summary ? Math.round(dashboard.credits_summary.used_credits / 60) : 0}h
-                                </span>
-                            </div>
-                            <div className={`p-4 rounded-xl ${bgClass} border ${borderClass}`}>
-                                <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase block mb-1`}>Videos</span>
-                                <span className={`text-xl font-normal ${textClass}`}>{dashboard?.weekly_stats?.videos_completed || 0}</span>
-                            </div>
+                        <div className={`mt-8 pt-8 border-t ${borderClass}`}>
+                            <Button variant="ghost" className="w-full text-white border border-white/10 hover:bg-white/5 font-bold uppercase tracking-widest text-xs">
+                                Upgrade to Max
+                            </Button>
                         </div>
                     </div>
                 </div>

@@ -16,9 +16,12 @@ export default function Header({ onLoginClick, onGetStartedClick }: HeaderProps)
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
                     {/* Logo */}
-                    <div className="flex items-center gap-2">
-
-                    </div>
+                    <a href="/" className="flex items-center gap-2 group">
+                        <div className="w-8 h-8 rounded-lg bg-olleey-yellow flex items-center justify-center text-black font-black text-sm shadow-[0_0_15px_rgba(251,191,36,0.2)] group-hover:scale-105 transition-transform">
+                            O
+                        </div>
+                        <span className="text-xl font-bold tracking-tighter text-gray-900">olleey.com</span>
+                    </a>
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-8">

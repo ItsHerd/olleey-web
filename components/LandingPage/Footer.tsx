@@ -7,7 +7,7 @@ export default function Footer() {
         <footer className="relative bg-black pt-32 pb-6 overflow-hidden border-t border-white/5">
             {/* Background Massive Text */}
             <div className="absolute bottom-[-15%] left-1/2 -translate-x-1/2 w-full text-center pointer-events-none select-none z-0">
-                <h2 className="text-[35vw] font-bold tracking-tighter leading-none select-none text-transparent bg-clip-text bg-gradient-to-b from-zinc-200 via-zinc-500 to-black opacity-30">
+                <h2 className="text-[30vw] font-bold tracking-tighter leading-none select-none text-transparent bg-clip-text bg-gradient-to-b from-zinc-200 via-zinc-500 to-black opacity-30">
                     OLLEEY
                 </h2>
             </div>

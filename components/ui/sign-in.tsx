@@ -38,7 +38,7 @@ interface SignInPageProps {
 // --- SUB-COMPONENTS ---
 
 const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors focus-within:border-violet-400/70 focus-within:bg-violet-500/10">
+  <div className="rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors focus-within:border-olleey-yellow/70 focus-within:bg-olleey-yellow/5">
     {children}
   </div>
 );
@@ -156,7 +156,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             <input type="checkbox" name="rememberMe" className="custom-checkbox" />
             <span className="text-foreground/90">Keep me signed in</span>
           </label>
-          <a href="#" onClick={(e) => { e.preventDefault(); onResetPassword?.(); }} className="hover:underline text-violet-400 transition-colors">Reset password</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); onResetPassword?.(); }} className="hover:underline text-olleey-yellow transition-colors">Reset password</a>
         </div>
 
         <Button
@@ -182,13 +182,13 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       </Button>
 
       <p className="animate-element animate-delay-900 text-center text-sm text-muted-foreground">
-        New to our platform? <a href="#" onClick={(e) => { e.preventDefault(); onCreateAccount?.(); }} className="text-violet-400 hover:underline transition-colors">Create Account</a>
+        New to our platform? <a href="#" onClick={(e) => { e.preventDefault(); onCreateAccount?.(); }} className="text-olleey-yellow hover:underline transition-colors">Create Account</a>
       </p>
 
       <div className="animate-element animate-delay-1000 mt-4 flex justify-center gap-4 text-xs text-muted-foreground/60">
-        <a href="/privacy" className="hover:text-violet-400 transition-colors">Privacy Policy</a>
+        <a href="/privacy" className="hover:text-olleey-yellow transition-colors">Privacy Policy</a>
         <span>•</span>
-        <a href="/terms" className="hover:text-violet-400 transition-colors">Terms of Service</a>
+        <a href="/terms" className="hover:text-olleey-yellow transition-colors">Terms of Service</a>
       </div>
     </AuthLayout>
   );
@@ -298,13 +298,13 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
       </Button>
 
       <p className="animate-element animate-delay-1000 text-center text-sm text-muted-foreground">
-        Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); onSignInClick?.(); }} className="text-violet-400 hover:underline transition-colors">Sign In</a>
+        Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); onSignInClick?.(); }} className="text-olleey-yellow hover:underline transition-colors">Sign In</a>
       </p>
 
       <div className="animate-element animate-delay-1100 mt-4 flex justify-center gap-4 text-xs text-muted-foreground/60">
-        <a href="/privacy" className="hover:text-violet-400 transition-colors">Privacy Policy</a>
+        <a href="/privacy" className="hover:text-olleey-yellow transition-colors">Privacy Policy</a>
         <span>•</span>
-        <a href="/terms" className="hover:text-violet-400 transition-colors">Terms of Service</a>
+        <a href="/terms" className="hover:text-olleey-yellow transition-colors">Terms of Service</a>
       </div>
     </AuthLayout>
   );
