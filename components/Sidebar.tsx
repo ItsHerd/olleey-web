@@ -5,6 +5,7 @@ import { ChevronDown, Check, Plus, Zap } from "lucide-react";
 import { useState } from "react";
 import type { Project } from "@/lib/api";
 
+
 type SidebarProps = {
   currentPage: string;
   onNavigate: (page: string) => void;
@@ -17,10 +18,6 @@ type SidebarProps = {
   onProjectSelect?: (project: Project) => void;
   onCreateProject?: () => void;
 };
-
-const ZapIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.7l10-10.7v8.1h6l-10 10.7v-8.1h-6z" /></svg>
-);
 
 export default function Sidebar({
   currentPage,
@@ -48,7 +45,6 @@ export default function Sidebar({
 
   const mainNavItems = [
     { name: "Dashboard", icon: <ContentIcon /> },
-    { name: "Manual Upload", icon: <ZapIcon /> },
     { name: "Channels", icon: <ChannelsIcon /> },
     { name: "Workflows", icon: <LanguagesIcon /> },
     { name: "Guardrails", icon: <GuardrailsIcon /> },

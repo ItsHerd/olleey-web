@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { X, Upload as UploadIcon, Loader2, CheckCircle, AlertCircle, Youtube, Link as LinkIcon, FileVideo, ImageIcon, ArrowLeft, Send, SlidersHorizontal, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ export function ManualProcessView({
     onSuccess,
     onCancel,
 }: ManualProcessViewProps) {
+    const router = useRouter();
     const { theme } = useTheme();
     const [activeTab, setActiveTab] = useState<SourceTab>("channel");
     const [sourceVideoUrl, setSourceVideoUrl] = useState("");
@@ -260,6 +262,20 @@ export function ManualProcessView({
                                         {availableChannels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
 
+                                    {availableChannels.length === 0 && (
+                                        <div className={`mt-2 p-3 ${isDark ? 'bg-olleey-yellow/5 border-olleey-yellow/20' : 'bg-olleey-yellow/10 border-olleey-yellow/30'} border flex items-center justify-between`}>
+                                            <p className={`text-[10px] font-bold ${isDark ? 'text-olleey-yellow' : 'text-amber-800'}`}>
+                                                No channels connected yet.
+                                            </p>
+                                            <button
+                                                onClick={() => router.push("/connections/add")}
+                                                className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white hover:text-olleey-yellow' : 'text-black hover:text-olleey-yellow'} transition-colors underline`}
+                                            >
+                                                Add Channel
+                                            </button>
+                                        </div>
+                                    )}
+
                                     {sourceChannelId && (
                                         <div className={`border ${borderClass} rounded-none overflow-hidden max-h-[300px] overflow-y-auto bg-black/5`}>
                                             {loadingVideos ? (
@@ -310,6 +326,19 @@ export function ManualProcessView({
                                             <option value="">Select channel override...</option>
                                             {availableChannels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>
+                                        {availableChannels.length === 0 && (
+                                            <div className={`mt-2 p-3 ${isDark ? 'bg-olleey-yellow/5 border-olleey-yellow/20' : 'bg-olleey-yellow/10 border-olleey-yellow/30'} border flex items-center justify-between`}>
+                                                <p className={`text-[10px] font-bold ${isDark ? 'text-olleey-yellow' : 'text-amber-800'}`}>
+                                                    No channels available for context.
+                                                </p>
+                                                <button
+                                                    onClick={() => router.push("/connections/add")}
+                                                    className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white hover:text-olleey-yellow' : 'text-black hover:text-olleey-yellow'} transition-colors underline`}
+                                                >
+                                                    Add Connection
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -447,7 +476,17 @@ export function ManualProcessView({
                                         </div>
                                     ))}
                                     {availableChannels.filter(c => c.id !== sourceChannelId).length === 0 && (
-                                        <div className="p-12 text-center text-xs font-bold opacity-20">No distribution targets available</div>
+                                        <div className={`p-4 ${isDark ? 'bg-olleey-yellow/5 border-olleey-yellow/20' : 'bg-olleey-yellow/10 border-olleey-yellow/30'} border mx-1 mb-1 flex items-center justify-between`}>
+                                            <p className={`text-[10px] font-bold ${isDark ? 'text-olleey-yellow' : 'text-amber-800'}`}>
+                                                No international distribution hubs found.
+                                            </p>
+                                            <button
+                                                onClick={() => router.push("/connections/add")}
+                                                className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white hover:text-olleey-yellow' : 'text-black hover:text-olleey-yellow'} transition-colors underline`}
+                                            >
+                                                Connect Hub
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </div>

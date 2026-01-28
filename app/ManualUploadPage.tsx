@@ -46,14 +46,24 @@ export default function ManualUploadPage() {
         );
     }
 
-    const availableChannels = channelGraph.flatMap((master: MasterNode) =>
-        master.language_channels.map((lc: any) => ({
-            id: lc.channel_id,
-            name: lc.channel_name,
-            language_code: lc.language_code,
-            language_name: lc.language_name
-        }))
-    );
+    const allChannels = [
+        ...channelGraph.map(m => ({
+            id: m.channel_id,
+            name: m.channel_name,
+            language_code: m.language_code,
+            language_name: m.language_name,
+            is_master: true
+        })),
+        ...channelGraph.flatMap((master: MasterNode) =>
+            master.language_channels.map((lc: any) => ({
+                id: lc.channel_id,
+                name: lc.channel_name,
+                language_code: lc.language_code,
+                language_name: lc.language_name,
+                is_master: false
+            }))
+        )
+    ];
 
     return (
         <div className={`w-full h-full ${bgClass} overflow-y-auto pt-8 pb-20`}>
@@ -66,7 +76,7 @@ export default function ManualUploadPage() {
                 </div>
 
                 <ManualProcessView
-                    availableChannels={availableChannels}
+                    availableChannels={allChannels}
                     projectId={selectedProject?.id}
                     onSuccess={() => {
                         router.push("/app?page=Dashboard");
