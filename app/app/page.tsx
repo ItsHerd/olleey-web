@@ -6,7 +6,7 @@ import ActivityQueue from "@/components/ActivityQueue";
 import DashboardPage from "../DashboardPage";
 import ChannelsPage from "../ChannelsPage";
 import AccountsPage from "../AccountsPage";
-import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings, Plus, ChevronRight } from "lucide-react";
+import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings, Plus, ChevronRight, Zap, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguagesPage from "../LanguagesPage";
 import GuardrailsPage from "../GuardrailsPage";
@@ -14,6 +14,8 @@ import JobsPage from "../JobsPage";
 import NotificationsPage from "../NotificationsPage";
 import SettingsPage from "../SettingsPage";
 import LoginPage from "../LoginPage";
+import UsagePage from "../UsagePage";
+import SupportPage from "../SupportPage";
 import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
@@ -152,7 +154,7 @@ function AppContent() {
         const pageParam = searchParams?.get("page");
         if (pageParam) {
             // Map page param to valid page names
-            const validPages = ["Dashboard", "Channels", "Accounts", "Workflows", "Notifications", "Dynamic Sponsors", "Comment Mirroring", "Settings"];
+            const validPages = ["Dashboard", "Channels", "Accounts", "Workflows", "Notifications", "Dynamic Sponsors", "Comment Mirroring", "Settings", "Usage", "Support"];
             if (validPages.includes(pageParam)) {
                 setCurrentPage(pageParam);
             } else if (pageParam === "Languages" || pageParam === "Queued Jobs") {
@@ -198,6 +200,8 @@ function AppContent() {
                 return <ChannelsPage />;
             case "Accounts":
                 return <AccountsPage onLogout={handleLogout} />;
+            case "Usage":
+                return <UsagePage />;
             case "Workflows":
                 return <JobsPage />;
             case "Guardrails":
@@ -212,7 +216,12 @@ function AppContent() {
                         title="Dynamic Sponsors"
                         description="Automatically swap brand segments for local sponsors in target countries."
                         value=""
-                        features={[]}
+                        features={[
+                            "AI-Powered Segment Detection",
+                            "Seamless Asset Replacement",
+                            "Regional Ad-Network Integration",
+                            "Automated ROI Reporting"
+                        ]}
                     />
                 );
             case "Comment Mirroring":
@@ -221,11 +230,18 @@ function AppContent() {
                         title="AI Comment Mirroring"
                         description="Automatically translate viewer comments and your replies to maintain engagement across languages."
                         value=""
-                        features={[]}
+                        features={[
+                            "Context-Aware Translation",
+                            "Sentiment Preservation",
+                            "Creator Reply Sync",
+                            "Community Health Monitoring"
+                        ]}
                     />
                 );
             case "Settings":
                 return <SettingsPage />;
+            case "Support":
+                return <SupportPage />;
             default:
                 return <DashboardPage />;
         }
@@ -376,20 +392,51 @@ function AppContent() {
                                 <Settings className="h-4 w-4" />
                             </Button>
 
-                            {/* Account/User Link */}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setCurrentPage("Accounts")}
-                                className={`h-9 w-9 rounded-lg transition-all ${currentPage === "Accounts" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
-                                title="Account"
-                            >
-                                <User className="h-4 w-4" />
-                            </Button>
+                            {/* Account/User Dropdown */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className={`h-9 w-9 rounded-lg transition-all ${currentPage === "Accounts" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
+                                        title="Account"
+                                    >
+                                        <User className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-xl shadow-xl overflow-hidden z-[100]`}>
+                                    <DropdownMenuLabel className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest px-3 py-2 text-white/40`}>
+                                        Manage Account
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                    <DropdownMenuItem
+                                        onClick={() => setCurrentPage("Accounts")}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                                    >
+                                        <User className="w-4 h-4 text-olleey-yellow" />
+                                        <span className="text-sm">Account Page</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => setCurrentPage("Usage")}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                                    >
+                                        <Zap className="w-4 h-4 text-olleey-yellow" />
+                                        <span className="text-sm">See Usage</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                    <DropdownMenuItem
+                                        onClick={handleLogout}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-red-500 hover:bg-red-500/10 transition-colors`}
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        <span className="text-sm font-bold">Sign Out</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </header>
 
-                    <main className={`flex-1 overflow-y-auto ${bgClass} px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 lg:py-10 min-w-0`}>
+                    <main className={`flex-1 overflow-hidden ${bgClass} px-0 py-0 min-w-0`}>
                         {renderPage()}
                     </main>
                 </div>

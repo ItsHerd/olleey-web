@@ -22,6 +22,7 @@ import { QueueAndReview } from "@/components/Dashboard/QueueAndReview";
 import { ReleasedMedia } from "@/components/Dashboard/ReleasedMedia";
 import { ActivityFeed } from "@/components/Dashboard/ActivityFeed";
 import { QuickStats } from "@/components/Dashboard/QuickStats";
+import { GridDashboard } from "@/components/Dashboard/GridDashboard";
 
 interface VideoWithLocalizations extends Video {
   estimated_credits?: number;
@@ -235,7 +236,7 @@ export default function DashboardPage() {
   }, [videosWithLocalizations, selectedChannelId]);
 
   return (
-    <div className={`w-full h-full ${bgClass} flex flex-col overflow-hidden`}>
+    <div className={`w-full h-full ${bgClass} flex flex-col overflow-hidden pl-3 pr-6 pb-4`}>
       <SEO
         title="Dashboard | Olleey"
         description="Manage your global content production, monitor translation jobs, and distribute to international channels from your creative command center."
@@ -245,6 +246,7 @@ export default function DashboardPage() {
         textClass={textClass}
         textSecondaryClass={textSecondaryClass}
         isDark={isDark}
+        userName={dashboard?.name}
         videosLoading={videosLoading}
         showManualProcessView={showManualProcessView}
         refetchVideos={refetchVideos}
@@ -256,72 +258,53 @@ export default function DashboardPage() {
         }, 0)}
       />
 
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="w-full flex flex-col px-2 sm:px-4">
+      <div className="flex-1 overflow-hidden min-h-0">
+        <div className="w-full h-full flex flex-col px-0">
           {showManualProcessView ? (
-            <ManualProcessView
-              availableChannels={
-                channelGraph.flatMap((master: MasterNode) =>
-                  master.language_channels.map((lc: any) => ({
-                    id: lc.channel_id,
-                    name: lc.channel_name,
-                    language_code: lc.language_code,
-                    language_name: lc.language_name
-                  }))
-                )
-              }
-              projectId={selectedProject?.id}
-              onSuccess={() => {
-                setShowManualProcessView(false);
-                refetchVideos();
-              }}
-              onCancel={() => setShowManualProcessView(false)}
-            />
-          ) : (
-            <div className="flex flex-col lg:flex-row gap-8 mb-12">
-              <div className="flex-1 min-w-0 space-y-16">
-                <QueueAndReview
-                  videosLoading={videosLoading}
-                  filteredVideos={filteredVideos}
-                  isDark={isDark}
-                  textClass={textClass}
-                  textSecondaryClass={textSecondaryClass}
-                  cardClass={cardClass}
-                  borderClass={borderClass}
-                  getOverallVideoStatus={getOverallVideoStatus}
-                  onNavigate={(id) => router.push(`/content/${id}`)}
-                />
-
-                <ReleasedMedia
-                  filteredVideos={filteredVideos}
-                  textClass={textClass}
-                  textSecondaryClass={textSecondaryClass}
-                  cardClass={cardClass}
-                  borderClass={borderClass}
-                  getOverallVideoStatus={getOverallVideoStatus}
-                  onNavigate={(id) => router.push(`/content/${id}`)}
-                />
-              </div>
-
-              <div className="w-full lg:w-64 shrink-0">
-                <ActivityFeed
-                  activitiesLoading={activitiesLoading}
-                  activities={activities}
-                  textClass={textClass}
-                  textSecondaryClass={textSecondaryClass}
-                  cardClass={cardClass}
-                  borderClass={borderClass}
-                />
-
-                <QuickStats
-                  dashboard={dashboard}
-                  textClass={textClass}
-                  textSecondaryClass={textSecondaryClass}
-                  cardClass={cardClass}
-                  borderClass={borderClass}
-                />
-              </div>
+            <div className="px-4">
+              <ManualProcessView
+                availableChannels={
+                  channelGraph.flatMap((master: MasterNode) =>
+                    master.language_channels.map((lc: any) => ({
+                      id: lc.channel_id,
+                      name: lc.channel_name,
+                      language_code: lc.language_code,
+                      language_name: lc.language_name
+                    }))
+                  )
+                }
+                projectId={selectedProject?.id}
+                onSuccess={() => {
+                  setShowManualProcessView(false);
+                  refetchVideos();
+                }}
+                onCancel={() => setShowManualProcessView(false)}
+              />
             </div>
+          ) : (
+            <GridDashboard
+              userName={dashboard?.name || "Creator"}
+              userEmail={dashboard?.email || "creator@olleey.com"}
+              projects={[]} // Replace with actual projects if available
+              selectedProject={selectedProject}
+              videos={filteredVideos}
+              videosLoading={videosLoading}
+              activities={activities}
+              activitiesLoading={activitiesLoading}
+              getOverallVideoStatus={getOverallVideoStatus}
+              isDark={isDark}
+              textClass={textClass}
+              textSecondaryClass={textSecondaryClass}
+              cardClass={cardClass}
+              borderClass={borderClass}
+              onNavigate={(id) => router.push(`/content/${id}`)}
+              onCreateProject={() => setShowManualProcessView(true)}
+              totalVideos={filteredVideos.length}
+              totalTranslations={filteredVideos.reduce((acc, video) => {
+                const localizations = video.localizations || {};
+                return acc + Object.values(localizations).filter(l => l.status === "live").length;
+              }, 0)}
+            />
           )}
         </div>
       </div>

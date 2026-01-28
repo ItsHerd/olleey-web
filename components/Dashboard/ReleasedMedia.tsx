@@ -51,38 +51,38 @@ export function ReleasedMedia({
                     <p className={`text-sm font-medium ${textSecondaryClass}`}>Your completed productions will be showcased here.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-                    {liveVideos.slice(0, 6).map((video) => (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                    {liveVideos.slice(0, 8).map((video) => (
                         <div
                             key={video.video_id}
                             onClick={() => onNavigate(video.video_id)}
-                            className={`${cardClass} border ${borderClass} rounded-3xl p-6 flex flex-col gap-5 cursor-pointer hover:border-olleey-yellow/40 transition-all hover:translate-y-[-6px] hover:shadow-2xl hover:shadow-olleey-yellow/5 group relative overflow-hidden`}
+                            className={`${cardClass} border ${borderClass} rounded-3xl p-5 flex flex-col gap-4 cursor-pointer hover:border-olleey-yellow/40 transition-all hover:translate-y-[-4px] hover:shadow-2xl hover:shadow-olleey-yellow/5 group relative overflow-hidden`}
                         >
-                            <div className="w-full aspect-video rounded-2xl bg-gray-900 shrink-0 overflow-hidden shadow-xl relative border border-white/5">
+                            <div className="w-full aspect-[9/14] rounded-2xl bg-gray-900 shrink-0 overflow-hidden shadow-lg relative border border-white/5">
                                 <img src={video.thumbnail_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" alt="" />
                                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent transition-opacity" />
-                                <div className="absolute bottom-4 left-4 px-3 py-1.5 bg-black/60 backdrop-blur-xl rounded-xl border border-white/10 flex items-center gap-2">
-                                    <Radio className="w-3.5 h-3.5 text-green-500 animate-pulse" />
-                                    <span className="text-[11px] font-black text-white uppercase tracking-tighter">
-                                        {formatViews(video.global_views)} Global Views
-                                    </span>
+                                <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-2">
+                                    <div className="px-2 py-1 bg-black/60 backdrop-blur-xl rounded-lg border border-white/10 flex items-center gap-1.5 self-start">
+                                        <Radio className="w-3 h-3 text-green-500 animate-pulse" />
+                                        <span className="text-[9px] font-black text-white uppercase tracking-tighter">
+                                            {formatViews(video.global_views)}
+                                        </span>
+                                    </div>
+                                    <h4 className={`text-sm font-bold text-white truncate group-hover:text-olleey-yellow transition-colors`}>{video.title}</h4>
                                 </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <h4 className={`text-lg font-bold ${textClass} truncate mb-3 group-hover:text-olleey-yellow transition-colors`}>{video.title}</h4>
-                                <div className="flex items-center justify-between border-t border-white/[0.04] pt-5 mt-2">
-                                    <div className="flex items-center gap-2.5">
-                                        {Object.keys(video.localizations || {})
-                                            .filter(l => video.localizations?.[l].status === 'live')
-                                            .slice(0, 5)
-                                            .map(lang => (
-                                                <div key={lang} className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shadow-lg hover:scale-125 hover:-translate-y-1 transition-all" title={lang}>
-                                                    <span className="text-lg">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
-                                                </div>
-                                            ))}
-                                    </div>
-                                    <span className={`text-[10px] font-black ${textSecondaryClass} uppercase tracking-tighter`}>{getRelativeTime(video.published_at)}</span>
+                            <div className="flex items-center justify-between border-t border-white/[0.04] pt-4 mt-auto">
+                                <div className="flex items-center gap-1.5">
+                                    {Object.keys(video.localizations || {})
+                                        .filter(l => video.localizations?.[l].status === 'live')
+                                        .slice(0, 3)
+                                        .map(lang => (
+                                            <div key={lang} className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shadow-lg" title={lang}>
+                                                <span className="text-sm">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
+                                            </div>
+                                        ))}
                                 </div>
+                                <span className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-tighter`}>{getRelativeTime(video.published_at)}</span>
                             </div>
                         </div>
                     ))}

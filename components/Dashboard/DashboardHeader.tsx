@@ -14,6 +14,7 @@ interface DashboardHeaderProps {
     setShowManualProcessView: (show: boolean) => void;
     totalVideos: number;
     totalTranslations: number;
+    userName?: string | null;
 }
 
 export function DashboardHeader({
@@ -25,18 +26,19 @@ export function DashboardHeader({
     refetchVideos,
     setShowManualProcessView,
     totalVideos,
-    totalTranslations
+    totalTranslations,
+    userName
 }: DashboardHeaderProps) {
     return (
-        <div className={`flex-shrink-0 px-0 py-3 sm:py-4 md:py-6`}>
+        <div className={`flex-shrink-0 px-0 pt-5 pb-0`}>
             <div className="flex flex-col gap-3 sm:gap-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                     <div className="min-w-0 flex-1">
                         <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal ${textClass} mb-1 sm:mb-2 truncate`}>
-                            Dashboard
+                            Welcome back, {userName?.split(' ')[0] || 'Creator'}
                         </h1>
                         <p className={`text-xs sm:text-sm md:text-base ${textSecondaryClass} truncate`}>
-                            Manage your videos and track translation progress across languages
+                            Manage your personal work and videos.
                         </p>
                     </div>
 
@@ -73,12 +75,6 @@ export function DashboardHeader({
                     </div>
                 </div>
 
-                <div className={`flex items-center gap-2 sm:gap-3 md:gap-6 text-xs sm:text-sm ${textSecondaryClass} flex-shrink-0 flex-wrap ml-auto`}>
-                    <span className="whitespace-nowrap">Total Videos: <strong className={`${textClass}`}>{totalVideos}</strong></span>
-                    <span className="whitespace-nowrap">Translations: <strong className="text-indigo-400">
-                        {totalTranslations}
-                    </strong></span>
-                </div>
             </div>
         </div>
     );

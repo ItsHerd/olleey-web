@@ -59,15 +59,7 @@ export function QueueAndReview({
                     <p className={`text-sm font-medium ${textSecondaryClass}`}>Syncing with production servers...</p>
                 </div>
             ) : activeVideos.length === 0 ? (
-                <div className={`${cardClass} border-2 border-dashed ${borderClass} rounded-3xl p-16 text-center group transition-all hover:bg-white/[0.01]`}>
-                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                        <CheckCircle className={`w-10 h-10 ${textSecondaryClass} opacity-20`} />
-                    </div>
-                    <p className={`${textClass} text-lg font-bold mb-2`}>Queue Clear</p>
-                    <p className={`text-sm ${textSecondaryClass} max-w-xs mx-auto`}>
-                        No videos currently in processing. New content from your connected channels will appear here automatically.
-                    </p>
-                </div>
+                null
             ) : (
                 <div className={`${cardClass} border ${borderClass} rounded-3xl shadow-2xl shadow-black/10 overflow-hidden`}>
                     <table className="w-full text-left border-collapse">

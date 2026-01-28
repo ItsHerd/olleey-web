@@ -86,17 +86,17 @@ module.exports = {
         },
         // Dark Theme
         dark: {
-          bg: "#1a1c20",
-          bgAlt: "#17191e",
-          card: "#22262b",
-          cardAlt: "#25292f",
+          bg: "#0A0A0A",
+          bgAlt: "#0F0F0F",
+          card: "#141414",
+          cardAlt: "#1A1A1A",
           text: "#f0f2f5",
           textSecondary: "#a0a8b0",
           accent: "#f28a80",
           accentAlt: "#f0807b",
           accentSecondary: "#f0c674",
           accentSecondaryAlt: "#edc667",
-          border: "#343a40",
+          border: "#1c1c1c",
         },
         // Olleey Theme Colors
         olleey: {
