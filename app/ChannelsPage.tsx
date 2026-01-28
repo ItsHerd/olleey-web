@@ -256,29 +256,45 @@ export default function ChannelsPage() {
   return (
     <div className={`h-full flex flex-col ${bgClass}`}>
       {/* Header */}
-      <div className={`px-0 py-3 sm:py-4 md:py-6 border-b ${borderClass}`}>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className={`text-2xl font-semibold ${textClass} mb-2`}>Channel Network</h1>
-            <p className={`text-sm ${textSecondaryClass}`}>
-              Manage your YouTube channel connections and language satellites
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-            <div className={`flex items-center gap-3 sm:gap-6 text-xs sm:text-sm ${textSecondaryClass} border-r ${borderClass} pr-3 sm:pr-6`}>
-              <span>Total: <strong className={textClass}>{graphStats.total_connections}</strong></span>
-              <span>Active: <strong className="text-green-600">{graphStats.active_connections}</strong></span>
-              {graphStats.expired_connections > 0 && (
-                <span>Expired: <strong className="text-red-600">{graphStats.expired_connections}</strong></span>
-              )}
+      <div className={`relative px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12 border-b ${borderClass} overflow-hidden`}>
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=2000"
+            className="w-full h-full object-cover opacity-20"
+            alt=""
+          />
+          <div className={`absolute inset-0 bg-gradient-to-r ${isDark ? 'from-dark-bg via-dark-bg/80 to-transparent' : 'from-light-bg via-light-bg/80 to-transparent'}`} />
+        </div>
+
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="flex-1">
+              <h1 className={`text-xl sm:text-2xl md:text-3xl font-300 ${textClass} mb-2 tracking-tight`}>Channel Network</h1>
+              <p className={`text-sm sm:text-base ${textSecondaryClass} max-w-2xl`}>
+                Manage your YouTube channel connections and secure your global infrastructure with ease.
+              </p>
             </div>
-            <button
-              onClick={handleAddChannel}
-              className={`inline-flex items-center gap-2 ${cardClass} border ${borderClass} ${textClass} px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-all shadow-sm`}
-            >
-              <Plus className="h-4 w-4" />
-              Add Channel
-            </button>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-lg">
+              <div className={`flex items-center gap-4 sm:gap-8 text-xs sm:text-sm ${textSecondaryClass}`}>
+                <div className="flex flex-col">
+                  <span className="opacity-60 uppercase text-[9px] font-bold tracking-widest mb-1">Total Assets</span>
+                  <span className={`text-lg font-semibold ${textClass}`}>{graphStats.total_connections}</span>
+                </div>
+                <div className="w-[1px] h-8 bg-white/10" />
+                <div className="flex flex-col">
+                  <span className="opacity-60 uppercase text-[9px] font-bold tracking-widest mb-1">Health</span>
+                  <span className="text-lg font-semibold text-green-500">Active</span>
+                </div>
+              </div>
+              <button
+                onClick={handleAddChannel}
+                className="inline-flex items-center gap-2 bg-olleey-yellow text-black px-5 py-2.5 rounded-xl text-sm font-bold hover:scale-105 transition-all shadow-xl shadow-olleey-yellow/20"
+              >
+                <Plus className="h-4 w-4" />
+                Add Connection
+              </button>
+            </div>
           </div>
         </div>
       </div>

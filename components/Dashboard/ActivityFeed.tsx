@@ -29,7 +29,7 @@ export function ActivityFeed({
                 <h2 className={`text-xl font-300 ${textClass}`}>Activity Feed</h2>
             </div>
 
-            <div className={`${cardClass} border ${borderClass} rounded-2xl p-5 space-y-6 relative overflow-hidden`}>
+            <div className={`${cardClass} border ${borderClass} rounded-none p-5 space-y-6 relative overflow-hidden`}>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-olleey-yellow/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none" />
 
                 <div className="relative space-y-6">

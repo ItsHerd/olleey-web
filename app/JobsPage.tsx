@@ -30,6 +30,7 @@ export default function JobsPage() {
     const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
     const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
     const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
+    const isDark = theme === "dark";
 
     const loadJobs = async () => {
         try {
@@ -108,21 +109,33 @@ export default function JobsPage() {
     return (
         <div className={`w-full h-full ${bgClass} flex flex-col overflow-hidden`}>
             {/* Header */}
-            <div className={`px-0 py-3 sm:py-4 md:py-6 border-b ${borderClass}`}>
-                <div className="flex items-center justify-between mb-2 px-2 sm:px-4">
-                    <h1 className={`text-xl sm:text-2xl font-semibold ${textClass}`}>Workflows</h1>
-                    <button
-                        onClick={loadJobs}
-                        disabled={loading}
-                        className={`flex items-center gap-2 px-4 py-2 ${cardClass} border ${borderClass} rounded-lg hover:opacity-80 transition-all shadow-sm disabled:opacity-50`}
-                    >
-                        <RefreshCw className={`h-4 w-4 ${textSecondaryClass} ${loading ? 'animate-spin' : ''}`} />
-                        <span className={`text-sm font-medium ${textClass}`}>Refresh</span>
-                    </button>
+            <div className={`relative px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12 border-b ${borderClass} overflow-hidden`}>
+                {/* Background Image with Overlay */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=2000"
+                        className="w-full h-full object-cover opacity-20"
+                        alt=""
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-r ${isDark ? 'from-dark-bg via-dark-bg/80 to-transparent' : 'from-light-bg via-light-bg/80 to-transparent'}`} />
                 </div>
-                <p className={`text-sm ${textSecondaryClass} px-2 sm:px-4`}>
-                    Monitor processing status and manage dubbing pipeline
-                </p>
+
+                <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-2">
+                        <h1 className={`text-xl sm:text-2xl md:text-3xl font-300 ${textClass} tracking-tight`}>Workflows</h1>
+                        <button
+                            onClick={loadJobs}
+                            disabled={loading}
+                            className={`flex items-center gap-2 px-4 py-2 ${cardClass} border ${borderClass} rounded-lg hover:opacity-80 transition-all shadow-sm disabled:opacity-50`}
+                        >
+                            <RefreshCw className={`h-4 w-4 ${textSecondaryClass} ${loading ? 'animate-spin' : ''}`} />
+                            <span className={`text-sm font-medium ${textClass}`}>Refresh</span>
+                        </button>
+                    </div>
+                    <p className={`text-sm sm:text-base ${textSecondaryClass} max-w-2xl`}>
+                        Monitor processing status and manage your global dubbing pipeline from a centralized production hub.
+                    </p>
+                </div>
             </div>
 
             <div className="flex-1 overflow-auto px-4 md:px-6 py-6">
@@ -143,54 +156,59 @@ export default function JobsPage() {
                     </div>
                 )}
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <div className={`${cardClass} border ${borderClass} rounded-2xl p-5 shadow-sm`}>
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                                <FileText className="h-4 w-4 text-indigo-500" />
-                            </div>
-                            <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>
-                                Monthly Total
-                            </span>
-                        </div>
-                        <p className={`text-3xl font-bold ${textClass}`}>{stats.totalThisMonth}</p>
-                    </div>
+                {/* Production Monitor Bar */}
+                <div className={`${cardClass} border ${borderClass} rounded-[2rem] p-1 mb-10 shadow-2xl shadow-black/20 overflow-hidden relative group`}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-olleey-yellow/5 via-transparent to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    <div className="relative flex flex-col md:flex-row items-stretch divide-y md:divide-y-0 md:divide-x divide-white/[0.05]">
 
-                    <div className={`${cardClass} border ${borderClass} rounded-2xl p-5 shadow-sm`}>
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                                <RefreshCw className="h-4 w-4 text-orange-500" />
+                        {/* Monthly Throughput */}
+                        <div className="flex-1 px-8 py-6 flex flex-col justify-center">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                                <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} opacity-60`}>Monthly Flow</span>
                             </div>
-                            <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>
-                                Processing
-                            </span>
+                            <div className="flex items-baseline gap-2">
+                                <span className={`text-4xl font-light tracking-tighter ${textClass}`}>{stats.totalThisMonth}</span>
+                                <span className={`text-[10px] font-bold ${textSecondaryClass}`}>TOTAL UNITS</span>
+                            </div>
                         </div>
-                        <p className={`text-3xl font-bold ${textClass}`}>{stats.processing}</p>
-                    </div>
 
-                    <div className={`${cardClass} border ${borderClass} rounded-2xl p-5 shadow-sm`}>
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                        {/* Active Processing */}
+                        <div className="flex-1 px-8 py-6 flex flex-col justify-center bg-white/[0.02]">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+                                <span className={`text-[11px] font-black uppercase tracking-[0.2em] text-orange-500/80`}>In Production</span>
                             </div>
-                            <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>
-                                Completed
-                            </span>
+                            <div className="flex items-baseline gap-2">
+                                <span className={`text-4xl font-light tracking-tighter text-orange-500`}>{stats.processing}</span>
+                                <span className={`text-[10px] font-bold text-orange-500/60`}>ACTIVE PIPELINES</span>
+                            </div>
                         </div>
-                        <p className={`text-3xl font-bold ${textClass}`}>{stats.completed}</p>
-                    </div>
 
-                    <div className={`${cardClass} border ${borderClass} rounded-2xl p-5 shadow-sm`}>
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
-                                <AlertCircle className="h-4 w-4 text-red-500" />
+                        {/* Fleet Readiness */}
+                        <div className="flex-1 px-8 py-6 flex flex-col justify-center">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                <span className={`text-[11px] font-black uppercase tracking-[0.2em] text-emerald-500/80`}>Fleet Ready</span>
                             </div>
-                            <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>
-                                Failed
-                            </span>
+                            <div className="flex items-baseline gap-2">
+                                <span className={`text-4xl font-light tracking-tighter text-emerald-500`}>{stats.completed}</span>
+                                <span className={`text-[10px] font-bold text-emerald-500/60`}>STAGED & LIVE</span>
+                            </div>
                         </div>
-                        <p className={`text-3xl font-bold ${textClass}`}>{stats.failed}</p>
+
+                        {/* Failed Intercepts */}
+                        <div className="flex-1 px-8 py-6 flex flex-col justify-center">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                                <span className={`text-[11px] font-black uppercase tracking-[0.2em] text-red-500/80`}>System Block</span>
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                                <span className={`text-4xl font-light tracking-tighter text-red-500`}>{stats.failed}</span>
+                                <span className={`text-[10px] font-bold text-red-500/60`}>FAILED JOBS</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 

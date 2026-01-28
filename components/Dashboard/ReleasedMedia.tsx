@@ -33,7 +33,7 @@ export function ReleasedMedia({
         <section>
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-green-500/10 rounded-2xl shadow-sm border border-green-500/20">
+                    <div className="p-3 bg-green-500/10 rounded-none shadow-sm border border-green-500/20">
                         <CheckCircle className="w-6 h-6 text-green-500" />
                     </div>
                     <div>
@@ -47,7 +47,7 @@ export function ReleasedMedia({
             </div>
 
             {liveVideos.length === 0 ? (
-                <div className={`${cardClass} border border-dashed ${borderClass} rounded-3xl p-16 text-center shadow-inner`}>
+                <div className={`${cardClass} border border-dashed ${borderClass} rounded-none p-16 text-center shadow-inner`}>
                     <p className={`text-sm font-medium ${textSecondaryClass}`}>Your completed productions will be showcased here.</p>
                 </div>
             ) : (
@@ -56,13 +56,13 @@ export function ReleasedMedia({
                         <div
                             key={video.video_id}
                             onClick={() => onNavigate(video.video_id)}
-                            className={`${cardClass} border ${borderClass} rounded-3xl p-5 flex flex-col gap-4 cursor-pointer hover:border-olleey-yellow/40 transition-all hover:translate-y-[-4px] hover:shadow-2xl hover:shadow-olleey-yellow/5 group relative overflow-hidden`}
+                            className={`${cardClass} border ${borderClass} rounded-none p-5 flex flex-col gap-4 cursor-pointer hover:border-olleey-yellow/40 transition-all hover:translate-y-[-4px] hover:shadow-2xl hover:shadow-olleey-yellow/5 group relative overflow-hidden`}
                         >
-                            <div className="w-full aspect-[9/14] rounded-2xl bg-gray-900 shrink-0 overflow-hidden shadow-lg relative border border-white/5">
+                            <div className="w-full aspect-[9/14] rounded-none bg-gray-900 shrink-0 overflow-hidden shadow-lg relative border border-white/5">
                                 <img src={video.thumbnail_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" alt="" />
                                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent transition-opacity" />
                                 <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-2">
-                                    <div className="px-2 py-1 bg-black/60 backdrop-blur-xl rounded-lg border border-white/10 flex items-center gap-1.5 self-start">
+                                    <div className="px-2 py-1 bg-black/60 backdrop-blur-xl rounded-none border border-white/10 flex items-center gap-1.5 self-start">
                                         <Radio className="w-3 h-3 text-green-500 animate-pulse" />
                                         <span className="text-[9px] font-black text-white uppercase tracking-tighter">
                                             {formatViews(video.global_views)}

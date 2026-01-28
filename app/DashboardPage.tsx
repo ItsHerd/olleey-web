@@ -130,6 +130,15 @@ export default function DashboardPage() {
     }
   }, [dashboard?.youtube_connections?.length, searchParams]);
 
+  useEffect(() => {
+    const action = searchParams.get("action");
+    if (action === "manual") {
+      setShowManualProcessView(true);
+    } else {
+      setShowManualProcessView(false);
+    }
+  }, [searchParams]);
+
   const handleApproveQuickCheck = async () => {
     const { videoId, languageCode } = quickCheckState;
     if (videoId && languageCode) {
@@ -250,7 +259,13 @@ export default function DashboardPage() {
         videosLoading={videosLoading}
         showManualProcessView={showManualProcessView}
         refetchVideos={refetchVideos}
-        setShowManualProcessView={setShowManualProcessView}
+        setShowManualProcessView={(show) => {
+          if (!show) {
+            router.push("/app?page=Dashboard");
+          } else {
+            setShowManualProcessView(true);
+          }
+        }}
         totalVideos={filteredVideos.length}
         totalTranslations={filteredVideos.reduce((acc, video) => {
           const localizations = video.localizations || {};
@@ -258,10 +273,10 @@ export default function DashboardPage() {
         }, 0)}
       />
 
-      <div className="flex-1 overflow-hidden min-h-0">
-        <div className="w-full h-full flex flex-col px-0">
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="w-full flex-1 flex flex-col px-0 py-4">
           {showManualProcessView ? (
-            <div className="px-4">
+            <div className="w-full max-w-7xl mx-auto">
               <ManualProcessView
                 availableChannels={
                   channelGraph.flatMap((master: MasterNode) =>
@@ -275,10 +290,10 @@ export default function DashboardPage() {
                 }
                 projectId={selectedProject?.id}
                 onSuccess={() => {
-                  setShowManualProcessView(false);
+                  router.push("/app?page=Dashboard");
                   refetchVideos();
                 }}
-                onCancel={() => setShowManualProcessView(false)}
+                onCancel={() => router.push("/app?page=Dashboard")}
               />
             </div>
           ) : (

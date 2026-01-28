@@ -34,43 +34,46 @@ export function DashboardHeader({
             <div className="flex flex-col gap-3 sm:gap-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                     <div className="min-w-0 flex-1">
-                        <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal ${textClass} mb-1 sm:mb-2 truncate`}>
-                            Welcome back, {userName?.split(' ')[0] || 'Creator'}
-                        </h1>
-                        <p className={`text-xs sm:text-sm md:text-base ${textSecondaryClass} truncate`}>
-                            Manage your personal work and videos.
-                        </p>
+                        {!showManualProcessView ? (
+                            <div>
+                                <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal ${textClass} mb-1 sm:mb-2 truncate`}>
+                                    Welcome back, {userName?.split(' ')[0] || 'Creator'}
+                                </h1>
+                                <p className={`text-xs sm:text-sm md:text-base ${textSecondaryClass} truncate`}>
+                                    Manage your personal work and videos.
+                                </p>
+                            </div>
+                        ) : (
+                            <div>
+                                <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-300 ${textClass} mb-1 sm:mb-2 truncate uppercase tracking-widest`}>
+                                    Manual Process Pipeline
+                                </h1>
+                                <p className={`text-xs sm:text-sm md:text-base ${textSecondaryClass} truncate uppercase tracking-tight opacity-60`}>
+                                    Configure source and distribution settings for manual dubbing.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {showManualProcessView && (
+                            <Button
+                                onClick={() => setShowManualProcessView(false)}
+                                className={`h-11 px-6 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-none hover:bg-white/10 transition-all mr-2`}
+                            >
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Exit Manual Mode
+                            </Button>
+                        )}
                         <Button
                             variant="outline"
                             size="icon"
                             onClick={refetchVideos}
                             disabled={videosLoading}
-                            className={`h-10 w-10 ${isDark ? 'border-white/10 hover:bg-white/5' : 'border-gray-200'}`}
+                            className={`h-11 w-11 rounded-none ${isDark ? 'border-white/10 bg-white/5 hover:bg-white/10' : 'border-gray-200'}`}
                             title="Refresh"
                         >
                             <RefreshCw className={`h-5 w-5 ${videosLoading ? "animate-spin" : ""}`} />
-                        </Button>
-                        <Button
-                            onClick={() => setShowManualProcessView(!showManualProcessView)}
-                            className={`gap-2 h-10 px-4 transition-all duration-300 ${showManualProcessView
-                                ? (isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-black')
-                                : 'bg-olleey-yellow text-black font-300 hover:shadow-[0_0_15px_rgba(251,191,36,0.4)]'
-                                }`}
-                        >
-                            {showManualProcessView ? (
-                                <>
-                                    <ArrowLeft className="h-4 w-4" />
-                                    Back to Dashboard
-                                </>
-                            ) : (
-                                <>
-                                    <Zap className="h-4 w-4" />
-                                    Start Manual Process
-                                </>
-                            )}
                         </Button>
                     </div>
                 </div>

@@ -36,13 +36,34 @@ export default function GuardrailsPage() {
     return (
         <div className={`h-full flex flex-col ${bgClass}`}>
             {/* Header */}
-            <div className={`px-0 py-3 sm:py-4 md:py-6 border-b ${borderClass}`}>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-2 sm:px-4">
-                    <div>
-                        <h1 className={`text-2xl font-semibold ${textClass} mb-2`}>Guardrails</h1>
-                        <p className={`text-sm ${textSecondaryClass}`}>
-                            Define safety preferences and automated behaviors for your dubbing pipeline.
-                        </p>
+            <div className={`relative px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12 border-b ${borderClass} overflow-hidden`}>
+                {/* Background Image with Overlay */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2000"
+                        className="w-full h-full object-cover opacity-20"
+                        alt=""
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-r ${isDark ? 'from-dark-bg via-dark-bg/80 to-transparent' : 'from-light-bg via-light-bg/80 to-transparent'}`} />
+                </div>
+
+                <div className="relative z-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 px-2 sm:px-4">
+                        <div>
+                            <h1 className={`text-xl sm:text-2xl md:text-3xl font-300 ${textClass} mb-2 tracking-tight`}>System Guardrails</h1>
+                            <p className={`text-sm sm:text-base ${textSecondaryClass} max-w-2xl`}>
+                                Define safety protocols and automated thresholds for the global dubbing pipeline.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-4 bg-white/5 backdrop-blur-md p-4 rounded-none border border-white/10 shadow-lg">
+                            <div className="flex flex-col">
+                                <span className="opacity-60 uppercase text-[9px] font-black tracking-widest mb-1">Status</span>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className={`text-xs font-bold ${textClass}`}>Active Security</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -58,17 +79,17 @@ export default function GuardrailsPage() {
                         </div>
 
                         <div className="grid gap-4">
-                            <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 flex items-center justify-between shadow-sm`}>
+                            <div className={`${cardClass} border ${borderClass} rounded-none p-6 flex items-center justify-between shadow-sm`}>
                                 <div className="space-y-1">
                                     <p className={`font-semibold ${textClass}`}>Scheduling Defaults</p>
                                     <p className={`text-xs ${textSecondaryClass}`}>Default behavior for new workflow runs</p>
                                 </div>
-                                <div className={`flex ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-100 border-gray-200'} p-1 rounded-xl border`}>
+                                <div className={`flex ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-100 border-gray-200'} p-1 rounded-none border`}>
                                     {["Immediate", "Scheduled", "Manual"].map((v) => (
                                         <button
                                             key={v}
                                             onClick={() => setSchedulingDefault(v)}
-                                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${schedulingDefault === v
+                                            className={`px-4 py-2 rounded-none text-xs font-bold transition-all ${schedulingDefault === v
                                                 ? "bg-olleey-yellow text-black shadow-lg shadow-yellow-500/20"
                                                 : `${textSecondaryClass} hover:${textClass}`
                                                 }`}
@@ -79,7 +100,7 @@ export default function GuardrailsPage() {
                                 </div>
                             </div>
 
-                            <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 flex items-center justify-between shadow-sm`}>
+                            <div className={`${cardClass} border ${borderClass} rounded-none p-6 flex items-center justify-between shadow-sm`}>
                                 <div className="space-y-1">
                                     <p className={`font-semibold ${textClass}`}>Enable Auto-Publishing</p>
                                     <p className={`text-xs ${textSecondaryClass}`}>Automatically upload to YouTube once dubbing is completed</p>
@@ -97,7 +118,7 @@ export default function GuardrailsPage() {
                         </div>
 
                         <div className="grid gap-4">
-                            <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 flex items-center justify-between shadow-sm`}>
+                            <div className={`${cardClass} border ${borderClass} rounded-none p-6 flex items-center justify-between shadow-sm`}>
                                 <div className="space-y-1">
                                     <p className={`font-semibold ${textClass}`}>Manual Review Required</p>
                                     <p className={`text-xs ${textSecondaryClass}`}>Always require approval before final distribution</p>
@@ -105,7 +126,7 @@ export default function GuardrailsPage() {
                                 <Switch checked={approvalRequired} onCheckedChange={setApprovalRequired} />
                             </div>
 
-                            <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 shadow-sm`}>
+                            <div className={`${cardClass} border ${borderClass} rounded-none p-6 shadow-sm`}>
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="space-y-1">
                                         <p className={`font-semibold ${textClass}`}>AI Quality Threshold</p>
@@ -119,7 +140,7 @@ export default function GuardrailsPage() {
                                     max="100"
                                     value={qualityThreshold}
                                     onChange={(e) => setQualityThreshold(parseInt(e.target.value))}
-                                    className={`w-full h-1.5 ${isDark ? 'bg-white/10' : 'bg-gray-200'} rounded-lg appearance-none cursor-pointer accent-olleey-yellow`}
+                                    className={`w-full h-1.5 ${isDark ? 'bg-white/10' : 'bg-gray-200'} rounded-none appearance-none cursor-pointer accent-olleey-yellow`}
                                 />
                             </div>
                         </div>
@@ -132,7 +153,7 @@ export default function GuardrailsPage() {
                             <h2 className={`text-lg font-bold ${textClass}`}>Content Safety</h2>
                         </div>
 
-                        <div className={`p-6 border ${borderClass} rounded-2xl bg-gradient-to-br from-olleey-yellow/5 to-transparent relative overflow-hidden group`}>
+                        <div className={`p-6 border ${borderClass} rounded-none bg-gradient-to-br from-olleey-yellow/5 to-transparent relative overflow-hidden group`}>
                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                 <Zap className="w-24 h-24 text-olleey-yellow" />
                             </div>
@@ -153,7 +174,7 @@ export default function GuardrailsPage() {
 
                     {/* Danger Zone */}
                     <div className="pt-8 mt-8 border-t border-red-500/10">
-                        <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-6 flex items-center justify-between">
+                        <div className="bg-red-500/5 border border-red-500/10 rounded-none p-6 flex items-center justify-between">
                             <div>
                                 <p className={`font-bold text-red-500 mb-1`}>Reset Guardrails</p>
                                 <p className={`text-xs text-red-500/60`}>Revert all safety and automation settings to platform defaults.</p>

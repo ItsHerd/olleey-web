@@ -169,26 +169,28 @@ export function ManualProcessView({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Source & Configuration */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 shadow-sm`}>
-                        <h3 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
-                            <Youtube className="w-5 h-5 text-red-500" />
+                    <div className={`${cardClass} border ${borderClass} rounded-none p-8 lg:p-10 shadow-sm relative overflow-hidden`}>
+                        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                            <SlidersHorizontal className="w-32 h-32" />
+                        </div>
+
+                        <h3 className={`text-xl md:text-2xl font-300 ${textClass} mb-8 flex items-center gap-3`}>
+                            <div className="w-1.5 h-6 bg-olleey-yellow" />
                             Source Configuration
                         </h3>
 
                         {/* Source Selection */}
-                        <div className={`p-1 ${cardAltClass} border ${borderClass} rounded-xl flex items-center gap-1 mb-6`}>
+                        <div className={`p-1 ${cardAltClass} border ${borderClass} rounded-none flex items-center gap-1 mb-8`}>
                             {(['channel', 'url', 'upload'] as SourceTab[]).map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
-                                    className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${activeTab === tab
-                                        ? (isDark ? 'bg-white text-black shadow-lg' : 'bg-black text-white shadow-lg')
-                                        : `${textSecondaryClass} hover:${textClass}`
+                                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] rounded-none transition-all ${activeTab === tab
+                                        ? (isDark ? 'bg-olleey-yellow text-black' : 'bg-olleey-yellow text-black')
+                                        : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`
                                         }`}
                                 >
-                                    {tab === 'channel' && <span className="flex items-center justify-center gap-2"><Youtube className="w-3.5 h-3.5" /> Channel</span>}
-                                    {tab === 'url' && <span className="flex items-center justify-center gap-2"><LinkIcon className="w-3.5 h-3.5" /> URL</span>}
-                                    {tab === 'upload' && <span className="flex items-center justify-center gap-2"><FileVideo className="w-3.5 h-3.5" /> Upload</span>}
+                                    {tab}
                                 </button>
                             ))}
                         </div>
@@ -198,14 +200,14 @@ export function ManualProcessView({
                                 <select
                                     value={sourceChannelId}
                                     onChange={(e) => setSourceChannelId(e.target.value)}
-                                    className={`w-full ${cardAltClass} border ${borderClass} ${textClass} rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-olleey-yellow outline-none transition-all`}
+                                    className={`w-full ${cardAltClass} border ${borderClass} ${textClass} rounded-none px-4 py-4 text-sm focus:border-olleey-yellow outline-none transition-all appearance-none`}
                                 >
-                                    <option value="">Select source channel...</option>
-                                    {availableChannels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    <option value="">SELECT SOURCE CHANNEL...</option>
+                                    {availableChannels.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
                                 </select>
 
                                 {sourceChannelId && (
-                                    <div className={`border ${borderClass} rounded-xl overflow-hidden max-h-[320px] overflow-y-auto`}>
+                                    <div className={`border ${borderClass} rounded-none overflow-hidden max-h-[400px] overflow-y-auto bg-black/5`}>
                                         {loadingVideos ? (
                                             <div className="p-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-olleey-yellow" /></div>
                                         ) : channelVideos.map(video => (
@@ -215,12 +217,17 @@ export function ManualProcessView({
                                                     setSelectedVideoId(video.video_id);
                                                     setCustomTitle(video.title);
                                                 }}
-                                                className={`flex items-center gap-4 p-3 cursor-pointer border-b ${borderClass} last:border-0 transition-all ${selectedVideoId === video.video_id ? 'bg-olleey-yellow/10' : 'hover:bg-rolleey-yellow/5'}`}
+                                                className={`flex items-center gap-6 p-4 cursor-pointer border-b ${borderClass} last:border-0 transition-all ${selectedVideoId === video.video_id ? 'bg-olleey-yellow text-black' : 'hover:bg-white/5'}`}
                                             >
-                                                <div className="w-20 aspect-video rounded bg-black/20 overflow-hidden shrink-0">
+                                                <div className="w-24 aspect-video rounded-none bg-black/20 overflow-hidden shrink-0 border border-white/10">
                                                     {video.thumbnail_url && <img src={video.thumbnail_url} className="w-full h-full object-cover" />}
                                                 </div>
-                                                <p className={`text-sm font-medium ${textClass} line-clamp-1`}>{video.title}</p>
+                                                <div className="flex-1">
+                                                    <p className={`text-xs font-black uppercase tracking-widest ${selectedVideoId === video.video_id ? 'text-black' : textClass} line-clamp-1`}>{video.title}</p>
+                                                    <p className={`text-[10px] ${selectedVideoId === video.video_id ? 'text-black/60' : textSecondaryClass} mt-1 uppercase tracking-tight`}>
+                                                        PUBLISHED: {new Date(video.published_at).toLocaleDateString()}
+                                                    </p>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -231,61 +238,63 @@ export function ManualProcessView({
                         {activeTab === 'url' && (
                             <div className="space-y-4">
                                 <Input
-                                    placeholder="Paste YouTube Video URL..."
+                                    placeholder="PASTE YOUTUBE VIDEO URL..."
                                     value={sourceVideoUrl}
                                     onChange={(e) => setSourceVideoUrl(e.target.value)}
-                                    className={`${cardAltClass} border-${borderClass} h-12 rounded-xl`}
+                                    className={`${cardAltClass} border-${borderClass} h-14 rounded-none uppercase text-[10px] tracking-widest font-black`}
                                 />
                                 <select
                                     value={sourceChannelId}
                                     onChange={(e) => setSourceChannelId(e.target.value)}
-                                    className={`w-full ${cardAltClass} border ${borderClass} ${textClass} rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-olleey-yellow outline-none transition-all`}
+                                    className={`w-full ${cardAltClass} border ${borderClass} ${textClass} rounded-none px-4 py-4 text-sm focus:border-olleey-yellow outline-none transition-all appearance-none uppercase text-[10px] tracking-widest font-black`}
                                 >
-                                    <option value="">Select source channel override...</option>
-                                    {availableChannels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    <option value="">SELECT SOURCE CHANNEL OVERRIDE...</option>
+                                    {availableChannels.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
                                 </select>
                             </div>
                         )}
 
                         {activeTab === 'upload' && (
-                            <div className={`border-2 border-dashed ${borderClass} rounded-2xl p-12 text-center hover:bg-olleey-yellow/5 transition-colors group cursor-pointer`}>
-                                <FileVideo className={`w-12 h-12 mx-auto mb-4 ${textSecondaryClass} group-hover:text-olleey-yellow transition-colors`} />
-                                <p className={`text-sm font-bold ${textClass}`}>Drop your video file here</p>
-                                <p className={`text-xs ${textSecondaryClass} mt-1`}>Supported formats: MP4, MOV, AVI (Max 2GB)</p>
+                            <div className={`border-2 border-dashed ${borderClass} rounded-none p-16 text-center hover:bg-olleey-yellow/5 transition-colors group cursor-pointer bg-black/5`}>
+                                <div className="p-6 bg-white/5 inline-flex mb-6 border border-white/10 rounded-none">
+                                    <FileVideo className={`w-10 h-10 ${textSecondaryClass} group-hover:text-olleey-yellow transition-colors`} />
+                                </div>
+                                <p className={`text-xs font-black uppercase tracking-[0.3em] ${textClass}`}>Drop local workstation file</p>
+                                <p className={`text-[10px] ${textSecondaryClass} mt-3 uppercase tracking-widest opacity-60`}>MP4 / MOV / AVI (MAX 2GB)</p>
                             </div>
                         )}
                     </div>
 
-                    <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 shadow-sm`}>
-                        <h3 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
-                            <SlidersHorizontal className="w-5 h-5 text-indigo-500" />
+                    <div className={`${cardClass} border ${borderClass} rounded-none p-8 lg:p-10 shadow-sm relative overflow-hidden`}>
+                        <h3 className={`text-xl md:text-2xl font-300 ${textClass} mb-8 flex items-center gap-3`}>
+                            <div className="w-1.5 h-6 bg-indigo-500" />
                             Job Settings
                         </h3>
 
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest pl-1`}>Target Channel <span className="text-red-500">*</span></label>
+                                    <label className={`text-[10px] font-black ${textSecondaryClass} uppercase tracking-[0.2em] mb-3 block`}>Target Distribution <span className="text-red-500">*</span></label>
                                     <select
                                         value={selectedTargetChannel}
                                         onChange={(e) => setSelectedTargetChannel(e.target.value)}
-                                        className={`w-full ${cardAltClass} border ${borderClass} ${textClass} rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-olleey-yellow outline-none h-11 transition-all`}
+                                        className={`w-full ${cardAltClass} border ${borderClass} ${textClass} rounded-none px-4 py-3 text-[10px] font-black uppercase tracking-widest focus:border-olleey-yellow outline-none h-12 transition-all appearance-none`}
                                     >
-                                        <option value="">Select target channel...</option>
-                                        <option value="none">No target (Draft mode)</option>
+                                        <option value="">SELECT TARGET CHANNEL...</option>
+                                        <option value="none">LOCAL DRAFT ONLY</option>
                                         {availableChannels.filter(c => c.id !== sourceChannelId).map(c => (
-                                            <option key={c.id} value={c.id}>{c.name} {c.language_name ? `(${c.language_name})` : ''}</option>
+                                            <option key={c.id} value={c.id}>{c.name.toUpperCase()} {c.language_name ? `- ${c.language_name.toUpperCase()}` : ''}</option>
                                         ))}
                                     </select>
                                 </div>
                                 {activeTab === 'upload' && (
                                     <div className="space-y-2">
-                                        <label className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest pl-1`}>Custom Title</label>
+                                        <label className={`text-[10px] font-black ${textSecondaryClass} uppercase tracking-[0.2em] mb-3 block`}>Custom Title</label>
                                         <Input
-                                            placeholder="Enter localized title..."
+                                            placeholder="ENTER LOCALIZED TITLE..."
                                             value={customTitle}
                                             onChange={(e) => setCustomTitle(e.target.value)}
-                                            className={`${cardAltClass} border-${borderClass} rounded-xl h-11`}
+                                            className={`${cardAltClass} border-${borderClass} rounded-none h-12 text-[10px] font-black uppercase tracking-widest`}
                                         />
                                     </div>
                                 )}
@@ -309,9 +318,9 @@ export function ManualProcessView({
 
                 {/* Right Column: Preview & Action */}
                 <div className="space-y-6">
-                    <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 shadow-sm`}>
-                        <h3 className={`text-lg font-bold ${textClass} mb-4 flex items-center gap-2`}>
-                            <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className={`${cardClass} border ${borderClass} rounded-none p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl bg-white/5`}>
+                        <h3 className={`text-xl font-300 ${textClass} mb-8 flex items-center gap-3`}>
+                            <div className="w-1.5 h-6 bg-emerald-500" />
                             Final Review
                         </h3>
 
@@ -319,81 +328,79 @@ export function ManualProcessView({
                             {/* Thumbnail Upload/Preview - Only for Upload Tab */}
                             {activeTab === 'upload' && (
                                 <div className="space-y-2">
-                                    <label className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest pl-1`}>Thumbnail (Optional)</label>
-                                    <div className={`relative aspect-video rounded-xl border-2 border-dashed ${borderClass} overflow-hidden group hover:border-olleey-yellow transition-all`}>
+                                    <label className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-[0.2em] mb-3 block`}>Asset Thumbnail</label>
+                                    <div className={`relative aspect-video rounded-none border border-white/10 ${borderClass} overflow-hidden group hover:border-olleey-yellow transition-all bg-black/40`}>
                                         {thumbnailPreview ? (
                                             <>
-                                                <img src={thumbnailPreview} className="w-full h-full object-cover" />
+                                                <img src={thumbnailPreview} className="w-full h-full object-cover opacity-80" />
                                                 <button
                                                     onClick={() => { setUploadedThumbnail(null); setThumbnailPreview(null); }}
-                                                    className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black transition-colors"
+                                                    className="absolute top-3 right-3 p-2 bg-black text-white rounded-none border border-white/20 hover:bg-olleey-yellow hover:text-black transition-all"
                                                 >
                                                     <X className="w-4 h-4" />
                                                 </button>
                                             </>
                                         ) : (
                                             <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
-                                                <ImageIcon className={`w-8 h-8 ${textSecondaryClass} mb-2 group-hover:text-olleey-yellow transition-colors`} />
-                                                <span className={`text-[10px] font-bold ${textSecondaryClass} uppercase group-hover:text-olleey-yellow`}>Upload Thumbnail</span>
+                                                <ImageIcon className={`w-8 h-8 ${textSecondaryClass} mb-3 group-hover:text-olleey-yellow transition-colors opacity-40`} />
+                                                <span className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-widest group-hover:text-olleey-yellow`}>Upload Asset Visual</span>
                                                 <input type="file" className="hidden" accept="image/*" onChange={handleThumbnailSelect} />
                                             </label>
                                         )}
                                     </div>
-                                    <p className={`text-[9px] ${textSecondaryClass} mt-2 italic px-1`}>
-                                        Upload a custom thumbnail for the localized version.
-                                    </p>
                                 </div>
                             )}
 
-                            <div className={`p-4 ${cardAltClass} rounded-xl space-y-3`}>
-                                <div className="flex justify-between items-center text-xs">
-                                    <span className={textSecondaryClass}>Video ID</span>
-                                    <span className={`font-mono ${textClass}`}>{selectedVideoId || '---'}</span>
+                            <div className={`p-6 ${cardAltClass} rounded-none border border-white/5 space-y-4`}>
+                                <div className="flex justify-between items-center">
+                                    <span className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-widest`}>Asset ID</span>
+                                    <span className={`text-xs font-black tracking-tighter ${textClass}`}>{selectedVideoId || 'PENDING'}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-xs">
-                                    <span className={textSecondaryClass}>Neural Engine</span>
-                                    <span className="text-olleey-yellow font-bold uppercase">Turbo v4</span>
+                                <div className="flex justify-between items-center">
+                                    <span className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-widest`}>Neural Processing</span>
+                                    <span className="text-[10px] font-black text-olleey-yellow tracking-widest">TURBO V4 ACTIVE</span>
                                 </div>
-                                <div className="flex justify-between items-center text-xs">
-                                    <span className={textSecondaryClass}>Estimated Cost</span>
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-2 h-2 rounded-full bg-green-500" />
-                                        <span className={`font-bold ${textClass}`}>Free Tier</span>
+                                <div className="w-full h-[1px] bg-white/5" />
+                                <div className="flex justify-between items-center">
+                                    <span className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-widest`}>Estimated Cost</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        <span className={`text-xs font-black ${textClass} tracking-widest`}>0.00 CREDITS</span>
                                     </div>
                                 </div>
                             </div>
 
                             {error && (
-                                <div className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                                    <p className="text-[11px] text-red-500 leading-tight">{error}</p>
+                                <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-none">
+                                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-red-500 leading-relaxed">{error}</p>
                                 </div>
                             )}
 
-                            <div className="flex flex-col gap-3 pt-2">
+                            <div className="flex flex-col gap-4 pt-4">
                                 <Button
                                     size="lg"
                                     onClick={handleSubmit}
                                     disabled={isSubmitting || isSuccessState}
-                                    className={`w-full h-12 text-sm font-bold uppercase tracking-widest shadow-xl transition-all ${isSuccessState
-                                        ? 'bg-green-500 hover:bg-green-600 text-white'
-                                        : 'bg-olleey-yellow text-black hover:shadow-[0_0_20px_rgba(251,191,36,0.3)]'
+                                    className={`w-full h-14 text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl transition-all rounded-none ${isSuccessState
+                                        ? 'bg-emerald-500 text-white'
+                                        : 'bg-olleey-yellow text-black hover:bg-white hover:scale-105 hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]'
                                         }`}
                                 >
                                     {isSubmitting ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <Loader2 className="w-6 h-6 animate-spin" />
                                     ) : isSuccessState ? (
-                                        <CheckCircle className="w-5 h-5" />
+                                        <CheckCircle className="w-6 h-6" />
                                     ) : (
-                                        <><Send className="w-4 h-4 mr-2" /> Start Processing</>
+                                        <>START PROCESSING PIPELINE</>
                                     )}
                                 </Button>
                                 <Button
                                     variant="ghost"
                                     onClick={onCancel}
-                                    className={`w-full text-[10px] font-bold uppercase tracking-widest ${textSecondaryClass} hover:${textClass}`}
+                                    className={`w-full py-4 text-[9px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-white transition-all rounded-none`}
                                 >
-                                    Discard Changes
+                                    ABORT OPERATION
                                 </Button>
                             </div>
                         </div>

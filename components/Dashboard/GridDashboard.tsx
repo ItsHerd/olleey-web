@@ -54,12 +54,12 @@ export function GridDashboard({
         <div className="flex flex-col gap-4 w-full h-full">
             {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center gap-6 w-full">
-                    <div className="w-16 h-10 bg-white/5 rounded-lg shrink-0" />
+                    <div className={`w-16 h-10 ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-none shrink-0 animate-pulse`} />
                     <div className="flex-1 space-y-3">
-                        <div className="h-3 bg-white/10 rounded-full w-1/3" />
-                        <div className="h-2 bg-white/5 rounded-full w-1/2" />
+                        <div className={`h-3 ${isDark ? "bg-white/20" : "bg-gray-300"} rounded-full w-1/3 animate-pulse`} />
+                        <div className={`h-2 ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-full w-1/2 animate-pulse`} />
                     </div>
-                    <div className="w-24 h-8 bg-white/5 rounded-full shrink-0" />
+                    <div className={`w-24 h-8 ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-full shrink-0 animate-pulse`} />
                 </div>
             ))}
         </div>
@@ -70,10 +70,10 @@ export function GridDashboard({
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full h-full">
             {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="flex flex-col gap-3 h-full">
-                    <div className="aspect-[9/14] bg-white/5 rounded-2xl w-full border border-white/5" />
+                    <div className={`aspect-[9/14] ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-none w-full border ${isDark ? "border-white/5" : "border-gray-100"} animate-pulse`} />
                     <div className="space-y-2 mt-2 px-1">
-                        <div className="h-3 bg-white/10 rounded-full w-3/4" />
-                        <div className="h-2 bg-white/5 rounded-full w-1/2" />
+                        <div className={`h-3 ${isDark ? "bg-white/20" : "bg-gray-300"} rounded-full w-3/4 animate-pulse`} />
+                        <div className={`h-2 ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-full w-1/2 animate-pulse`} />
                     </div>
                 </div>
             ))}
@@ -81,13 +81,13 @@ export function GridDashboard({
     );
 
     return (
-        <div className="h-full w-full flex flex-col pt-1">
-            <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 grid-rows-[auto_1fr_auto_1fr] gap-x-5 gap-y-4 h-full overflow-hidden">
+        <div className="flex-1 w-full flex flex-col min-h-0 pt-1">
+            <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 grid-rows-[auto_1fr_auto_1fr] gap-x-5 gap-y-4 flex-1 min-h-0 overflow-hidden relative">
 
                 {/* --- Row 1 & 2: Top Sections --- */}
 
                 {/* 1. Profile Hero Card - Spans 2 cols, 2 rows (Left) */}
-                <div className="col-span-1 md:col-span-2 row-start-1 row-end-3 relative rounded-3xl overflow-hidden group border border-white/5 shadow-2xl flex flex-col h-full bg-black/20">
+                <div className="col-span-1 md:col-span-2 row-start-1 row-end-3 relative rounded-none overflow-hidden group border border-white/5 shadow-2xl flex flex-col h-full bg-black/20">
                     <img
                         src="https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&q=80&w=2000"
                         className="absolute inset-0 w-full h-full object-cover brightness-[0.35] group-hover:scale-105 transition-transform duration-1000"
@@ -97,7 +97,7 @@ export function GridDashboard({
 
                     <div className="relative flex-1 p-10 flex flex-col justify-between">
                         <div>
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-olleey-yellow/20 backdrop-blur-md border border-olleey-yellow/30 text-[11px] font-black uppercase tracking-widest text-olleey-yellow mb-8 shadow-[0_0_20px_rgba(251,191,36,0.15)]">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-none bg-olleey-yellow/20 backdrop-blur-md border border-olleey-yellow/30 text-[11px] font-black uppercase tracking-widest text-olleey-yellow mb-8 shadow-[0_0_20px_rgba(251,191,36,0.15)]">
                                 <User className="w-4 h-4" /> Professional Tier
                             </div>
                             <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-normal text-white tracking-tighter mb-4 leading-none">
@@ -118,14 +118,19 @@ export function GridDashboard({
 
                             {/* Quick Links Row */}
                             <div className="flex flex-wrap gap-2">
-                                <Button variant="ghost" size="sm" className="h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-full">
+                                <Button
+                                    onClick={onCreateProject}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
+                                >
                                     <Plus className="w-3.5 h-3.5 mr-2" /> New Project
                                 </Button>
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => onNavigate('Settings')}
-                                    className="h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-full"
+                                    className="h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
                                 >
                                     <Settings className="w-3.5 h-3.5 mr-2" /> Settings
                                 </Button>
@@ -133,7 +138,7 @@ export function GridDashboard({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => onNavigate('Guardrails')}
-                                    className="h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-full"
+                                    className="h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
                                 >
                                     <Shield className="w-3.5 h-3.5 mr-2" /> Guardrails
                                 </Button>
@@ -148,14 +153,14 @@ export function GridDashboard({
                 <div className="col-span-1 md:col-span-2 flex items-center justify-between px-2 pt-1">
                     <h3 className={`text-lg md:text-xl lg:text-2xl font-300 ${textClass} tracking-tight`}>Queue & Review</h3>
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-3 py-1 bg-olleey-yellow/10 rounded-full border border-olleey-yellow/20">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-olleey-yellow/10 rounded-none border border-olleey-yellow/20">
                             <div className="w-2.5 h-2.5 rounded-full bg-olleey-yellow animate-pulse" />
                             <span className="text-[11px] font-black text-olleey-yellow uppercase tracking-widest">Active Jobs</span>
                         </div>
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-full"
+                            className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
                         >
                             Full Queue
                         </Button>
@@ -163,16 +168,11 @@ export function GridDashboard({
                 </div>
 
                 {/* 2. Queue & Review CARD */}
-                <div className={`col-span-1 md:col-span-2 row-start-2 row-end-3 rounded-[2rem] border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col h-full`}>
-                    <div className="flex-1 overflow-hidden">
+                <div className={`col-span-1 md:col-span-2 lg:col-start-3 lg:col-end-5 row-start-2 row-end-3 rounded-none border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col h-full z-10`}>
+                    <div className="flex-1 overflow-y-auto">
                         {!videosLoading && (videos.length === 0 || !videos.some(v => ["draft", "processing"].includes(getOverallVideoStatus(v.localizations || {})))) ? (
-                            <div className="flex flex-col h-full">
-                                <div className="p-8 pb-4">
-                                    <p className={`text-xs font-bold uppercase tracking-widest ${textSecondaryClass} opacity-30`}>Queue empty • Awaiting new processing jobs</p>
-                                </div>
-                                <div className="flex-1 opacity-20 px-8 pb-8">
-                                    <CardSkeleton />
-                                </div>
+                            <div className="flex flex-col h-full opacity-25">
+                                <CardSkeleton />
                             </div>
                         ) : videosLoading ? (
                             <CardSkeleton />
@@ -203,14 +203,14 @@ export function GridDashboard({
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-full"
+                            className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
                         >
                             Archive View
                         </Button>
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-full"
+                            className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
                         >
                             Studio Library
                         </Button>
@@ -223,23 +223,18 @@ export function GridDashboard({
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-full"
+                        className="h-9 px-5 text-[11px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
                     >
                         View Logs
                     </Button>
                 </div>
 
                 {/* 3. Released Media CARD */}
-                <div className={`col-span-1 md:col-span-2 row-start-4 row-end-5 rounded-[2rem] border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col h-full`}>
-                    <div className="flex-1 overflow-hidden">
+                <div className={`col-span-1 md:col-span-2 lg:col-start-1 lg:col-end-3 row-start-4 row-end-5 rounded-none border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col h-full z-10`}>
+                    <div className="flex-1 overflow-y-auto">
                         {!videosLoading && (videos.length === 0 || !videos.some(v => getOverallVideoStatus(v.localizations || {}) === "live")) ? (
-                            <div className="flex flex-col h-full">
-                                <div className="p-8 pb-4">
-                                    <p className={`text-xs font-bold uppercase tracking-widest ${textSecondaryClass} opacity-30`}>Library empty • Archive and released media will appear here</p>
-                                </div>
-                                <div className="flex-1 opacity-20 px-8 pb-8">
-                                    <MediaGridSkeleton />
-                                </div>
+                            <div className="flex flex-col h-full opacity-25">
+                                <MediaGridSkeleton />
                             </div>
                         ) : videosLoading ? (
                             <MediaGridSkeleton />
@@ -258,16 +253,11 @@ export function GridDashboard({
                 </div>
 
                 {/* 4. Activity Feed CARD */}
-                <div className={`col-span-1 md:col-span-2 row-start-4 row-end-5 rounded-[2rem] border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col h-full`}>
-                    <div className="flex-1 overflow-hidden">
+                <div className={`col-span-1 md:col-span-2 lg:col-start-3 lg:col-end-5 row-start-4 row-end-5 rounded-none border ${borderClass} ${cardClass} shadow-2xl overflow-hidden flex flex-col h-full z-10`}>
+                    <div className="flex-1 overflow-y-auto">
                         {!activitiesLoading && activities.length === 0 ? (
-                            <div className="flex flex-col h-full">
-                                <div className="p-8 pb-4">
-                                    <p className={`text-xs font-bold uppercase tracking-widest ${textSecondaryClass} opacity-30`}>Feed empty • System activity logs will appear here</p>
-                                </div>
-                                <div className="flex-1 opacity-20 px-8 pb-8">
-                                    <CardSkeleton />
-                                </div>
+                            <div className="flex flex-col h-full opacity-25">
+                                <CardSkeleton />
                             </div>
                         ) : activitiesLoading ? (
                             <CardSkeleton />

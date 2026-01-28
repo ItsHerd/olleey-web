@@ -298,7 +298,7 @@ function AppContent() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`h-9 w-9 rounded-lg transition-all ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10' : `${textClass} hover:bg-white/5`}`}
+                            className={`h-9 w-9 rounded-none transition-all ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10' : `${textClass} hover:bg-white/5`}`}
                         >
                             <PanelLeft className="h-4 w-4" />
                         </Button>
@@ -315,7 +315,7 @@ function AppContent() {
                                         <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
                                     </button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-xl shadow-xl overflow-hidden z-[100]`}>
+                                <DropdownMenuContent align="start" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-none shadow-xl overflow-hidden z-[100]`}>
                                     <DropdownMenuLabel className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest px-3 py-2`}>
                                         Select Project
                                     </DropdownMenuLabel>
@@ -324,7 +324,7 @@ function AppContent() {
                                         <DropdownMenuItem
                                             key={project.id}
                                             onClick={() => setSelectedProject(project)}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${selectedProject?.id === project.id
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${selectedProject?.id === project.id
                                                 ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/5 text-olleey-yellow font-bold')
                                                 : (isDark ? 'text-dark-textSecondary hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-black')
                                                 }`}
@@ -335,7 +335,7 @@ function AppContent() {
                                     ))}
                                     <DropdownMenuItem
                                         onClick={() => setIsCreateProjectModalOpen(true)}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${isDark ? 'text-olleey-yellow hover:bg-olleey-yellow/10' : 'text-olleey-yellow hover:bg-olleey-yellow/5'} font-bold transition-colors`}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer ${isDark ? 'text-olleey-yellow hover:bg-olleey-yellow/10' : 'text-olleey-yellow hover:bg-olleey-yellow/5'} font-bold transition-colors`}
                                     >
                                         <Plus className="w-3.5 h-3.5" />
                                         <span className="text-sm">New Project</span>
@@ -351,21 +351,33 @@ function AppContent() {
                         </div>
 
                         <div className="ml-auto flex items-center gap-1 sm:gap-2">
+                            {/* Manual Process Button */}
+                            <Button
+                                onClick={() => {
+                                    setCurrentPage("Dashboard");
+                                    router.push("/app?page=Dashboard&action=manual");
+                                }}
+                                className={`h-9 px-4 gap-2 bg-olleey-yellow hover:bg-white text-black font-black uppercase tracking-wider text-[10px] rounded-none transition-all shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] mr-2`}
+                            >
+                                <Zap className="h-4 w-4" />
+                                <span className="hidden md:inline">Manual Process</span>
+                            </Button>
+
                             {/* Add Channel Button - Compact */}
                             <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => router.push("/connections/add")}
-                                className={`h-9 px-2 sm:px-3 gap-2 ${isDark ? 'hover:bg-rolleey-yellow/10 text-olleey-yellow' : 'hover:bg-olleey-yellow/5 text-olleey-yellow'} transition-all`}
+                                className={`h-9 px-3 gap-2 ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-olleey-yellow' : 'bg-white border-gray-200 text-black hover:border-olleey-yellow'} transition-all rounded-none group`}
                                 title="Add Channel"
                             >
                                 <div className="relative">
-                                    <Youtube className="h-4 w-4" />
-                                    <div className="absolute -top-1 -right-1 bg-olleey-yellow rounded-full w-2 h-2 border border-black flex items-center justify-center">
+                                    <Youtube className="h-4 w-4 text-olleey-yellow" />
+                                    <div className="absolute -top-1 -right-1 bg-olleey-yellow rounded-none w-2 h-2 border border-black flex items-center justify-center">
                                         <Plus className="h-1.5 w-1.5 text-black" />
                                     </div>
                                 </div>
-                                <span className="hidden lg:inline text-xs font-bold uppercase tracking-wider">Add Connection</span>
+                                <span className="hidden lg:inline text-[10px] font-black uppercase tracking-widest transition-colors group-hover:text-olleey-yellow">Add Connection</span>
                             </Button>
 
                             <div className={`h-4 w-[1px] ${borderClass} mx-1 hidden sm:block`} />
@@ -375,7 +387,7 @@ function AppContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setCurrentPage("Notifications")}
-                                className={`h-9 w-9 rounded-lg transition-all ${currentPage === "Notifications" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
+                                className={`h-9 w-9 rounded-none transition-all ${currentPage === "Notifications" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
                                 title="Notifications"
                             >
                                 <Bell className="h-4 w-4" />
@@ -386,7 +398,7 @@ function AppContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setCurrentPage("Settings")}
-                                className={`h-9 w-9 rounded-lg transition-all ${currentPage === "Settings" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
+                                className={`h-9 w-9 rounded-none transition-all ${currentPage === "Settings" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
                                 title="Settings"
                             >
                                 <Settings className="h-4 w-4" />
@@ -398,27 +410,27 @@ function AppContent() {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className={`h-9 w-9 rounded-lg transition-all ${currentPage === "Accounts" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
+                                        className={`h-9 w-9 rounded-none transition-all ${currentPage === "Accounts" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
                                         title="Account"
                                     >
                                         <User className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-xl shadow-xl overflow-hidden z-[100]`}>
+                                <DropdownMenuContent align="end" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-none shadow-xl overflow-hidden z-[100]`}>
                                     <DropdownMenuLabel className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest px-3 py-2 text-white/40`}>
                                         Manage Account
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
                                     <DropdownMenuItem
                                         onClick={() => setCurrentPage("Accounts")}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
                                     >
                                         <User className="w-4 h-4 text-olleey-yellow" />
                                         <span className="text-sm">Account Page</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() => setCurrentPage("Usage")}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
                                     >
                                         <Zap className="w-4 h-4 text-olleey-yellow" />
                                         <span className="text-sm">See Usage</span>
@@ -426,7 +438,7 @@ function AppContent() {
                                     <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
                                     <DropdownMenuItem
                                         onClick={handleLogout}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-red-500 hover:bg-red-500/10 transition-colors`}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer text-red-500 hover:bg-red-500/10 transition-colors`}
                                     >
                                         <LogOut className="w-4 h-4" />
                                         <span className="text-sm font-bold">Sign Out</span>

@@ -37,7 +37,7 @@ export function QueueAndReview({
         <section>
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-olleey-yellow/10 rounded-2xl shadow-sm border border-olleey-yellow/20">
+                    <div className="p-3 bg-olleey-yellow/10 rounded-none shadow-sm border border-olleey-yellow/20">
                         <Clock className="w-6 h-6 text-olleey-yellow" />
                     </div>
                     <div>
@@ -45,7 +45,7 @@ export function QueueAndReview({
                         <p className={`text-[11px] ${textSecondaryClass} font-medium`}>Active processing and pending approvals</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-1.5 px-4 py-2 bg-white/5 rounded-full border border-white/5 shadow-sm">
+                <div className="flex items-center gap-1.5 px-4 py-2 bg-white/5 rounded-none border border-white/5 shadow-sm">
                     <div className="w-2 h-2 rounded-full bg-olleey-yellow animate-pulse" />
                     <span className={`text-[10px] font-bold uppercase tracking-widest ${textClass}`}>
                         {activeVideos.length} Production Active
@@ -54,14 +54,14 @@ export function QueueAndReview({
             </div>
 
             {videosLoading ? (
-                <div className="flex flex-col items-center justify-center py-24 bg-white/5 rounded-3xl border border-white/5">
+                <div className="flex flex-col items-center justify-center py-24 bg-white/5 rounded-none border border-white/5">
                     <Loader2 className={`h-10 w-10 animate-spin text-olleey-yellow mb-4 opacity-50`} />
                     <p className={`text-sm font-medium ${textSecondaryClass}`}>Syncing with production servers...</p>
                 </div>
             ) : activeVideos.length === 0 ? (
                 null
             ) : (
-                <div className={`${cardClass} border ${borderClass} rounded-3xl shadow-2xl shadow-black/10 overflow-hidden`}>
+                <div className={`${cardClass} border-y ${borderClass} rounded-none shadow-2xl shadow-black/10 overflow-hidden`}>
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className={`${isDark ? 'bg-white/5' : 'bg-gray-50/50'} border-b ${borderClass}`}>
@@ -85,7 +85,7 @@ export function QueueAndReview({
                                     >
                                         <td className="px-6 py-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="relative w-24 aspect-video rounded-xl overflow-hidden bg-gray-900 shrink-0 shadow-lg border border-white/5">
+                                                <div className="relative w-24 aspect-video rounded-none overflow-hidden bg-gray-900 shrink-0 shadow-lg border border-white/5">
                                                     {video.thumbnail_url && <img src={video.thumbnail_url} className={`w-full h-full object-cover ${isProcessing ? 'opacity-40' : ''}`} alt="" />}
                                                     {isProcessing && (
                                                         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
@@ -111,7 +111,7 @@ export function QueueAndReview({
                                         </td>
                                         <td className="px-6 py-6">
                                             {isReview ? (
-                                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-olleey-yellow/10 text-olleey-yellow text-[10px] font-black uppercase tracking-widest border border-olleey-yellow/20 shadow-sm">
+                                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-none bg-olleey-yellow/10 text-olleey-yellow text-[10px] font-black uppercase tracking-widest border border-olleey-yellow/20 shadow-sm">
                                                     <FileCheck className="w-3.5 h-3.5" />
                                                     Review
                                                 </span>

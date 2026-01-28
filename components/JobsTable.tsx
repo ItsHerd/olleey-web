@@ -110,7 +110,7 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
             },
             'pending': {
                 label: 'Pending',
-                className: isDark ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20' : 'bg-gray-100 text-gray-600'
+                className: isDark ? 'bg-zinc-800 text-zinc-400 border border-zinc-700' : 'bg-gray-100 text-gray-600'
             },
             'completed': {
                 label: 'Completed',
@@ -129,7 +129,7 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
                 className: isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-amber-100 text-amber-600'
             },
         };
-        return statusMap[status] || { label: status, className: isDark ? 'bg-gray-500/10 text-gray-400' : 'bg-gray-100 text-gray-600' };
+        return statusMap[status] || { label: status, className: isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-600' };
     };
 
     const columns: ColumnDef<Job>[] = [
@@ -141,7 +141,7 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
                 const video = videos.find(v => v.video_id === job.source_video_id);
                 return (
                     <div className="flex items-center gap-3 min-w-[200px]">
-                        <div className="relative w-14 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                        <div className={`relative w-14 h-10 rounded-md overflow-hidden ${isDark ? "bg-white/5" : "bg-gray-100"} flex-shrink-0`}>
                             {video?.thumbnail_url ? (
                                 <img
                                     src={video.thumbnail_url}
@@ -150,15 +150,15 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <Play className="h-4 w-4 text-gray-400" />
+                                    <Play className={`h-4 w-4 ${textSecondaryClass}`} />
                                 </div>
                             )}
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="font-medium text-sm text-gray-900 truncate max-w-[250px]">
+                            <span className={`font-medium text-sm ${textClass} truncate max-w-[250px]`}>
                                 {video?.title || "Unknown Video"}
                             </span>
-                            <span className="text-xs text-gray-500 truncate">
+                            <span className={`text-xs ${textSecondaryClass} truncate`}>
                                 {video?.channel_name || "Unknown Channel"}
                             </span>
                         </div>
@@ -190,7 +190,7 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
                     <Button
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                        className="-ml-4 hover:bg-transparent text-xs font-medium text-gray-500"
+                        className={`-ml-4 hover:bg-transparent text-xs font-medium ${textSecondaryClass}`}
                     >
                         Order Date
                         <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -219,7 +219,7 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
             id: "payment",
             header: "Payment Status",
             cell: () => (
-                <span className="text-sm text-gray-600">
+                <span className={`text-sm ${textSecondaryClass}`}>
                     Paid
                 </span>
             ),
@@ -304,7 +304,7 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
     };
 
     return (
-        <div className={`${cardClass} rounded-2xl border ${borderClass} shadow-sm overflow-hidden`}>
+        <div className={`${cardClass} border-y ${borderClass} shadow-sm overflow-hidden`}>
             <Table>
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
@@ -340,7 +340,7 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={columns.length} className="h-32 text-center text-gray-500">
+                            <TableCell colSpan={columns.length} className={`h-32 text-center ${textSecondaryClass}`}>
                                 No workflows found.
                             </TableCell>
                         </TableRow>
