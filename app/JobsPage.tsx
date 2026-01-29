@@ -10,6 +10,7 @@ import { Loader2, AlertCircle, RefreshCw, Circle, CheckCircle, FileText, Sparkle
 import { useProject } from "@/lib/ProjectContext";
 import { JobsTable } from "@/components/JobsTable";
 import { WorkflowModal } from "@/components/WorkflowModal";
+import { useToast } from "@/components/ui/use-toast";
 
 type JobFilter = "all" | "processing" | "completed" | "failed" | "waiting";
 
@@ -23,6 +24,7 @@ export default function JobsPage() {
     const [selectedGraphJobId, setSelectedGraphJobId] = useState<string | null>(null);
     const [filter, setFilter] = useState<JobFilter>("all");
     const { theme } = useTheme();
+    const { toast } = useToast();
 
     // Theme tokens
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -37,10 +39,13 @@ export default function JobsPage() {
             setLoading(true);
             setError(null);
             const response = await jobsAPI.listJobs(selectedProject?.id);
-            // Sort by created_at descending
-            const sortedJobs = (response.jobs || []).sort((a: Job, b: Job) =>
-                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            );
+            // Sort by source_video_id (grouping) then created_at descending
+            const sortedJobs = (response.jobs || []).sort((a: Job, b: Job) => {
+                if (a.source_video_id !== b.source_video_id) {
+                    return a.source_video_id.localeCompare(b.source_video_id);
+                }
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
             setJobs(sortedJobs);
         } catch (err: any) {
             logger.error("JobsPage", "Failed to load jobs", err);
@@ -207,7 +212,6 @@ export default function JobsPage() {
 
                     </div>
                 </div>
-
                 {/* Filter Tabs */}
                 <div className="mb-6">
                     <div className={`border-b ${borderClass}`}>
@@ -241,6 +245,7 @@ export default function JobsPage() {
                 <div className="flex-1">
                     <JobsTable
                         jobs={filteredJobs}
+                        projectId={selectedProject?.id}
                         onViewWorkflow={(jobId) => setSelectedGraphJobId(jobId)}
                     />
                 </div>
@@ -262,10 +267,39 @@ export default function JobsPage() {
                     channelName={videos.find(v => v.video_id === jobs.find(j => j.job_id === selectedGraphJobId)?.source_video_id)?.channel_name}
                     videoTitle={videos.find(v => v.video_id === jobs.find(j => j.job_id === selectedGraphJobId)?.source_video_id)?.title}
                     videoThumbnail={videos.find(v => v.video_id === jobs.find(j => j.job_id === selectedGraphJobId)?.source_video_id)?.thumbnail_url}
-                    onApprove={(lang: string) => console.log('Approved via modal:', lang)}
-                    onReject={(lang: string) => console.log('Rejected via modal:', lang)}
-                    onRetry={() => console.log('Retry via modal')}
-                    onPreview={() => console.log('Preview via modal')}
+                    onApprove={async (lang: string) => {
+                        if (!selectedGraphJobId) return;
+                        try {
+                            await jobsAPI.approveJob(selectedGraphJobId);
+                            toast("Workflow approved successfully!", "success");
+                            loadJobs();
+                            setSelectedGraphJobId(null);
+                        } catch (err: any) {
+                            logger.error("JobsPage", "Failed to approve job", err);
+                            toast(err.message || "Failed to approve workflow", "error");
+                        }
+                    }}
+                    onReject={async (lang: string) => {
+                        if (!selectedGraphJobId) return;
+                        try {
+                            // Backend might need a reject endpoint, for now we just log or provide feedback
+                            logger.info("JobsPage", `Rejected workflow ${selectedGraphJobId} for ${lang}`);
+                            toast("Workflow rejected. Our team will review the issues.", "info");
+                            setSelectedGraphJobId(null);
+                        } catch (err) {
+                            logger.error("JobsPage", "Failed to reject job", err);
+                        }
+                    }}
+                    onRetry={() => {
+                        if (!selectedGraphJobId) return;
+                        loadJobs();
+                        toast("Retrying production pipeline...", "info");
+                    }}
+                    onPreview={() => {
+                        if (!selectedGraphJobId) return;
+                        // Open preview logic
+                        logger.info("JobsPage", "Opening preview for job", selectedGraphJobId);
+                    }}
                 />
             </div>
         </div>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { X, Upload as UploadIcon, Loader2, CheckCircle, AlertCircle, Youtube, Link as LinkIcon, FileVideo, ImageIcon, ArrowLeft, Send, SlidersHorizontal, ChevronRight } from "lucide-react";
+import { X, Upload as UploadIcon, Loader2, CheckCircle, AlertCircle, Youtube, Link as LinkIcon, FileVideo, ImageIcon, ArrowLeft, ArrowRight, Send, SlidersHorizontal, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/lib/useTheme";
@@ -51,6 +51,7 @@ export function ManualProcessView({
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [selectedTargetChannels, setSelectedTargetChannels] = useState<string[]>([]);
+    const [targetLanguageOverrides, setTargetLanguageOverrides] = useState<{ [channelId: string]: string }>({});
     const [sourceLanguage, setSourceLanguage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccessState, setIsSuccessState] = useState(false);
@@ -177,7 +178,10 @@ export function ManualProcessView({
 
             // 2. Create the job with multiple target languages
             const targetLanguages = selectedTargetChannels
-                .map(id => availableChannels.find(c => c.id === id)?.language_code)
+                .map(id => {
+                    const ch = availableChannels.find(c => c.id === id);
+                    return targetLanguageOverrides[id] || ch?.language_code;
+                })
                 .filter(Boolean) as string[];
 
             await jobsAPI.createJob({
@@ -470,8 +474,22 @@ export function ManualProcessView({
                                                     </p>
                                                 </div>
                                                 <p className={`text-[10px] ${textSecondaryClass} font-medium mt-2 opacity-60`}>
-                                                    {c.language_name || 'Neural translation'}
+                                                    {c.language_name || 'Unassigned Hub'}
                                                 </p>
+                                                {!c.language_code && selectedTargetChannels.includes(c.id) && (
+                                                    <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                                                        <select
+                                                            value={targetLanguageOverrides[c.id] || ""}
+                                                            onChange={(e) => setTargetLanguageOverrides(prev => ({ ...prev, [c.id]: e.target.value }))}
+                                                            className={`w-full bg-white/5 border ${borderClass} ${textClass} rounded-none px-3 py-2 text-[10px] font-bold focus:border-olleey-yellow outline-none appearance-none cursor-pointer`}
+                                                        >
+                                                            <option value="">Select Target Language...</option>
+                                                            {LANGUAGE_OPTIONS.map(l => (
+                                                                <option key={l.code} value={l.code}>{l.flag} {l.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -545,9 +563,31 @@ export function ManualProcessView({
                                         <span className={`text-[10px] font-bold ${textSecondaryClass}`}>Distribution</span>
                                         <span className="text-xs font-bold text-olleey-yellow">{selectedTargetChannels.length} hubs</span>
                                     </div>
-                                    <div className="flex justify-between items-center py-4">
+                                    <div className="flex justify-between items-center py-4 border-b border-white/5">
                                         <span className={`text-[10px] font-bold ${textSecondaryClass}`}>Neural Engine</span>
                                         <span className="text-xs font-bold text-olleey-yellow">Turbo V4</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-4">
+                                        <span className={`text-[10px] font-bold ${textSecondaryClass}`}>Linguistic Mapping</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-base">{sourceLanguage ? LANGUAGE_OPTIONS.find(l => l.code === sourceLanguage)?.flag : "🌐"}</span>
+                                            <ArrowRight className="w-3 h-3 text-olleey-yellow opacity-50" />
+                                            <div className="flex items-center -space-x-1">
+                                                {selectedTargetChannels.length > 0 ? (
+                                                    selectedTargetChannels.map(id => {
+                                                        const ch = availableChannels.find(c => c.id === id);
+                                                        const langCode = targetLanguageOverrides[id] || ch?.language_code;
+                                                        return (
+                                                            <span key={id} className="text-base" title={ch?.name}>
+                                                                {langCode ? LANGUAGE_OPTIONS.find(l => l.code === langCode)?.flag : "❓"}
+                                                            </span>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <span className="text-xs font-bold text-olleey-yellow/40">--</span>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

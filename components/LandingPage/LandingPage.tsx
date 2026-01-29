@@ -18,7 +18,7 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
     return (
         <div className="min-h-screen bg-white font-sans">
             <SEO
-                title="Olleey | Clone, Translate & Distribute Your Content Globally"
+                title="Olleey | Translate & Distribute Your Content Globally"
                 description="The ultimate AI-powered workflow for creators. Build automated pipelines that clone your voice, translate videos, and distribute to 10+ languages instantly."
             />
             {/* Hero Section - Minimalist Design */}
@@ -29,7 +29,7 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
                     { label: 'PRODUCT', href: '#product' },
                     { label: 'PRICING', href: '#pricing' },
                 ]}
-                mainText="Build automated workflows that clone, translate, and distribute your content to 10+ languages instantly."
+                mainText="Build automated workflows that translate and distribute your content to 10+ languages instantly."
                 readMoreLink="#product"
                 imageSrc="/hero-image.png"
                 imageAlt="Professional content creator"

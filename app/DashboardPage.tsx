@@ -295,7 +295,30 @@ export default function DashboardPage() {
             textSecondaryClass={textSecondaryClass}
             cardClass={cardClass}
             borderClass={borderClass}
-            onNavigate={(id) => router.push(`/content/${id}`)}
+            onNavigate={(id) => {
+              const video = filteredVideos.find(v => v.video_id === id);
+              if (!video) return;
+
+              const status = getOverallVideoStatus(video.localizations || {});
+              if (status === "draft") {
+                // Find the first language that needs review
+                const langCode = Object.keys(video.localizations || {}).find(
+                  l => video.localizations![l].status === "draft"
+                );
+                const jobId = video.localizations![langCode || ""].job_id;
+
+                if (jobId) {
+                  setQuickCheckState({
+                    isOpen: true,
+                    videoId: jobId,
+                    languageCode: langCode || null
+                  });
+                }
+              } else {
+                // Navigate to workflows page
+                router.push("/app?page=Workflows");
+              }
+            }}
             onCreateProject={() => router.push("/app?page=Manual Upload")}
             totalVideos={filteredVideos.length}
             totalTranslations={filteredVideos.reduce((acc, video) => {

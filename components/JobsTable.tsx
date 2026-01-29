@@ -27,19 +27,27 @@ import {
     Trash2,
     ChevronLeft,
     Eye,
-    MoreVertical
+    MoreVertical,
+    ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Job } from "@/lib/api";
+import { Job, youtubeAPI, MasterNode } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useVideos } from "@/lib/useVideos";
+import { getLanguageFlag } from "@/lib/languages";
+import { useEffect, useMemo } from "react";
+
+interface FlattenedJob extends Job {
+    targetLanguage: string;
+}
 
 interface JobsTableProps {
     jobs: Job[];
     onViewWorkflow: (jobId: string) => void;
+    projectId?: string;
 }
 
-export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
+export function JobsTable({ jobs, onViewWorkflow, projectId }: JobsTableProps) {
     const { theme } = useTheme();
     const router = useRouter();
     const { videos } = useVideos();
@@ -57,6 +65,41 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
         pageIndex: 0,
         pageSize: 10,
     });
+    const [masterChannels, setMasterChannels] = useState<MasterNode[]>([]);
+
+    const flattenedJobs = useMemo(() => {
+        const flat: FlattenedJob[] = [];
+        jobs.forEach(job => {
+            (job.target_languages || []).forEach(lang => {
+                flat.push({
+                    ...job,
+                    targetLanguage: lang
+                });
+            });
+        });
+        return flat;
+    }, [jobs]);
+
+    useEffect(() => {
+        const loadChannels = async () => {
+            try {
+                const response = await youtubeAPI.getChannelGraph(projectId);
+                setMasterChannels(response.master_nodes || []);
+            } catch (err) {
+                console.error("Failed to load channels for language lookup", err);
+            }
+        };
+        loadChannels();
+    }, [projectId]);
+
+    const getSourceLanguage = (job: Job) => {
+        const video = videos.find(v => v.video_id === job.source_video_id);
+        if (video?.channel_id) {
+            const channel = masterChannels.find(c => c.channel_id === video.channel_id);
+            if (channel?.language_code) return channel.language_code;
+        }
+        return "en"; // Default to English if unknown
+    };
 
     const getLanguageFlags = (languages: string[]) => {
         const flagMap: Record<string, string> = {
@@ -132,7 +175,7 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
         return statusMap[status] || { label: status, className: isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-600' };
     };
 
-    const columns: ColumnDef<Job>[] = [
+    const columns: ColumnDef<FlattenedJob>[] = [
         {
             id: "video",
             header: "Video Title",
@@ -167,18 +210,24 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
             },
         },
         {
-            accessorKey: "target_languages",
-            header: "Languages",
+            id: "flow",
+            header: "Flow",
             cell: ({ row }) => {
-                const flags = getLanguageFlags(row.original.target_languages || []);
+                const job = row.original;
+                const sourceLang = getSourceLanguage(job);
+                const targetFlag = getLanguageFlags([job.targetLanguage])[0];
+
                 return (
-                    <div className="flex gap-1 text-base">
-                        {flags.slice(0, 3).map((flag, idx) => (
-                            <span key={idx} title={row.original.target_languages[idx]} className="drop-shadow-sm">{flag}</span>
-                        ))}
-                        {flags.length > 3 && (
-                            <span className={`text-[10px] font-bold ${textSecondaryClass} ml-1`}>+{flags.length - 3}</span>
-                        )}
+                    <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-center">
+                            <span className="text-xl shadow-sm">{getLanguageFlag(sourceLang)}</span>
+                            <span className={`text-[8px] font-bold uppercase tracking-tighter ${textSecondaryClass}`}>Source</span>
+                        </div>
+                        <ArrowRight className={`w-3 h-3 ${textSecondaryClass} opacity-30`} />
+                        <div className="flex flex-col items-center px-4 py-2 bg-white/5 rounded-lg border border-white/10 min-w-[60px]">
+                            <span className="text-xl drop-shadow-sm">{targetFlag}</span>
+                            <span className={`text-[8px] font-bold uppercase tracking-tighter ${textSecondaryClass}`}>Target</span>
+                        </div>
                     </div>
                 );
             },
@@ -254,7 +303,7 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
     ];
 
     const table = useReactTable({
-        data: jobs,
+        data: flattenedJobs,
         columns,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
@@ -326,18 +375,24 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
                 </TableHeader>
                 <TableBody>
                     {table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map((row) => (
-                            <TableRow
-                                key={row.id}
-                                className={`${hoverClass} transition-colors border-b ${borderClass} last:border-0`}
-                            >
-                                {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id} className="py-4">
-                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                    </TableCell>
-                                ))}
-                            </TableRow>
-                        ))
+                        table.getRowModel().rows.map((row, index) => {
+                            const currentJob = row.original;
+                            const prevJob = index > 0 ? table.getRowModel().rows[index - 1].original : null;
+                            const isNewGroup = !prevJob || prevJob.source_video_id !== currentJob.source_video_id;
+
+                            return (
+                                <TableRow
+                                    key={row.id}
+                                    className={`${hoverClass} transition-colors border-b ${borderClass} last:border-0 ${!isNewGroup ? 'bg-black/5 opacity-80' : ''}`}
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell key={cell.id} className={`py-4 ${!isNewGroup && (cell.column.id === 'video') ? 'invisible' : ''}`}>
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            );
+                        })
                     ) : (
                         <TableRow>
                             <TableCell colSpan={columns.length} className={`h-32 text-center ${textSecondaryClass}`}>
@@ -352,7 +407,7 @@ export function JobsTable({ jobs, onViewWorkflow }: JobsTableProps) {
             {totalPages > 1 && (
                 <div className={`flex items-center justify-between px-6 py-4 border-t ${borderClass}`}>
                     <div className={`text-xs ${textSecondaryClass}`}>
-                        Showing {pagination.pageIndex * pagination.pageSize + 1}-{Math.min((pagination.pageIndex + 1) * pagination.pageSize, jobs.length)} of {jobs.length} entries
+                        Showing {pagination.pageIndex * pagination.pageSize + 1}-{Math.min((pagination.pageIndex + 1) * pagination.pageSize, flattenedJobs.length)} of {flattenedJobs.length} translations
                     </div>
                     <div className="flex items-center gap-1">
                         <button

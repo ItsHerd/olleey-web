@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { youtubeAPI, channelsAPI, type MasterNode, type LanguageChannel } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
-import { Loader2, Youtube, Plus, RefreshCw, CheckCircle, XCircle, AlertCircle, Radio, ChevronRight, Video, Globe2, Pause, Play, Trash2, Star, Check } from "lucide-react";
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
+import { Loader2, Youtube, Plus, RefreshCw, CheckCircle, XCircle, AlertCircle, Radio, ChevronRight, Video, Globe2, Pause, Play, Trash2, Star, Check, Languages } from "lucide-react";
 
 type ConnectionStatus = "active" | "expired" | "restricted" | "disconnected";
 
@@ -200,6 +201,16 @@ export default function ChannelsPage() {
     }
   };
 
+  const handleUpdateLanguage = async (connectionId: string, languageCode: string) => {
+    try {
+      await youtubeAPI.updateConnection(connectionId, { language_code: languageCode });
+      logger.info("Channels", `Updated language to ${languageCode}`);
+      await loadChannelGraph();
+    } catch (error) {
+      logger.error("Channels", "Failed to update language", error);
+    }
+  };
+
   // Flatten the graph for a table view
   const tableData = useMemo(() => {
     const flat: any[] = [];
@@ -211,6 +222,8 @@ export default function ChannelsPage() {
         name: master.channel_name,
         avatar: master.channel_avatar_url,
         status: master.status.status,
+        language_code: master.language_code,
+        language_name: master.language_name,
         is_primary: master.is_primary,
         is_paused: master.is_paused,
         videos: master.total_videos,
@@ -275,7 +288,7 @@ export default function ChannelsPage() {
                 Manage your YouTube channel connections and secure your global infrastructure with ease.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-lg">
+            <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-lg">
               <div className={`flex items-center gap-4 sm:gap-8 text-xs sm:text-sm ${textSecondaryClass}`}>
                 <div className="flex flex-col">
                   <span className="opacity-60 uppercase text-[9px] font-bold tracking-widest mb-1">Total Assets</span>
@@ -287,13 +300,6 @@ export default function ChannelsPage() {
                   <span className="text-lg font-semibold text-green-500">Active</span>
                 </div>
               </div>
-              <button
-                onClick={handleAddChannel}
-                className="inline-flex items-center gap-2 bg-olleey-yellow text-black px-5 py-2.5 rounded-xl text-sm font-bold hover:scale-105 transition-all shadow-xl shadow-olleey-yellow/20"
-              >
-                <Plus className="h-4 w-4" />
-                Add Connection
-              </button>
             </div>
           </div>
         </div>
@@ -348,6 +354,14 @@ export default function ChannelsPage() {
                   Unassigned
                 </button>
               </div>
+
+              <button
+                onClick={handleAddChannel}
+                className="inline-flex items-center gap-2 bg-olleey-yellow text-black px-4 py-2 rounded-lg text-sm font-bold hover:scale-105 transition-all shadow-lg shadow-olleey-yellow/10"
+              >
+                <Plus className="h-4 w-4" />
+                Add Connection
+              </button>
             </div>
 
             {/* Table */}
@@ -358,6 +372,7 @@ export default function ChannelsPage() {
                     <tr className={`${isDark ? 'bg-white/5' : 'bg-gray-50'} border-b ${borderClass}`}>
                       <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Channel</th>
                       <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Role</th>
+                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Language</th>
                       <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Status</th>
                       <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest text-center`}>Content</th>
                       <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest text-right`}>Actions</th>
@@ -404,9 +419,23 @@ export default function ChannelsPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isMaster ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20" : "bg-olleey-yellow/10 text-olleey-yellow border border-olleey-yellow/20"}`}>
-                              {isMaster ? "Master" : `${item.language_name} Satellite`}
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider w-fit ${isMaster ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20" : "bg-olleey-yellow/10 text-olleey-yellow border border-olleey-yellow/20"}`}>
+                              {isMaster ? "Master" : "Satellite"}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap min-w-[180px]">
+                            <select
+                              value={item.language_code || ""}
+                              onChange={(e) => handleUpdateLanguage(item.id, e.target.value)}
+                              className={`w-full bg-white/5 border ${borderClass} text-[11px] font-bold ${item.language_code ? 'text-olleey-yellow' : textSecondaryClass} rounded-lg px-3 py-2 focus:border-olleey-yellow outline-none appearance-none cursor-pointer transition-all hover:bg-white/10`}
+                            >
+                              <option value="" className={isDark ? "bg-dark-bg" : "bg-white"}>Assign Language...</option>
+                              {LANGUAGE_OPTIONS.map(l => (
+                                <option key={l.code} value={l.code} className={isDark ? "bg-dark-bg" : "bg-white text-black"}>
+                                  {l.flag} {l.name}
+                                </option>
+                              ))}
+                            </select>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
