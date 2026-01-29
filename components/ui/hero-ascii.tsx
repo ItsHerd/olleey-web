@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Image from 'next/image';
 
 interface HeroAsciiProps {
   navLinks?: { label: string; href: string }[];
@@ -109,7 +110,15 @@ export default function HeroAscii({ navLinks, onSignIn, onSignUp, onGetStarted }
         <div className="container mx-auto px-4 lg:px-8 py-3 lg:py-4 flex items-center justify-between">
           {/* Left: Logo */}
           <div className="flex items-center gap-2 lg:gap-4">
-            <div className="font-mono text-white text-xl lg:text-2xl font-bold tracking-widest italic transform -skew-x-12">
+            <div className="relative w-6 h-6 lg:w-8 lg:h-8">
+                <Image 
+                    src="/images/translogowhite.png" 
+                    alt="Olleey Logo" 
+                    fill 
+                    className="object-contain" 
+                />
+            </div>
+            <div className="font-mono text-white text-xl lg:text-2xl font-bold tracking-widest">
               OLLEEY
             </div>
             <div className="h-3 lg:h-4 w-px bg-white/40"></div>
@@ -230,8 +239,8 @@ export default function HeroAscii({ navLinks, onSignIn, onSignUp, onGetStarted }
             <span className="hidden lg:inline">SYSTEM.ACTIVE</span>
             <span className="lg:hidden">SYS.ACT</span>
             <div className="hidden lg:flex gap-1">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="w-1 h-3 bg-white/30" style={{ height: `${Math.random() * 12 + 4}px` }}></div>
+              {[12, 8, 14, 6, 10, 16, 5, 11].map((height, i) => (
+                <div key={i} className="w-1 h-3 bg-white/30" style={{ height: `${height}px` }}></div>
               ))}
             </div>
             <span>V1.0.0</span>
