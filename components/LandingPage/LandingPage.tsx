@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
+import { motion } from "framer-motion";
+import HeroAscii from "@/components/ui/hero-ascii";
 import Footer from "./Footer";
-import { MinimalistHero } from "@/components/ui/minimalist-hero";
 import { FlowchartAnimation } from "@/components/FlowchartAnimation";
 import CreatorsShowcase from "./CreatorsShowcase";
 import { GlobalLifecycle } from "./GlobalLifecycle";
@@ -23,32 +23,16 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
         { label: 'PRICING', href: '#pricing' },
     ];
 
+
     return (
         <div className="min-h-screen bg-white font-sans">
             <SEO
                 title="Olleey | Translate & Distribute Your Content Globally"
                 description="The ultimate AI-powered workflow for creators. Build automated pipelines that translate and distribute your content to 10+ languages instantly."
             />
-            {/* Hero Section - Minimalist Design */}
-            <MinimalistHero
-                logoText=""
+            {/* Hero Section - Ascii Design */}
+            <HeroAscii 
                 navLinks={navLinks}
-                mainText="Build automated workflows that translate and distribute your content to 10+ languages instantly."
-                readMoreLink="#product"
-                imageSrc="/hero-image.png"
-                imageAlt="Professional content creator"
-                overlayText={{
-                    part1: 'speak',
-                    part2: 'global.',
-                }}
-                socialLinks={[
-                    { icon: Facebook, href: '#' },
-                    { icon: Instagram, href: '#' },
-                    { icon: Twitter, href: '#' },
-                    { icon: Linkedin, href: '#' },
-                ]}
-                languageFlags={['🇺🇸', '🇪🇸', '🇫🇷', '🇩🇪']}
-                totalLanguages={40}
                 onSignIn={onNavigation}
                 onSignUp={onNavigation}
                 onGetStarted={onNavigation}
@@ -58,25 +42,44 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
             <CreatorsShowcase />
             <GlobalLifecycle />
 
-            {/* Pricing Section */}
-            <section id="pricing" className="relative py-18 overflow-hidden">
-                {/* Background Treatment */}
-                <div className="absolute inset-0 bg-[#F8F9FA] -z-10" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_50%_0%,rgba(0,0,0,0.02)_0%,transparent_50%)] -z-10" />
+            {/* Pricing Section - Technical */}
+            <section id="pricing" className="relative py-32 overflow-hidden bg-black border-t border-white/10">
+                {/* Background Grid */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
-                <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px]">
-                    <div className="text-center mb-20 animate-element animate-delay-100">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-black/5 rounded-full border border-black/5 mb-6">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rolleey-yellow animate-pulse" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Scaling Solutions</span>
-                        </div>
-                        <h2 className="text-[50px] md:text-[75px] leading-[1.1] font-normal tracking-tighter text-black mb-8 px-4">
-                            One price, <span className="font-semibold italic">all</span> the things.
-                        </h2>
-                        <p className="text-lg md:text-xl text-zinc-500 max-w-2xl mx-auto leading-relaxed">
+                <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px] relative z-10">
+                    <div className="text-center mb-20">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                            className="inline-flex items-center gap-3 px-4 py-1 border border-white/30 backdrop-blur-sm mb-6 bg-black"
+                        >
+                             <div className="w-1.5 h-1.5 bg-white animate-pulse" />
+                             <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white">Scaling Solutions</span>
+                        </motion.div>
+                        <motion.h2 
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.1 }}
+                            className="text-4xl md:text-6xl font-normal text-white mb-8 px-4 font-mono uppercase tracking-tight"
+                        >
+                            One price. <br/>
+                            <span className="text-white/50">All features.</span>
+                        </motion.h2>
+                        <motion.p 
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            className="text-sm md:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed font-mono"
+                        >
                             Scale your global distribution with transparent, usage-based pricing designed to grow with your audience.
-                        </p>
+                        </motion.p>
                     </div>
+
 
                     <div className="animate-element animate-delay-300">
                         <PricingCalculator onGetStarted={onNavigation} />

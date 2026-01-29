@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from 'react';
+import { motion } from 'framer-motion';
 import ReactFlow, {
     Node,
     Edge,
@@ -18,25 +19,32 @@ import 'reactflow/dist/style.css';
 // Custom node component for workflow nodes
 const WorkflowNode = ({ data }: any) => {
     return (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] w-[240px] transition-all hover:shadow-[0_8px_30px_-10px_rgba(0,0,0,0.15)] group">
-            <Handle type="target" position={Position.Left} className="!bg-blue-500 !w-2.5 !h-2.5 !border-none !-translate-x-1" />
-            <Handle type="source" position={Position.Right} className="!bg-blue-500 !w-2.5 !h-2.5 !border-none !translate-x-1" />
+        <div className="bg-black/90 border border-white/20 rounded-sm overflow-hidden w-[240px] transition-all hover:border-white/60 group relative backdrop-blur-sm">
+            {/* Technical corners */}
+            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/40" />
+            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/40" />
+            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/40" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white/40" />
 
-            <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                    <span className="p-1 px-3 bg-olleey-yellow/10 text-black text-[9px] font-black uppercase tracking-[0.2em] rounded-full border border-olleey-yellow/20">{data.category || 'Workflow'}</span>
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+            <Handle type="target" position={Position.Left} className="!bg-black !border !border-white !w-2 !h-2 !rounded-none" />
+            <Handle type="source" position={Position.Right} className="!bg-black !border !border-white !w-2 !h-2 !rounded-none" />
+
+            <div className="p-4 relative z-10">
+                <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-white/70">{data.category || 'NODE'}</span>
+                    <div className="w-1.5 h-1.5 bg-white/60 animate-pulse" />
                 </div>
 
-                <h4 className="text-sm font-bold text-gray-900 mb-1 tracking-tight">{data.label}</h4>
+                <h4 className="text-xs font-bold font-mono text-white mb-2 uppercase tracking-wide">{data.label}</h4>
                 {data.oneLiner && (
-                    <p className="text-[10px] text-zinc-400 mb-4 font-medium leading-relaxed italic border-l-2 border-olleey-yellow/30 pl-3">
+                    <p className="text-[9px] text-gray-400 mb-3 font-mono leading-relaxed pl-2 border-l border-white/20">
                         {data.oneLiner}
                     </p>
                 )}
 
                 {data.image && (
-                    <div className="aspect-video relative bg-gray-50 rounded-2xl overflow-hidden mb-4 border border-zinc-100 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">
+                    <div className="aspect-video relative bg-white/5 border border-white/10 mb-3 grayscale overflow-hidden">
+                         <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_50%,transparent_75%)] bg-[length:250%_250%] animate-scan" />
                         {data.videoUrl ? (
                             <video
                                 src={data.videoUrl}
@@ -44,37 +52,35 @@ const WorkflowNode = ({ data }: any) => {
                                 loop
                                 muted
                                 playsInline
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover opacity-60 hover:opacity-100 transition-opacity"
                             />
                         ) : data.imageUrl ? (
                             <img
                                 src={data.imageUrl}
                                 alt={data.label}
-                                className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700"
+                                className="w-full h-full object-cover opacity-60 hover:opacity-80 transition-opacity"
                             />
                         ) : (
-                            <div className="w-full h-full bg-zinc-50 flex items-center justify-center">
-                                <span className="text-3xl">{data.emoji}</span>
+                            <div className="w-full h-full flex items-center justify-center">
+                                <span className="text-2xl text-white/20">{data.emoji}</span>
                             </div>
                         )}
                     </div>
                 )}
 
                 {data.content && (
-                    <p className="text-[11px] text-zinc-500 leading-tight mb-2 font-medium">
+                    <p className="text-[9px] text-gray-500 font-mono leading-tight">
                         {data.content}
                     </p>
                 )}
             </div>
 
-            <div className="bg-zinc-50/50 p-4 flex justify-between items-center border-t border-zinc-100 group-hover:bg-zinc-50 transition-colors">
-                <span className="text-[9px] font-black uppercase text-zinc-400 tracking-widest">{data.actionLabel || 'Status'}</span>
-                <div className="flex items-center gap-3">
-                    <span className="text-[9px] font-bold text-blue-600 uppercase tracking-wider">{data.status || 'Ready'}</span>
+            <div className="bg-white/5 p-2 px-4 flex justify-between items-center border-t border-white/10">
+                <span className="text-[8px] font-mono uppercase text-white/40 tracking-wider">STS:{data.actionLabel || 'RDY'}</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-[8px] font-mono text-white/60 uppercase">{data.status || 'IDLE'}</span>
                     {data.hasRun && (
-                        <button className="px-4 py-1.5 bg-black text-white rounded-full text-[9px] font-bold uppercase tracking-widest hover:bg-olleey-yellow hover:text-black transition-all shadow-md active:scale-95">
-                            EXECUTE
-                        </button>
+                        <div className="w-1 h-1 bg-white" />
                     )}
                 </div>
             </div>
@@ -218,57 +224,65 @@ const initialEdges: Edge[] = [
         id: 'e-src-clone',
         source: 'source-input',
         target: 'clone-audio',
-        type: 'straight',
-        style: { stroke: '#D4D4D8', strokeWidth: 2, opacity: 0.4 },
+        type: 'step',
+        style: { stroke: '#FFFFFF', strokeWidth: 1, opacity: 0.3 },
+        animated: true,
     },
     {
         id: 'e-src-trans',
         source: 'source-input',
         target: 'translate',
-        type: 'straight',
-        style: { stroke: '#D4D4D8', strokeWidth: 2, opacity: 0.4 },
+        type: 'step',
+        style: { stroke: '#FFFFFF', strokeWidth: 1, opacity: 0.3 },
+        animated: true,
     },
     {
         id: 'e-clone-context',
         source: 'clone-audio',
         target: 'context-rewrite',
-        type: 'straight',
-        style: { stroke: '#D4D4D8', strokeWidth: 2, opacity: 0.4 },
+        type: 'step',
+        style: { stroke: '#FFFFFF', strokeWidth: 1, opacity: 0.3 },
+        animated: true,
     },
     {
         id: 'e-trans-context',
         source: 'translate',
         target: 'context-rewrite',
-        type: 'straight',
-        style: { stroke: '#D4D4D8', strokeWidth: 2, opacity: 0.4 },
+        type: 'step',
+        style: { stroke: '#FFFFFF', strokeWidth: 1, opacity: 0.3 },
+        animated: true,
     },
     {
         id: 'e-context-sync',
         source: 'context-rewrite',
         target: 'lip-sync',
-        type: 'straight',
-        style: { stroke: '#D4D4D8', strokeWidth: 2, opacity: 0.4 },
+        type: 'step',
+        style: { stroke: '#FFFFFF', strokeWidth: 1, opacity: 0.3 },
+        animated: true,
     },
     {
         id: 'e-sync-qc',
         source: 'lip-sync',
         target: 'qc-gate',
-        type: 'straight',
-        style: { stroke: '#D4D4D8', strokeWidth: 2, opacity: 0.4 },
+        type: 'step',
+        style: { stroke: '#FFFFFF', strokeWidth: 1, opacity: 0.3 },
+        animated: true,
     },
     {
         id: 'e-qc-brand',
         source: 'qc-gate',
         target: 'brand-swap',
-        type: 'straight',
-        style: { stroke: '#D4D4D8', strokeWidth: 2, opacity: 0.4 },
+        type: 'step',
+        style: { stroke: '#FFFFFF', strokeWidth: 1, opacity: 0.3 },
+        animated: true,
     },
     {
         id: 'e-qc-dist',
         source: 'qc-gate',
         target: 'global-dist',
-        type: 'straight',
-        style: { stroke: '#D4D4D8', strokeWidth: 2, opacity: 0.4 },
+        type: 'step',
+        style: { stroke: '#FFFFFF', strokeWidth: 1, opacity: 0.3 },
+        animated: true,
     },
 ];
 
@@ -277,43 +291,81 @@ export function FlowchartAnimation({ onGetStarted }: { onGetStarted?: () => void
     const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
     return (
-        <div id="workflows" className="relative w-full min-h-[900px] bg-white py-24 px-8 overflow-hidden">
-            {/* Subtitle Background Accent */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-[radial-gradient(circle_at_50%_0%,rgba(0,0,0,0.03)_0%,transparent_70%)] pointer-events-none" />
+        <div id="workflows" className="relative w-full min-h-[900px] bg-black py-24 px-8 overflow-hidden z-10 border-t border-white/20">
+            {/* Grid Background */}
+            <div className="absolute inset-0 z-0 opacity-20" 
+                style={{ 
+                    backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
+                    backgroundSize: '40px 40px'
+                }} 
+            />
 
             {/* Header */}
-            <div className="relative z-10 text-center mb-24 max-w-4xl mx-auto">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-black/5 rounded-full border border-black/5 mb-8">
-                    <span className="w-2 h-2 rounded-full bg-rolleey-yellow animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">The Engine</span>
-                </div>
-                <h2 className="text-[40px] md:text-[64px] leading-[1.1] font-normal tracking-tighter text-black mb-8 px-4">
-                    Architect Your <span className="font-semibold italic">Global</span> Release.
-                </h2>
-                <p className="text-xl text-zinc-500 max-w-2xl mx-auto leading-relaxed mb-10">
+            <div className="relative z-10 text-center mb-20 max-w-4xl mx-auto">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="inline-flex items-center gap-3 px-4 py-1 border border-white/30 backdrop-blur-sm mb-6"
+                >
+                    <span className="w-1.5 h-1.5 bg-white animate-pulse" />
+                    <span className="text-[10px] font-mono tracking-[0.3em] text-white">THE ENGINE</span>
+                </motion.div>
+                
+                <motion.h2 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="text-3xl md:text-5xl font-bold font-mono text-white mb-6 uppercase tracking-wider"
+                >
+                    Architect Your <br/>
+                    <span className="text-white/50">Global Release.</span>
+                </motion.h2>
+                
+                <motion.p 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="text-sm md:text-base font-mono text-gray-400 max-w-2xl mx-auto leading-relaxed mb-10 border-l-2 border-white/20 pl-4 text-left md:text-center md:border-l-0 md:pl-0"
+                >
                     Our zero-latency pipeline handles everything from neural voice cloning to regional ad-injection, ensuring you feel native in every language.
-                </p>
-                <div className="flex justify-center gap-4">
+                </motion.p>
+
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="flex flex-col md:flex-row justify-center gap-4"
+                >
                     <button
                         onClick={onGetStarted}
-                        className="px-8 py-3 bg-black text-white rounded-full text-sm font-bold tracking-tight hover:bg-zinc-800 transition-all shadow-xl shadow-black/10"
+                        className="group relative px-6 py-2.5 bg-white text-black font-mono text-xs uppercase tracking-widest hover:bg-transparent hover:text-white hover:border-white border border-transparent transition-all"
                     >
                         Start Your First Pipeline
+                        <div className="absolute inset-0 border border-white translate-x-1 translate-y-1 -z-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform" />
                     </button>
-                    <button className="px-8 py-3 border border-zinc-200 rounded-full text-sm font-bold tracking-tight hover:bg-zinc-50 transition-all">
+                    
+                    <button className="px-6 py-2.5 border border-white/40 text-white font-mono text-xs uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+                        <span className="w-2 h-2 border border-white rounded-full flex items-center justify-center">
+                            <span className="w-0.5 h-0.5 bg-white rounded-full" />
+                        </span>
                         Watch the Demo
                     </button>
-                </div>
+                </motion.div>
             </div>
 
-            {/* React Flow Diagram */}
-            <div className="relative max-w-7xl mx-auto h-[750px] bg-white border border-zinc-100 rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.12)] overflow-hidden">
-                <div className="absolute top-8 left-8 z-20 flex items-center gap-4">
-                    <div className="flex gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-red-400/20 border border-red-400/40" />
-                        <div className="w-2 h-2 rounded-full bg-yellow-400/20 border border-yellow-400/40" />
-                        <div className="w-2 h-2 rounded-full bg-green-400/20 border border-green-400/40" />
-                    </div>
+            {/* React Flow Diagram Frame */}
+            <div className="relative max-w-7xl mx-auto h-[700px] border border-white/20 bg-black/50 backdrop-blur-sm">
+                {/* Technical Markers */}
+                <div className="absolute top-0 left-0 p-2 border-b border-r border-white/20 font-mono text-[9px] text-white/50">
+                    SYS.VIEW.01
+                </div>
+                <div className="absolute bottom-0 right-0 p-2 border-t border-l border-white/20 font-mono text-[9px] text-white/50">
+                    COORD: 34.052, -118.243
                 </div>
 
                 <ReactFlow
@@ -323,17 +375,17 @@ export function FlowchartAnimation({ onGetStarted }: { onGetStarted?: () => void
                     onEdgesChange={onEdgesChange}
                     nodeTypes={nodeTypes}
                     defaultEdgeOptions={{
-                        type: 'straight',
+                        type: 'step',
                         style: {
-                            stroke: '#D4D4D8',
-                            strokeWidth: 2,
-                            opacity: 0.4,
+                            stroke: '#FFFFFF',
+                            strokeWidth: 1,
+                            opacity: 0.3,
                         },
                         markerEnd: {
                             type: MarkerType.ArrowClosed,
-                            color: '#D4D4D8',
-                            width: 15,
-                            height: 15,
+                            color: '#FFFFFF',
+                            width: 12,
+                            height: 12,
                         },
                     }}
                     fitView
@@ -350,7 +402,7 @@ export function FlowchartAnimation({ onGetStarted }: { onGetStarted?: () => void
                     panOnDrag={true}
                     preventScrolling={false}
                 >
-                    <Background color="#F4F4F5" gap={40} size={1} />
+                    <Background color="#333" gap={20} size={1} variant={"dots" as any} />
                 </ReactFlow>
             </div>
         </div>
