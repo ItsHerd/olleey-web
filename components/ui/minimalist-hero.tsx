@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LandingHeader } from '../LandingPage/LandingHeader';
 
-// Define the props interface for type safety and reusability
 interface MinimalistHeroProps {
     logoText: string;
     navLinks: { label: string; href: string }[];
@@ -24,24 +24,6 @@ interface MinimalistHeroProps {
     onGetStarted?: () => void;
 }
 
-// Helper component for navigation links
-const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a
-        href={href}
-        className="text-sm font-medium tracking-widest text-black/60 transition-colors hover:text-black"
-    >
-        {children}
-    </a>
-);
-
-// Helper component for social media icons
-const SocialIcon = ({ href, icon: Icon }: { href: string; icon: LucideIcon }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="text-black/60 transition-colors hover:text-black">
-        <Icon className="h-5 w-5" />
-    </a>
-);
-
-// The main reusable Hero Section component
 export const MinimalistHero = ({
     logoText,
     navLinks,
@@ -51,15 +33,13 @@ export const MinimalistHero = ({
     imageAlt,
     overlayText,
     socialLinks,
-    languageFlags = ['🇺🇸', '🇪🇸', '🇫🇷', '🇩🇪'],
+    languageFlags = [],
     totalLanguages = 40,
     className,
     onSignIn,
     onSignUp,
     onGetStarted,
 }: MinimalistHeroProps) => {
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
     return (
         <div
             className={cn(
@@ -67,85 +47,14 @@ export const MinimalistHero = ({
                 className
             )}
         >
-            {/* Header */}
-            <header className="z-30 flex w-full max-w-7xl items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <img src="/logo-transparent.png" alt="" className="w-32" />
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="text-xl font-bold tracking-wider"
-                    >
-                        {logoText}
-                    </motion.div>
-                </div>
-                <div className="hidden items-center space-x-8 md:flex">
-                    {navLinks.map((link) => (
-                        <NavLink key={link.label} href={link.href}>
-                            {link.label}
-                        </NavLink>
-                    ))}
-                </div>
-                <div className="hidden items-center gap-4 md:flex">
-                    <button
-                        onClick={onSignIn}
-                        className="text-sm font-medium tracking-widest text-black/60 transition-colors hover:text-black"
-                    >
-                        SIGN IN
-                    </button>
-                    <button
-                        onClick={onSignUp}
-                        className="rounded-full bg-black px-6 py-2 text-sm font-medium tracking-widest text-white transition-opacity hover:opacity-90"
-                    >
-                        SIGN UP
-                    </button>
-                </div>
-                <motion.button
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex flex-col space-y-1.5 md:hidden z-50"
-                    aria-label="Toggle menu"
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                >
-                    <span className={cn("block h-0.5 w-6 bg-black transition-transform", isMobileMenuOpen && "rotate-45 translate-y-2")}></span>
-                    <span className={cn("block h-0.5 w-6 bg-black transition-opacity", isMobileMenuOpen && "opacity-0")}></span>
-                    <span className={cn("block h-0.5 w-5 bg-black transition-transform", isMobileMenuOpen && "-rotate-45 -translate-y-2 w-6")}></span>
-                </motion.button>
-            </header>
+            <LandingHeader
+                logoText={logoText}
+                navLinks={navLinks}
+                onSignIn={onSignIn}
+                onSignUp={onSignUp}
+            />
 
-            {/* Mobile Menu Overlay */}
-            {isMobileMenuOpen && (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-white p-8 md:hidden"
-                >
-                    <div className="flex flex-col items-center space-y-8 text-xl font-medium tracking-widest text-black">
-                        {navLinks.map((link) => (
-                            <a
-                                key={link.label}
-                                href={link.href}
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className="transition-colors hover:text-black/60"
-                            >
-                                {link.label}
-                            </a>
-                        ))}
-                        <button onClick={() => { onSignIn?.(); setIsMobileMenuOpen(false); }} className="text-black/60 hover:text-black">
-                            SIGN IN
-                        </button>
-                        <button
-                            onClick={() => { onSignUp?.(); setIsMobileMenuOpen(false); }}
-                            className="text-black"
-                        >
-                            SIGN UP
-                        </button>
-                    </div>
-                </motion.div>
-            )}
+            {/* Main Content Area */}
 
             {/* Main Content Area */}
             <div className="relative grid w-full max-w-7xl flex-grow grid-cols-1 items-center md:grid-cols-3">
@@ -210,44 +119,8 @@ export const MinimalistHero = ({
 
             {/* Footer Elements */}
             <footer className="z-30 flex w-full max-w-7xl items-center justify-between">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 1.2 }}
-                    className="flex items-center space-x-4"
-                >
-                    {socialLinks.map((link, index) => (
-                        <SocialIcon key={index} href={link.href} icon={link.icon} />
-                    ))}
-                </motion.div>
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 1.3 }}
-                    className="flex items-center"
-                >
-                    {languageFlags.map((flag, index) => (
-                        <span
-                            key={index}
-                            className="flex items-center justify-center rounded-full bg-white px-3 py-2 border border-black/20 text-xl transition-all hover:scale-110 hover:z-50"
-                            style={{
-                                marginLeft: index === 0 ? 0 : '-12px',
-                                zIndex: languageFlags.length - index,
-                            }}
-                        >
-                            {flag}
-                        </span>
-                    ))}
-                    <span
-                        className="flex items-center justify-center rounded-full bg-white px-3 py-2 border border-black/20 text-sm font-semibold text-black transition-all hover:scale-110 hover:z-50"
-                        style={{
-                            marginLeft: '-12px',
-                            zIndex: 0,
-                        }}
-                    >
-                        {totalLanguages}+
-                    </span>
-                </motion.div>
+
+
             </footer>
         </div>
     );

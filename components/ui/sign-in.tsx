@@ -152,11 +152,11 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         </div>
 
         <div className="animate-element animate-delay-500 flex items-center justify-between text-sm">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" name="rememberMe" className="custom-checkbox" />
-            <span className="text-foreground/90">Keep me signed in</span>
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <input type="checkbox" name="rememberMe" className="w-4 h-4 rounded border-border bg-background checked:bg-olleey-yellow checked:border-olleey-yellow transition-all" />
+            <span className="text-foreground/70 group-hover:text-foreground transition-colors">Keep me signed in</span>
           </label>
-          <a href="#" onClick={(e) => { e.preventDefault(); onResetPassword?.(); }} className="hover:underline text-olleey-yellow transition-colors">Reset password</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); onResetPassword?.(); }} className="hover:underline text-olleey-yellow transition-colors font-medium">Reset password</a>
         </div>
 
         <Button
@@ -169,17 +169,19 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
       <div className="animate-element animate-delay-700 relative flex items-center justify-center">
         <span className="w-full border-t border-border"></span>
-        <span className="px-4 text-sm text-muted-foreground bg-background absolute">Or continue with</span>
+        <span className="px-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 bg-background absolute">Or continue with</span>
       </div>
 
-      <Button
-        variant="outline"
-        onClick={onGoogleSignIn}
-        className="animate-element animate-delay-800 w-full flex items-center justify-center gap-3 rounded-2xl py-7 hover:shadow-lg active:scale-[0.98]"
-      >
-        <GoogleIcon />
-        <span className="font-medium">Continue with Google</span>
-      </Button>
+      <div className="animate-element animate-delay-800">
+        <Button
+          variant="outline"
+          onClick={onGoogleSignIn}
+          className="w-full flex items-center justify-center gap-3 rounded-2xl py-7 border-zinc-200 dark:border-zinc-800 bg-transparent text-foreground hover:bg-zinc-50 dark:hover:bg-zinc-900 font-semibold transition-all shadow-sm active:scale-[0.98]"
+        >
+          <GoogleIcon />
+          <span>Continue with Google</span>
+        </Button>
+      </div>
 
       <p className="animate-element animate-delay-900 text-center text-sm text-muted-foreground">
         New to our platform? <a href="#" onClick={(e) => { e.preventDefault(); onCreateAccount?.(); }} className="text-olleey-yellow hover:underline transition-colors">Create Account</a>
@@ -285,17 +287,19 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
 
       <div className="animate-element animate-delay-800 relative flex items-center justify-center">
         <span className="w-full border-t border-border"></span>
-        <span className="px-4 text-sm text-muted-foreground bg-background absolute">Or continue with</span>
+        <span className="px-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 bg-background absolute">Or continue with</span>
       </div>
 
-      <Button
-        variant="outline"
-        onClick={onGoogleSignUp}
-        className="animate-element animate-delay-900 w-full flex items-center justify-center gap-3 rounded-2xl py-7 hover:shadow-lg active:scale-[0.98]"
-      >
-        <GoogleIcon />
-        <span className="font-medium">Continue with Google</span>
-      </Button>
+      <div className="animate-element animate-delay-900">
+        <Button
+          variant="outline"
+          onClick={onGoogleSignUp}
+          className="w-full flex items-center justify-center gap-3 rounded-2xl py-7 border-zinc-200 dark:border-zinc-800 bg-transparent text-foreground hover:bg-zinc-50 dark:hover:bg-zinc-900 font-semibold transition-all shadow-sm active:scale-[0.98]"
+        >
+          <GoogleIcon />
+          <span>Continue with Google</span>
+        </Button>
+      </div>
 
       <p className="animate-element animate-delay-1000 text-center text-sm text-muted-foreground">
         Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); onSignInClick?.(); }} className="text-olleey-yellow hover:underline transition-colors">Sign In</a>

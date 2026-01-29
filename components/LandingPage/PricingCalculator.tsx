@@ -1,144 +1,199 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Zap, Globe, ShieldCheck, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }) {
-    const [minutes, setMinutes] = useState(0);
+    const [minutes, setMinutes] = useState(60);
 
     // Calculate pricing tier based on minutes
     const getPricingTier = (mins: number) => {
         if (mins === 0) {
             return {
-                name: "Free",
+                name: "Discovery",
                 price: 0,
-                description: "Our free plan allows you to test the waters with basic features. Perfect for trying out our platform.",
+                icon: Sparkles,
+                description: "Experience the power of professional dubbing with our entry-level tier.",
                 features: [
-                    "1 Language",
-                    "5 minutes / month",
-                    "Basic support"
+                    "Manual localization",
+                    "5 minutes processing",
+                    "2 target languages",
+                    "Community support"
                 ]
             };
         } else if (mins <= 60) {
             return {
-                name: "Starter",
+                name: "Starter Hub",
                 price: 29,
-                description: "Perfect for growing creators looking to expand their reach to new audiences.",
+                icon: Zap,
+                description: "Perfect for growing creators looking to establish a global presence.",
                 features: [
-                    "3 Languages",
-                    "60 minutes / month",
-                    "No watermark",
+                    "Full automation engine",
+                    "60 minutes processing",
+                    "5 target languages",
+                    "Standard resolution",
                     "Email support"
                 ]
             };
         } else if (mins <= 300) {
             return {
-                name: "Creator",
+                name: "Creator Suite",
                 price: 99,
-                description: "For established creators ready to dominate global markets.",
+                icon: Globe,
+                description: "Comprehensive solution for high-volume international distribution.",
                 features: [
-                    "10 Languages",
-                    "300 minutes / month",
-                    "No watermark",
-                    "Priority support",
+                    "Ultra-low latency",
+                    "300 minutes processing",
+                    "15 target languages",
+                    "4K output support",
+                    "Priority processing",
                     "Advanced analytics"
                 ]
             };
         } else {
             return {
-                name: "Enterprise",
+                name: "Studio Fleet",
                 price: null,
-                description: "Custom solutions for large-scale operations and creator studios.",
+                icon: ShieldCheck,
+                description: "Built for massive production houses and enterprise-scale networks.",
                 features: [
-                    "Unlimited Languages",
-                    "Unlimited minutes",
-                    "No watermark",
-                    "Dedicated account manager",
-                    "Custom integrations",
-                    "SLA guarantee"
+                    "Unlimited Everything",
+                    "Custom processing limits",
+                    "Uncapped languages",
+                    "White-label options",
+                    "API access",
+                    "Dedicated manager",
+                    "Custom SLAs"
                 ]
             };
         }
     };
 
     const tier = getPricingTier(minutes);
+    const TierIcon = tier.icon;
 
     return (
-        <div className="grid lg:grid-cols-2 gap-12 max-w-[1100px] mx-auto">
-            {/* Left Side - Calculator */}
-            <div className="bg-gray-50 rounded-[32px] p-8 md:p-12 text-left">
-                <h3 className="text-xl md:text-2xl font-normal text-black mb-8">
-                    Calculate your pricing
-                </h3>
+        <div className="max-w-[1200px] mx-auto">
+            <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-stretch">
+                {/* Left Side - Interactive Hub */}
+                <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-black/5 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center gap-3 mb-10">
+                            <div className="p-2.5 bg-black rounded-2xl">
+                                <Zap className="w-5 h-5 text-rolleey-yellow" />
+                            </div>
+                            <h3 className="text-2xl font-normal tracking-tight">Usage Estimator</h3>
+                        </div>
 
-                <div className="mb-8">
-                    <div className="text-4xl md:text-5xl font-normal text-black mb-6">
-                        {minutes} minutes
+                        <div className="space-y-16">
+                            <div className="space-y-8">
+                                <div className="flex items-baseline justify-between gap-4">
+                                    <div className="flex flex-col">
+                                        <span className="text-6xl md:text-8xl font-normal tracking-tighter text-black tabular-nums">
+                                            {minutes}
+                                        </span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Minutes per month</span>
+                                    </div>
+                                    <div className="hidden sm:block text-right">
+                                        <span className="text-sm font-medium text-zinc-400">Average production cycle</span>
+                                    </div>
+                                </div>
+
+                                {/* Refined Slider */}
+                                <div className="relative pt-4 px-1">
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="500"
+                                        step="10"
+                                        value={minutes}
+                                        onChange={(e) => setMinutes(Number(e.target.value))}
+                                        className="w-full h-1.5 bg-zinc-100 rounded-full appearance-none cursor-pointer accent-black transition-all hover:h-2"
+                                        style={{
+                                            background: `linear-gradient(to right, #000 0%, #000 ${(minutes / 500) * 100}%, #f4f4f5 ${(minutes / 500) * 100}%, #f4f4f5 100%)`
+                                        }}
+                                    />
+                                    <div className="flex justify-between mt-6 text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                                        <span>Single Video</span>
+                                        <span>Global Studio</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Slider */}
-                    <input
-                        type="range"
-                        min="0"
-                        max="500"
-                        value={minutes}
-                        onChange={(e) => setMinutes(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer slider"
-                        style={{
-                            background: `linear-gradient(to right, #272932 0%, #272932 ${(minutes / 500) * 100}%, #e5e7eb ${(minutes / 500) * 100}%, #e5e7eb 100%)`
-                        }}
-                    />
-
-                    <div className="flex justify-between mt-2 text-sm text-gray-500">
-                        <span>0</span>
-                        <span>500+</span>
+                    <div className="mt-20 pt-10 border-t border-zinc-100 grid sm:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Scale Support</p>
+                            <p className="text-sm text-zinc-600 leading-relaxed">Need more than 500 minutes? Our enterprise team can build a custom buffer for your fleet.</p>
+                        </div>
+                        <div className="flex flex-col items-start sm:items-end justify-end">
+                            <button className="group text-sm font-bold text-black inline-flex items-center gap-2 hover:opacity-70 transition-all">
+                                Contact Sales <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div className="pt-6 border-t border-gray-200 text-left">
-                    <p className="text-gray-600 text-sm mb-3">Need a custom solution?</p>
-                    <button className="text-black font-medium text-sm hover:underline inline-flex items-center gap-1">
-                        Contact us <ArrowRight className="w-3 h-3" />
-                    </button>
+                {/* Right Side - Dynamic Plan Card */}
+                <div className="relative group perspective-1000">
+                    <div className="h-full bg-black rounded-[3rem] p-10 md:p-14 text-white shadow-[0_48px_80px_-20px_rgba(0,0,0,0.3)] flex flex-col justify-between transition-all duration-700 hover:scale-[1.01] overflow-hidden">
+                        {/* Subtle background glow */}
+                        <div className="absolute -top-24 -right-24 w-64 h-64 bg-rolleey-yellow/10 blur-[100px] rounded-full pointer-events-none group-hover:bg-rolleey-yellow/20 transition-colors duration-700" />
+
+                        <div className="relative z-10">
+                            <div className="flex items-center justify-between mb-12">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rolleey-yellow/60">Current Selection</span>
+                                    <h3 className="text-3xl font-normal tracking-tight italic">{tier.name}</h3>
+                                </div>
+                                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                    <TierIcon className="w-6 h-6 text-rolleey-yellow" />
+                                </div>
+                            </div>
+
+                            <div className="mb-10">
+                                {tier.price !== null ? (
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-7xl font-light tracking-tighter tabular-nums">${tier.price}</span>
+                                        <span className="text-lg font-medium text-white/40">/mo</span>
+                                    </div>
+                                ) : (
+                                    <div className="text-4xl font-light tracking-tighter">Custom Quota</div>
+                                )}
+                            </div>
+
+                            <p className="text-lg text-white/50 leading-relaxed mb-12 max-w-xs">
+                                {tier.description}
+                            </p>
+
+                            <div className="space-y-5">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Capabilities Include</p>
+                                <ul className="grid gap-4">
+                                    {tier.features.map((feature, index) => (
+                                        <li key={index} className="flex items-center gap-3 text-sm font-medium text-white/80">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-rolleey-yellow" />
+                                            {feature}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div className="relative z-10 mt-14">
+                            <Button
+                                onClick={onGetStarted}
+                                className="w-full bg-rolleey-yellow text-black hover:bg-white h-16 rounded-2xl text-base font-bold transition-all shadow-2xl shadow-rolleey-yellow/20"
+                            >
+                                Deploy Pipeline
+                            </Button>
+                            <p className="text-center text-white/20 text-[10px] font-bold uppercase tracking-widest mt-4">
+                                Cancel or upgrade anytime
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            {/* Right Side - Plan Card */}
-            <div className="bg-white rounded-[32px] p-8 md:p-12 border border-gray-200 shadow-lg text-left">
-                <p className="text-sm text-gray-500 mb-2 uppercase tracking-wide">Your plan</p>
-                <h3 className="text-4xl md:text-5xl font-normal text-black mb-6">
-                    {tier.name}
-                </h3>
-
-                {tier.price !== null ? (
-                    <div className="text-3xl md:text-4xl font-normal text-black mb-6">
-                        ${tier.price}<span className="text-lg text-gray-500">/mo</span>
-                    </div>
-                ) : (
-                    <div className="text-2xl font-normal text-black mb-6">
-                        Custom pricing
-                    </div>
-                )}
-
-                <p className="text-gray-600 mb-8 leading-relaxed">
-                    {tier.description}
-                </p>
-
-                <button
-                    onClick={onGetStarted}
-                    className="w-full bg-black text-white py-4 rounded-full text-base font-medium hover:opacity-90 transition-opacity mb-8"
-                >
-                    Get started
-                </button>
-
-                <ul className="space-y-3">
-                    {tier.features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-3 text-gray-700">
-                            <Check className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
-                            <span>{feature}</span>
-                        </li>
-                    ))}
-                </ul>
             </div>
         </div>
     );

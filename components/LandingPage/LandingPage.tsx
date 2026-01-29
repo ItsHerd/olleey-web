@@ -6,6 +6,7 @@ import Footer from "./Footer";
 import { MinimalistHero } from "@/components/ui/minimalist-hero";
 import { FlowchartAnimation } from "@/components/FlowchartAnimation";
 import CreatorsShowcase from "./CreatorsShowcase";
+import { GlobalLifecycle } from "./GlobalLifecycle";
 import AIProductsShowcase from "./AIProductsShowcase";
 import { PricingCalculator } from "./PricingCalculator";
 import { SEO } from "@/components/SEO";
@@ -15,20 +16,23 @@ interface LandingPageProps {
 }
 
 export default function LandingPage({ onNavigation }: LandingPageProps) {
+    const navLinks = [
+        { label: 'HOME', href: '#' },
+        { label: 'WORKFLOWS', href: "#workflows" },
+        { label: 'PRODUCT', href: '#product' },
+        { label: 'PRICING', href: '#pricing' },
+    ];
+
     return (
         <div className="min-h-screen bg-white font-sans">
             <SEO
                 title="Olleey | Translate & Distribute Your Content Globally"
-                description="The ultimate AI-powered workflow for creators. Build automated pipelines that clone your voice, translate videos, and distribute to 10+ languages instantly."
+                description="The ultimate AI-powered workflow for creators. Build automated pipelines that translate and distribute your content to 10+ languages instantly."
             />
             {/* Hero Section - Minimalist Design */}
             <MinimalistHero
                 logoText=""
-                navLinks={[
-                    { label: 'HOME', href: '#' },
-                    { label: 'PRODUCT', href: '#product' },
-                    { label: 'PRICING', href: '#pricing' },
-                ]}
+                navLinks={navLinks}
                 mainText="Build automated workflows that translate and distribute your content to 10+ languages instantly."
                 readMoreLink="#product"
                 imageSrc="/hero-image.png"
@@ -50,26 +54,36 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
                 onGetStarted={onNavigation}
             />
 
-            <FlowchartAnimation />
+            <FlowchartAnimation onGetStarted={onNavigation} />
             <CreatorsShowcase />
-            <AIProductsShowcase />
+            <GlobalLifecycle />
 
             {/* Pricing Section */}
-            <section id="pricing" className="bg-white pb-20 mb-20 mt-10">
+            <section id="pricing" className="relative py-18 overflow-hidden">
+                {/* Background Treatment */}
+                <div className="absolute inset-0 bg-[#F8F9FA] -z-10" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_50%_0%,rgba(0,0,0,0.02)_0%,transparent_50%)] -z-10" />
+
                 <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px]">
-                    <div className="text-center mb-16">
-                        <p className="text-sm text-gray-500 mb-2 uppercase tracking-wide text-center font-bold">Pricing</p>
-                        <h2 className="text-[50px] md:text-[60px] leading-tight font-normal text-black mt-4 mb-6 text-center">
-                            One price, all the things
+                    <div className="text-center mb-20 animate-element animate-delay-100">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-black/5 rounded-full border border-black/5 mb-6">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rolleey-yellow animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Scaling Solutions</span>
+                        </div>
+                        <h2 className="text-[50px] md:text-[75px] leading-[1.1] font-normal tracking-tighter text-black mb-8 px-4">
+                            One price, <span className="font-semibold italic">all</span> the things.
                         </h2>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto text-center leading-relaxed">
-                            Scale your content globally with transparent pricing based on your usage.
+                        <p className="text-lg md:text-xl text-zinc-500 max-w-2xl mx-auto leading-relaxed">
+                            Scale your global distribution with transparent, usage-based pricing designed to grow with your audience.
                         </p>
                     </div>
 
-                    <PricingCalculator onGetStarted={onNavigation} />
+                    <div className="animate-element animate-delay-300">
+                        <PricingCalculator onGetStarted={onNavigation} />
+                    </div>
                 </div>
             </section>
+            <AIProductsShowcase />
 
             <Footer />
         </div>

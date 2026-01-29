@@ -92,7 +92,7 @@ export default function CreatorsShowcase() {
   const activeFeature = features.find(f => f.id === activeTab) || features[0];
 
   return (
-    <section className="py-24 bg-white">
+    <section id="product" className="py-24 bg-white">
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px]">
 
         {/* Header */}
@@ -103,7 +103,7 @@ export default function CreatorsShowcase() {
             </span>
           </div>
           <h2 className="text-4xl md:text-5xl lg:text-[56px] leading-[1.1] font-normal text-[#1C1D21]">
-            Build automated workflows that clone, translate, <br /> and distribute your content globally
+            Master your global footprint with the most <br /> advanced automation engine
           </h2>
         </div>
 

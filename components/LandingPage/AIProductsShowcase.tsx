@@ -22,42 +22,42 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
     // Default products if none provided
     const defaultProducts: ProductCard[] = [
         {
-            title: "Olleey Workflows: One Upload, Worldwide Release",
+            title: "Zero-Latency Voice Cloning",
             description:
-                "Plug Olleey into your main channel and turn every new upload into a fully automated multi-language release—without adding a single step to your process.",
+                "Preserve your unique vocal identity across every border. Our neural engine clones your tone, cadence, and emotion with breathtaking accuracy in 40+ languages.",
             image: "https://cdn.dribbble.com/userupload/18293083/file/original-79c28b4f9f64f091b8c5c3fb6e66cb60.png?resize=2048x1536&vertical=center",
             primaryAction: {
-                label: "View Demo",
-                onClick: () => console.log("View Olleey Workflows")
+                label: "Hear samples",
+                onClick: () => console.log("View Voice Samples")
             }
         },
         {
-            title: "Regenerative Lip-Sync: Native in Every Language",
+            title: "Regenerative Lip-Sync",
             description:
-                "Go beyond basic dubbing. Olleey regenerates lower-face motion to match each target language while preserving your original performance and emotion.",
+                "Go beyond basic dubbing. Olleey regenerates your lower-face motion to match each target language's phonemes while preserving your original expression.",
             image: "https://3dwithus.com/wp-content/uploads/2020/04/Lip-Sync-Before-After-Mesh-Editing-in-Blender-2.8.jpg",
             secondaryAction: {
-                label: "View examples",
+                label: "Watch demo",
                 onClick: () => console.log("View lip-sync examples")
             }
         },
         {
-            title: "Zero-Touch Channel Automation",
+            title: "Smart Multi-Track Packaging",
             description:
-                "From transcription and translation to packaging and publishing, Olleey runs in the background—auto-routing content to MLA tracks and regional channels.",
+                "Automatically mux translated audio into YouTube Multi-Language Audio tracks or master them as independent regional video files—ready for instant broadcast.",
             image: "https://cdn.dribbble.com/userupload/44898567/file/ca2fc904f631c548f551cf9efcd5dc2b.jpg?resize=400x0",
             secondaryAction: {
-                label: "Explore integrations",
+                label: "Export specs",
                 onClick: () => console.log("Explore channel integrations")
             }
         },
         {
-            title: "Language Performance Analytics",
+            title: "Global Hub Analytics",
             description:
-                "Compare retention, watch time, and RPM across languages so you know exactly where to double down and which markets to unlock next.",
+                "Track your global performance from a single pane of glass. Monitor RPM, retention, and audience growth across every localized channel in real-time.",
             image: "https://cdn.dribbble.com/userupload/15010682/file/original-a37ebacacb04da8f6467ae2bfd7d53d5.jpg?format=webp&resize=400x300&vertical=center",
             secondaryAction: {
-                label: "See analytics",
+                label: "Visit Hub",
                 onClick: () => console.log("View analytics details")
             }
         }
