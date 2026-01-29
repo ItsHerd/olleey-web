@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { ArrowUpRight, Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface Feature {
@@ -92,53 +93,101 @@ export default function CreatorsShowcase() {
   const activeFeature = features.find(f => f.id === activeTab) || features[0];
 
   return (
-    <section id="product" className="py-24 bg-white">
-      <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px]">
+
+    <section id="product" className="py-24 bg-black border-b border-white/10 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] relative z-10">
 
         {/* Header */}
-        <div className="mb-20">
-          <div className="mb-6">
-            <span className="text-xs font-bold uppercase tracking-wide text-gray-500">
-              For <span className="text-black border-b-2 border-dotted border-black">CONTENT CREATORS & MEDIA COMPANIES</span>
+        <div className="mb-20 text-center md:text-left">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-6 inline-flex border border-white/20 px-3 py-1"
+          >
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/60">
+              SYS.Mod.03 <span className="text-white mx-2">//</span> CREATORS
             </span>
-          </div>
-          <h2 className="text-4xl md:text-5xl lg:text-[56px] leading-[1.1] font-normal text-[#1C1D21]">
-            Master your global footprint with the most <br /> advanced automation engine
-          </h2>
+          </motion.div>
+          
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-3xl md:text-5xl lg:text-[56px] leading-[1.1] font-normal text-white font-mono uppercase tracking-tight"
+          >
+            Master your <br/>
+            <span className="text-white/50">Global Footprint.</span>
+          </motion.h2>
         </div>
 
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-8">
           {/* Left Column - Navigation */}
-          <div className="lg:col-span-5 flex flex-col gap-10">
-            {features.map((feature) => (
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="lg:col-span-5 flex flex-col gap-px border border-white/10 bg-white/5"
+          >
+            {features.map((feature, idx) => (
               <div
                 key={feature.id}
                 className={cn(
-                  "group cursor-pointer transition-all duration-300",
-                  activeTab === feature.id ? "opacity-100" : "opacity-40 hover:opacity-70"
+                  "group cursor-pointer p-6 hover:bg-white/5 transition-colors duration-200 border-b border-white/10 last:border-b-0",
+                  activeTab === feature.id ? "bg-white/10" : "opacity-60 hover:opacity-100"
                 )}
                 onClick={() => setActiveTab(feature.id)}
               >
-                <div className="flex items-center gap-4 mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-mono text-white/40">0{idx + 1}</span>
+                    <h3 className={cn(
+                      "text-xs font-mono uppercase tracking-widest transition-colors",
+                      activeTab === feature.id ? "text-white" : "text-white/70 group-hover:text-white"
+                    )}>
+                      {feature.title}
+                    </h3>
+                  </div>
                   {activeTab === feature.id && (
-                    <div className="w-4 h-4 rounded-full border border-black relative flex items-center justify-center">
-                      <div className="w-4 h-4 absolute border-t-2 border-black rounded-full animate-spin duration-[3000ms]" style={{ borderTopColor: 'transparent', borderRightColor: 'transparent' }}></div>
-                    </div>
+                    <div className="w-1.5 h-1.5 bg-white animate-pulse" />
                   )}
-                  <h3 className="text-sm font-bold uppercase tracking-wide text-black">
-                    {feature.title}
-                  </h3>
                 </div>
-                <p className="text-base text-black/80 leading-relaxed font-medium">
-                  {feature.description}
-                </p>
+                {activeTab === feature.id && (
+                  <p className="text-xs text-gray-400 leading-relaxed font-mono mt-2 pl-7 border-l border-white/20 ml-1">
+                    {feature.description}
+                  </p>
+                )}
               </div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Right Column - Media Display */}
-          <div className="lg:col-span-7">
-            <div className="relative bg-[#F3F4F6] rounded-[32px] overflow-hidden aspect-[4/3] w-full shadow-sm">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="lg:col-span-7"
+          >
+            <div className="relative bg-black border border-white/20 w-full aspect-[4/3] group overflow-hidden">
+                {/* Technical Overlay */}
+                <div className="absolute top-4 left-4 z-20 flex gap-2 text-[9px] font-mono text-white/60">
+                    <span className="border border-white/20 px-1">REC</span>
+                    <span className="animate-pulse text-red-500">●</span>
+                </div>
+                <div className="absolute top-0 right-0 p-2 border-b border-l border-white/20 w-8 h-8" />
+                <div className="absolute bottom-0 left-0 p-2 border-t border-r border-white/20 w-8 h-8" />
+                
+                {/* Crosshairs */}
+                <div className="absolute inset-0 z-10 pointer-events-none opacity-20">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 border border-white" />
+                    <div className="absolute top-1/2 left-0 right-0 h-px bg-white/20" />
+                    <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20" />
+                </div>
 
               {/* Content Renderers */}
               {activeFeature.media.type === 'video' && (
@@ -168,7 +217,10 @@ export default function CreatorsShowcase() {
               {activeFeature.media.type === 'custom_podcast' && (
                 <div className="w-full h-full flex items-center justify-center bg-white p-6 md:p-12 relative">
                   {/* Phone Mockup Frame */}
-                  <div className="relative w-[280px] md:w-[320px] aspect-[9/19.5] bg-black rounded-[40px] border-[8px] border-black shadow-2xl overflow-hidden ring-1 ring-gray-900/5">
+                  {/* Phone Mockup Frame - Technical */}
+                  <div className="relative w-[280px] md:w-[320px] aspect-[9/19.5] bg-black border border-white/30 p-2 relative z-10">
+                    <div className="absolute -inset-1 border border-white/10 opacity-50 pointer-events-none" />
+                    <div className="h-full w-full bg-zinc-900 overflow-hidden relative border border-white/10">
                     {/* Dynamic Island */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[25px] w-[100px] bg-black flex items-center justify-center z-20 rounded-b-[16px]"></div>
 
@@ -205,29 +257,27 @@ export default function CreatorsShowcase() {
 
                       </div>
                     </div>
+                    </div>
                   </div>
 
-                  {/* Right Side Podcast Text Dialog - simulating the screenshot */}
+                  {/* Right Side Podcast Text Dialog - Technical */}
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-0 w-[260px] md:w-[300px] z-10 hidden md:block">
-                    <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-gray-100">
-                      <h4 className="font-bold text-sm mb-3">The Secret World of Science</h4>
-                      <div className="space-y-3">
+                    <div className="bg-black/80 backdrop-blur-md p-4 border border-white/20 font-mono">
+                      <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                        <h4 className="text-[10px] text-white uppercase tracking-wider">Transcription Log</h4>
+                        <span className="text-[9px] text-green-500">LIVE</span>
+                      </div>
+                      <div className="space-y-4">
                         <div className="flex gap-3 items-start">
-                          <div className="w-6 h-6 rounded-full bg-pink-400 flex-shrink-0"></div>
-                          <p className="text-xs text-gray-600 leading-snug">
-                            Alright, so let's dive into today's <span className="bg-teal-100 px-1 rounded">review</span> topic - Atomic Theory.
+                          <span className="text-[9px] text-white/40 pt-1">00:12</span>
+                          <p className="text-[10px] text-white/80 leading-normal font-mono">
+                            <span className="text-blue-400">&gt;</span> Alright, so let's dive into today's <span className="bg-white/20 px-1 text-white">review</span> topic...
                           </p>
                         </div>
                         <div className="flex gap-3 items-start">
-                          <div className="w-6 h-6 rounded-full bg-blue-400 flex-shrink-0"></div>
-                          <p className="text-xs text-gray-600 leading-snug">
-                            Now this is one of my absolute favourite subjects. Where should we begin?
-                          </p>
-                        </div>
-                        <div className="flex gap-3 items-start">
-                          <div className="w-6 h-6 rounded-full bg-pink-400 flex-shrink-0"></div>
-                          <p className="text-xs text-gray-600 leading-snug">
-                            Let's go back to the very beginning with John Dalton in 1803
+                          <span className="text-[9px] text-white/40 pt-1">00:15</span>
+                          <p className="text-[10px] text-white/80 leading-normal font-mono">
+                            <span className="text-blue-400">&gt;</span> Now this is one of my absolute favourite subjects.
                           </p>
                         </div>
                       </div>
@@ -248,54 +298,35 @@ export default function CreatorsShowcase() {
                     src={activeFeature.media.src || ""}
                     alt={activeFeature.media.alt || ""}
                     fill
-                    className="object-cover"
+                    className="object-cover opacity-80"
                   />
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.2)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
                 </div>
               )}
 
-              {/* Bottom Bar Logic */}
-              <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur rounded-full px-4 py-3 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-3">
-                  {activeFeature.footer.isBrandLogo ? (
-                    <span className="font-bold text-lg tracking-tight flex items-center gap-1">
-                      <span className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                        <span className="w-3 h-3 bg-white rounded-sm"></span>
-                      </span>
-                      {activeFeature.footer.brand}
-                      <ArrowUpRight className="w-3 h-3 text-black ml-1" />
-                    </span>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      {activeFeature.footer.icon && (
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
-                          <Image src={activeFeature.footer.icon} alt="User" width={32} height={32} />
-                        </div>
-                      )}
-                      {activeFeature.footer.link && (
-                        <span className="font-bold text-sm flex items-center gap-1">
-                          {activeFeature.footer.link}
-                          <ArrowUpRight className="w-3 h-3" />
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <span className="text-gray-500 text-sm hidden sm:inline-block">
-                    {activeFeature.footer.text}
-                  </span>
+              {/* Bottom Bar Logic - Technical */}
+              <div className="absolute bottom-0 left-0 right-0 bg-black/90 border-t border-white/20 p-4 flex items-center justify-between z-30">
+                <div className="flex items-center gap-4">
+                  <div className="font-mono text-[9px] text-white/60 uppercase tracking-widest flex items-center gap-2">
+                    {activeFeature.footer.isBrandLogo ? (
+                         <span className="text-white font-bold">{activeFeature.footer.brand}</span>
+                    ) : (
+                        <span>{activeFeature.footer.link || 'SYSTEM_DEFAULT'}</span>
+                    )}
+                    <span className="text-white/20">|</span>
+                    <span>{activeFeature.footer.text}</span>
+                  </div>
                 </div>
 
-                {activeFeature.footer.action ? (
-                  <button className="bg-black text-white text-xs font-bold px-4 py-2 rounded-full uppercase hover:bg-black/80 transition-colors">
-                    {activeFeature.footer.action}
-                  </button>
-                ) : (
-                  <button className="bg-black text-white text-xs font-bold px-4 py-2 rounded-full uppercase hover:bg-black/80 transition-colors">
-                    GET STARTED FREE
-                  </button>
-                )}
+                <button className="group flex items-center gap-2 text-[9px] font-mono uppercase text-white hover:text-white/80 transition-colors">
+                    {activeFeature.footer.action || 'INITIALIZE'}
+                    <span className="w-3 h-3 border border-white/50 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                        <ArrowUpRight className="w-2 h-2" />
+                    </span>
+                </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
