@@ -13,9 +13,20 @@ import { SEO } from "@/components/SEO";
 
 interface LandingPageProps {
     onNavigation: () => void;
+    initialAuthMode?: 'login' | 'register';
+    autoShowAuth?: boolean;
 }
 
-export default function LandingPage({ onNavigation }: LandingPageProps) {
+export default function LandingPage({ onNavigation, initialAuthMode = 'login', autoShowAuth = false }: LandingPageProps) {
+    const [showAuth, setShowAuth] = React.useState(autoShowAuth);
+    const [authMode, setAuthMode] = React.useState<'login' | 'register'>(initialAuthMode);
+
+    const triggerAuth = (mode: 'login' | 'register') => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setAuthMode(mode);
+        setShowAuth(true);
+    };
+
     const navLinks = [
         { label: 'HOME', href: '#' },
         { label: 'WORKFLOWS', href: "#workflows" },
@@ -31,14 +42,16 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
                 description="The ultimate AI-powered workflow for creators. Build automated pipelines that translate and distribute your content to 10+ languages instantly."
             />
             {/* Hero Section - Ascii Design */}
-            <HeroAscii 
+            <HeroAscii
                 navLinks={navLinks}
-                onSignIn={onNavigation}
-                onSignUp={onNavigation}
-                onGetStarted={onNavigation}
+                onAuthenticated={onNavigation}
+                showAuth={showAuth}
+                setShowAuth={setShowAuth}
+                authMode={authMode}
+                setAuthMode={setAuthMode}
             />
 
-            <FlowchartAnimation onGetStarted={onNavigation} />
+            <FlowchartAnimation onGetStarted={() => triggerAuth('register')} />
             <CreatorsShowcase />
             <GlobalLifecycle />
 
@@ -49,27 +62,27 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
 
                 <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px] relative z-10">
                     <div className="text-center mb-20">
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
                             className="inline-flex items-center gap-3 px-4 py-1 border border-white/30 backdrop-blur-sm mb-6 bg-black"
                         >
-                             <div className="w-1.5 h-1.5 bg-white animate-pulse" />
-                             <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white">Scaling Solutions</span>
+                            <div className="w-1.5 h-1.5 bg-white animate-pulse" />
+                            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white">Scaling Solutions</span>
                         </motion.div>
-                        <motion.h2 
+                        <motion.h2
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.1 }}
                             className="text-4xl md:text-6xl font-normal text-white mb-8 px-4 font-mono uppercase tracking-tight"
                         >
-                            One price. <br/>
+                            One price. <br />
                             <span className="text-white/50">All features.</span>
                         </motion.h2>
-                        <motion.p 
+                        <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
@@ -82,13 +95,13 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
 
 
                     <div className="animate-element animate-delay-300">
-                        <PricingCalculator onGetStarted={onNavigation} />
+                        <PricingCalculator onGetStarted={() => triggerAuth('register')} />
                     </div>
                 </div>
             </section>
             <AIProductsShowcase />
 
-            <Footer />
+            <Footer onGetStarted={() => triggerAuth('register')} />
         </div>
     );
 }

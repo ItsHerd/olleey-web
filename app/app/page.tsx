@@ -13,7 +13,6 @@ import GuardrailsPage from "../GuardrailsPage";
 import JobsPage from "../JobsPage";
 import NotificationsPage from "../NotificationsPage";
 import SettingsPage from "../SettingsPage";
-import LoginPage from "../LoginPage";
 import UsagePage from "../UsagePage";
 import SupportPage from "../SupportPage";
 import ManualUploadPage from "../ManualUploadPage";
@@ -265,9 +264,10 @@ function AppContent() {
         );
     }
 
-    // Show login page if not authenticated
+    // Redirect to landing page login if not authenticated
     if (!isAuthenticated) {
-        return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+        window.location.href = '/?auth=login';
+        return null;
     }
 
     const selectedProjectChannelName = channelGraph.find(m => m.connection_id === selectedProject?.master_connection_id)?.channel_name;
