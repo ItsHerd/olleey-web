@@ -33,7 +33,7 @@ const features: Feature[] = [
     description: "Connect your YouTube channel once—Olleey handles the rest. We continuously monitor your feed and automatically spin up the localization pipeline the moment your video goes live. No buttons to press, no workflows to remember.",
     media: {
       type: "image",
-      src: "https://lh3.googleusercontent.com/gg-dl/AOI_d_9qallH36KgtlBT4CFW4XPmz73LT1zZn12OIAz8MLf0WjiF-wXMg2oYbtjn8fkxMxMEzeHO8H11aFbD7i7aUpGXGXLMzSuJ1WQTShD4fUXi86OovMbTSwp4jd-bF7vinU1X6SY1-9D5mZiwP53RnUV3D8hsRrDjntn-geokcq0VZ4xMLw=s1024-rj",
+      src: "/images/photo1.png",
       alt: "Automated monitoring dashboard",
     },
     footer: {
@@ -46,9 +46,9 @@ const features: Feature[] = [
     title: "THE ONE-TO-MANY ENGINE",
     description: "Turn a single source video into 10+ fully localized, native-feeling versions—instantly. Our parallel processing system runs transcription, translation, voice cloning, and regenerative lip-sync all at once across every target language.",
     media: {
-      type: "video",
-      src: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-futuristic-devices-27-large.mp4",
-      poster: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1000&auto=format&fit=crop",
+      type: "image",
+      src: "/images/photo2.png",
+      alt: "Global distribution network",
     },
     footer: {
       text: "1 upload → 10+ languages",
@@ -61,7 +61,7 @@ const features: Feature[] = [
     description: "Automate with guardrails. Set rules like \"Auto-publish if Confidence > 95%; otherwise send to Slack for review.\" Every output passes through configurable logic to keep quality high, branding tight, and mistakes out of your feed.",
     media: {
       type: "image",
-      src: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop",
+      src: "/images/photo3.png",
       alt: "Quality control dashboard",
     },
     footer: {
@@ -74,8 +74,9 @@ const features: Feature[] = [
     title: "NATIVE AUTO-DISTRIBUTION",
     description: "Never download or re-upload again. Olleey pushes finished videos directly to your YouTube MLA tracks or regional channels—and to TikTok and Instagram—as Drafts or Scheduled Posts. Global publishing becomes a single automated step.",
     media: {
-      type: "custom_podcast",
-      src: "/podcast-mockup.png",
+      type: "image",
+      src: "/images/photo4.png",
+      alt: "Auto distribution dashboard",
     },
     footer: {
       text: "Direct platform publishing",
@@ -85,7 +86,7 @@ const features: Feature[] = [
 ];
 
 export default function CreatorsShowcase() {
-  const [activeTab, setActiveTab] = useState("one-to-many");
+  const [activeTab, setActiveTab] = useState("zero-touch");
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -292,13 +293,19 @@ export default function CreatorsShowcase() {
                 </div>
               )}
 
-              {['audiobooks', 'dubbed-videos', 'music'].includes(activeFeature.media.type === 'image' ? activeTab : '') && (
+              {activeFeature.media.type === 'image' && (
                 <div className="w-full h-full relative">
                   <Image
-                    src={activeFeature.media.src || ""}
+                    src={
+                        activeTab === 'zero-touch' ? "/images/photo1.png" : 
+                        activeTab === 'one-to-many' ? "/images/photo2.png" :
+                        activeTab === 'quality-gates' ? "/images/photo3.png" :
+                        activeTab === 'auto-distribution' ? "/images/photo4.png" :
+                        activeFeature.media.src || ""
+                    }
                     alt={activeFeature.media.alt || ""}
                     fill
-                    className="object-cover opacity-80"
+                    className="opacity-80 object-contain p-8"
                   />
                   <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.2)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
                 </div>

@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
+import { X } from 'lucide-react';
 import { authAPI } from "@/lib/api";
 import { getUserFriendlyErrorMessage } from "@/lib/errorMessages";
 import { useGoogleSignIn } from "@/lib/useGoogleSignIn";
@@ -26,6 +28,7 @@ export default function HeroAscii({
 }: HeroAsciiProps) {
   const [internalShowAuth, setInternalShowAuth] = useState(false);
   const [internalAuthMode, setInternalAuthMode] = useState<'login' | 'register'>('login');
+  const [showDemo, setShowDemo] = useState(false);
 
   const showAuth = externalShowAuth ?? internalShowAuth;
   const setShowAuth = externalSetShowAuth ?? setInternalShowAuth;
@@ -205,7 +208,8 @@ export default function HeroAscii({
         <div className="container mx-auto px-4 lg:px-8 py-3 lg:py-4 flex items-center justify-between">
           {/* Left: Logo */}
           <div className="flex items-center gap-2 lg:gap-4">
-            <div className="relative w-6 h-6 lg:w-8 lg:h-8">
+            <Link href="/" className="flex items-center gap-2 lg:gap-4 group">
+            <div className="relative w-6 h-6 lg:w-8 lg:h-8 transition-transform group-hover:scale-105">
               <Image
                 src="/images/translogowhite.png"
                 alt="Olleey Logo"
@@ -213,9 +217,10 @@ export default function HeroAscii({
                 className="object-contain"
               />
             </div>
-            <div className="font-mono text-white text-xl lg:text-2xl font-bold tracking-widest">
+            <div className="font-mono text-white text-xl lg:text-2xl font-bold tracking-widest group-hover:text-white/90 transition-colors">
               olleey
             </div>
+            </Link>
             <div className="h-3 lg:h-4 w-px bg-white/40"></div>
             <span className="text-white/60 text-[8px] lg:text-[10px] font-mono">GLOBAL TRANSLATION</span>
           </div>
@@ -444,7 +449,10 @@ export default function HeroAscii({
                       START PIPELINE
                     </button>
 
-                    <button className="relative px-5 lg:px-6 py-2 lg:py-2.5 bg-transparent border border-white text-white font-mono text-xs lg:text-sm hover:bg-white hover:text-black transition-all duration-200" style={{ borderWidth: '1px' }}>
+                    <button 
+                      onClick={() => setShowDemo(true)}
+                      className="relative px-5 lg:px-6 py-2 lg:py-2.5 bg-transparent border border-white text-white font-mono text-xs lg:text-sm hover:bg-white hover:text-black transition-all duration-200" style={{ borderWidth: '1px' }}
+                    >
                       WATCH DEMO
                     </button>
                   </div>
@@ -487,6 +495,54 @@ export default function HeroAscii({
           </div>
         </div>
       </div>
+
+      {/* Demo Video Modal */}
+      <AnimatePresence>
+        {showDemo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={() => setShowDemo(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-4xl aspect-video bg-black border border-white/20 shadow-2xl overflow-hidden group"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Technical Corners */}
+              <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-white/40" />
+              <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-white/40" />
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-white/40" />
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-white/40" />
+              
+              {/* Header */}
+              <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/60 to-transparent">
+                <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                   <span className="text-[10px] font-mono text-white/80 tracking-widest">DEMO_PLAYBACK.MP4</span>
+                </div>
+                <button 
+                    onClick={() => setShowDemo(false)}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
+                    <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+
+              <video 
+                src="/speaker.mp4"
+                className="w-full h-full object-cover"
+                autoPlay
+                controls
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style jsx>{`
         .dither-pattern {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
     Mail,
     Phone,
@@ -29,10 +30,11 @@ export default function Footer({ onGetStarted }: { onGetStarted?: () => void }) 
         {
             title: "CORPORATE",
             links: [
-                { label: "About", href: "#" },
-                { label: "Careers", href: "#" },
-                { label: "Contact", href: "#" },
-                { label: "Legal", href: "#" },
+                { label: "About", href: "/about" },
+                { label: "Careers", href: "/careers" },
+                { label: "Contact", href: "/contact" },
+                { label: "Terms", href: "/terms" },
+                { label: "Privacy", href: "/privacy" },
             ],
         },
     ];
@@ -45,13 +47,8 @@ export default function Footer({ onGetStarted }: { onGetStarted?: () => void }) 
             href: "mailto:hello@olleey.com",
         },
         {
-            icon: <Phone size={14} className="text-white" />,
-            text: "+1 (555) 000-0000",
-            href: "tel:+15550000000",
-        },
-        {
             icon: <MapPin size={14} className="text-white" />,
-            text: "San Francisco, CA",
+            text: "Seattle, Wa",
         },
     ];
 
@@ -77,8 +74,13 @@ export default function Footer({ onGetStarted }: { onGetStarted?: () => void }) 
                     {/* Brand section */}
                     <div className="flex flex-col space-y-4">
                         <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-white flex items-center justify-center">
-                                <div className="w-4 h-4 bg-black" />
+                            <div className="relative w-8 h-8">
+                                <Image
+                                    src="/images/translogowhite.png"
+                                    alt="Olleey Logo"
+                                    fill
+                                    className="object-contain"
+                                />
                             </div>
                             <span className="text-white text-xl font-bold font-mono tracking-widest">OLLEEY</span>
                         </div>
