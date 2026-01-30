@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { tokenStorage } from "@/lib/api";
 import LandingPage from "@/components/LandingPage/LandingPage";
 
-export default function Index() {
+function LandingPageWrapper() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const authTrigger = searchParams.get('auth');
@@ -21,11 +21,19 @@ export default function Index() {
     router.push("/app");
   };
 
-  return <Suspense fallback={null}>
+  return (
     <LandingPage
       onNavigation={handleNavigation}
       initialAuthMode={authTrigger === 'register' ? 'register' : 'login'}
       autoShowAuth={!!authTrigger}
     />
-  </Suspense>;
+  );
+}
+
+export default function Index() {
+  return (
+    <Suspense fallback={null}>
+      <LandingPageWrapper />
+    </Suspense>
+  );
 }
