@@ -21,7 +21,7 @@ export default function Footer({ onGetStarted }: { onGetStarted?: () => void }) 
         {
             title: "PLATFORM",
             links: [
-                { label: "Join Today", onClick: onGetStarted },
+                { label: "Join Today", onClick: onGetStarted, href: "/" },
                 { label: "Engine", href: "#workflows" },
                 { label: "Studio", href: "#product" },
                 { label: "Distribution", href: "#distribution" },
@@ -48,7 +48,7 @@ export default function Footer({ onGetStarted }: { onGetStarted?: () => void }) 
         },
         {
             icon: <MapPin size={14} className="text-white" />,
-            text: "Seattle, Wa",
+            text: "Seattle, WA",
         },
     ];
 
@@ -68,7 +68,7 @@ export default function Footer({ onGetStarted }: { onGetStarted?: () => void }) 
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8 }}
-                className="max-w-7xl mx-auto p-8 md:p-14 z-40 relative"
+                className="max-w-7xl mx-auto p-8 md:p-14 z-[60] relative"
             >
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 lg:gap-16 pb-12 border-b border-white/10 mb-12">
                     {/* Brand section */}
@@ -107,12 +107,12 @@ export default function Footer({ onGetStarted }: { onGetStarted?: () => void }) 
                                                 <span className="mr-1 opacity-0 hover:opacity-100 transition-opacity">&gt;</span> {link.label}
                                             </button>
                                         ) : (
-                                            <a
-                                                href={link.href}
-                                                className="text-xs text-stone-400 hover:text-white transition-colors font-mono hover:pl-2 duration-200"
+                                            <Link
+                                                href={link.href!}
+                                                className="text-xs text-stone-400 hover:text-white transition-colors font-mono hover:pl-2 duration-200 block"
                                             >
                                                 <span className="mr-1 opacity-0 hover:opacity-100 transition-opacity">&gt;</span> {link.label}
-                                            </a>
+                                            </Link>
                                         )}
                                     </li>
                                 ))}
