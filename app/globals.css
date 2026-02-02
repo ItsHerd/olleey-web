@@ -287,3 +287,22 @@ input[type="range"].slider::-moz-range-thumb:hover {
   pointer-events: none;
   opacity: 0.6;
 }
+
+/* Accordion Animations */
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}

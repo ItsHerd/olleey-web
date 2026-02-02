@@ -83,25 +83,25 @@ export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    className="bg-black border border-white/20 p-10 md:p-16 flex flex-col justify-between relative overflow-hidden group"
+                    className="bg-black border border-white/20 p-6 md:p-8 flex flex-col justify-between relative overflow-hidden group"
                 >
                     {/* Corner Markers */}
                     <div className="absolute top-0 left-0 p-2 border-b border-r border-white/20 w-8 h-8" />
                     <div className="absolute bottom-0 right-0 p-2 border-t border-l border-white/20 w-8 h-8" />
                     
                     <div>
-                        <div className="flex items-center gap-3 mb-10 border-b border-white/10 pb-6">
+                        <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
                             <div className="p-2 bg-white/10">
                                 <Zap className="w-4 h-4 text-white" />
                             </div>
                             <h3 className="text-sm font-mono uppercase tracking-widest text-white">Usage Estimator</h3>
                         </div>
 
-                        <div className="space-y-16">
+                        <div className="space-y-8">
                             <div className="space-y-8">
                                 <div className="flex items-baseline justify-between gap-4">
                                     <div className="flex flex-col">
-                                        <span className="text-6xl md:text-8xl font-mono font-light tracking-tighter text-white tabular-nums">
+                                        <span className="text-5xl md:text-6xl font-mono font-light tracking-tighter text-white tabular-nums">
                                             {minutes}
                                         </span>
                                         <span className="text-[9px] font-mono uppercase tracking-widest text-white/40">Minutes per month</span>
@@ -148,7 +148,7 @@ export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }
                         </div>
                     </div>
 
-                    <div className="mt-20 pt-10 border-t border-white/10 grid sm:grid-cols-2 gap-8">
+                    <div className="mt-6 pt-6 border-t border-white/10 grid sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <p className="text-[9px] font-mono uppercase tracking-widest text-white/60">Scale Support</p>
                             <p className="text-xs font-mono text-white/40 leading-relaxed">Need more than 500 minutes? Our enterprise team can build a custom buffer for your fleet.</p>
@@ -169,14 +169,14 @@ export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="relative group"
                 >
-                    <div className="h-full bg-white border border-black p-10 md:p-14 text-black flex flex-col justify-between transition-all duration-700 relative overflow-hidden">
+                    <div className="h-full bg-white border border-black p-6 md:p-8 text-black flex flex-col justify-between transition-all duration-700 relative overflow-hidden">
                         {/* Technical Grid Background */}
                         <div className="absolute inset-0 z-0 opacity-5 pointer-events-none" 
                              style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
                         />
 
                         <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-12 border-b border-black/10 pb-6">
+                            <div className="flex items-center justify-between mb-6 border-b border-black/10 pb-4">
                                 <div className="flex flex-col gap-1">
                                     <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-black/60">Current Selection</span>
                                     <h3 className="text-2xl font-mono uppercase tracking-widest font-bold">{tier.name}</h3>
@@ -186,7 +186,7 @@ export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }
                                 </div>
                             </div>
 
-                            <div className="mb-10">
+                            <div className="mb-6">
                                 {tier.price !== null ? (
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-6xl font-mono font-bold tracking-tighter tabular-nums text-black">${tier.price}</span>
@@ -197,7 +197,7 @@ export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }
                                 )}
                             </div>
 
-                            <p className="text-sm font-mono text-black/60 leading-relaxed mb-12 max-w-xs border-l-2 border-black/10 pl-4">
+                            <p className="text-sm font-mono text-black/60 leading-relaxed mb-6 max-w-xs border-l-2 border-black/10 pl-4">
                                 {tier.description}
                             </p>
 
@@ -214,7 +214,7 @@ export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }
                             </div>
                         </div>
 
-                        <div className="relative z-10 mt-14">
+                        <div className="relative z-10 mt-6">
                             <Button
                                 onClick={onGetStarted}
                                 className="w-full bg-black text-white hover:bg-black/80 h-14 rounded-none text-xs font-mono font-bold uppercase tracking-widest transition-all border border-transparent hover:border-black"
