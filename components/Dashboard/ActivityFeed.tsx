@@ -1,9 +1,24 @@
 "use client";
 
 import React from "react";
-import { History, Loader2, CheckCircle, Radio, Plus, Youtube, Zap, Upload, FileCheck, Play } from "lucide-react";
+import {
+    History,
+    Loader2,
+    CheckCircle,
+    Radio,
+    Plus,
+    Youtube,
+    Zap,
+    Upload,
+    FileCheck,
+    Play,
+    ArrowRight,
+    Sparkles,
+    Clock
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ActivityItem } from "@/lib/api";
+import { motion } from "framer-motion";
 
 interface ActivityFeedProps {
     activitiesLoading: boolean;
@@ -13,6 +28,11 @@ interface ActivityFeedProps {
     cardClass: string;
     borderClass: string;
 }
+
+const itemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 }
+};
 
 export function ActivityFeed({
     activitiesLoading,
@@ -29,7 +49,7 @@ export function ActivityFeed({
             case 'upload':
                 return <Upload className="w-3.5 h-3.5 text-blue-500" />;
             case 'plus':
-                return <Plus className="w-3.5 h-3.5 text-purple-500" />;
+                return <Plus className="w-3.5 h-3.5 text-olleey-yellow" />;
             case 'youtube':
                 return <Youtube className="w-3.5 h-3.5 text-red-500" />;
             case 'alert':
@@ -42,83 +62,137 @@ export function ActivityFeed({
     const getIconBgColor = (icon: string) => {
         switch (icon) {
             case 'check':
-                return 'bg-green-500/10 border-green-500/20';
+                return 'bg-green-500/10 border-green-500/10';
             case 'upload':
-                return 'bg-blue-500/10 border-blue-500/20';
+                return 'bg-blue-500/10 border-blue-500/10';
             case 'plus':
-                return 'bg-purple-500/10 border-purple-500/20';
+                return 'bg-olleey-yellow/10 border-olleey-yellow/10';
             case 'youtube':
-                return 'bg-red-500/10 border-red-500/20';
+                return 'bg-red-500/10 border-red-500/10';
             case 'alert':
-                return 'bg-yellow-500/10 border-yellow-500/20';
+                return 'bg-yellow-500/10 border-yellow-500/10';
             default:
-                return 'bg-olleey-yellow/10 border-olleey-yellow/20';
+                return 'bg-olleey-yellow/10 border-olleey-yellow/10';
         }
     };
 
     return (
         <div className="w-full">
-            <div className={`${cardClass} border-none rounded-sm p-4 relative overflow-hidden`}>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-olleey-yellow/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none" />
+            <div className={`${cardClass} border-none rounded-none p-6 relative overflow-hidden bg-black/10`}>
+                {/* Visual Flair */}
+                <div className="absolute top-0 right-0 w-48 h-48 bg-olleey-yellow/5 rounded-full -mr-24 -mt-24 blur-[80px] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/5 rounded-full -ml-16 -mb-16 blur-[60px] pointer-events-none" />
 
                 <div className="relative">
+                    <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-white/5 border border-white/10 rounded-none">
+                                <History className="w-4 h-4 text-white/40" />
+                            </div>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
+                                Global Activity Log
+                            </h3>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-[9px] font-black uppercase tracking-widest text-green-500/70">Live</span>
+                        </div>
+                    </div>
+
                     {/* Timeline line */}
-                    <div className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-white/5" />
+                    <div className="absolute left-[19px] top-16 bottom-0 w-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent" />
 
                     {activitiesLoading ? (
-                        <div className="flex justify-center py-12">
-                            <Loader2 className="w-6 h-6 animate-spin text-olleey-yellow opacity-40" />
+                        <div className="flex flex-col items-center justify-center py-20 gap-4">
+                            <Loader2 className="w-8 h-8 animate-spin text-olleey-yellow opacity-40 stroke-[1px]" />
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Polling Feed...</p>
                         </div>
                     ) : activities.length > 0 ? (
-                        <div className="space-y-6">
+                        <motion.div
+                            initial="hidden"
+                            animate="visible"
+                            variants={{
+                                visible: {
+                                    transition: {
+                                        staggerChildren: 0.05
+                                    }
+                                }
+                            }}
+                            className="space-y-8"
+                        >
                             {activities.slice(0, 8).map((activity, index) => (
-                                <div key={activity.id} className="relative flex gap-3 items-start group">
-                                    {/* Icon */}
-                                    <div className={`relative z-10 w-8 h-8 flex items-center justify-center shrink-0 rounded-full border-2 ${getIconBgColor(activity.icon)} backdrop-blur-sm transition-all group-hover:scale-110`}>
-                                        {getIconComponent(activity.icon)}
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className={`flex-1 min-w-0 pb-2 ${index !== activities.length - 1 ? 'border-b border-white/5' : ''}`}>
-                                        <div className="flex items-start justify-between gap-2 mb-1">
-                                            <p className={`text-[8px] ${textClass} font-medium leading-relaxed`}>
-                                                {activity.message}
-                                            </p>
-                                            <span className={`text-[9px] font-medium ${textSecondaryClass} whitespace-nowrap`}>
-                                                {activity.time}
-                                            </span>
+                                <motion.div
+                                    key={activity.id}
+                                    variants={itemVariants}
+                                    className="relative flex gap-5 items-start group"
+                                >
+                                    {/* Icon Container with multi-layered border */}
+                                    <div className="relative shrink-0">
+                                        <div className={`relative z-10 w-10 h-10 flex items-center justify-center rounded-none border border-white/5 ${getIconBgColor(activity.icon)} backdrop-blur-md transition-all group-hover:border-olleey-yellow/50 group-hover:scale-105 duration-500 shadow-xl`}>
+                                            {getIconComponent(activity.icon)}
                                         </div>
-                                        
-                                        {/* Optional: Add detail badge based on type */}
-                                        {activity.type && (
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[8px] font-bold uppercase tracking-wider ${
-                                                activity.type === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                                                activity.type === 'warning' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
-                                                activity.type === 'error' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                                                'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                                            }`}>
-                                                {activity.type}
-                                            </span>
+                                        {index === 0 && (
+                                            <div className="absolute -inset-1 bg-olleey-yellow/5 rounded-none blur-sm animate-pulse pointer-events-none" />
                                         )}
                                     </div>
-                                </div>
+
+                                    {/* Content area */}
+                                    <div className="flex-1 min-w-0 pt-0.5">
+                                        <div className="flex items-baseline justify-between gap-4 mb-2">
+                                            <p className="text-xs font-bold text-white/80 leading-relaxed tracking-tight group-hover:text-white transition-colors">
+                                                {activity.message}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-1.5">
+                                                <Clock className="w-3 h-3 text-white/20" />
+                                                <span className="text-[10px] font-medium text-white/30 lowercase italic">
+                                                    {activity.time}
+                                                </span>
+                                            </div>
+
+                                            {activity.type && (
+                                                <>
+                                                    <div className="w-1 h-1 rounded-full bg-white/10" />
+                                                    <span className={`text-[9px] font-black uppercase tracking-widest ${activity.type === 'success' ? 'text-green-500/60' :
+                                                            activity.type === 'warning' ? 'text-olleey-yellow/60' :
+                                                                activity.type === 'error' ? 'text-red-500/60' :
+                                                                    'text-blue-500/60'
+                                                        }`}>
+                                                        {activity.type}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Hover Arrow */}
+                                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 pt-2 pr-2">
+                                        <ArrowRight className="w-3 h-3 text-olleey-yellow" />
+                                    </div>
+                                </motion.div>
                             ))}
-                        </div>
+                        </motion.div>
                     ) : (
-                        <div className="text-center py-12">
-                            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-white/5 flex items-center justify-center">
-                                <History className={`w-6 h-6 ${textSecondaryClass}`} />
+                        <div className="text-center py-20">
+                            <div className="w-16 h-16 mx-auto mb-6 rounded-none bg-white/[0.02] border border-white/5 flex items-center justify-center opacity-40">
+                                <History className={`w-8 h-8 ${textSecondaryClass} stroke-[1px]`} />
                             </div>
-                            <p className={`text-xs ${textSecondaryClass}`}>No recent activity</p>
-                            <p className={`text-[10px] ${textSecondaryClass} mt-1`}>Your workflow actions will appear here</p>
+                            <p className="text-sm font-normal text-white mb-1 tracking-tight">System event log is empty</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Operational stream offline</p>
                         </div>
                     )}
                 </div>
 
                 {activities.length > 8 && (
-                    <div className="mt-4 pt-4 border-t border-white/5">
-                        <Button variant="ghost" className={`w-full text-[10px] font-bold ${textSecondaryClass} hover:${textClass} hover:bg-white/5 h-8 transition-all`}>
-                            View All Activities
+                    <div className="mt-10 pt-6 border-t border-white/5">
+                        <Button
+                            variant="ghost"
+                            className="w-full h-12 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-none text-[10px] font-black uppercase tracking-[0.2em] text-white/40 hover:text-olleey-yellow transition-all flex items-center justify-center gap-2 group"
+                        >
+                            Open Activity Vault
+                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                         </Button>
                     </div>
                 )}

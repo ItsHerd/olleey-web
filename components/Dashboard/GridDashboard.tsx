@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Zap, ArrowRight, ExternalLink, User, BarChart3, Clock, LayoutGrid, Layers, History, CheckCircle, Settings, Shield } from "lucide-react";
+import { Plus, Zap, ArrowRight, ExternalLink, User, BarChart3, Clock, LayoutGrid, Layers, History, CheckCircle, Settings, Shield, Sparkles, TrendingUp, Target, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatViews } from "@/lib/utils";
 import { QueueAndReview } from "./QueueAndReview";
@@ -87,12 +87,12 @@ export function GridDashboard({
 
     return (
         <div className="w-full h-auto pt-1 pb-20">
-            <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 relative">
+            <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
 
                 {/* --- Row 1: Top Sections --- */}
 
                 {/* 1. Profile Hero Card - Spans 2 cols (Left) */}
-                <div className="col-span-1 md:col-span-2 relative rounded-none overflow-hidden group border border-white/5 shadow-2xl flex flex-col min-h-[400px] bg-black/20">
+                <div className={`col-span-1 md:col-span-2 relative rounded-none overflow-hidden group border ${borderClass} shadow-2xl flex flex-col min-h-[400px] bg-black/20`}>
                     <img
                         src="https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&q=80&w=2000"
                         className="absolute inset-0 w-full h-full object-cover brightness-[0.35] group-hover:scale-105 transition-transform duration-1000"
@@ -103,7 +103,7 @@ export function GridDashboard({
                     <div className="relative flex-1 p-10 flex flex-col justify-between">
                         <div>
                             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-none bg-olleey-yellow/20 backdrop-blur-md border border-olleey-yellow/30 text-[11px] font-black uppercase tracking-widest text-olleey-yellow mb-8 shadow-[0_0_20px_rgba(251,191,36,0.15)]">
-                                <User className="w-4 h-4" /> Professional Tier
+                                <Sparkles className="w-4 h-4" /> Professional Tier
                             </div>
                             <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-normal text-white tracking-tighter mb-4 leading-none">
                                 {userName || "Creator"}
@@ -111,13 +111,19 @@ export function GridDashboard({
 
                             {/* Stats Row */}
                             <div className="flex items-center gap-8 mb-8 pb-8 border-b border-white/5">
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-1">Total Assets</span>
-                                    <span className="text-3xl font-normal text-white">{totalVideos}</span>
+                                <div className="flex flex-col group cursor-default">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <LayoutGrid className="w-3.5 h-3.5 text-white/30 group-hover:text-white/50 transition-colors" />
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 group-hover:text-white/40 transition-colors">Total Assets</span>
+                                    </div>
+                                    <span className="text-3xl font-normal text-white group-hover:text-olleey-yellow transition-colors">{totalVideos}</span>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-olleey-yellow/40 mb-1">Distributions</span>
-                                    <span className="text-3xl font-normal text-olleey-yellow">{totalTranslations}</span>
+                                <div className="flex flex-col group cursor-default">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <TrendingUp className="w-3.5 h-3.5 text-olleey-yellow/40 group-hover:text-olleey-yellow/60 transition-colors" />
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-olleey-yellow/40 group-hover:text-olleey-yellow/60 transition-colors">Distributions</span>
+                                    </div>
+                                    <span className="text-3xl font-normal text-olleey-yellow group-hover:scale-105 transition-transform">{totalTranslations}</span>
                                 </div>
                             </div>
 
@@ -127,25 +133,25 @@ export function GridDashboard({
                                     onClick={onCreateProject}
                                     variant="ghost"
                                     size="sm"
-                                    className="h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
+                                    className={`h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none group`}
                                 >
-                                    <Plus className="w-3.5 h-3.5 mr-2" /> New Project
+                                    <Rocket className="w-3.5 h-3.5 mr-2 group-hover:rotate-12 transition-transform" /> New Project
                                 </Button>
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => router.push('/app?page=Settings')}
-                                    className="h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
+                                    className={`h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none group`}
                                 >
-                                    <Settings className="w-3.5 h-3.5 mr-2" /> Settings
+                                    <Settings className="w-3.5 h-3.5 mr-2 group-hover:rotate-90 transition-transform duration-300" /> Settings
                                 </Button>
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => router.push('/app?page=Guardrails')}
-                                    className="h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
+                                    className={`h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none group`}
                                 >
-                                    <Shield className="w-3.5 h-3.5 mr-2" /> Guardrails
+                                    <Shield className="w-3.5 h-3.5 mr-2 group-hover:scale-110 transition-transform" /> Guardrails
                                 </Button>
                             </div>
                         </div>
@@ -157,7 +163,12 @@ export function GridDashboard({
                 {/* 2. Queue & Review Container */}
                 <div className="col-span-1 md:col-span-2 flex flex-col gap-2">
                     <div className="flex items-center justify-between px-2">
-                        <h3 className={`text-base md:text-lg font-300 ${textClass} tracking-tight`}>Queue & Review</h3>
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-olleey-yellow/10 rounded-sm border border-olleey-yellow/20">
+                                <Clock className="w-4 h-4 text-olleey-yellow" />
+                            </div>
+                            <h3 className={`text-base md:text-lg font-300 ${textClass} tracking-tight`}>Queue & Review</h3>
+                        </div>
                         <div className="flex items-center gap-2">
                             <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 bg-olleey-yellow/10 rounded-none border border-olleey-yellow/20">
                                 <div className="w-1.5 h-1.5 rounded-full bg-olleey-yellow animate-pulse" />
@@ -167,7 +178,7 @@ export function GridDashboard({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => router.push('/app?page=Workflows')}
-                                className="h-7 px-3 text-[9px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
+                                className={`h-7 px-3 text-[9px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none`}
                             >
                                 View All
                             </Button>
@@ -176,27 +187,34 @@ export function GridDashboard({
 
                     <div className={`rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden`}>
                         <div className="overflow-hidden">
-                            {!videosLoading && (videos.length === 0 || !videos.some(v => ["draft", "processing"].includes(getOverallVideoStatus(v.localizations || {})))) ? (
-                                <div className="flex flex-col h-full opacity-30">
-                                    <RowSkeleton />
-                                </div>
-                            ) : videosLoading ? (
-                                <RowSkeleton />
-                            ) : (
-                                <div className="w-full">
-                                    <QueueAndReview
-                                        videosLoading={videosLoading}
-                                        filteredVideos={videos.slice(0, 3)}
-                                        isDark={isDark}
-                                        textClass={textClass}
-                                        textSecondaryClass={textSecondaryClass}
-                                        cardClass="bg-transparent"
-                                        borderClass="border-none"
-                                        getOverallVideoStatus={getOverallVideoStatus}
-                                        onNavigate={onNavigate}
-                                    />
-                                </div>
-                            )}
+                            {(() => {
+                                const queueVideos = videos.filter(v => ["draft", "processing"].includes(getOverallVideoStatus(v.localizations || {})));
+                                if (!videosLoading && queueVideos.length === 0) {
+                                    return (
+                                        <div className="flex flex-col h-full opacity-30">
+                                            <RowSkeleton />
+                                        </div>
+                                    );
+                                }
+                                if (videosLoading) {
+                                    return <RowSkeleton />;
+                                }
+                                return (
+                                    <div className="w-full">
+                                        <QueueAndReview
+                                            videosLoading={videosLoading}
+                                            filteredVideos={queueVideos.slice(0, 3)}
+                                            isDark={isDark}
+                                            textClass={textClass}
+                                            textSecondaryClass={textSecondaryClass}
+                                            cardClass="bg-transparent"
+                                            borderClass="border-none"
+                                            getOverallVideoStatus={getOverallVideoStatus}
+                                            onNavigate={onNavigate}
+                                        />
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>
@@ -206,12 +224,17 @@ export function GridDashboard({
                 {/* 3. Released Media Container */}
                 <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-2">
                     <div className="flex items-center justify-between px-2">
-                        <h3 className={`text-base md:text-lg font-300 ${textClass} tracking-tight`}>Released Media</h3>
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-green-500/10 rounded-sm border border-green-500/20">
+                                <Layers className="w-4 h-4 text-green-500" />
+                            </div>
+                            <h3 className={`text-base md:text-lg font-300 ${textClass} tracking-tight`}>Released Media</h3>
+                        </div>
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => router.push('/app?page=Channels')}
-                            className="h-7 px-3 text-[9px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
+                            onClick={() => router.push('/app?page=All Media')}
+                            className={`h-7 px-3 text-[9px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none`}
                         >
                             View All
                         </Button>
@@ -219,27 +242,38 @@ export function GridDashboard({
 
                     <div className={`rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden`}>
                         <div className="overflow-hidden">
-                            {!videosLoading && (videos.length === 0 || !videos.some(v => getOverallVideoStatus(v.localizations || {}) === "live")) ? (
-                                <div className="flex flex-col h-full opacity-25 p-8">
-                                    <p className={`text-xs ${textSecondaryClass} text-center`}>No released media yet</p>
-                                </div>
-                            ) : videosLoading ? (
-                                <div className="p-4">
-                                    <MediaGridSkeleton />
-                                </div>
-                            ) : (
-                                <div className="w-full">
-                                    <ReleasedMedia
-                                        filteredVideos={videos.slice(0, 4)}
-                                        textClass={textClass}
-                                        textSecondaryClass={textSecondaryClass}
-                                        cardClass="bg-transparent"
-                                        borderClass="border-none"
-                                        getOverallVideoStatus={getOverallVideoStatus}
-                                        onNavigate={onNavigate}
-                                    />
-                                </div>
-                            )}
+                            {(() => {
+                                const releasedVideos = videos.filter(v =>
+                                    Object.values(v.localizations || {}).some((l: any) => l.status === "live")
+                                );
+                                if (!videosLoading && releasedVideos.length === 0) {
+                                    return (
+                                        <div className="flex flex-col h-full opacity-25 p-8">
+                                            <p className={`text-xs ${textSecondaryClass} text-center`}>No released media yet</p>
+                                        </div>
+                                    );
+                                }
+                                if (videosLoading) {
+                                    return (
+                                        <div className="p-4">
+                                            <MediaGridSkeleton />
+                                        </div>
+                                    );
+                                }
+                                return (
+                                    <div className="w-full">
+                                        <ReleasedMedia
+                                            filteredVideos={releasedVideos.slice(0, 8)}
+                                            textClass={textClass}
+                                            textSecondaryClass={textSecondaryClass}
+                                            cardClass="bg-transparent"
+                                            borderClass="border-none"
+                                            getOverallVideoStatus={getOverallVideoStatus}
+                                            onNavigate={onNavigate}
+                                        />
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>
@@ -247,12 +281,17 @@ export function GridDashboard({
                 {/* 4. Activity Feed Container */}
                 <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-2">
                     <div className="flex items-center justify-between px-2">
-                        <h3 className={`text-base md:text-lg font-300 ${textClass} tracking-tight`}>Activity Feed</h3>
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-blue-500/10 rounded-sm border border-blue-500/20">
+                                <History className="w-4 h-4 text-blue-500" />
+                            </div>
+                            <h3 className={`text-base md:text-lg font-300 ${textClass} tracking-tight`}>Activity Feed</h3>
+                        </div>
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => router.push('/app?page=Workflows')}
-                            className="h-7 px-3 text-[9px] text-white font-black uppercase tracking-widest bg-white/5 border border-white/20 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none"
+                            className={`h-7 px-3 text-[9px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none`}
                         >
                             View All
                         </Button>

@@ -504,6 +504,7 @@ export interface Video {
   status?: string;
   video_type?: "original" | "translated";
   source_video_id?: string | null;
+  language_code?: string;
   translated_languages?: string[];
   localizations?: Record<string, LocalizationInfo>;
 }

@@ -166,6 +166,10 @@ export function QueueAndReview({
                                                         <Button
                                                             variant={isReview ? "default" : "ghost"}
                                                             size="sm"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onNavigate(video.video_id);
+                                                            }}
                                                             className={`h-7 px-2.5 text-[9px] font-bold transition-all ${isReview
                                                                 ? 'bg-olleey-yellow text-black hover:bg-olleey-yellow/90 shadow-lg shadow-olleey-yellow/20'
                                                                 : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}

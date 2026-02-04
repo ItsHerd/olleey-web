@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle, Radio } from "lucide-react";
+import { CheckCircle, Radio, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { formatViews, getRelativeTime } from "@/lib/utils";
@@ -25,24 +25,33 @@ export function ReleasedMedia({
     getOverallVideoStatus,
     onNavigate
 }: ReleasedMediaProps) {
-    const liveVideos = filteredVideos.filter(v => {
-        const status = getOverallVideoStatus(v.localizations || {});
-        console.log('[ReleasedMedia]', v.title, 'status:', status, 'localizations:', v.localizations);
-        return status === "live";
-    });
+    const liveVideos = filteredVideos.filter(v =>
+        Object.values(v.localizations || {}).some((l: any) => l.status === "live")
+    );
 
     return (
         <section>
             {liveVideos.length === 0 ? (
-                <div className={`${cardClass} border border-dashed ${borderClass} rounded-none p-12 text-center shadow-inner`}>
-                    <p className={`text-sm font-medium ${textSecondaryClass}`}>Your completed productions will be showcased here.</p>
+                <div className={`${cardClass} border border-white/5 rounded-none p-16 text-center shadow-2xl relative overflow-hidden bg-black/20 group`}>
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-olleey-yellow/5 rounded-full blur-[60px] pointer-events-none" />
+
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="w-16 h-16 rounded-none bg-white/[0.02] border border-white/10 flex items-center justify-center mb-6 shadow-xl group-hover:border-olleey-yellow/30 transition-colors duration-500">
+                            <Layers className="w-8 h-8 text-white/20 stroke-[1px]" />
+                        </div>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-2">Production Archive Empty</h4>
+                        <p className="text-xs font-light text-white/20 max-w-[200px] leading-relaxed">
+                            Once your translations are published, they will appear in this operational hub.
+                        </p>
+                    </div>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {liveVideos.slice(0, 8).map((video) => {
                         const liveLangs = Object.keys(video.localizations || {})
                             .filter(l => video.localizations?.[l].status === 'live');
-                        
+
                         return (
                             <div
                                 key={video.video_id}

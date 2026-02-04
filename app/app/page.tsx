@@ -16,6 +16,7 @@ import SettingsPage from "../SettingsPage";
 import UsagePage from "../UsagePage";
 import SupportPage from "../SupportPage";
 import ManualUploadPage from "../ManualUploadPage";
+import AllMediaPage from "../AllMediaPage";
 import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
@@ -244,6 +245,8 @@ function AppContent() {
                 return <SupportPage />;
             case "Manual Upload":
                 return <ManualUploadPage />;
+            case "All Media":
+                return <AllMediaPage />;
             default:
                 return <DashboardPage />;
         }
