@@ -7,7 +7,6 @@ import ReactFlow, {
     Edge,
     Background,
     BackgroundVariant,
-    Controls,
     MarkerType,
     Position,
     Handle,
@@ -19,7 +18,6 @@ import {
     FileText,
     Video,
     Image as ImageIcon,
-    Mic,
     Sparkles,
     ThumbsUp,
     ThumbsDown,
@@ -102,56 +100,41 @@ const WorkflowStageNode = ({ data }: any) => {
     const Icon = data.icon;
 
     return (
-        <div className={`${isDark ? 'bg-[#1a1c20] border-gray-800' : 'bg-white border-gray-200'} border rounded-2xl overflow-hidden shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] w-[200px] transition-all hover:shadow-[0_8px_30px_-10px_rgba(0,0,0,0.15)] group relative`}>
+        <div className={`${isDark ? 'bg-[#1a1c20] border-gray-800' : 'bg-white border-gray-200'} border rounded-xl overflow-hidden shadow-md w-[180px] transition-all hover:shadow-lg group relative`}>
             <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-blue-500 !border-none !-translate-x-1" />
             <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-blue-500 !border-none !translate-x-1" />
 
             {/* Inner Content */}
-            <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                    <span className={`p-1 px-2.5 rounded-lg text-[9px] font-bold uppercase tracking-widest ${colors.badge}`}>
+            <div className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                    <span className={`p-1 px-2 rounded-md text-[8px] font-bold uppercase tracking-wide ${colors.badge}`}>
                         {data.category || 'Workflow'}
                     </span>
                     <div className={`w-1.5 h-1.5 rounded-full ${colors.pulse}`} />
                 </div>
 
-                <div className="flex items-center gap-2 mb-1">
-                    <div className={`w-6 h-6 rounded flex items-center justify-center ${colors.badge}`}>
-                        <Icon className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-5 h-5 rounded flex items-center justify-center ${colors.badge}`}>
+                        <Icon className="w-3 h-3" />
                     </div>
-                    <h4 className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'} truncate`}>{data.label}</h4>
+                    <h4 className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'} truncate flex-1`}>{data.label}</h4>
                 </div>
 
-                {data.oneLiner && (
-                    <p className={`text-[9px] ${isDark ? 'text-gray-400 border-gray-800' : 'text-gray-500 border-blue-100'} mb-2 font-medium leading-relaxed italic border-l-2 pl-2`}>
-                        {data.oneLiner}
-                    </p>
-                )}
-
-                <div className="aspect-[2/1] relative bg-gray-100 dark:bg-black/20 rounded-xl overflow-hidden mb-2 flex items-center justify-center border border-gray-100 dark:border-gray-800">
-                    {data.imageUrl ? (
+                {data.imageUrl && (
+                    <div className="aspect-[2/1] relative bg-gray-100 dark:bg-black/20 rounded-lg overflow-hidden flex items-center justify-center border border-gray-100 dark:border-gray-800">
                         <img src={data.imageUrl} alt={data.label} className="w-full h-full object-cover" />
-                    ) : (
-                        <span className="text-2xl">{data.emoji || '⚙️'}</span>
-                    )}
-                </div>
-
-                {data.subtitle && (
-                    <p className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-tight mb-1`}>
-                        {data.subtitle}
-                    </p>
+                    </div>
                 )}
             </div>
 
             {/* Footer / Status */}
-            <div className={`${isDark ? 'bg-black/20 border-gray-800/50' : 'bg-gray-50/50 border-gray-100'} p-2 px-3 flex justify-between items-center border-t group-hover:bg-opacity-80 transition-colors`}>
-                <span className={`text-[8px] font-bold uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'} tracking-tighter`}>{data.actionLabel || 'STATUS'}</span>
-                <span className={`text-[9px] font-bold uppercase ${colors.text}`}>{data.status || 'Ready'}</span>
+            <div className={`${isDark ? 'bg-black/20 border-gray-800/50' : 'bg-gray-50/50 border-gray-100'} p-2 flex justify-center items-center border-t`}>
+                <span className={`text-[9px] font-bold uppercase ${colors.text}`}>{data.status || 'Pending'}</span>
             </div>
 
             {/* Completion Checkmark Overlay */}
             {data.status === 'completed' && (
-                <div className="absolute top-2 right-2 -mr-1 -mt-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 pointer-events-none">
                     <div className="bg-emerald-500 rounded-full p-0.5 shadow-lg">
                         <CheckCircle className="w-3 h-3 text-white" />
                     </div>
@@ -241,30 +224,23 @@ export function WorkflowModal({
                 position: { x: 0, y: 150 },
                 data: {
                     icon: FileText,
-                    label: 'Metadata Extraction',
+                    label: 'Source Video',
                     category: 'INPUT',
-                    oneLiner: 'Automatic ingestion of source data...',
-                    emoji: '📑',
                     imageUrl: videoThumbnail,
-                    subtitle: 'Extracting title & description',
                     status: workflowState.metadata_extraction?.status || 'pending',
-                    actionLabel: 'EXTRACT',
                 },
             },
             {
                 id: 'translation',
                 type: 'workflowStage',
-                position: { x: 300, y: 0 },
+                position: { x: 250, y: 0 },
                 data: {
                     icon: Globe,
-                    label: 'AI Translation',
+                    label: 'Translation',
                     category: 'PROCESS',
-                    oneLiner: 'Context-aware native rewrite...',
-                    emoji: '🌍',
-                    subtitle: 'Multi-lingual scripts',
+                    imageUrl: '/workflow-translation.png',
                     status: translationStatus,
                     showActions: translationStatus === 'review',
-                    actionLabel: 'LOCALIZE',
                     onApprove: () => onApprove?.('all'),
                     onReject: () => onReject?.('all'),
                 },
@@ -272,47 +248,37 @@ export function WorkflowModal({
             {
                 id: 'assets',
                 type: 'workflowStage',
-                position: { x: 300, y: 300 },
+                position: { x: 250, y: 300 },
                 data: {
                     icon: ImageIcon,
-                    label: 'Visual Assets',
+                    label: 'Assets',
                     category: 'ASSET',
-                    oneLiner: 'High-impact localized media...',
-                    emoji: '🎨',
-                    subtitle: 'Thumbnails & static media',
+                    imageUrl: '/workflow-assets.png',
                     status: assetsStatus,
-                    actionLabel: 'GENERATE',
                 },
             },
             {
                 id: 'dubbing',
                 type: 'workflowStage',
-                position: { x: 600, y: 150 },
+                position: { x: 500, y: 150 },
                 data: {
                     icon: Video,
-                    label: 'AI Dubbing',
+                    label: 'Dubbing',
                     category: 'ENGINE',
-                    oneLiner: 'Neural voice & lip-sync...',
-                    emoji: '🎙️',
-                    subtitle: 'Voice cloning & lip-sync',
+                    imageUrl: '/workflow-dubbing.png',
                     status: dubbingStatus,
-                    actionLabel: 'RENDER',
                 },
             },
             {
                 id: 'distribution',
                 type: 'workflowStage',
-                position: { x: 900, y: 150 },
+                position: { x: 750, y: 150 },
                 data: {
                     icon: Sparkles,
-                    label: 'Global Release',
+                    label: 'Publishing',
                     category: 'OUTPUT',
-                    oneLiner: 'Multichannel worldwide blast...',
-                    emoji: '🚀',
                     imageUrl: videoThumbnail,
-                    subtitle: 'Ready for publishing',
                     status: jobStatus === 'completed' ? 'completed' : 'pending',
-                    actionLabel: 'PUBLISH',
                 },
             },
         ];
@@ -366,7 +332,7 @@ export function WorkflowModal({
         ];
 
         return { nodes: flowNodes, edges: flowEdges };
-    }, [workflowState, translationStatus, assetsStatus, dubbingStatus, jobStatus, onApprove, onReject]);
+    }, [workflowState, translationStatus, assetsStatus, dubbingStatus, jobStatus, onApprove, onReject, videoThumbnail]);
 
     if (!isOpen) return null;
 
@@ -380,8 +346,8 @@ export function WorkflowModal({
                             <Sparkles className="w-5 h-5 text-olleey-yellow" />
                         </div>
                         <div>
-                            <h3 className={`text-lg font-bold ${textClass}`}>Job Workflow Execution</h3>
-                            <p className={`text-xs ${textSecondaryClass}`}>Job ID: {jobId}</p>
+                            <h3 className={`text-lg font-bold ${textClass}`}>Workflow Pipeline</h3>
+                            <p className={`text-xs ${textSecondaryClass}`}>{targetLanguages.length} language{targetLanguages.length !== 1 ? 's' : ''}</p>
                         </div>
                     </div>
                     <button
@@ -395,18 +361,16 @@ export function WorkflowModal({
                 {/* Sub-Header / Context */}
                 {(channelName || videoTitle) && (
                     <div className={`px-6 py-3 ${bgClass} border-b ${borderClass} flex items-center gap-6 text-sm flex-shrink-0`}>
-                        {channelName && (
-                            <div className="flex items-center gap-2">
-                                <Youtube className={`w-4 h-4 ${textSecondaryClass}`} />
-                                <span className={textSecondaryClass}>Channel:</span>
-                                <span className={`font-medium ${textClass}`}>{channelName}</span>
+                        {videoTitle && (
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <Play className={`w-4 h-4 ${textSecondaryClass} flex-shrink-0`} />
+                                <span className={`font-medium ${textClass} truncate`}>{videoTitle}</span>
                             </div>
                         )}
-                        {videoTitle && (
-                            <div className="flex items-center gap-2 max-w-md">
-                                <FileText className={`w-4 h-4 ${textSecondaryClass}`} />
-                                <span className={textSecondaryClass}>Video:</span>
-                                <span className={`font-medium ${textClass} truncate`}>{videoTitle}</span>
+                        {channelName && (
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <Youtube className={`w-4 h-4 ${textSecondaryClass}`} />
+                                <span className={`${textSecondaryClass}`}>{channelName}</span>
                             </div>
                         )}
                     </div>
@@ -430,34 +394,28 @@ export function WorkflowModal({
                             maxZoom={2}
                         >
                             <Background color={isDark ? "#1a1c20" : "#f1f5f9"} gap={20} variant={BackgroundVariant.Dots} />
-                            <Controls className={isDark ? "bg-gray-800 border-gray-700 fill-white" : ""} />
                         </ReactFlow>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className={`flex-shrink-0 ${cardClass} border-t ${borderClass} px-6 py-4 flex items-center justify-between`}>
-                    <p className={`text-sm ${textSecondaryClass}`}>
-                        Pipeline visualization • {targetLanguages.length} target language{targetLanguages.length !== 1 ? 's' : ''}
-                    </p>
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="outline"
-                            className={`gap-2 ${isDark ? 'border-gray-700 hover:bg-gray-800 text-white' : ''}`}
-                            onClick={onRetry}
-                        >
-                            <RefreshCw className="w-4 h-4" />
-                            Retry Job
-                        </Button>
-                        <Button
-                            className="gap-2 bg-olleey-yellow text-black hover:bg-yellow-500"
-                            onClick={onPreview}
-                            disabled={jobStatus !== 'completed' && jobStatus !== 'waiting_approval'}
-                        >
-                            <Play className="w-4 h-4 fill-current" />
-                            Preview
-                        </Button>
-                    </div>
+                <div className={`flex-shrink-0 ${cardClass} border-t ${borderClass} px-6 py-4 flex items-center justify-end gap-3`}>
+                    <Button
+                        variant="outline"
+                        className={`gap-2 ${isDark ? 'border-gray-700 hover:bg-gray-800 text-white' : ''}`}
+                        onClick={onRetry}
+                    >
+                        <RefreshCw className="w-4 h-4" />
+                        Retry
+                    </Button>
+                    <Button
+                        className="gap-2 bg-olleey-yellow text-black hover:bg-yellow-500"
+                        onClick={onPreview}
+                        disabled={jobStatus !== 'completed' && jobStatus !== 'waiting_approval'}
+                    >
+                        <Play className="w-4 h-4 fill-current" />
+                        Preview Result
+                    </Button>
                 </div>
             </div>
         </div>
