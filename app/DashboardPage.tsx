@@ -20,8 +20,8 @@ import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
 import { QueueAndReview } from "@/components/Dashboard/QueueAndReview";
 import { ReleasedMedia } from "@/components/Dashboard/ReleasedMedia";
 import { ActivityFeed } from "@/components/Dashboard/ActivityFeed";
-import { QuickStats } from "@/components/Dashboard/QuickStats";
 import { GridDashboard } from "@/components/Dashboard/GridDashboard";
+import { DashboardSkeleton } from "@/components/Dashboard/DashboardSkeleton";
 
 interface VideoWithLocalizations extends Video {
   estimated_credits?: number;
@@ -63,12 +63,6 @@ export default function DashboardPage() {
   const { dashboard, loading: dashboardLoading, refetch: refetchDashboard } = useDashboard();
   const { toast } = useToast();
 
-  const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
-    selectedChannelId
-      ? { channel_id: selectedChannelId, project_id: selectedProject?.id }
-      : { project_id: selectedProject?.id }
-  );
-
   // Theme-aware classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
   const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
@@ -77,80 +71,90 @@ export default function DashboardPage() {
   const borderClass = theme === "light" ? "border-gray-200" : "border-white/10";
   const isDark = theme === "dark";
 
-  // Data Fetching Hooks
+  // 1. Coordinated Channel Synchronization
   useEffect(() => {
-    const loadChannelGraph = async () => {
+    if (!dashboard || !selectedProject) return;
+
+    const urlChannelId = searchParams.get("channel_id");
+
+    // Prioritize URL, then Master Connection, then first available connection
+    if (urlChannelId) {
+      if (urlChannelId !== selectedChannelId) {
+        setSelectedChannelId(urlChannelId);
+      }
+    } else {
+      const master = dashboard.youtube_connections?.find(c => c.connection_id === selectedProject.master_connection_id);
+      const primary = dashboard.youtube_connections?.find(c => c.is_primary);
+      const fallback = dashboard.youtube_connections?.[0];
+
+      const targetId = master?.youtube_channel_id || primary?.youtube_channel_id || fallback?.youtube_channel_id || "";
+
+      if (targetId && targetId !== selectedChannelId) {
+        setSelectedChannelId(targetId);
+      }
+    }
+  }, [dashboard, selectedProject?.id, searchParams]);
+
+  const canFetchContent = !!dashboard && !!selectedProject && !!selectedChannelId;
+
+  // 2. Coordinated Background Fetches (Graph & Activity)
+  useEffect(() => {
+    if (!canFetchContent) return;
+
+    const loadCoordinatedData = async () => {
       try {
+        // Load Activity
+        setActivitiesLoading(true);
+        const activityData = await dashboardAPI.getActivity(selectedProject.id);
+        setActivities(activityData);
+
+        // Load Graph
         const graph = await youtubeAPI.getChannelGraph();
         setChannelGraph(graph.master_nodes || []);
       } catch (error) {
-        logger.error("DashboardPage", "Failed to load channel graph", error);
-      }
-    };
-    loadChannelGraph();
-  }, []);
-
-  useEffect(() => {
-    const fetchActivities = async () => {
-      try {
-        setActivitiesLoading(true);
-        const data = await dashboardAPI.getActivity(selectedProject?.id);
-        setActivities(data);
-      } catch (err) {
-        logger.error("DashboardPage", "Failed to fetch activities", err);
+        logger.error("DashboardPage", "Coordinated fetch failed", error);
       } finally {
         setActivitiesLoading(false);
       }
     };
 
-    if (dashboard) {
-      fetchActivities();
-    }
-  }, [dashboard, selectedProject?.id]);
+    loadCoordinatedData();
+  }, [canFetchContent, selectedProject?.id]);
+
+  const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
+    selectedChannelId
+      ? { channel_id: selectedChannelId, project_id: selectedProject?.id }
+      : { project_id: selectedProject?.id },
+    { enabled: canFetchContent }
+  );
 
   useEffect(() => {
-    if (selectedProject && dashboard?.youtube_connections) {
-      const master = dashboard.youtube_connections.find(c => c.connection_id === selectedProject.master_connection_id);
-      if (master) {
-        setSelectedChannelId(master.youtube_channel_id);
-      } else if (dashboard.youtube_connections.length > 0) {
-        setSelectedChannelId(dashboard.youtube_connections[0].youtube_channel_id);
+    const handleRefresh = async () => {
+      console.log("[Dashboard] Coordinated refresh initiated");
+      try {
+        // Refetch everything in parallel
+        await Promise.all([
+          refetchDashboard(),
+          refetchVideos(),
+          (async () => {
+            const graph = await youtubeAPI.getChannelGraph();
+            setChannelGraph(graph.master_nodes || []);
+          })(),
+          (async () => {
+            const activityData = await dashboardAPI.getActivity(selectedProject?.id);
+            setActivities(activityData);
+          })()
+        ]);
+        toast("Dashboard Synchronized", "success");
+      } catch (err) {
+        logger.error("DashboardPage", "Refresh failed", err);
+        toast("Sync partial failure", "error");
       }
-    }
-  }, [selectedProject?.id, dashboard?.youtube_connections]);
-
-  useEffect(() => {
-    if (dashboard?.youtube_connections && dashboard.youtube_connections.length > 0) {
-      const urlChannelId = searchParams.get("channel_id");
-      if (urlChannelId && urlChannelId !== selectedChannelId) {
-        setSelectedChannelId(urlChannelId);
-      } else if (!selectedChannelId) {
-        const primaryChannel = dashboard.youtube_connections.find(c => c.is_primary);
-        const defaultChannel = primaryChannel || dashboard.youtube_connections[0];
-        setSelectedChannelId(defaultChannel.youtube_channel_id);
-      }
-    }
-  }, [dashboard?.youtube_connections?.length, searchParams]);
-
-  useEffect(() => {
-    const handleRefresh = () => {
-      refetchDashboard();
-      refetchVideos();
-      // Also reload channel graph
-      const loadChannelGraph = async () => {
-        try {
-          const graph = await youtubeAPI.getChannelGraph();
-          setChannelGraph(graph.master_nodes || []);
-        } catch (error) {
-          logger.error("DashboardPage", "Failed to load channel graph", error);
-        }
-      };
-      loadChannelGraph();
     };
 
     window.addEventListener('olleey-refresh', handleRefresh);
     return () => window.removeEventListener('olleey-refresh', handleRefresh);
-  }, [refetchDashboard, refetchVideos]);
+  }, [refetchDashboard, refetchVideos, selectedProject?.id]);
 
 
   const handleApproveQuickCheck = async () => {
@@ -324,95 +328,86 @@ export default function DashboardPage() {
     return filtered;
   }, [videosWithLocalizations, selectedChannelId]);
 
+  const isInitialLoading = dashboardLoading || (canFetchContent && (videosLoading || (activitiesLoading && activities.length === 0)));
+
   return (
-    <div className={`w-full h-full ${bgClass} flex flex-col pl-3 pr-6 pb-4`}>
+    <div className={`w-full h-full ${bgClass} flex flex-col pr-3`}>
       <SEO
         title="Dashboard | Olleey"
         description="Manage your global content production, monitor translation jobs, and distribute to international channels from your creative command center."
       />
 
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="w-full flex-1 flex flex-col px-0">
-          <DashboardHeader
-            textClass={textClass}
-            textSecondaryClass={textSecondaryClass}
-            isDark={isDark}
-            userName={dashboard?.name}
-            videosLoading={videosLoading}
-            showManualProcessView={false}
-            refetchVideos={refetchVideos}
-            setShowManualProcessView={() => {
-              router.push("/app?page=Manual Upload");
-            }}
-            totalVideos={filteredVideos.length}
-            totalTranslations={filteredVideos.reduce((acc, video) => {
-              const localizations = video.localizations || {};
-              return acc + Object.values(localizations).filter(l => l.status === "live").length;
-            }, 0)}
-          />
-          <GridDashboard
-            userName={dashboard?.name || "Creator"}
-            userEmail={dashboard?.email || "creator@olleey.com"}
-            projects={[]} // Replace with actual projects if available
-            selectedProject={selectedProject}
-            videos={filteredVideos}
-            videosLoading={videosLoading}
-            activities={activities}
-            activitiesLoading={activitiesLoading}
-            getOverallVideoStatus={getOverallVideoStatus}
-            isDark={isDark}
-            textClass={textClass}
-            textSecondaryClass={textSecondaryClass}
-            cardClass={cardClass}
-            borderClass={borderClass}
-            onNavigate={(id) => {
-              const video = filteredVideos.find(v => v.video_id === id);
-              if (!video) {
-                console.log("[Dashboard] Video not found:", id);
-                return;
-              }
+      <DashboardHeader
+        textClass={textClass}
+        textSecondaryClass={textSecondaryClass}
+        isDark={isDark}
+        videosLoading={videosLoading}
+        showManualProcessView={false}
+        refetchVideos={refetchVideos}
+        setShowManualProcessView={() => router.push("/app?page=Manual Upload")}
+        totalVideos={filteredVideos.length}
+        totalTranslations={filteredVideos.reduce((acc, video) => {
+          const localizations = video.localizations || {};
+          return acc + Object.values(localizations).filter(l => l.status === "live").length;
+        }, 0)}
+        userName={dashboard?.name}
+      />
 
-              const status = getOverallVideoStatus(video.localizations || {});
-              console.log("[Dashboard] Navigate to video:", id, "status:", status, "localizations:", video.localizations);
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+        <div className="w-full">
+          {isInitialLoading ? (
+            <DashboardSkeleton borderClass={borderClass} cardClass={cardClass} />
+          ) : (
+            <>
+              <GridDashboard
+                userName={dashboard?.name || "Creator"}
+                userEmail={dashboard?.email || "creator@olleey.com"}
+                projects={[]}
+                selectedProject={selectedProject}
+                videos={filteredVideos}
+                videosLoading={videosLoading}
+                activities={activities}
+                activitiesLoading={activitiesLoading}
+                getOverallVideoStatus={getOverallVideoStatus}
+                isDark={isDark}
+                textClass={textClass}
+                textSecondaryClass={textSecondaryClass}
+                cardClass={cardClass}
+                borderClass={borderClass}
+                onNavigate={(id) => {
+                  const video = filteredVideos.find(v => v.video_id === id);
+                  if (!video) return;
 
-              if (status === "draft") {
-                // Find the first language that needs review
-                const langCode = Object.keys(video.localizations || {}).find(
-                  l => video.localizations![l].status === "draft"
-                );
-                const loc = video.localizations?.[langCode || ""];
-                const jobId = loc?.job_id;
+                  const status = getOverallVideoStatus(video.localizations || {});
+                  if (status === "draft") {
+                    const langCode = Object.keys(video.localizations || {}).find(
+                      l => video.localizations![l].status === "draft"
+                    );
+                    const loc = video.localizations?.[langCode || ""];
+                    const jobId = loc?.job_id;
 
-                console.log("[Dashboard] Opening review for lang:", langCode, "jobId:", jobId);
-
-                // Open the review modal even if jobId is missing (will show error gracefully)
-                const reviewJobId = jobId || id; // Fallback to video_id if no job_id
-
-                // Use sample videos for demo - Big Buck Bunny is public domain
-                const sampleOriginal = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-                const sampleDubbed = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4";
-
-                setQuickCheckState({
-                  isOpen: true,
-                  videoId: reviewJobId,
-                  languageCode: langCode || null,
-                  originalVideoUrl: (video as any).video_url || sampleOriginal,
-                  dubbedVideoUrl: loc?.video_url || sampleDubbed,
-                  videoTitle: video.title,
-                  videoDescription: (video as any).description || `Reviewing ${LANGUAGE_OPTIONS.find(l => l.code === (langCode || ""))?.name || "Target"} production of "${video.title}"`
-                });
-              } else {
-                // Navigate to workflows page
-                router.push("/app?page=Workflows");
-              }
-            }}
-            onCreateProject={() => router.push("/app?page=Manual Upload")}
-            totalVideos={filteredVideos.length}
-            totalTranslations={filteredVideos.reduce((acc, video) => {
-              const localizations = video.localizations || {};
-              return acc + Object.values(localizations).filter(l => l.status === "live").length;
-            }, 0)}
-          />
+                    setQuickCheckState({
+                      isOpen: true,
+                      videoId: jobId || id,
+                      languageCode: langCode || null,
+                      originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                      dubbedVideoUrl: loc?.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                      videoTitle: video.title,
+                      videoDescription: (video as any).description || `Reviewing production of "${video.title}"`
+                    });
+                  } else {
+                    router.push("/app?page=Workflows");
+                  }
+                }}
+                onCreateProject={() => router.push("/app?page=Manual Upload")}
+                totalVideos={filteredVideos.length}
+                totalTranslations={filteredVideos.reduce((acc, video) => {
+                  const localizations = video.localizations || {};
+                  return acc + Object.values(localizations).filter(l => l.status === "live").length;
+                }, 0)}
+              />
+            </>
+          )}
         </div>
       </div>
 

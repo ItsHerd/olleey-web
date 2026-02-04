@@ -86,7 +86,7 @@ export function GridDashboard({
     );
 
     return (
-        <div className="w-full h-auto pt-1 pb-20">
+        <div className="w-full h-auto pb-20">
             <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
 
                 {/* --- Row 1: Top Sections --- */}

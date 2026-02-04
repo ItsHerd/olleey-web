@@ -39,7 +39,8 @@ function clearExpiredCache() {
   }
 }
 
-export function useVideos(params?: { page?: number; page_size?: number; channel_id?: string; project_id?: string }) {
+export function useVideos(params?: { page?: number; page_size?: number; channel_id?: string; project_id?: string }, options: { enabled?: boolean } = { enabled: true }) {
+  const { enabled = true } = options;
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +54,8 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
   }, [params?.page, params?.page_size, params?.channel_id, params?.project_id]);
 
   useEffect(() => {
+    if (!enabled) return;
+
     const loadVideos = async (forceRefresh: boolean = false) => {
       const currentParams = paramsRef.current;
       const cacheKey = getCacheKey(currentParams);
