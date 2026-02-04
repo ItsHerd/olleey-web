@@ -353,8 +353,8 @@ export function JobsTable({ jobs, onViewWorkflow, projectId }: JobsTableProps) {
     };
 
     return (
-        <div className={`${cardClass} border-y ${borderClass} shadow-sm overflow-hidden`}>
-            <Table>
+        <div className={`${cardClass} border-y ${borderClass} shadow-sm overflow-x-auto custom-scrollbar`}>
+            <Table className="min-w-[800px]">
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id} className={`hover:bg-transparent border-b ${borderClass}`}>

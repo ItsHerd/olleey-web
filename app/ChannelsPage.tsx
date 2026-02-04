@@ -366,8 +366,8 @@ export default function ChannelsPage() {
 
             {/* Table */}
             <div className={`${cardClass} border ${borderClass} rounded-2xl overflow-hidden shadow-sm`}>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left border-collapse min-w-[1000px]">
                   <thead>
                     <tr className={`${isDark ? 'bg-white/5' : 'bg-gray-50'} border-b ${borderClass}`}>
                       <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Channel</th>

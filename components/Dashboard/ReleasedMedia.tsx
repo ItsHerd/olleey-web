@@ -25,67 +25,67 @@ export function ReleasedMedia({
     getOverallVideoStatus,
     onNavigate
 }: ReleasedMediaProps) {
-    const liveVideos = filteredVideos.filter(v =>
-        getOverallVideoStatus(v.localizations || {}) === "live"
-    );
+    const liveVideos = filteredVideos.filter(v => {
+        const status = getOverallVideoStatus(v.localizations || {});
+        console.log('[ReleasedMedia]', v.title, 'status:', status, 'localizations:', v.localizations);
+        return status === "live";
+    });
 
     return (
         <section>
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-green-500/10 rounded-none shadow-sm border border-green-500/20">
-                        <CheckCircle className="w-6 h-6 text-green-500" />
-                    </div>
-                    <div>
-                        <h2 className={`text-2xl font-300 ${textClass} tracking-tight`}>Released Media</h2>
-                        <p className={`text-[11px] ${textSecondaryClass} font-medium`}>Recently published global distribution</p>
-                    </div>
-                </div>
-                <Button variant="ghost" size="sm" className={`h-10 px-6 text-[11px] font-black uppercase tracking-widest ${textSecondaryClass} hover:${textClass} hover:bg-white/5`}>
-                    View All Media
-                </Button>
-            </div>
-
             {liveVideos.length === 0 ? (
-                <div className={`${cardClass} border border-dashed ${borderClass} rounded-none p-16 text-center shadow-inner`}>
+                <div className={`${cardClass} border border-dashed ${borderClass} rounded-none p-12 text-center shadow-inner`}>
                     <p className={`text-sm font-medium ${textSecondaryClass}`}>Your completed productions will be showcased here.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-                    {liveVideos.slice(0, 8).map((video) => (
-                        <div
-                            key={video.video_id}
-                            onClick={() => onNavigate(video.video_id)}
-                            className={`${cardClass} border ${borderClass} rounded-none p-5 flex flex-col gap-4 cursor-pointer hover:border-olleey-yellow/40 transition-all hover:translate-y-[-4px] hover:shadow-2xl hover:shadow-olleey-yellow/5 group relative overflow-hidden`}
-                        >
-                            <div className="w-full aspect-[9/14] rounded-none bg-gray-900 shrink-0 overflow-hidden shadow-lg relative border border-white/5">
-                                <img src={video.thumbnail_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" alt="" />
-                                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent transition-opacity" />
-                                <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-2">
-                                    <div className="px-2 py-1 bg-black/60 backdrop-blur-xl rounded-none border border-white/10 flex items-center gap-1.5 self-start">
-                                        <Radio className="w-3 h-3 text-green-500 animate-pulse" />
-                                        <span className="text-[9px] font-black text-white uppercase tracking-tighter">
-                                            {formatViews(video.global_views)}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {liveVideos.slice(0, 8).map((video) => {
+                        const liveLangs = Object.keys(video.localizations || {})
+                            .filter(l => video.localizations?.[l].status === 'live');
+                        
+                        return (
+                            <div
+                                key={video.video_id}
+                                onClick={() => onNavigate(video.video_id)}
+                                className={`${cardClass} border ${borderClass} rounded-sm p-3 flex flex-col gap-3 cursor-pointer hover:border-olleey-yellow/40 transition-all hover:translate-y-[-2px] hover:shadow-xl hover:shadow-olleey-yellow/5 group relative overflow-hidden`}
+                            >
+                                <div className="w-full aspect-video rounded-sm bg-gray-900 shrink-0 overflow-hidden shadow-md relative border border-white/5">
+                                    <img src={video.thumbnail_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />
+                                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent" />
+                                    <div className="absolute top-2 right-2">
+                                        <div className="px-1.5 py-0.5 bg-green-500/90 backdrop-blur-sm rounded-sm flex items-center gap-1">
+                                            <Radio className="w-2.5 h-2.5 text-white animate-pulse" />
+                                            <span className="text-[8px] font-black text-white uppercase">
+                                                Live
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <h4 className={`text-[11px] font-bold ${textClass} truncate group-hover:text-olleey-yellow transition-colors`}>
+                                        {video.title}
+                                    </h4>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1">
+                                            {liveLangs.slice(0, 3).map(lang => (
+                                                <div key={lang} className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shadow-sm" title={LANGUAGE_OPTIONS.find(l => l.code === lang)?.name}>
+                                                    <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
+                                                </div>
+                                            ))}
+                                            {liveLangs.length > 3 && (
+                                                <span className={`text-[8px] font-bold ${textSecondaryClass} ml-0.5`}>
+                                                    +{liveLangs.length - 3}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className={`text-[8px] font-bold ${textSecondaryClass} uppercase`}>
+                                            {getRelativeTime(video.published_at)}
                                         </span>
                                     </div>
-                                    <h4 className={`text-sm font-bold text-white truncate group-hover:text-olleey-yellow transition-colors`}>{video.title}</h4>
                                 </div>
                             </div>
-                            <div className="flex items-center justify-between border-t border-white/[0.04] pt-4 mt-auto">
-                                <div className="flex items-center gap-1.5">
-                                    {Object.keys(video.localizations || {})
-                                        .filter(l => video.localizations?.[l].status === 'live')
-                                        .slice(0, 3)
-                                        .map(lang => (
-                                            <div key={lang} className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shadow-lg" title={lang}>
-                                                <span className="text-sm">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
-                                            </div>
-                                        ))}
-                                </div>
-                                <span className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-tighter`}>{getRelativeTime(video.published_at)}</span>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </section>

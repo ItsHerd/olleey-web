@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme } = useTheme();
-  const [selectedLanguages] = useState<string[]>(["es", "fr", "de", "pt", "ja"]);
+  const [selectedLanguages] = useState<string[]>(["es", "fr", "de", "pt", "ja", "it"]);
   const [selectedChannelId, setSelectedChannelId] = useState<string>("");
   const [videoTypeFilter] = useState<"all" | "original" | "processed">("all");
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
@@ -239,9 +239,14 @@ export default function DashboardPage() {
 
   const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): LocalizationStatus => {
     const statuses = Object.values(localizations).map(l => l.status);
-    if (statuses.some(s => s === "processing")) return "processing";
-    if (statuses.some(s => s === "draft")) return "draft";
-    if (statuses.every(s => s === "live")) return "live";
+    
+    // Filter out "not-started" to only check actual localizations
+    const activeStatuses = statuses.filter(s => s !== "not-started");
+    
+    if (activeStatuses.length === 0) return "not-started";
+    if (activeStatuses.some(s => s === "processing")) return "processing";
+    if (activeStatuses.some(s => s === "draft")) return "draft";
+    if (activeStatuses.every(s => s === "live")) return "live";
     return "not-started";
   };
 
