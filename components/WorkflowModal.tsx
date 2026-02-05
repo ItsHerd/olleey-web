@@ -27,6 +27,7 @@ import {
     ThumbsDown,
     RefreshCw,
     Play,
+    Eye,
     Globe,
     Youtube,
     ShieldCheck,
@@ -36,7 +37,9 @@ import {
     Plus,
     GripVertical,
     AlertTriangle,
-    Settings
+    Settings,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { JobWorkflowState } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -157,8 +160,24 @@ const WorkflowStageNode = ({ data }: any) => {
             </div>
 
             {/* Footer / Status */}
-            <div className={`${isDark ? 'bg-black/20 border-gray-800/50' : 'bg-gray-50/50 border-gray-100'} p-2 flex justify-center items-center border-t`}>
+            <div className={`${isDark ? 'bg-black/20 border-gray-800/50' : 'bg-gray-50/50 border-gray-100'} p-2 flex justify-between items-center border-t min-h-[32px]`}>
                 <span className={`text-[9px] font-bold uppercase ${colors.text}`}>{data.status || 'Pending'}</span>
+                {data.status !== 'pending' && (
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            data.onPreview?.();
+                        }}
+                        className={`flex items-center gap-1 px-2 py-1 rounded-md border text-[8px] font-bold transition-all shadow-sm
+                            ${isDark 
+                                ? 'bg-gray-800/40 border-gray-700 text-gray-300 hover:text-white hover:bg-gray-700 hover:border-gray-600' 
+                                : 'bg-white border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
+                    >
+                        <Eye className="w-2.5 h-2.5" />
+                        PREVIEW
+                    </button>
+                )}
             </div>
 
             {/* Completion Checkmark Overlay */}
@@ -388,6 +407,7 @@ export function WorkflowModal({
     const [selectedGate, setSelectedGate] = useState<string | null>(null);
     const [showGatePanel, setShowGatePanel] = useState(false);
     const [hoveredEdge, setHoveredEdge] = useState<string | null>(null);
+    const [isGatesPanelCollapsed, setIsGatesPanelCollapsed] = useState(false);
 
     // Gate Management - Only toggle needed since gates are pre-populated
     const toggleGate = useCallback((gateId: string) => {
@@ -442,20 +462,21 @@ export function WorkflowModal({
             {
                 id: 'metadata',
                 type: 'workflowStage',
-                position: { x: 50, y: 140 },
+                position: { x: 100, y: 200 },
                 data: {
                     icon: FileText,
                     label: 'Source Video',
                     category: 'INPUT',
                     imageUrl: videoThumbnail,
                     status: workflowState.metadata_extraction?.status || 'pending',
+                    onPreview: () => onPreview?.(),
                 },
                 draggable: true,
             },
             {
                 id: 'translation',
                 type: 'workflowStage',
-                position: { x: 530, y: 40 },
+                position: { x: 600, y: 40 },
                 data: {
                     icon: Globe,
                     label: 'Translation',
@@ -465,45 +486,49 @@ export function WorkflowModal({
                     showActions: translationStatus === 'review',
                     onApprove: () => onApprove?.('all'),
                     onReject: () => onReject?.('all'),
+                    onPreview: () => onPreview?.(),
                 },
                 draggable: true,
             },
             {
                 id: 'assets',
                 type: 'workflowStage',
-                position: { x: 530, y: 280 },
+                position: { x: 600, y: 360 },
                 data: {
                     icon: ImageIcon,
                     label: 'Assets',
                     category: 'ASSET',
                     imageUrl: '/workflow-assets.png',
                     status: assetsStatus,
+                    onPreview: () => onPreview?.(),
                 },
                 draggable: true,
             },
             {
                 id: 'dubbing',
                 type: 'workflowStage',
-                position: { x: 1010, y: 140 },
+                position: { x: 1100, y: 200 },
                 data: {
                     icon: Video,
                     label: 'Dubbing',
                     category: 'ENGINE',
                     imageUrl: '/workflow-dubbing.png',
                     status: dubbingStatus,
+                    onPreview: () => onPreview?.(),
                 },
                 draggable: true,
             },
             {
                 id: 'distribution',
                 type: 'workflowStage',
-                position: { x: 1490, y: 140 },
+                position: { x: 1600, y: 200 },
                 data: {
                     icon: Sparkles,
                     label: 'Publishing',
                     category: 'OUTPUT',
                     imageUrl: videoThumbnail,
                     status: jobStatus === 'completed' ? 'completed' : 'pending',
+                    onPreview: () => onPreview?.(),
                 },
                 draggable: true,
             },
@@ -525,15 +550,18 @@ export function WorkflowModal({
                 const targetLeftEdge = targetNode.position.x;
                 const midpoint = (sourceRightEdge + targetLeftEdge) / 2;
 
-                // Add vertical offset to spread out gates that are close together
-                const verticalMidpoint = (sourceNode.position.y + targetNode.position.y) / 2;
-                const verticalDiff = targetNode.position.y - sourceNode.position.y;
-                // If going upward (negative diff), offset up more; if downward (positive), offset down more
-                const verticalOffset = verticalDiff > 0 ? -30 : verticalDiff < 0 ? -50 : -40;
+                // Center gates precisely on the connection path
+                const nodeHeight = 160; // Approximate height of stage node
+                const gateHeight = 130; // Approximate height of gate node
+                
+                // Vertical midpoint of the nodes' centers
+                const sourceCenterY = sourceNode.position.y + (nodeHeight / 2);
+                const targetCenterY = targetNode.position.y + (nodeHeight / 2);
+                const verticalCenter = (sourceCenterY + targetCenterY) / 2;
 
                 const gatePosition = {
-                    x: midpoint - (gateWidth / 2), // Center the gate at the midpoint
-                    y: verticalMidpoint + verticalOffset,
+                    x: midpoint - (gateWidth / 2),
+                    y: verticalCenter - (gateHeight / 2),
                 };
 
                 flowNodes.push({
@@ -617,7 +645,7 @@ export function WorkflowModal({
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className={`relative w-full max-w-4xl h-[70vh] ${cardClass} border ${borderClass} rounded-2xl shadow-2xl overflow-hidden flex flex-col scale-100 opacity-100 transition-all duration-300 animate-in fade-in zoom-in-95`}>
+            <div className={`relative w-full max-w-7xl h-[75vh] ${cardClass} border ${borderClass} rounded-2xl shadow-2xl overflow-hidden flex flex-col scale-100 opacity-100 transition-all duration-300 animate-in fade-in zoom-in-95`}>
                 {/* Header */}
                 <div className={`px-6 py-4 border-b ${borderClass} flex items-center justify-between flex-shrink-0`}>
                     <div className="flex items-center gap-3">
@@ -657,76 +685,112 @@ export function WorkflowModal({
 
                 {/* React Flow Content */}
                 <div className="flex-1 overflow-hidden relative">
-                    {/* Gate Status Panel */}
-                    <div className={`absolute top-4 left-4 z-10 ${cardClass} border ${borderClass} rounded-xl shadow-lg p-3 w-64`}>
-                        <div className="flex items-center justify-between mb-3">
-                            <h4 className={`text-sm font-bold ${textClass} flex items-center gap-2`}>
-                                <ShieldCheck className="w-4 h-4 text-purple-500" />
-                                Workflow Gates
-                            </h4>
-                        </div>
+                    {/* Gate Status Panel - Collapsible */}
+                    <div className={`absolute top-4 left-4 z-10 ${cardClass} border ${borderClass} rounded-xl shadow-lg transition-all duration-300 ${isGatesPanelCollapsed ? 'w-12' : 'w-72'}`}>
+                        {/* Collapse/Expand Button */}
+                        <button
+                            onClick={() => setIsGatesPanelCollapsed(!isGatesPanelCollapsed)}
+                            className={`absolute -right-3 top-3 z-20 p-1.5 ${cardClass} border ${borderClass} rounded-full shadow-md hover:scale-110 transition-transform ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+                            title={isGatesPanelCollapsed ? 'Expand panel' : 'Collapse panel'}
+                        >
+                            {isGatesPanelCollapsed ? (
+                                <ChevronRight className={`w-4 h-4 ${textClass}`} />
+                            ) : (
+                                <ChevronLeft className={`w-4 h-4 ${textClass}`} />
+                            )}
+                        </button>
 
-                        {/* Instructions */}
-                        <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200'} border mb-3`}>
-                            <p className={`text-[10px] ${isDark ? 'text-blue-300' : 'text-blue-700'} leading-relaxed`}>
-                                Click the toggle button on any gate in the workflow to enable or disable it.
-                            </p>
-                        </div>
-
-                        {/* Gate List */}
-                        <div className="space-y-2">
-                            <p className={`text-[10px] font-bold uppercase tracking-wide ${textSecondaryClass} mb-2`}>
-                                All Gates
-                            </p>
-
-                            {gates.map(gate => {
-                                const gateConfig = (() => {
-                                    switch (gate.type) {
-                                        case 'deploy': return { icon: ShieldCheck, color: 'text-purple-500', bg: isDark ? 'bg-purple-500/10' : 'bg-purple-50' };
-                                        case 'notification': return { icon: Bell, color: 'text-cyan-500', bg: isDark ? 'bg-cyan-500/10' : 'bg-cyan-50' };
-                                        case 'approval': return { icon: Lock, color: 'text-amber-500', bg: isDark ? 'bg-amber-500/10' : 'bg-amber-50' };
-                                        case 'conditional': return { icon: GitBranch, color: 'text-pink-500', bg: isDark ? 'bg-pink-500/10' : 'bg-pink-50' };
-                                    }
-                                })();
-                                const GateIcon = gateConfig.icon;
-
-                                return (
-                                    <div
-                                        key={gate.id}
-                                        className={`flex items-center gap-2 p-2 rounded-lg ${isDark ? 'bg-gray-800/30' : 'bg-gray-50'} ${!gate.config.enabled ? 'opacity-50' : ''}`}
-                                    >
-                                        <div className={`p-1.5 rounded ${gateConfig.bg}`}>
-                                            <GateIcon className={`w-3 h-3 ${gateConfig.color}`} />
+                        {isGatesPanelCollapsed ? (
+                            /* Collapsed State - Icon Only */
+                            <div className="p-3">
+                                <div className="flex flex-col items-center gap-3">
+                                    <ShieldCheck className="w-5 h-5 text-purple-500" />
+                                    <div className="w-px h-8 bg-gradient-to-b from-purple-500/50 to-transparent" />
+                                    <div className="flex flex-col gap-2 items-center">
+                                        <div className={`w-6 h-6 rounded-full ${isDark ? 'bg-gray-800' : 'bg-gray-100'} flex items-center justify-center`}>
+                                            <span className={`text-[10px] font-bold ${textClass}`}>{gates.length}</span>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className={`text-[10px] font-medium ${textClass} truncate`}>{gate.label}</p>
-                                            <p className={`text-[8px] ${textSecondaryClass}`}>
-                                                {availableEdges.find(e => e.source === gate.sourceId && e.target === gate.targetId)?.label}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${gate.config.enabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                                        <div className={`w-6 h-6 rounded-full ${isDark ? 'bg-emerald-500/20' : 'bg-emerald-100'} flex items-center justify-center`}>
+                                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                                                {gates.filter(g => g.config.enabled).length}
+                                            </span>
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Stats */}
-                        <div className={`mt-3 pt-3 border-t ${borderClass}`}>
-                            <div className="grid grid-cols-2 gap-2 text-center">
-                                <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-                                    <p className={`text-[10px] ${textSecondaryClass}`}>Total</p>
-                                    <p className={`text-lg font-bold ${textClass}`}>{gates.length}</p>
-                                </div>
-                                <div className={`p-2 rounded-lg ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-50'}`}>
-                                    <p className={`text-[10px] text-emerald-600 dark:text-emerald-400`}>Active</p>
-                                    <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                                        {gates.filter(g => g.config.enabled).length}
-                                    </p>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            /* Expanded State - Full Panel */
+                            <div className="p-3">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className={`text-sm font-bold ${textClass} flex items-center gap-2`}>
+                                        <ShieldCheck className="w-4 h-4 text-purple-500" />
+                                        Workflow Gates
+                                    </h4>
+                                </div>
+
+                                {/* Instructions */}
+                                <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200'} border mb-3`}>
+                                    <p className={`text-[10px] ${isDark ? 'text-blue-300' : 'text-blue-700'} leading-relaxed`}>
+                                        Click the toggle button on any gate in the workflow to enable or disable it.
+                                    </p>
+                                </div>
+
+                                {/* Gate List */}
+                                <div className="space-y-2">
+                                    <p className={`text-[10px] font-bold uppercase tracking-wide ${textSecondaryClass} mb-2`}>
+                                        All Gates
+                                    </p>
+
+                                    {gates.map(gate => {
+                                        const gateConfig = (() => {
+                                            switch (gate.type) {
+                                                case 'deploy': return { icon: ShieldCheck, color: 'text-purple-500', bg: isDark ? 'bg-purple-500/10' : 'bg-purple-50' };
+                                                case 'notification': return { icon: Bell, color: 'text-cyan-500', bg: isDark ? 'bg-cyan-500/10' : 'bg-cyan-50' };
+                                                case 'approval': return { icon: Lock, color: 'text-amber-500', bg: isDark ? 'bg-amber-500/10' : 'bg-amber-50' };
+                                                case 'conditional': return { icon: GitBranch, color: 'text-pink-500', bg: isDark ? 'bg-pink-500/10' : 'bg-pink-50' };
+                                            }
+                                        })();
+                                        const GateIcon = gateConfig.icon;
+
+                                        return (
+                                            <div
+                                                key={gate.id}
+                                                className={`flex items-center gap-2 p-2 rounded-lg ${isDark ? 'bg-gray-800/30' : 'bg-gray-50'} ${!gate.config.enabled ? 'opacity-50' : ''}`}
+                                            >
+                                                <div className={`p-1.5 rounded ${gateConfig.bg}`}>
+                                                    <GateIcon className={`w-3 h-3 ${gateConfig.color}`} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-[10px] font-medium ${textClass} truncate`}>{gate.label}</p>
+                                                    <p className={`text-[8px] ${textSecondaryClass}`}>
+                                                        {availableEdges.find(e => e.source === gate.sourceId && e.target === gate.targetId)?.label}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${gate.config.enabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Stats */}
+                                <div className={`mt-3 pt-3 border-t ${borderClass}`}>
+                                    <div className="grid grid-cols-2 gap-2 text-center">
+                                        <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
+                                            <p className={`text-[10px] ${textSecondaryClass}`}>Total</p>
+                                            <p className={`text-lg font-bold ${textClass}`}>{gates.length}</p>
+                                        </div>
+                                        <div className={`p-2 rounded-lg ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-50'}`}>
+                                            <p className={`text-[10px] text-emerald-600 dark:text-emerald-400`}>Active</p>
+                                            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                                {gates.filter(g => g.config.enabled).length}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* ReactFlow Canvas */}
