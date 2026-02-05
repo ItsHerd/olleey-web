@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
-import { LANGUAGE_OPTIONS } from "@/lib/languages";
+import { LANGUAGE_OPTIONS, getFakeLocalizedText } from "@/lib/languages";
 import { youtubeAPI, jobsAPI, dashboardAPI, type MasterNode, type Video, type ActivityItem, type LocalizationInfo } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
@@ -49,6 +49,8 @@ export default function DashboardPage() {
     dubbedVideoUrl?: string;
     videoTitle?: string;
     videoDescription?: string;
+    isApproved?: boolean;
+    approvedAt?: string;
   }>({ isOpen: false, videoId: null, languageCode: null });
 
   // Terminal Panel State
@@ -71,31 +73,31 @@ export default function DashboardPage() {
   const borderClass = theme === "light" ? "border-gray-200" : "border-white/10";
   const isDark = theme === "dark";
 
-  // 1. Coordinated Channel Synchronization
+  // 1. Coordinated Channel Synchronization - Stable version
   useEffect(() => {
     if (!dashboard || !selectedProject) return;
 
     const urlChannelId = searchParams.get("channel_id");
+    let targetId = "";
 
     // Prioritize URL, then Master Connection, then first available connection
     if (urlChannelId) {
-      if (urlChannelId !== selectedChannelId) {
-        setSelectedChannelId(urlChannelId);
-      }
+      targetId = urlChannelId;
     } else {
       const master = dashboard.youtube_connections?.find(c => c.connection_id === selectedProject.master_connection_id);
       const primary = dashboard.youtube_connections?.find(c => c.is_primary);
       const fallback = dashboard.youtube_connections?.[0];
-
-      const targetId = master?.youtube_channel_id || primary?.youtube_channel_id || fallback?.youtube_channel_id || "";
-
-      if (targetId && targetId !== selectedChannelId) {
-        setSelectedChannelId(targetId);
-      }
+      targetId = master?.youtube_channel_id || primary?.youtube_channel_id || fallback?.youtube_channel_id || "";
     }
-  }, [dashboard, selectedProject?.id, searchParams]);
 
-  const canFetchContent = !!dashboard && !!selectedProject && !!selectedChannelId;
+    if (targetId && targetId !== selectedChannelId) {
+      console.log("[Dashboard] Setting channel ID:", targetId);
+      setSelectedChannelId(targetId);
+    }
+  }, [dashboard, selectedProject?.id, searchParams, selectedChannelId]);
+
+  const canFetchContent = useMemo(() => !!dashboard && !!selectedProject && !!selectedChannelId,
+    [dashboard, selectedProject, selectedChannelId]);
 
   // 2. Coordinated Background Fetches (Graph & Activity)
   useEffect(() => {
@@ -105,7 +107,7 @@ export default function DashboardPage() {
       try {
         // Load Activity
         setActivitiesLoading(true);
-        const activityData = await dashboardAPI.getActivity(selectedProject.id);
+        const activityData = await dashboardAPI.getActivity(selectedProject!.id);
         setActivities(activityData);
 
         // Load Graph
@@ -122,9 +124,9 @@ export default function DashboardPage() {
   }, [canFetchContent, selectedProject?.id]);
 
   const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
-    selectedChannelId
+    useMemo(() => (selectedChannelId
       ? { channel_id: selectedChannelId, project_id: selectedProject?.id }
-      : { project_id: selectedProject?.id },
+      : { project_id: selectedProject?.id }), [selectedChannelId, selectedProject?.id]),
     { enabled: canFetchContent }
   );
 
@@ -306,7 +308,7 @@ export default function DashboardPage() {
     });
   }, [videos, selectedLanguages, videoTypeFilter, dashboard?.recent_jobs]);
 
-  const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): LocalizationStatus => {
+  const getOverallVideoStatus = useCallback((localizations: Record<string, LocalizationInfo>): LocalizationStatus => {
     const statuses = Object.values(localizations).map(l => l.status);
 
     // Filter out "not-started" to only check actual localizations
@@ -317,7 +319,7 @@ export default function DashboardPage() {
     if (activeStatuses.some(s => s === "draft")) return "draft";
     if (activeStatuses.every(s => s === "live")) return "live";
     return "not-started";
-  };
+  }, []);
 
   const filteredVideos = useMemo(() => {
     let filtered = videosWithLocalizations;
@@ -328,7 +330,61 @@ export default function DashboardPage() {
     return filtered;
   }, [videosWithLocalizations, selectedChannelId]);
 
-  const isInitialLoading = dashboardLoading || (canFetchContent && (videosLoading || (activitiesLoading && activities.length === 0)));
+  const onNavigate = useCallback((id: string) => {
+    const video = filteredVideos.find(v => v.video_id === id);
+    if (!video) return;
+
+    const status = getOverallVideoStatus(video.localizations || {});
+
+    // Find the first relevant localization based on status
+    const langCode = Object.keys(video.localizations || {}).find(l => {
+      const s = video.localizations![l].status;
+      if (status === "draft") return s === "draft";
+      if (status === "processing") return s === "processing";
+      if (status === "live") return s === "live";
+      return false;
+    }) || Object.keys(video.localizations || {})[0];
+
+    const loc = video.localizations?.[langCode || ""];
+
+    if (status === "processing") {
+      setTerminalState({
+        isOpen: true,
+        jobId: loc?.job_id || id,
+        videoTitle: video.title,
+        language: LANGUAGE_OPTIONS.find(l => l.code === langCode)?.name
+      });
+    } else {
+      // Both Draft and Live use the QuickCheckModal
+      const fakeText = getFakeLocalizedText(langCode || "en");
+      setQuickCheckState({
+        isOpen: true,
+        videoId: loc?.job_id || id,
+        languageCode: langCode || null,
+        originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        dubbedVideoUrl: loc?.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+        videoTitle: fakeText.title,
+        videoDescription: fakeText.description,
+        isApproved: status === "live",
+        approvedAt: (video as any).published_at || (video as any).created_at
+      });
+    }
+  }, [filteredVideos, getOverallVideoStatus]);
+
+  const isInitialLoading = useMemo(() => {
+    // If dashboard is still loading, it's definitely initial loading
+    if (dashboardLoading && !dashboard) return true;
+
+    // Once we have dashboard and are trying to fetch content
+    if (canFetchContent) {
+      // If we don't have videos yet and it's loading
+      if (videosLoading && videos.length === 0) return true;
+      // If we don't have activities yet and it's loading
+      if (activitiesLoading && activities.length === 0) return true;
+    }
+
+    return false;
+  }, [dashboardLoading, dashboard, canFetchContent, videosLoading, videos.length, activitiesLoading, activities.length]);
 
   return (
     <div className={`w-full h-full ${bgClass} flex flex-col pr-3`}>
@@ -374,31 +430,7 @@ export default function DashboardPage() {
                 textSecondaryClass={textSecondaryClass}
                 cardClass={cardClass}
                 borderClass={borderClass}
-                onNavigate={(id) => {
-                  const video = filteredVideos.find(v => v.video_id === id);
-                  if (!video) return;
-
-                  const status = getOverallVideoStatus(video.localizations || {});
-                  if (status === "draft") {
-                    const langCode = Object.keys(video.localizations || {}).find(
-                      l => video.localizations![l].status === "draft"
-                    );
-                    const loc = video.localizations?.[langCode || ""];
-                    const jobId = loc?.job_id;
-
-                    setQuickCheckState({
-                      isOpen: true,
-                      videoId: jobId || id,
-                      languageCode: langCode || null,
-                      originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                      dubbedVideoUrl: loc?.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                      videoTitle: video.title,
-                      videoDescription: (video as any).description || `Reviewing production of "${video.title}"`
-                    });
-                  } else {
-                    router.push("/app?page=Workflows");
-                  }
-                }}
+                onNavigate={onNavigate}
                 onCreateProject={() => router.push("/app?page=Manual Upload")}
                 totalVideos={filteredVideos.length}
                 totalTranslations={filteredVideos.reduce((acc, video) => {
@@ -421,6 +453,8 @@ export default function DashboardPage() {
         videoDescription={quickCheckState.videoDescription}
         onApprove={handleApproveQuickCheck}
         onFlag={handleFlagQuickCheck}
+        isApproved={quickCheckState.isApproved}
+        approvedAt={quickCheckState.approvedAt}
       />
 
       <JobTerminalPanel

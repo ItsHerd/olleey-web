@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Clock, CheckCircle, Loader2, RefreshCw, FileCheck, ChevronRight } from "lucide-react";
+import { Clock, CheckCircle, Loader2, RefreshCw, FileCheck, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { getRelativeTime } from "@/lib/utils";
@@ -170,12 +170,21 @@ export function QueueAndReview({
                                                                 e.stopPropagation();
                                                                 onNavigate(video.video_id);
                                                             }}
-                                                            className={`h-7 px-2.5 text-[9px] font-bold transition-all ${isReview
+                                                            className={`h-7 px-3 text-[9px] font-black transition-all ${isReview
                                                                 ? 'bg-olleey-yellow text-black hover:bg-olleey-yellow/90 shadow-lg shadow-olleey-yellow/20'
                                                                 : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
                                                         >
-                                                            {isReview ? "Review" : "View"}
-                                                            <ChevronRight className="w-3 h-3 ml-0.5" />
+                                                            {isReview ? (
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <Sparkles className="w-3 h-3" />
+                                                                    <span>Approve & Preview</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span>Monitor Job</span>
+                                                                    <ChevronRight className="w-3 h-3" />
+                                                                </div>
+                                                            )}
                                                         </Button>
                                                     </div>
                                                 </div>

@@ -92,7 +92,7 @@ export function GridDashboard({
                 {/* --- Row 1: Top Sections --- */}
 
                 {/* 1. Profile Hero Card - Spans 2 cols (Left) */}
-                <div className={`col-span-1 md:col-span-2 relative rounded-none overflow-hidden group border ${borderClass} shadow-2xl flex flex-col min-h-[400px] bg-black/20`}>
+                <div className={`col-span-1 md:col-span-2 relative rounded-none overflow-hidden group border ${borderClass} shadow-2xl flex flex-col min-h-[450px] bg-black/20`}>
                     <img
                         src="https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&q=80&w=2000"
                         className="absolute inset-0 w-full h-full object-cover brightness-[0.35] group-hover:scale-105 transition-transform duration-1000"
@@ -161,8 +161,8 @@ export function GridDashboard({
                 </div>
 
                 {/* 2. Queue & Review Container */}
-                <div className="col-span-1 md:col-span-2 flex flex-col gap-2">
-                    <div className="flex items-center justify-between px-2">
+                <div className="col-span-1 md:col-span-2 flex flex-col gap-2 min-h-[450px]">
+                    <div className="flex items-center justify-between px-2 shrink-0">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-olleey-yellow/10 rounded-sm border border-olleey-yellow/20">
                                 <Clock className="w-4 h-4 text-olleey-yellow" />
@@ -185,25 +185,25 @@ export function GridDashboard({
                         </div>
                     </div>
 
-                    <div className={`rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden`}>
-                        <div className="overflow-hidden">
+                    <div className={`flex-1 rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden relative`}>
+                        <div className="flex-1 overflow-hidden">
                             {(() => {
                                 const queueVideos = videos.filter(v => ["draft", "processing"].includes(getOverallVideoStatus(v.localizations || {})));
                                 if (!videosLoading && queueVideos.length === 0) {
                                     return (
                                         <div className="flex flex-col h-full opacity-30">
-                                            <RowSkeleton />
+                                            <RowSkeleton count={5} />
                                         </div>
                                     );
                                 }
                                 if (videosLoading) {
-                                    return <RowSkeleton />;
+                                    return <RowSkeleton count={5} />;
                                 }
                                 return (
-                                    <div className="w-full">
+                                    <div className="w-full h-full">
                                         <QueueAndReview
                                             videosLoading={videosLoading}
-                                            filteredVideos={queueVideos.slice(0, 3)}
+                                            filteredVideos={queueVideos.slice(0, 5)}
                                             isDark={isDark}
                                             textClass={textClass}
                                             textSecondaryClass={textSecondaryClass}
@@ -222,8 +222,8 @@ export function GridDashboard({
                 {/* --- Row 2: Bottom Sections --- */}
 
                 {/* 3. Released Media Container */}
-                <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-2">
-                    <div className="flex items-center justify-between px-2">
+                <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-2 min-h-[450px]">
+                    <div className="flex items-center justify-between px-2 shrink-0">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-green-500/10 rounded-sm border border-green-500/20">
                                 <Layers className="w-4 h-4 text-green-500" />
@@ -240,28 +240,28 @@ export function GridDashboard({
                         </Button>
                     </div>
 
-                    <div className={`rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden`}>
-                        <div className="overflow-hidden">
+                    <div className={`flex-1 rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden relative`}>
+                        <div className="flex-1 overflow-hidden">
                             {(() => {
                                 const releasedVideos = videos.filter(v =>
                                     Object.values(v.localizations || {}).some((l: any) => l.status === "live")
                                 );
                                 if (!videosLoading && releasedVideos.length === 0) {
                                     return (
-                                        <div className="flex flex-col h-full opacity-25 p-8">
-                                            <p className={`text-xs ${textSecondaryClass} text-center`}>No released media yet</p>
+                                        <div className="flex flex-col h-full items-center justify-center opacity-25 p-8">
+                                            <p className={`text-sm ${textSecondaryClass} text-center font-medium`}>No released media yet</p>
                                         </div>
                                     );
                                 }
                                 if (videosLoading) {
                                     return (
-                                        <div className="p-4">
+                                        <div className="p-4 h-full">
                                             <MediaGridSkeleton />
                                         </div>
                                     );
                                 }
                                 return (
-                                    <div className="w-full">
+                                    <div className="w-full h-full overflow-y-auto custom-scrollbar">
                                         <ReleasedMedia
                                             filteredVideos={releasedVideos.slice(0, 8)}
                                             textClass={textClass}
@@ -279,8 +279,8 @@ export function GridDashboard({
                 </div>
 
                 {/* 4. Activity Feed Container */}
-                <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-2">
-                    <div className="flex items-center justify-between px-2">
+                <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-2 min-h-[450px]">
+                    <div className="flex items-center justify-between px-2 shrink-0">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-blue-500/10 rounded-sm border border-blue-500/20">
                                 <History className="w-4 h-4 text-blue-500" />
@@ -297,21 +297,21 @@ export function GridDashboard({
                         </Button>
                     </div>
 
-                    <div className={`rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden`}>
-                        <div className="overflow-hidden">
+                    <div className={`flex-1 rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden relative`}>
+                        <div className="flex-1 overflow-hidden">
                             {!activitiesLoading && activities.length === 0 ? (
-                                <div className="flex flex-col h-full opacity-30 p-8">
-                                    <p className={`text-xs ${textSecondaryClass} text-center`}>No recent activity</p>
+                                <div className="flex flex-col h-full items-center justify-center opacity-30 p-8">
+                                    <p className={`text-sm ${textSecondaryClass} text-center font-medium`}>No recent activity</p>
                                 </div>
                             ) : activitiesLoading ? (
-                                <div className="p-4">
-                                    <RowSkeleton />
+                                <div className="p-4 h-full">
+                                    <RowSkeleton count={5} />
                                 </div>
                             ) : (
-                                <div className="w-full">
+                                <div className="w-full h-full overflow-y-auto custom-scrollbar">
                                     <ActivityFeed
                                         activitiesLoading={activitiesLoading}
-                                        activities={activities.slice(0, 5)}
+                                        activities={activities.slice(0, 8)}
                                         textClass={textClass}
                                         textSecondaryClass={textSecondaryClass}
                                         cardClass="bg-transparent"

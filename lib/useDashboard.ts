@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { dashboardAPI, type DashboardData } from "./api";
 
 export function useDashboard(options: { enabled?: boolean } = { enabled: true }) {
@@ -6,13 +6,7 @@ export function useDashboard(options: { enabled?: boolean } = { enabled: true })
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (options.enabled) {
-      loadDashboard();
-    }
-  }, [options.enabled]);
-
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -24,7 +18,13 @@ export function useDashboard(options: { enabled?: boolean } = { enabled: true })
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (options.enabled) {
+      loadDashboard();
+    }
+  }, [options.enabled, loadDashboard]);
 
   return {
     dashboard,

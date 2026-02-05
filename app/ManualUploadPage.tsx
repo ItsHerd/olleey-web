@@ -27,10 +27,18 @@ export default function ManualUploadPage() {
         const loadChannelGraph = async () => {
             try {
                 setIsLoading(true);
-                const graph = await youtubeAPI.getChannelGraph();
+                // Add timeout for faster UX
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Loading timeout')), 5000)
+                );
+                const dataPromise = youtubeAPI.getChannelGraph();
+                
+                const graph = await Promise.race([dataPromise, timeoutPromise]);
                 setChannelGraph(graph.master_nodes || []);
             } catch (error) {
                 logger.error("ManualUploadPage", "Failed to load channel graph", error);
+                // Continue anyway with empty channels - user can still upload
+                setChannelGraph([]);
             } finally {
                 setIsLoading(false);
             }

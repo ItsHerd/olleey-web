@@ -15,6 +15,8 @@ type SidebarProps = {
   projects?: Project[];
   selectedProject?: Project | null;
   selectedProjectChannelName?: string;
+  selectedProjectChannelAvatar?: string;
+  projectAvatars?: Record<string, string>;
   onProjectSelect?: (project: Project) => void;
   onCreateProject?: () => void;
 };
@@ -28,6 +30,8 @@ export default function Sidebar({
   projects = [],
   selectedProject,
   selectedProjectChannelName,
+  selectedProjectChannelAvatar,
+  projectAvatars = {},
   onProjectSelect,
   onCreateProject
 }: SidebarProps) {
@@ -93,8 +97,12 @@ export default function Sidebar({
                 : 'justify-center'
                 }`}
             >
-              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-[12px] text-white font-bold shadow-sm flex-shrink-0`}>
-                {selectedProject?.name?.charAt(0) || "P"}
+              <div className={`w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ${!selectedProjectChannelAvatar ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-[12px] text-white font-bold shadow-sm' : ''}`}>
+                {selectedProjectChannelAvatar ? (
+                  <img src={selectedProjectChannelAvatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  selectedProject?.name?.charAt(0) || "P"
+                )}
               </div>
               {isExpanded && (
                 <>
@@ -129,8 +137,12 @@ export default function Sidebar({
                         : `${textSecondaryClass} hover:${cardClass} hover:${textClass}`
                         }`}
                     >
-                      <div className="w-6 h-6 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400">{project.name.charAt(0)}</span>
+                      <div className={`w-6 h-6 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center ${!projectAvatars[project.id] ? 'bg-yellow-100 dark:bg-yellow-900/30 text-xs font-bold text-yellow-600 dark:text-yellow-400' : ''}`}>
+                        {projectAvatars[project.id] ? (
+                          <img src={projectAvatars[project.id]} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          project.name.charAt(0)
+                        )}
                       </div>
                       <span className="truncate flex-1 text-left">{project.name}</span>
                       {selectedProject?.id === project.id && (

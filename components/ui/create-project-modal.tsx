@@ -150,38 +150,6 @@ export function CreateProjectModal({
                         </p>
                     </div>
 
-                    {/* Master Channel Requirement */}
-                    <div className={`p-4 border ${borderClass} rounded-lg bg-blue-500/10`}>
-                        <div className="flex items-start gap-3">
-                            <Youtube className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                                <p className={`text-sm font-medium ${textClass} mb-1`}>
-                                    Master Channel Required
-                                </p>
-                                <p className={`text-xs ${textSecondaryClass} mb-3`}>
-                                    Each project needs at least one master YouTube channel to source content from.
-                                </p>
-                                <Button
-                                    type="button"
-                                    onClick={handleConnectChannel}
-                                    disabled={isConnectingChannel}
-                                    className="w-full bg-blue-500 text-white hover:bg-blue-600 text-sm"
-                                >
-                                    {isConnectingChannel ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                            Connecting...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Youtube className="h-4 w-4 mr-2" />
-                                            Connect Master Channel
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
 
                     {/* Error Message */}
                     {error && (

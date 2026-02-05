@@ -8,6 +8,7 @@ import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { Button } from "@/components/ui/button";
+import { useDemo } from "@/lib/DemoContext";
 import {
   Loader2,
   Video,
@@ -64,6 +65,7 @@ export default function AllMediaPage() {
   const { videos, loading: videosLoading } = useVideos(
     selectedProject?.id ? { project_id: selectedProject.id } : {}
   );
+  const { isDemoMode, updateVideoState, refreshTrigger } = useDemo();
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [sortBy, setSortBy] = useState<SortBy>("date");
@@ -236,11 +238,13 @@ export default function AllMediaPage() {
                 <span className="text-xl font-normal text-white">4.2 TB</span>
               </div>
               <Button
-                onClick={() => router.push("/app?page=Manual Upload")}
+                onClick={() => {
+                  window.location.href = "/app?page=Manual Upload";
+                }}
                 className="h-12 px-6 bg-olleey-yellow text-black hover:bg-olleey-yellow/90 font-black uppercase tracking-widest rounded-none shadow-[0_0_20px_rgba(251,191,36,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Plus className="w-4 h-4 mr-2 stroke-[3px]" />
-                Upload New Asset
+                Upload New Video
               </Button>
             </div>
           </div>
@@ -508,6 +512,64 @@ export default function AllMediaPage() {
                           </span>
                         )}
                       </div>
+
+                      {/* Demo Interactive Controls */}
+                      {isDemoMode && Object.keys(video.localizations || {}).some(l => video.localizations?.[l]?.status !== 'not-started') && (
+                        <div className="mt-3 pt-3 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
+                          <div className="text-[9px] font-black uppercase tracking-widest text-olleey-yellow/60 mb-2">Demo Controls</div>
+                          <div className="flex flex-col gap-1">
+                            {Object.keys(video.localizations || {})
+                              .filter(l => video.localizations?.[l]?.status !== 'not-started')
+                              .slice(0, 3)
+                              .map(lang => {
+                                const localization = video.localizations?.[lang];
+                                if (!localization || !localization.job_id) return null;
+                                
+                                return (
+                                  <div key={lang} className="flex items-center gap-1.5">
+                                    <span className="text-[10px] text-white/40 w-8">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
+                                    {localization.status === 'processing' && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => updateVideoState(video.video_id, localization.job_id!, lang, 'draft')}
+                                        className="h-6 px-2 text-[9px] bg-white/5 hover:bg-olleey-yellow hover:text-black"
+                                      >
+                                        → Draft
+                                      </Button>
+                                    )}
+                                    {localization.status === 'draft' && (
+                                      <>
+                                        <Button
+                                          size="sm"
+                                          onClick={() => updateVideoState(video.video_id, localization.job_id!, lang, 'live')}
+                                          className="h-6 px-2 text-[9px] bg-green-600 hover:bg-green-500"
+                                        >
+                                          ✓ Approve
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          onClick={() => updateVideoState(video.video_id, localization.job_id!, lang, 'processing')}
+                                          className="h-6 px-2 text-[9px] bg-white/5 hover:bg-blue-500"
+                                        >
+                                          ↻ Reprocess
+                                        </Button>
+                                      </>
+                                    )}
+                                    {localization.status === 'live' && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => updateVideoState(video.video_id, localization.job_id!, lang, 'draft')}
+                                        className="h-6 px-2 text-[9px] bg-white/5 hover:bg-orange-500"
+                                      >
+                                        ← Unpublish
+                                      </Button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 );

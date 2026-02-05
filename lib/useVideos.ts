@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { videosAPI, type Video, type VideoListResponse } from "./api";
 
 // Cache configuration
@@ -125,35 +125,31 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
     });
   }, [videos, loading, error, total]);
 
-  // Refetch function that forces refresh
-  const refetch = async () => {
-    const loadVideos = async () => {
-      const currentParams = paramsRef.current;
-      const cacheKey = getCacheKey(currentParams);
+  // Refetch function that forces refresh - memoized to prevent constant re-renders
+  const refetch = useCallback(async () => {
+    const currentParams = paramsRef.current;
+    const cacheKey = getCacheKey(currentParams);
 
-      try {
-        setLoading(true);
-        setError(null);
-        const data: VideoListResponse = await videosAPI.listVideos(currentParams);
+    try {
+      setLoading(true);
+      setError(null);
+      const data: VideoListResponse = await videosAPI.listVideos(currentParams);
 
-        // Update cache
-        cacheStore.set(cacheKey, {
-          data,
-          timestamp: Date.now(),
-        });
+      // Update cache
+      cacheStore.set(cacheKey, {
+        data,
+        timestamp: Date.now(),
+      });
 
-        setVideos(data.videos || []);
-        setTotal(data.total || 0);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load videos");
-        console.error("Videos error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    await loadVideos();
-  };
+      setVideos(data.videos || []);
+      setTotal(data.total || 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load videos");
+      console.error("Videos error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return {
     videos,

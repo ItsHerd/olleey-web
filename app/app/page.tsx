@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
+import { getAnimalAvatar } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActivityQueue from "@/components/ActivityQueue";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CreateProjectModal } from "@/components/ui/create-project-modal";
 import { ComingSoonPage } from "@/components/ComingSoonPage";
+import { DemoProvider } from "@/lib/DemoContext";
 
 function AppContent() {
     const { theme } = useTheme();
@@ -45,6 +47,7 @@ function AppContent() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
+    const [userEmail, setUserEmail] = useState<string>();
 
     // Persist sidebar state
     useEffect(() => {
@@ -62,6 +65,26 @@ function AppContent() {
     const { dashboard, loading: dashboardLoading } = useDashboard({ enabled: isAuthenticated });
     const { projects, selectedProject, setSelectedProject } = useProject();
 
+    const projectAvatars = useMemo(() => {
+        const map: Record<string, string> = {};
+        projects.forEach(p => {
+            if (p.master_connection_id) {
+                const master = channelGraph.find(m => m.channel_id === p.master_connection_id);
+                map[p.id] = master?.channel_avatar_url || getAnimalAvatar(p.master_connection_id);
+            }
+        });
+        return map;
+    }, [projects, channelGraph]);
+
+    const selectedProjectMaster = useMemo(() =>
+        channelGraph.find(m => m.connection_id === selectedProject?.master_connection_id),
+        [channelGraph, selectedProject]);
+
+    const selectedProjectChannelName = selectedProjectMaster?.channel_name;
+    const selectedProjectChannelAvatar = useMemo(() =>
+        selectedProjectMaster?.channel_avatar_url || (selectedProject?.master_connection_id ? getAnimalAvatar(selectedProject.master_connection_id) : undefined),
+        [selectedProjectMaster, selectedProject]);
+
     // Get theme-aware classes
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
     const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
@@ -73,7 +96,7 @@ function AppContent() {
     const getChannelAvatar = (channelId?: string) => {
         if (!channelId) return undefined;
         const masterNode = channelGraph.find(m => m.channel_id === channelId);
-        return masterNode?.channel_avatar_url;
+        return masterNode?.channel_avatar_url || getAnimalAvatar(channelId);
     };
 
     const syncOnboardingFromBackend = async () => {
@@ -127,8 +150,9 @@ function AppContent() {
                 if (tokenStorage.isAuthenticated()) {
                     // Verify token is valid by fetching user info
                     try {
-                        await authAPI.getMe();
+                        const me = await authAPI.getMe();
                         setIsAuthenticated(true);
+                        setUserEmail(me.email || undefined);
                         await syncOnboardingFromBackend();
                     } catch (error) {
                         console.error("Auth verification failed:", error);
@@ -150,18 +174,12 @@ function AppContent() {
         checkAuth();
     }, []);
 
-    // Read page query parameter to sync internal state
+    // Read page query parameter to sync internal state (optimized)
     useEffect(() => {
         const pageParam = searchParams?.get("page");
         if (pageParam) {
-            // Map page param to valid page names
-            const validPages = ["Dashboard", "Channels", "Accounts", "Workflows", "Notifications", "Dynamic Sponsors", "Comment Mirroring", "Settings", "Usage", "Support"];
-            if (validPages.includes(pageParam)) {
-                setCurrentPage(pageParam);
-            } else if (pageParam === "Languages" || pageParam === "Queued Jobs") {
-                // Handle legacy page names
-                setCurrentPage("Workflows");
-            }
+            // Immediately set the page without validation delay
+            setCurrentPage(pageParam);
         }
     }, [searchParams]);
 
@@ -273,237 +291,239 @@ function AppContent() {
         return null;
     }
 
-    const selectedProjectChannelName = channelGraph.find(m => m.connection_id === selectedProject?.master_connection_id)?.channel_name;
-
     // Show main app (with onboarding or content)
     return (
-        <div className={`h-screen ${bgClass} overflow-hidden`}>
-            <div className={`flex h-full ${bgClass} overflow-hidden`}>
-                {/* Sidebar */}
-                <div className="flex-shrink-0 hidden sm:block">
-                    <Sidebar
-                        currentPage={currentPage}
-                        onNavigate={setCurrentPage}
-                        isLocked={false}
-                        onLogout={handleLogout}
-                        isOpen={isSidebarOpen}
-                        projects={projects}
-                        selectedProject={selectedProject}
-                        selectedProjectChannelName={selectedProjectChannelName}
-                        onProjectSelect={setSelectedProject}
-                        onCreateProject={() => setIsCreateProjectModalOpen(true)}
-                    />
-                </div>
+        <DemoProvider userEmail={userEmail}>
+            <div className={`h-screen ${bgClass} overflow-hidden`}>
+                <div className={`flex h-full ${bgClass} overflow-hidden`}>
+                    {/* Sidebar */}
+                    <div className="flex-shrink-0 hidden sm:block">
+                        <Sidebar
+                            currentPage={currentPage}
+                            onNavigate={setCurrentPage}
+                            isLocked={false}
+                            onLogout={handleLogout}
+                            isOpen={isSidebarOpen}
+                            projects={projects}
+                            selectedProject={selectedProject}
+                            selectedProjectChannelName={selectedProjectChannelName}
+                            selectedProjectChannelAvatar={selectedProjectChannelAvatar}
+                            projectAvatars={projectAvatars}
+                            onProjectSelect={setSelectedProject}
+                            onCreateProject={() => setIsCreateProjectModalOpen(true)}
+                        />
+                    </div>
 
-                {/* Main Content Area */}
-                <div className={`flex-1 flex flex-col overflow-hidden ${bgClass} relative min-w-0`}>
+                    {/* Main Content Area */}
+                    <div className={`flex-1 flex flex-col overflow-hidden ${bgClass} relative min-w-0`}>
 
-                    {/* Breadcrumb Header */}
-                    <header className={`flex items-center h-14 px-4 border-b ${isDark ? 'border-dark-border bg-dark-bg/80' : 'border-light-border bg-white/80'} shrink-0 gap-2 backdrop-blur-md z-20`}>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`h-9 w-9 rounded-none transition-all ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10' : `${textClass} hover:bg-white/5`}`}
-                        >
-                            <PanelLeft className="h-4 w-4" />
-                        </Button>
+                        {/* Breadcrumb Header */}
+                        <header className={`flex items-center h-14 px-4 border-b ${isDark ? 'border-dark-border bg-dark-bg/80' : 'border-light-border bg-white/80'} shrink-0 gap-2 backdrop-blur-md z-20`}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                className={`h-9 w-9 rounded-none transition-all ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10' : `${textClass} hover:bg-white/5`}`}
+                            >
+                                <PanelLeft className="h-4 w-4" />
+                            </Button>
 
-                        {/* Breadcrumbs */}
-                        <div className="flex items-center gap-1 sm:gap-2 ml-2 overflow-hidden">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <button
-                                        className={`flex items-center gap-1 text-sm font-medium ${textSecondaryClass} hover:${textClass} transition-colors truncate max-w-[150px] outline-none group`}
-                                        title={selectedProject?.name || "All Projects"}
-                                    >
-                                        <span className="truncate">{selectedProject?.name || "All Projects"}</span>
-                                        <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
-                                    </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-none shadow-xl overflow-hidden z-[100]`}>
-                                    <DropdownMenuLabel className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest px-3 py-2`}>
-                                        Select Project
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
-                                    {projects.map((project) => (
-                                        <DropdownMenuItem
-                                            key={project.id}
-                                            onClick={() => setSelectedProject(project)}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${selectedProject?.id === project.id
-                                                ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/5 text-olleey-yellow font-bold')
-                                                : (isDark ? 'text-dark-textSecondary hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-black')
-                                                }`}
+                            {/* Breadcrumbs */}
+                            <div className="flex items-center gap-1 sm:gap-2 ml-2 overflow-hidden">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            className={`flex items-center gap-1 text-sm font-medium ${textSecondaryClass} hover:${textClass} transition-colors truncate max-w-[150px] outline-none group`}
+                                            title={selectedProject?.name || "All Projects"}
                                         >
-                                            <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === project.id ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-transparent'}`} />
-                                            <span className="truncate text-sm">{project.name}</span>
+                                            <span className="truncate">{selectedProject?.name || "All Projects"}</span>
+                                            <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-none shadow-xl overflow-hidden z-[100]`}>
+                                        <DropdownMenuLabel className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest px-3 py-2`}>
+                                            Select Project
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                        {projects.map((project) => (
+                                            <DropdownMenuItem
+                                                key={project.id}
+                                                onClick={() => setSelectedProject(project)}
+                                                className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${selectedProject?.id === project.id
+                                                    ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/5 text-olleey-yellow font-bold')
+                                                    : (isDark ? 'text-dark-textSecondary hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-black')
+                                                    }`}
+                                            >
+                                                <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === project.id ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-transparent'}`} />
+                                                <span className="truncate text-sm">{project.name}</span>
+                                            </DropdownMenuItem>
+                                        ))}
+                                        <DropdownMenuItem
+                                            onClick={() => setIsCreateProjectModalOpen(true)}
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer ${isDark ? 'text-olleey-yellow hover:bg-olleey-yellow/10' : 'text-olleey-yellow hover:bg-olleey-yellow/5'} font-bold transition-colors`}
+                                        >
+                                            <Plus className="w-3.5 h-3.5" />
+                                            <span className="text-sm">New Project</span>
                                         </DropdownMenuItem>
-                                    ))}
-                                    <DropdownMenuItem
-                                        onClick={() => setIsCreateProjectModalOpen(true)}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer ${isDark ? 'text-olleey-yellow hover:bg-olleey-yellow/10' : 'text-olleey-yellow hover:bg-olleey-yellow/5'} font-bold transition-colors`}
-                                    >
-                                        <Plus className="w-3.5 h-3.5" />
-                                        <span className="text-sm">New Project</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
 
-                            <ChevronRight className={`h-3 w-3 ${textSecondaryClass} opacity-40 shrink-0`} />
+                                <ChevronRight className={`h-3 w-3 ${textSecondaryClass} opacity-40 shrink-0`} />
 
-                            <button
-                                className={`text-sm sm:text-base font-bold ${textClass} truncate cursor-default transition-opacity`}
-                            >
-                                {currentPage}
-                            </button>
-                        </div>
-
-                        {/* Search Bar - Quick Command Center */}
-                        <div className="hidden md:flex flex-1 max-w-md mx-6 relative group">
-                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10">
-                                <svg className={`h-4 w-4 ${textSecondaryClass} group-focus-within:text-olleey-yellow transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
+                                <button
+                                    className={`text-sm sm:text-base font-bold ${textClass} truncate cursor-default transition-opacity`}
+                                >
+                                    {currentPage}
+                                </button>
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Search videos, workflows or help..."
-                                className={`block w-full pl-10 pr-12 py-2 text-sm border-0 ${isDark ? 'bg-white/5 text-white placeholder-white/20' : 'bg-gray-100 text-black placeholder-gray-400'} rounded-xl focus:ring-1 focus:ring-olleey-yellow focus:bg-olleey-yellow/[0.03] outline-none transition-all duration-300`}
-                            />
-                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                <kbd className={`hidden lg:inline-flex items-center px-1.5 py-0.5 rounded border ${isDark ? 'border-white/10 bg-white/5 text-white/40' : 'border-gray-200 bg-white text-gray-400'} text-[10px] font-bold tracking-tighter`}>
-                                    ⌘K
-                                </kbd>
-                            </div>
-                        </div>
 
-                        <div className="ml-auto flex items-center gap-1 sm:gap-2">
-                            {/* Manual Process Button */}
-                            <Button
-                                onClick={() => {
-                                    setCurrentPage("Manual Upload");
-                                    router.push("/app?page=Manual Upload");
-                                }}
-                                className={`h-9 px-4 gap-2 bg-olleey-yellow hover:bg-white text-black font-black uppercase tracking-wider text-[10px] rounded-none transition-all shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] mr-2`}
-                            >
-                                <Zap className="h-4 w-4" />
-                                <span className="hidden md:inline">Manual Process</span>
-                            </Button>
-
-                            {/* Add Channel Button - Compact */}
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => router.push("/connections/add")}
-                                className={`h-9 px-3 gap-2 ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-olleey-yellow' : 'bg-white border-gray-200 text-black hover:border-olleey-yellow'} transition-all rounded-none group`}
-                                title="Add Channel"
-                            >
-                                <div className="relative">
-                                    <Youtube className="h-4 w-4 text-olleey-yellow" />
-                                    <div className="absolute -top-1 -right-1 bg-olleey-yellow rounded-none w-2 h-2 border border-black flex items-center justify-center">
-                                        <Plus className="h-1.5 w-1.5 text-black" />
-                                    </div>
+                            {/* Search Bar - Quick Command Center */}
+                            <div className="hidden md:flex flex-1 max-w-md mx-6 relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10">
+                                    <svg className={`h-4 w-4 ${textSecondaryClass} group-focus-within:text-olleey-yellow transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
                                 </div>
-                                <span className="hidden lg:inline text-[10px] font-black uppercase tracking-widest transition-colors group-hover:text-olleey-yellow">Add Connection</span>
-                            </Button>
+                                <input
+                                    type="text"
+                                    placeholder="Search videos, workflows or help..."
+                                    className={`block w-full pl-10 pr-12 py-2 text-sm border-0 ${isDark ? 'bg-white/5 text-white placeholder-white/20' : 'bg-gray-100 text-black placeholder-gray-400'} rounded-xl focus:ring-1 focus:ring-olleey-yellow focus:bg-olleey-yellow/[0.03] outline-none transition-all duration-300`}
+                                />
+                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <kbd className={`hidden lg:inline-flex items-center px-1.5 py-0.5 rounded border ${isDark ? 'border-white/10 bg-white/5 text-white/40' : 'border-gray-200 bg-white text-gray-400'} text-[10px] font-bold tracking-tighter`}>
+                                        ⌘K
+                                    </kbd>
+                                </div>
+                            </div>
 
-                            <div className={`h-4 w-[1px] ${borderClass} mx-1 hidden sm:block`} />
+                            <div className="ml-auto flex items-center gap-1 sm:gap-2">
+                                {/* Manual Process Button */}
+                                <Button
+                                    onClick={() => {
+                                        // Direct navigation for speed
+                                        window.location.href = "/app?page=Manual Upload";
+                                    }}
+                                    className={`h-9 px-4 gap-2 bg-olleey-yellow hover:bg-white text-black font-black uppercase tracking-wider text-[10px] rounded-none transition-all shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] mr-2`}
+                                >
+                                    <Zap className="h-4 w-4" />
+                                    <span className="hidden md:inline">Manual Process</span>
+                                </Button>
 
-                            {/* Global Refresh Button */}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                    window.dispatchEvent(new CustomEvent('olleey-refresh'));
-                                }}
-                                className={`h-9 w-9 rounded-none transition-all ${textSecondaryClass} hover:${textClass} hover:bg-white/5`}
-                                title="Refresh Page Data"
-                            >
-                                <RefreshCw className="h-4 w-4" />
-                            </Button>
+                                {/* Add Channel Button - Compact */}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => router.push("/connections/add")}
+                                    className={`h-9 px-3 gap-2 ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-olleey-yellow' : 'bg-white border-gray-200 text-black hover:border-olleey-yellow'} transition-all rounded-none group`}
+                                    title="Add Channel"
+                                >
+                                    <div className="relative">
+                                        <Youtube className="h-4 w-4 text-olleey-yellow" />
+                                        <div className="absolute -top-1 -right-1 bg-olleey-yellow rounded-none w-2 h-2 border border-black flex items-center justify-center">
+                                            <Plus className="h-1.5 w-1.5 text-black" />
+                                        </div>
+                                    </div>
+                                    <span className="hidden lg:inline text-[10px] font-black uppercase tracking-widest transition-colors group-hover:text-olleey-yellow">Add Connection</span>
+                                </Button>
 
-                            {/* Notifications Link */}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setCurrentPage("Notifications")}
-                                className={`h-9 w-9 rounded-none transition-all ${currentPage === "Notifications" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
-                                title="Notifications"
-                            >
-                                <Bell className="h-4 w-4" />
-                            </Button>
+                                <div className={`h-4 w-[1px] ${borderClass} mx-1 hidden sm:block`} />
 
-                            {/* Settings Link */}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setCurrentPage("Settings")}
-                                className={`h-9 w-9 rounded-none transition-all ${currentPage === "Settings" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
-                                title="Settings"
-                            >
-                                <Settings className="h-4 w-4" />
-                            </Button>
+                                {/* Global Refresh Button */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                        window.dispatchEvent(new CustomEvent('olleey-refresh'));
+                                    }}
+                                    className={`h-9 w-9 rounded-none transition-all ${textSecondaryClass} hover:${textClass} hover:bg-white/5`}
+                                    title="Refresh Page Data"
+                                >
+                                    <RefreshCw className="h-4 w-4" />
+                                </Button>
 
-                            {/* Account/User Dropdown */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className={`h-9 w-9 rounded-none transition-all ${currentPage === "Accounts" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
-                                        title="Account"
-                                    >
-                                        <User className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-none shadow-xl overflow-hidden z-[100]`}>
-                                    <DropdownMenuLabel className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest px-3 py-2 text-white/40`}>
-                                        Manage Account
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
-                                    <DropdownMenuItem
-                                        onClick={() => setCurrentPage("Accounts")}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
-                                    >
-                                        <User className="w-4 h-4 text-olleey-yellow" />
-                                        <span className="text-sm">Account Page</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() => setCurrentPage("Usage")}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
-                                    >
-                                        <Zap className="w-4 h-4 text-olleey-yellow" />
-                                        <span className="text-sm">See Usage</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
-                                    <DropdownMenuItem
-                                        onClick={handleLogout}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer text-red-500 hover:bg-red-500/10 transition-colors`}
-                                    >
-                                        <LogOut className="w-4 h-4" />
-                                        <span className="text-sm font-bold">Sign Out</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                    </header>
+                                {/* Notifications Link */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setCurrentPage("Notifications")}
+                                    className={`h-9 w-9 rounded-none transition-all ${currentPage === "Notifications" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
+                                    title="Notifications"
+                                >
+                                    <Bell className="h-4 w-4" />
+                                </Button>
 
-                    <main className={`flex-1 overflow-hidden ${bgClass} px-0 py-0 min-w-0`}>
-                        {renderPage()}
-                    </main>
+                                {/* Settings Link */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setCurrentPage("Settings")}
+                                    className={`h-9 w-9 rounded-none transition-all ${currentPage === "Settings" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
+                                    title="Settings"
+                                >
+                                    <Settings className="h-4 w-4" />
+                                </Button>
+
+                                {/* Account/User Dropdown */}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={`h-9 w-9 rounded-none transition-all ${currentPage === "Accounts" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
+                                            title="Account"
+                                        >
+                                            <User className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-none shadow-xl overflow-hidden z-[100]`}>
+                                        <DropdownMenuLabel className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest px-3 py-2 text-white/40`}>
+                                            Manage Account
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                        <DropdownMenuItem
+                                            onClick={() => setCurrentPage("Accounts")}
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                                        >
+                                            <User className="w-4 h-4 text-olleey-yellow" />
+                                            <span className="text-sm">Account Page</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => setCurrentPage("Usage")}
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                                        >
+                                            <Zap className="w-4 h-4 text-olleey-yellow" />
+                                            <span className="text-sm">See Usage</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                        <DropdownMenuItem
+                                            onClick={handleLogout}
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer text-red-500 hover:bg-red-500/10 transition-colors`}
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            <span className="text-sm font-bold">Sign Out</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </header>
+
+                        <main className={`flex-1 overflow-hidden ${bgClass} px-0 py-0 min-w-0`}>
+                            {renderPage()}
+                        </main>
+                    </div>
                 </div>
-            </div>
 
-            {/* Create Project Modal */}
-            <CreateProjectModal
-                isOpen={isCreateProjectModalOpen}
-                onClose={() => setIsCreateProjectModalOpen(false)}
-                onSuccess={() => {
-                    // Reload dashboard to show new project
-                    window.location.reload();
-                }}
-            />
-        </div>
+                {/* Create Project Modal */}
+                <CreateProjectModal
+                    isOpen={isCreateProjectModalOpen}
+                    onClose={() => setIsCreateProjectModalOpen(false)}
+                    onSuccess={() => {
+                        // Reload dashboard to show new project
+                        window.location.reload();
+                    }}
+                />
+            </div>
+        </DemoProvider>
     );
 }
 

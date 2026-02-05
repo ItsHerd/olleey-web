@@ -1,4 +1,5 @@
 "use client";
+import { getAnimalAvatar } from "@/lib/utils";
 
 import { useState, useEffect, useMemo } from "react";
 import { youtubeAPI, channelsAPI, type MasterNode, type LanguageChannel } from "@/lib/api";
@@ -388,13 +389,11 @@ export default function ChannelsPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-3">
                               <div className="relative">
-                                {item.avatar ? (
-                                  <img src={item.avatar} alt={item.name} className={`w-10 h-10 rounded-full object-cover border ${borderClass}`} />
-                                ) : (
-                                  <div className={`w-10 h-10 rounded-full ${cardAltClass} border ${borderClass} flex items-center justify-center`}>
-                                    <Youtube className={`h-5 w-5 ${textSecondaryClass}`} />
-                                  </div>
-                                )}
+                                <img
+                                  src={item.avatar || getAnimalAvatar(item.id)}
+                                  alt={item.name}
+                                  className={`w-10 h-10 rounded-full object-cover border ${borderClass} bg-white/5 opacity-90 hover:opacity-100 transition-opacity`}
+                                />
                                 {!isMaster && (
                                   <span className="absolute -bottom-1 -right-1 text-base bg-white dark:bg-black rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
                                     {getLanguageFlag(item.language_code)}
