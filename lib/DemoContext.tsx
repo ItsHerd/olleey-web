@@ -8,6 +8,9 @@ interface DemoContextType {
   isDemoMode: boolean;
   getVideoState: (videoId: string, langCode: string) => any;
   updateVideoState: (videoId: string, jobId: string, langCode: string, newStatus: string) => Promise<void>;
+  startProcessing: (videoId: string, jobId: string, langCode?: string) => Promise<void>;
+  pauseJob: (videoId: string, jobId: string, langCode?: string) => Promise<void>;
+  stopJob: (videoId: string, jobId: string, langCode?: string) => Promise<void>;
   refreshTrigger: number;
 }
 
@@ -81,8 +84,136 @@ export function DemoProvider({ children, userEmail }: { children: React.ReactNod
     setRefreshTrigger(prev => prev + 1);
   };
   
+  const startProcessing = async (videoId: string, jobId: string, langCode: string = 'es') => {
+    // Update to processing immediately for instant UI feedback
+    DemoStateManager.setState({
+      videoId, 
+      jobId, 
+      languageCode: langCode,
+      status: 'processing',
+      lastUpdated: new Date().toISOString()
+    });
+    
+    // Trigger refresh
+    setRefreshTrigger(prev => prev + 1);
+    
+    // Call backend to simulate processing (3-4 seconds)
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const token = tokenStorage.getAccessToken();
+      
+      const response = await fetch(
+        `${baseUrl}/jobs/${jobId}/start-processing?language_code=${langCode}`, 
+        {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        console.error('Failed to start processing:', await response.text());
+        return;
+      }
+      
+      // Backend automatically moves to draft after 3.5s
+      // Poll for status update or wait 4s then update to draft
+      setTimeout(() => {
+        DemoStateManager.setState({
+          videoId, 
+          jobId, 
+          languageCode: langCode,
+          status: 'draft',
+          lastUpdated: new Date().toISOString()
+        });
+        setRefreshTrigger(prev => prev + 1);
+      }, 4000);
+    } catch (error) {
+      console.error('Failed to start processing:', error);
+    }
+  };
+  
+  const pauseJob = async (videoId: string, jobId: string, langCode: string = 'es') => {
+    // Return to queued state
+    DemoStateManager.setState({
+      videoId, 
+      jobId, 
+      languageCode: langCode,
+      status: 'queued',
+      lastUpdated: new Date().toISOString()
+    });
+    
+    // Sync to backend
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const token = tokenStorage.getAccessToken();
+      
+      const response = await fetch(
+        `${baseUrl}/jobs/${jobId}/pause?language_code=${langCode}`, 
+        {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        console.error('Failed to pause job:', await response.text());
+      }
+    } catch (error) {
+      console.error('Failed to pause job:', error);
+    }
+    
+    // Trigger refresh
+    setRefreshTrigger(prev => prev + 1);
+  };
+  
+  const stopJob = async (videoId: string, jobId: string, langCode: string = 'es') => {
+    // Clear state (remove from demo tracking)
+    DemoStateManager.clearStates();
+    
+    // Optionally sync to backend to cancel the job
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const token = tokenStorage.getAccessToken();
+      
+      // Use the pause endpoint to move back to queued, or implement a cancel endpoint
+      const response = await fetch(
+        `${baseUrl}/jobs/${jobId}/pause?language_code=${langCode}`, 
+        {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        console.error('Failed to stop job:', await response.text());
+      }
+    } catch (error) {
+      console.error('Failed to stop job:', error);
+    }
+    
+    // Trigger refresh
+    setRefreshTrigger(prev => prev + 1);
+  };
+  
   return (
-    <DemoContext.Provider value={{ isDemoMode, getVideoState, updateVideoState, refreshTrigger }}>
+    <DemoContext.Provider value={{ 
+      isDemoMode, 
+      getVideoState, 
+      updateVideoState, 
+      startProcessing,
+      pauseJob,
+      stopJob,
+      refreshTrigger 
+    }}>
       {children}
     </DemoContext.Provider>
   );

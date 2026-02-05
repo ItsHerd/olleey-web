@@ -210,7 +210,7 @@ export default function AllMediaPage() {
   }, [videosWithLocalizations]);
 
   return (
-    <div className={`w-full min-h-screen ${bgClass} flex flex-col pl-3 pr-6 pb-20`}>
+    <div className={`w-full h-full ${bgClass} flex flex-col pl-3 pr-6 pb-20 overflow-y-auto custom-scrollbar`}>
       {/* Header with Mesh Gradient */}
       <div className="relative mb-8 pt-6 group overflow-hidden bg-black/5 border-b border-white/5 pb-8 -mx-6 px-6">
         <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
@@ -524,7 +524,7 @@ export default function AllMediaPage() {
                               .map(lang => {
                                 const localization = video.localizations?.[lang];
                                 if (!localization || !localization.job_id) return null;
-                                
+
                                 return (
                                   <div key={lang} className="flex items-center gap-1.5">
                                     <span className="text-[10px] text-white/40 w-8">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>

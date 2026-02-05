@@ -87,7 +87,7 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
   const userName = dashboard?.name || "Sidiq Moltafet";
 
   return (
-    <div className={`flex-1 p-6 ${bgClass}`}>
+    <div className={`flex-1 p-6 ${bgClass} overflow-y-auto`}>
       <div className="max-w-3xl mx-auto w-full">
         <div className="mb-6">
           <h2 className={`text-2xl font-normal ${textClass}`}>Account</h2>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Play, Pause, AlertCircle, CheckCircle, Flag, Volume2, VolumeX, Maximize2, SkipBack, SkipForward, Sparkles, User } from "lucide-react";
 import { useTheme } from "@/lib/useTheme";
 
@@ -30,6 +31,11 @@ export function QuickCheckModal({
     approvedAt
 }: QuickCheckModalProps) {
     const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Refs for video syncing
     const originalVideoRef = useRef<HTMLVideoElement>(null);
@@ -160,9 +166,9 @@ export function QuickCheckModal({
         }
     }, [isApproved]);
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onClose} />
@@ -489,6 +495,7 @@ export function QuickCheckModal({
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

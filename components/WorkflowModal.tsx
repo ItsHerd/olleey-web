@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '@/lib/useTheme';
 import ReactFlow, {
     Node,
@@ -258,11 +259,10 @@ const GateNode = ({ data }: any) => {
                         e.stopPropagation();
                         data.onToggle();
                     }}
-                    className={`absolute top-1 right-1 p-1.5 rounded-md ${
-                        isActive 
-                            ? `${config.bgClass} ${config.borderClass} border` 
+                    className={`absolute top-1 right-1 p-1.5 rounded-md ${isActive
+                            ? `${config.bgClass} ${config.borderClass} border`
                             : `${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-300'} border`
-                    } hover:scale-110 transition-transform z-10 shadow-sm`}
+                        } hover:scale-110 transition-transform z-10 shadow-sm`}
                     title={isActive ? 'Disable gate' : 'Enable gate'}
                 >
                     {isActive ? (
@@ -514,23 +514,23 @@ export function WorkflowModal({
             // Find source and target node positions
             const sourceNode = flowNodes.find(n => n.id === gate.sourceId);
             const targetNode = flowNodes.find(n => n.id === gate.targetId);
-            
+
             if (sourceNode && targetNode) {
                 // Node widths: WorkflowStage = 180px, Gate = 140px
                 const nodeWidth = 180;
                 const gateWidth = 140;
-                
+
                 // Calculate position at the midpoint between the edges of the nodes
                 const sourceRightEdge = sourceNode.position.x + nodeWidth;
                 const targetLeftEdge = targetNode.position.x;
                 const midpoint = (sourceRightEdge + targetLeftEdge) / 2;
-                
+
                 // Add vertical offset to spread out gates that are close together
                 const verticalMidpoint = (sourceNode.position.y + targetNode.position.y) / 2;
                 const verticalDiff = targetNode.position.y - sourceNode.position.y;
                 // If going upward (negative diff), offset up more; if downward (positive), offset down more
                 const verticalOffset = verticalDiff > 0 ? -30 : verticalDiff < 0 ? -50 : -40;
-                
+
                 const gatePosition = {
                     x: midpoint - (gateWidth / 2), // Center the gate at the midpoint
                     y: verticalMidpoint + verticalOffset,
@@ -560,7 +560,7 @@ export function WorkflowModal({
         // Build edges, inserting gates when they exist
         const addEdge = (source: string, target: string, edgeId: string, animated = false) => {
             const gate = getGateOnEdge(source, target);
-            
+
             if (gate && gate.config.enabled) {
                 // Split edge: source -> gate -> target
                 flowEdges.push(
@@ -606,11 +606,18 @@ export function WorkflowModal({
         return { nodes: flowNodes, edges: flowEdges };
     }, [workflowState, translationStatus, assetsStatus, dubbingStatus, jobStatus, onApprove, onReject, videoThumbnail, gates]);
 
-    if (!isOpen) return null;
+    const [mounted, setMounted] = useState(false);
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className={`relative w-full max-w-6xl h-[85vh] ${cardClass} border ${borderClass} rounded-2xl shadow-2xl overflow-hidden flex flex-col scale-100 opacity-100 transition-all duration-300 animate-in fade-in zoom-in-95`}>
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    if (!isOpen || !mounted) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className={`relative w-full max-w-4xl h-[70vh] ${cardClass} border ${borderClass} rounded-2xl shadow-2xl overflow-hidden flex flex-col scale-100 opacity-100 transition-all duration-300 animate-in fade-in zoom-in-95`}>
                 {/* Header */}
                 <div className={`px-6 py-4 border-b ${borderClass} flex items-center justify-between flex-shrink-0`}>
                     <div className="flex items-center gap-3">
@@ -658,7 +665,7 @@ export function WorkflowModal({
                                 Workflow Gates
                             </h4>
                         </div>
-                        
+
                         {/* Instructions */}
                         <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200'} border mb-3`}>
                             <p className={`text-[10px] ${isDark ? 'text-blue-300' : 'text-blue-700'} leading-relaxed`}>
@@ -671,7 +678,7 @@ export function WorkflowModal({
                             <p className={`text-[10px] font-bold uppercase tracking-wide ${textSecondaryClass} mb-2`}>
                                 All Gates
                             </p>
-                            
+
                             {gates.map(gate => {
                                 const gateConfig = (() => {
                                     switch (gate.type) {
@@ -682,7 +689,7 @@ export function WorkflowModal({
                                     }
                                 })();
                                 const GateIcon = gateConfig.icon;
-                                
+
                                 return (
                                     <div
                                         key={gate.id}
@@ -763,6 +770,7 @@ export function WorkflowModal({
                     </Button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

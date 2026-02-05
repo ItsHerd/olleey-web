@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Loader2, CheckCircle, AlertCircle, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,11 @@ export function CreateProjectModal({
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [isConnectingChannel, setIsConnectingChannel] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Theme-aware classes
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -97,9 +103,9 @@ export function CreateProjectModal({
         }
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
@@ -199,6 +205,7 @@ export function CreateProjectModal({
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

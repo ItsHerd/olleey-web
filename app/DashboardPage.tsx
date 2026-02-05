@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/lib/useDashboard";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
+import { useDemo } from "@/lib/DemoContext";
+import { DemoStateManager } from "@/lib/demoStateManager";
 import { LANGUAGE_OPTIONS, getFakeLocalizedText } from "@/lib/languages";
 import { youtubeAPI, jobsAPI, dashboardAPI, type MasterNode, type Video, type ActivityItem, type LocalizationInfo } from "@/lib/api";
 import { logger } from "@/lib/logger";
@@ -27,7 +29,7 @@ interface VideoWithLocalizations extends Video {
   estimated_credits?: number;
 }
 
-type LocalizationStatus = "live" | "draft" | "processing" | "not-started";
+type LocalizationStatus = "queued" | "live" | "draft" | "processing" | "not-started";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -53,6 +55,12 @@ export default function DashboardPage() {
     approvedAt?: string;
   }>({ isOpen: false, videoId: null, languageCode: null });
 
+  // Enhanced Review Modal State (for demo draft review)
+  const [reviewModalState, setReviewModalState] = useState<{
+    isOpen: boolean;
+    video: any;
+  }>({ isOpen: false, video: null });
+
   // Terminal Panel State
   const [terminalState, setTerminalState] = useState<{
     isOpen: boolean;
@@ -63,6 +71,7 @@ export default function DashboardPage() {
 
   const { selectedProject } = useProject();
   const { dashboard, loading: dashboardLoading, refetch: refetchDashboard } = useDashboard();
+  const { isDemoMode, getVideoState, startProcessing, refreshTrigger } = useDemo();
   const { toast } = useToast();
 
   // Theme-aware classes
@@ -95,6 +104,25 @@ export default function DashboardPage() {
       setSelectedChannelId(targetId);
     }
   }, [dashboard, selectedProject?.id, searchParams, selectedChannelId]);
+
+  // Initialize demo state for queued video (demo mode only)
+  useEffect(() => {
+    if (!isDemoMode || typeof window === 'undefined') return;
+
+    // Check if demo state already exists
+    const existingState = DemoStateManager.getState('demo_real_video_001', 'es');
+    if (!existingState) {
+      // Set initial queued state for the demo video on first load
+      console.log('[Demo] Initializing queued state for demo video');
+      DemoStateManager.setState({
+        videoId: 'demo_real_video_001',
+        jobId: 'demo_job_queued_001',
+        languageCode: 'es',
+        status: 'queued',
+        lastUpdated: new Date().toISOString()
+      });
+    }
+  }, [isDemoMode]); // Only depend on isDemoMode
 
   const canFetchContent = useMemo(() => !!dashboard && !!selectedProject && !!selectedChannelId,
     [dashboard, selectedProject, selectedChannelId]);
@@ -308,7 +336,17 @@ export default function DashboardPage() {
     });
   }, [videos, selectedLanguages, videoTypeFilter, dashboard?.recent_jobs]);
 
-  const getOverallVideoStatus = useCallback((localizations: Record<string, LocalizationInfo>): LocalizationStatus => {
+  const getOverallVideoStatus = useCallback((localizations: Record<string, LocalizationInfo>, videoId?: string): LocalizationStatus => {
+    // Check demo state for queued status first (demo mode only)
+    if (isDemoMode && videoId && typeof window !== 'undefined') {
+      try {
+        const demoState = getVideoState(videoId, 'es'); // Check primary language
+        if (demoState?.status === 'queued') return "queued";
+      } catch (error) {
+        console.warn('[Demo] Failed to get video state:', error);
+      }
+    }
+
     const statuses = Object.values(localizations).map(l => l.status);
 
     // Filter out "not-started" to only check actual localizations
@@ -319,7 +357,7 @@ export default function DashboardPage() {
     if (activeStatuses.some(s => s === "draft")) return "draft";
     if (activeStatuses.every(s => s === "live")) return "live";
     return "not-started";
-  }, []);
+  }, [isDemoMode, getVideoState]);
 
   const filteredVideos = useMemo(() => {
     let filtered = videosWithLocalizations;
@@ -334,7 +372,7 @@ export default function DashboardPage() {
     const video = filteredVideos.find(v => v.video_id === id);
     if (!video) return;
 
-    const status = getOverallVideoStatus(video.localizations || {});
+    const status = getOverallVideoStatus(video.localizations || {}, video.video_id);
 
     // Find the first relevant localization based on status
     const langCode = Object.keys(video.localizations || {}).find(l => {
@@ -346,6 +384,32 @@ export default function DashboardPage() {
     }) || Object.keys(video.localizations || {})[0];
 
     const loc = video.localizations?.[langCode || ""];
+
+    // Check demo state for queued status (demo mode only)
+    if (isDemoMode) {
+      const demoState = getVideoState(video.video_id, langCode || 'es');
+
+      if (demoState?.status === 'queued') {
+        // Start processing when clicking a queued video
+        startProcessing(video.video_id, loc?.job_id || video.video_id, langCode || 'es');
+        return;
+      } else if (demoState?.status === 'draft') {
+        // Open quick check modal (Review Hub) for draft videos in demo mode
+        const fakeText = getFakeLocalizedText(video.title, langCode || "es");
+        setQuickCheckState({
+          isOpen: true,
+          videoId: video.video_id,
+          languageCode: langCode || 'es',
+          originalVideoUrl: 'https://olleey-videos.s3.us-west-1.amazonaws.com/en.mp4',
+          dubbedVideoUrl: 'https://olleey-videos.s3.us-west-1.amazonaws.com/es.mov',
+          videoTitle: video.title,
+          videoDescription: video.description,
+          isApproved: false,
+          approvedAt: video.created_at
+        });
+        return;
+      }
+    }
 
     if (status === "processing") {
       setTerminalState({
@@ -369,7 +433,7 @@ export default function DashboardPage() {
         approvedAt: (video as any).published_at || (video as any).created_at
       });
     }
-  }, [filteredVideos, getOverallVideoStatus]);
+  }, [filteredVideos, getOverallVideoStatus, isDemoMode, getVideoState, startProcessing]);
 
   const isInitialLoading = useMemo(() => {
     // If dashboard is still loading, it's definitely initial loading
@@ -456,6 +520,7 @@ export default function DashboardPage() {
         isApproved={quickCheckState.isApproved}
         approvedAt={quickCheckState.approvedAt}
       />
+
 
       <JobTerminalPanel
         isOpen={terminalState.isOpen}

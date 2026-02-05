@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X, Terminal, Clock, Activity, AlertCircle, CheckCircle, Copy } from "lucide-react";
 import { useTheme } from "@/lib/useTheme";
 
@@ -20,7 +21,12 @@ interface JobTerminalPanelProps {
 export function JobTerminalPanel({ isOpen, onClose, jobId, videoTitle, language }: JobTerminalPanelProps) {
     const { theme } = useTheme();
     const [logs, setLogs] = useState<LogEntry[]>([]);
+    const [mounted, setMounted] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Theme classes
     const panelBg = theme === "light" ? "bg-white" : "bg-[#111]";
@@ -75,7 +81,9 @@ export function JobTerminalPanel({ isOpen, onClose, jobId, videoTitle, language 
         }
     }, [logs]);
 
-    return (
+    if (!isOpen || !mounted) return null;
+
+    return createPortal(
         <>
             {/* Backdrop */}
             <div
@@ -153,7 +161,8 @@ export function JobTerminalPanel({ isOpen, onClose, jobId, videoTitle, language 
                     </div>
                 </div>
             </div>
-        </>
+        </>,
+        document.body
     );
 }
 

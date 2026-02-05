@@ -3,7 +3,7 @@ interface DemoVideoState {
   videoId: string;
   jobId: string;
   languageCode: string;
-  status: 'processing' | 'draft' | 'live';
+  status: 'queued' | 'processing' | 'draft' | 'live';
   lastUpdated: string;
 }
 

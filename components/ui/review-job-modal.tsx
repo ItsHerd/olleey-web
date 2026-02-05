@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Loader2, CheckCircle, AlertCircle, Play, Globe2, Sparkles, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/useTheme";
@@ -37,6 +38,11 @@ export function ReviewJobModal({
     const [approving, setApproving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Theme-aware classes
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -108,9 +114,9 @@ export function ReviewJobModal({
         }
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
-    return (
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10">
@@ -374,7 +380,7 @@ export function ReviewJobModal({
                                             {LANGUAGE_FLAGS[lang] || "🌍"}
                                         </motion.div>
                                     ))}
-                                    {job?.target_languages.length ! > 5 && (
+                                    {job?.target_languages.length! > 5 && (
                                         <div className="w-8 h-8 rounded-full border-2 border-dark-bg bg-olleey-yellow flex items-center justify-center text-[10px] font-black text-black z-0 shadow-xl">
                                             +{job!.target_languages.length - 5}
                                         </div>
@@ -428,6 +434,7 @@ export function ReviewJobModal({
                     </motion.div>
                 </div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }
