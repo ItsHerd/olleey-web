@@ -483,7 +483,7 @@ export const dashboardAPI = {
 
 // Video Types
 export interface LocalizationInfo {
-  status: "not-started" | "processing" | "draft" | "live" | "failed";
+  status: "queued" | "not-started" | "processing" | "draft" | "live" | "failed";
   progress: number;
   video_url?: string;
   job_id?: string;
