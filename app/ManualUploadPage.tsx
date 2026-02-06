@@ -28,12 +28,12 @@ export default function ManualUploadPage() {
             try {
                 setIsLoading(true);
                 // Add timeout for faster UX
-                const timeoutPromise = new Promise((_, reject) => 
+                const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Loading timeout')), 5000)
                 );
                 const dataPromise = youtubeAPI.getChannelGraph();
-                
-                const graph = await Promise.race([dataPromise, timeoutPromise]);
+
+                const graph = await Promise.race([dataPromise, timeoutPromise]) as any;
                 setChannelGraph(graph.master_nodes || []);
             } catch (error) {
                 logger.error("ManualUploadPage", "Failed to load channel graph", error);

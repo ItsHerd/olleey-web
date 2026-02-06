@@ -29,7 +29,7 @@ interface VideoWithLocalizations extends Video {
   estimated_credits?: number;
 }
 
-type LocalizationStatus = "queued" | "live" | "draft" | "processing" | "not-started";
+type LocalizationStatus = "queued" | "live" | "draft" | "processing" | "not-started" | "failed";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -353,7 +353,9 @@ export default function DashboardPage() {
     const activeStatuses = statuses.filter(s => s !== "not-started");
 
     if (activeStatuses.length === 0) return "not-started";
+    if (activeStatuses.some(s => s === "failed")) return "failed";
     if (activeStatuses.some(s => s === "processing")) return "processing";
+    if (activeStatuses.some(s => s === "queued")) return "queued";
     if (activeStatuses.some(s => s === "draft")) return "draft";
     if (activeStatuses.every(s => s === "live")) return "live";
     return "not-started";
@@ -395,7 +397,7 @@ export default function DashboardPage() {
         return;
       } else if (demoState?.status === 'draft') {
         // Open quick check modal (Review Hub) for draft videos in demo mode
-        const fakeText = getFakeLocalizedText(video.title, langCode || "es");
+        const fakeText = getFakeLocalizedText(langCode || "es");
         setQuickCheckState({
           isOpen: true,
           videoId: video.video_id,
@@ -405,7 +407,7 @@ export default function DashboardPage() {
           videoTitle: video.title,
           videoDescription: video.description,
           isApproved: false,
-          approvedAt: video.created_at
+          approvedAt: video.published_at
         });
         return;
       }
