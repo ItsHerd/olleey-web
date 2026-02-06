@@ -6,6 +6,7 @@ import HeroAscii from "@/components/ui/hero-ascii";
 import Footer from "./Footer";
 import { FlowchartAnimation } from "@/components/FlowchartAnimation";
 import CreatorsShowcase from "./CreatorsShowcase";
+import VideoDubbingShowcase from "./VideoDubbingShowcase";
 import { GlobalLifecycle } from "./GlobalLifecycle";
 import AIProductsShowcase from "./AIProductsShowcase";
 import { PricingCalculator } from "./PricingCalculator";
@@ -54,6 +55,7 @@ export default function LandingPage({ onNavigation, initialAuthMode = 'login', a
 
             <FlowchartAnimation onGetStarted={() => triggerAuth('register')} />
             <CreatorsShowcase />
+            <VideoDubbingShowcase />
             <GlobalLifecycle />
 
             {/* Pricing Section - Technical */}
