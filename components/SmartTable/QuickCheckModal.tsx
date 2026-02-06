@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Play, Pause, AlertCircle, CheckCircle, Flag, Volume2, VolumeX, Maximize2, SkipBack, SkipForward, Sparkles, User } from "lucide-react";
+import { X, Play, Pause, AlertCircle, CheckCircle, Flag, Volume2, VolumeX, Maximize2, SkipBack, SkipForward, Sparkles, User, RotateCcw, Languages, Image as ImageIcon, Check } from "lucide-react";
 import { useTheme } from "@/lib/useTheme";
 
 interface QuickCheckModalProps {
@@ -48,7 +48,8 @@ export function QuickCheckModal({
     const [flagCategory, setFlagCategory] = useState("general");
     const [showFlagInput, setShowFlagInput] = useState(false);
     const [volume, setVolume] = useState(1);
-    const [isMuted, setIsMuted] = useState(false);
+    const [originalMuted, setOriginalMuted] = useState(true);
+    const [dubbedMuted, setDubbedMuted] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [checklist, setChecklist] = useState({
         lipSync: isApproved,
@@ -56,6 +57,18 @@ export function QuickCheckModal({
         tone: isApproved,
         audioQuality: isApproved
     });
+    const [targetLanguage, setTargetLanguage] = useState(languageName === "Spanish" ? "ES" : "EN");
+    const [thumbnailStrategy, setThumbnailStrategy] = useState<"original" | "converted">("converted");
+    const [reprocessingItems, setReprocessingItems] = useState<Record<string, boolean>>({});
+
+    const handleRedo = (key: string) => {
+        setReprocessingItems(prev => ({ ...prev, [key]: true }));
+        // Simulate processing for 3 seconds
+        setTimeout(() => {
+            setReprocessingItems(prev => ({ ...prev, [key]: false }));
+            setChecklist(prev => ({ ...prev, [key]: true }));
+        }, 3000);
+    };
 
     // Theme classes
     const cardClass = theme === "light" ? "bg-white" : "bg-[#0a0a0a]";
@@ -94,19 +107,25 @@ export function QuickCheckModal({
         }
     };
 
-    const toggleMute = () => {
+    const toggleOriginalMute = () => {
+        if (originalVideoRef.current) {
+            originalVideoRef.current.muted = !originalMuted;
+            setOriginalMuted(!originalMuted);
+        }
+    };
+
+    const toggleDubbedMute = () => {
         if (dubbedVideoRef.current) {
-            dubbedVideoRef.current.muted = !isMuted;
-            setIsMuted(!isMuted);
+            dubbedVideoRef.current.muted = !dubbedMuted;
+            setDubbedMuted(!dubbedMuted);
         }
     };
 
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newVolume = parseFloat(e.target.value);
         setVolume(newVolume);
-        if (dubbedVideoRef.current) {
-            dubbedVideoRef.current.volume = newVolume;
-        }
+        if (originalVideoRef.current) originalVideoRef.current.volume = newVolume;
+        if (dubbedVideoRef.current) dubbedVideoRef.current.volume = newVolume;
     };
 
     const changePlaybackSpeed = (speed: number) => {
@@ -187,9 +206,27 @@ export function QuickCheckModal({
                                 <h3 className={`text-lg font-black ${textClass} tracking-tight uppercase`}>
                                     {isApproved ? 'Live Production' : 'Review Hub'}
                                 </h3>
-                                <span className={`px-2 py-0.5 ${isApproved ? 'bg-green-500 text-white' : 'bg-olleey-yellow text-black'} text-[9px] font-black uppercase tracking-widest rounded-none`}>
-                                    {languageName} {isApproved ? 'Live' : 'Stage'}
-                                </span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className={`px-2 py-0.5 ${isApproved ? 'bg-green-500 text-white' : 'bg-olleey-yellow text-black'} text-[9px] font-black uppercase tracking-widest rounded-none`}>
+                                        {targetLanguage === "ES" ? "Spanish" : "English"} {isApproved ? 'Live' : 'Stage'}
+                                    </span>
+                                    {!isApproved && (
+                                        <div className="flex bg-white/5 border border-white/10 p-0.5 rounded-none">
+                                            <button 
+                                                onClick={() => setTargetLanguage("EN")}
+                                                className={`px-1.5 py-0.5 text-[8px] font-black uppercase transition-all ${targetLanguage === "EN" ? 'bg-white/20 text-white' : 'text-white/30 hover:text-white/60'}`}
+                                            >
+                                                EN
+                                            </button>
+                                            <button 
+                                                onClick={() => setTargetLanguage("ES")}
+                                                className={`px-1.5 py-0.5 text-[8px] font-black uppercase transition-all ${targetLanguage === "ES" ? 'bg-white/20 text-white' : 'text-white/30 hover:text-white/60'}`}
+                                            >
+                                                ES
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <p className={`text-[11px] ${textSecondaryClass} font-medium flex items-center gap-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[500px]`}>
                                 {videoTitle || "Operational Quality Check"}
@@ -226,17 +263,20 @@ export function QuickCheckModal({
                                         <span className="bg-black/80 backdrop-blur-md text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest border border-white/20">
                                             Original Master
                                         </span>
-                                        <span className="bg-red-500/80 backdrop-blur-md text-white px-2 py-1 text-[9px] font-black flex items-center gap-1.5 border border-red-500/50">
-                                            <VolumeX className="w-3.5 h-3.5" />
-                                            MUTED
-                                        </span>
+                                        <button 
+                                            onClick={toggleOriginalMute}
+                                            className={`${originalMuted ? 'bg-red-500/80 border-red-500/50' : 'bg-green-500/80 border-green-500/50'} backdrop-blur-md text-white px-2 py-1 text-[9px] font-black flex items-center gap-1.5 border transition-all hover:scale-105 active:scale-95`}
+                                        >
+                                            {originalMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                                            {originalMuted ? 'MUTED' : 'LIVE'}
+                                        </button>
                                     </div>
                                 </div>
                                 <video
                                     ref={originalVideoRef}
                                     src={originalVideoUrl}
                                     className="w-full h-full object-contain"
-                                    muted
+                                    muted={originalMuted}
                                 />
                                 <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/80 to-transparent pointer-events-none opacity-0 group-hover/orig:opacity-100 transition-opacity" />
                             </div>
@@ -246,18 +286,22 @@ export function QuickCheckModal({
                                 <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
                                     <div className="flex items-center gap-2">
                                         <span className={`${isApproved ? 'bg-green-500 text-white' : 'bg-olleey-yellow text-black'} px-3 py-1 text-[10px] font-black uppercase tracking-widest border ${isApproved ? 'border-green-500 shadow-green-500/20' : 'border-olleey-yellow shadow-olleey-yellow/20'} shadow-lg`}>
-                                            {languageName} Production
+                                            {targetLanguage === "ES" ? "Spanish" : "English"} Production
                                         </span>
-                                        <span className="bg-green-500/80 backdrop-blur-md text-white px-2 py-1 text-[9px] font-black flex items-center gap-1.5 border border-green-500/50">
-                                            <Volume2 className="w-3.5 h-3.5" />
-                                            STEREOPHONIC
-                                        </span>
+                                        <button 
+                                            onClick={toggleDubbedMute}
+                                            className={`${dubbedMuted ? 'bg-red-500/80 border-red-500/50' : 'bg-green-500/80 border-green-500/50'} backdrop-blur-md text-white px-2 py-1 text-[9px] font-black flex items-center gap-1.5 border transition-all hover:scale-105 active:scale-95`}
+                                        >
+                                            {dubbedMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                                            {dubbedMuted ? 'MUTED' : 'STEREOPHONIC'}
+                                        </button>
                                     </div>
                                 </div>
                                 <video
                                     ref={dubbedVideoRef}
                                     src={dubbedVideoUrl}
                                     className="w-full h-full object-contain"
+                                    muted={dubbedMuted}
                                 />
                                 <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/80 to-transparent pointer-events-none opacity-0 group-hover/dub:opacity-100 transition-opacity" />
                             </div>
@@ -308,9 +352,25 @@ export function QuickCheckModal({
 
                                 <div className="flex items-center gap-4 border-l border-white/10 pl-6">
                                     <div className="flex items-center gap-2">
-                                        <button onClick={toggleMute} className="text-white/40 hover:text-white transition-colors">
-                                            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                                        </button>
+                                        <div className="flex items-center bg-white/5 border border-white/10 p-0.5 rounded-none mr-2">
+                                            <button 
+                                                onClick={() => { setOriginalMuted(false); setDubbedMuted(true); }}
+                                                className={`px-2 py-1 text-[8px] font-black uppercase transition-all ${(!originalMuted && dubbedMuted) ? 'bg-white/20 text-white' : 'text-white/30 hover:text-white/60'}`}
+                                                title="Solo Original"
+                                            >
+                                                ORIG
+                                            </button>
+                                            <button 
+                                                onClick={() => { setOriginalMuted(true); setDubbedMuted(false); }}
+                                                className={`px-2 py-1 text-[8px] font-black uppercase transition-all ${(originalMuted && !dubbedMuted) ? 'bg-white/20 text-white' : 'text-white/30 hover:text-white/60'}`}
+                                                title="Solo Dubbed"
+                                            >
+                                                DUB
+                                            </button>
+                                        </div>
+                                        <div className="text-white/40">
+                                            {(!originalMuted && !dubbedMuted) ? <Volume2 className="w-4 h-4 text-olleey-yellow" /> : <Volume2 className="w-4 h-4" />}
+                                        </div>
                                         <input
                                             type="range"
                                             min="0"
@@ -339,63 +399,144 @@ export function QuickCheckModal({
                     </div>
 
                     {/* Right Side: Options & Info */}
-                    <div className={`w-80 flex flex-col ${cardClass} overflow-y-auto custom-scrollbar`}>
+                    <div className={`w-[340px] flex flex-col ${cardClass} overflow-y-auto custom-scrollbar border-l border-white/5`}>
                         <div className="p-6 space-y-8">
-                            {/* Status Section */}
+                            {/* Target Language Switcher (Mobile/Panel) */}
                             <div>
                                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-4 flex items-center gap-2">
-                                    <AlertCircle className="w-3.5 h-3.5" /> Quality Assurance
+                                    <Languages className="w-3.5 h-3.5" /> Target Production
                                 </h4>
-                                <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={() => setTargetLanguage("EN")}
+                                        className={`flex flex-col items-center justify-center p-3 border transition-all rounded-none gap-2 ${targetLanguage === "EN" ? 'border-olleey-yellow bg-olleey-yellow/10' : 'border-white/5 bg-white/5 hover:border-white/20'}`}
+                                    >
+                                        <span className={`text-[12px] font-black ${targetLanguage === "EN" ? 'text-olleey-yellow' : 'text-white/40'}`}>ENGLISH</span>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${targetLanguage === "EN" ? 'bg-olleey-yellow animate-pulse' : 'bg-white/10'}`} />
+                                    </button>
+                                    <button
+                                        onClick={() => setTargetLanguage("ES")}
+                                        className={`flex flex-col items-center justify-center p-3 border transition-all rounded-none gap-2 ${targetLanguage === "ES" ? 'border-olleey-yellow bg-olleey-yellow/10' : 'border-white/5 bg-white/5 hover:border-white/20'}`}
+                                    >
+                                        <span className={`text-[12px] font-black ${targetLanguage === "ES" ? 'text-olleey-yellow' : 'text-white/40'}`}>SPANISH</span>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${targetLanguage === "ES" ? 'bg-olleey-yellow animate-pulse' : 'bg-white/10'}`} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Status Section */}
+                            <div>
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <AlertCircle className="w-3.5 h-3.5" /> Quality Assurance
+                                    </div>
+                                    <span className="text-[8px] font-bold text-olleey-yellow/50">STAGE VERIFICATION</span>
+                                </h4>
+                                <div className="space-y-2">
                                     {Object.entries(checklist).map(([key, value]) => (
-                                        <button
-                                            key={key}
-                                            disabled={isApproved}
-                                            onClick={() => !isApproved && setChecklist(prev => ({ ...prev, [key]: !value }))}
-                                            className={`w-full flex items-center justify-between p-3 border transition-all rounded-none ${value ? 'border-green-500/50 bg-green-500/5' : 'border-white/5 bg-white/5 hover:border-white/20'} ${isApproved ? 'cursor-default' : 'cursor-pointer'}`}
-                                        >
-                                            <span className={`text-[11px] font-bold uppercase tracking-tight ${value ? 'text-green-500' : 'text-white/60'}`}>
-                                                {key.replace(/([A-Z])/g, ' $1')}
-                                            </span>
-                                            <div className={`w-4 h-4 border-2 flex items-center justify-center transition-all ${value ? 'bg-green-500 border-green-500' : 'border-white/20'}`}>
-                                                {value && <CheckCircle className="w-3 h-3 text-black fill-current" />}
-                                            </div>
-                                        </button>
+                                        <div key={key} className="relative group/qa">
+                                            <button
+                                                disabled={isApproved || reprocessingItems[key]}
+                                                onClick={() => !isApproved && setChecklist(prev => ({ ...prev, [key]: !value }))}
+                                                className={`w-full flex items-center justify-between p-3 border transition-all rounded-none 
+                                                    ${reprocessingItems[key] ? 'border-olleey-yellow/30 bg-olleey-yellow/5 animate-pulse' : 
+                                                      value ? 'border-green-500/50 bg-green-500/5' : 'border-white/5 bg-white/5 hover:border-white/20'} 
+                                                    ${isApproved ? 'cursor-default' : 'cursor-pointer'}`}
+                                            >
+                                                <div className="flex flex-col items-start gap-0.5">
+                                                    <span className={`text-[10px] font-black uppercase tracking-tight ${reprocessingItems[key] ? 'text-olleey-yellow' : value ? 'text-green-500' : 'text-white/60'}`}>
+                                                        {key.replace(/([A-Z])/g, ' $1')}
+                                                    </span>
+                                                    {reprocessingItems[key] && (
+                                                        <span className="text-[8px] font-bold text-olleey-yellow/60 uppercase">Reprocessing...</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    {!isApproved && !reprocessingItems[key] && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleRedo(key);
+                                                            }}
+                                                            className="p-1.5 bg-white/5 hover:bg-olleey-yellow hover:text-black rounded-none border border-white/10 transition-all opacity-0 group-hover/qa:opacity-100"
+                                                            title={`Redo ${key}`}
+                                                        >
+                                                            <RotateCcw className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                    <div className={`w-4 h-4 border flex items-center justify-center transition-all ${reprocessingItems[key] ? 'border-olleey-yellow' : value ? 'bg-green-500 border-green-500' : 'border-white/20'}`}>
+                                                        {reprocessingItems[key] ? (
+                                                            <div className="w-1.5 h-1.5 bg-olleey-yellow animate-ping rounded-full" />
+                                                        ) : value && (
+                                                            <Check className="w-3 h-3 text-black stroke-[3px]" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Metadata Section */}
+                            {/* Thumbnail Strategy */}
                             <div>
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-4">Production Info</h4>
-                                <div className="space-y-4">
-                                    <div className="p-4 bg-white/5 border border-white/5 rounded-none space-y-3">
-                                        <div>
-                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1.5">Primary Title</p>
-                                            <p className="text-xs font-bold text-white line-clamp-2">{videoTitle || "Unnamed Project"}</p>
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-4 flex items-center gap-2">
+                                    <ImageIcon className="w-3.5 h-3.5" /> Thumbnail Strategy
+                                </h4>
+                                <div className="space-y-2">
+                                    <button
+                                        onClick={() => setThumbnailStrategy("original")}
+                                        className={`w-full flex items-center gap-3 p-3 border transition-all rounded-none ${thumbnailStrategy === "original" ? 'border-olleey-yellow bg-olleey-yellow/5' : 'border-white/5 bg-white/5 hover:border-white/20'}`}
+                                    >
+                                        <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${thumbnailStrategy === "original" ? 'border-olleey-yellow bg-olleey-yellow' : 'border-white/20'}`}>
+                                            {thumbnailStrategy === "original" && <div className="w-1.5 h-1.5 bg-black rounded-full" />}
                                         </div>
-                                        <div className="pt-3 border-t border-white/[0.04]">
-                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1.5">{isApproved ? 'Live Description' : 'Draft Description'}</p>
-                                            <p className="text-xs text-white/50 leading-relaxed italic line-clamp-4">
-                                                {videoDescription || "No production notes provided."}
-                                            </p>
+                                        <div className="flex flex-col items-start">
+                                            <span className={`text-[10px] font-black uppercase ${thumbnailStrategy === "original" ? 'text-white' : 'text-white/40'}`}>Keep Original</span>
+                                            <span className="text-[8px] font-medium text-white/20">Source thumbnail will be reused</span>
                                         </div>
+                                    </button>
+                                    <button
+                                        onClick={() => setThumbnailStrategy("converted")}
+                                        className={`w-full flex items-center gap-3 p-3 border transition-all rounded-none ${thumbnailStrategy === "converted" ? 'border-olleey-yellow bg-olleey-yellow/5' : 'border-white/5 bg-white/5 hover:border-white/20'}`}
+                                    >
+                                        <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${thumbnailStrategy === "converted" ? 'border-olleey-yellow bg-olleey-yellow' : 'border-white/20'}`}>
+                                            {thumbnailStrategy === "converted" && <div className="w-1.5 h-1.5 bg-black rounded-full" />}
+                                        </div>
+                                        <div className="flex flex-col items-start">
+                                            <span className={`text-[10px] font-black uppercase ${thumbnailStrategy === "converted" ? 'text-white' : 'text-white/40'}`}>Convert Thumbnail</span>
+                                            <span className="text-[8px] font-medium text-olleey-yellow/60">AI-localization for {targetLanguage === "ES" ? "Spanish" : "English"}</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Metadata Section - Compact */}
+                            <div>
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-3">Production Info</h4>
+                                <div className="p-3 bg-[#050505] border border-white/5 rounded-none">
+                                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1.5">Primary Title</p>
+                                    <p className="text-[11px] font-bold text-white mb-3 leading-tight">{videoTitle || "Unnamed Project"}</p>
+                                    <div className="pt-2 border-t border-white/[0.04]">
+                                        <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Status</p>
+                                        <p className="text-[10px] text-white/50 italic line-clamp-2">
+                                            {isApproved ? "Production Live" : "Review Stage Active"}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Flagging Controls - Only show if not approved */}
+                            {/* Flagging Controls - Simplified */}
                             {!isApproved && (
                                 <div>
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-4">Feedback Protocol</h4>
                                     {showFlagInput ? (
-                                        <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                                            <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                                            <div className="grid grid-cols-2 gap-1.5">
                                                 {['sync', 'audio', 'visual', 'general'].map((cat) => (
                                                     <button
                                                         key={cat}
                                                         onClick={() => setFlagCategory(cat)}
-                                                        className={`px-3 py-2 text-[9px] font-black uppercase tracking-widest border transition-all rounded-none ${flagCategory === cat ? 'bg-red-500 border-red-500 text-white' : 'bg-white/5 border-white/10 text-white/40 hover:border-white/30'}`}
+                                                        className={`px-2 py-1.5 text-[8px] font-black uppercase tracking-widest border transition-all rounded-none ${flagCategory === cat ? 'bg-red-500 border-red-500 text-white' : 'bg-white/5 border-white/10 text-white/40'}`}
                                                     >
                                                         {cat}
                                                     </button>
@@ -404,8 +545,8 @@ export function QuickCheckModal({
                                             <textarea
                                                 value={flagReason}
                                                 onChange={(e) => setFlagReason(e.target.value)}
-                                                placeholder="Specify technical anomaly..."
-                                                className="w-full h-24 bg-[#050505] border border-white/10 p-3 text-xs text-white focus:border-red-500 outline-none transition-colors rounded-none placeholder:text-white/10"
+                                                placeholder="Technical anomaly details..."
+                                                className="w-full h-20 bg-[#050505] border border-white/10 p-2 text-[10px] text-white focus:border-red-500 outline-none transition-colors rounded-none"
                                             />
                                             <div className="flex gap-2">
                                                 <button
@@ -413,38 +554,26 @@ export function QuickCheckModal({
                                                         onFlag(flagReason, flagCategory);
                                                         setShowFlagInput(false);
                                                     }}
-                                                    className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest transition-all"
+                                                    className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-[9px] font-black uppercase tracking-widest transition-all"
                                                 >
-                                                    Initiate Flag
+                                                    Confirm Flag
                                                 </button>
                                                 <button
                                                     onClick={() => setShowFlagInput(false)}
-                                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black transition-all"
+                                                    className="px-3 py-2 bg-white/5 text-white/40 text-[9px] font-black uppercase transition-all"
                                                 >
-                                                    Cancel
+                                                    Back
                                                 </button>
                                             </div>
                                         </div>
                                     ) : (
                                         <button
                                             onClick={() => setShowFlagInput(true)}
-                                            className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 text-[10px] font-black uppercase tracking-widest transition-all rounded-none flex items-center justify-center gap-2"
+                                            className="w-full py-2.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-500 text-[9px] font-black uppercase tracking-widest transition-all rounded-none flex items-center justify-center gap-2"
                                         >
-                                            <Flag className="w-3.5 h-3.5" /> Rejection Protocol
+                                            <Flag className="w-3 h-3" /> Rejection Protocol
                                         </button>
                                     )}
-                                </div>
-                            )}
-
-                            {isApproved && (
-                                <div className="p-4 bg-green-500/5 border border-green-500/20 rounded-none">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <CheckCircle className="w-4 h-4 text-green-500" />
-                                        <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Quality Verified</span>
-                                    </div>
-                                    <p className="text-[10px] text-white/40 leading-relaxed">
-                                        This production has passed all quality assurance checks and is currently distributed across global hubs.
-                                    </p>
                                 </div>
                             )}
                         </div>
