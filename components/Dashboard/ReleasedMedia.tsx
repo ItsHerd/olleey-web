@@ -34,8 +34,8 @@ export function ReleasedMedia({
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Archive Offline</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {liveVideos.slice(0, 8).map((video, idx) => {
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {liveVideos.map((video, idx) => {
                         const liveLangs = Object.keys(video.localizations || {})
                             .filter(l => video.localizations?.[l].status === 'live');
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
 import { useDashboard } from "@/lib/useDashboard";
@@ -75,6 +75,8 @@ const itemVariants = {
 
 export default function AllMediaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const highlightedVideoId = searchParams.get("video_id");
   const { theme } = useTheme();
   const { selectedProject } = useProject();
   const { dashboard } = useDashboard();
@@ -103,6 +105,19 @@ export default function AllMediaPage() {
       refetchVideos();
     }
   }, [videosLoading, videos?.length, hasAttemptedRefetch, refetchVideos]);
+
+  // Handle scrolling to highlighted video
+  useEffect(() => {
+    if (highlightedVideoId && !videosLoading) {
+      const timer = setTimeout(() => {
+        const element = document.getElementById(`video-${highlightedVideoId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedVideoId, videosLoading]);
 
   // Theme classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -460,6 +475,7 @@ export default function AllMediaPage() {
                 return (
                   <motion.div
                     key={video.video_id}
+                    id={`video-${video.video_id}`}
                     variants={itemVariants}
                     onClick={() => {
                       if (status === "draft") {
@@ -480,7 +496,10 @@ export default function AllMediaPage() {
                         router.push(`/app?page=Workflows&video=${video.video_id}`);
                       }
                     }}
-                    className={`relative ${cardClass} border border-white/5 rounded-[2.5rem] overflow-hidden cursor-pointer transition-all duration-500 hover:border-olleey-yellow/30 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] group hover:-translate-y-2`}
+                    className={`relative ${cardClass} border rounded-[2.5rem] overflow-hidden cursor-pointer transition-all duration-500 hover:border-olleey-yellow/30 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] group hover:-translate-y-2 ${highlightedVideoId === video.video_id
+                      ? 'border-olleey-yellow shadow-[0_0_30px_rgba(251,191,36,0.2)] ring-1 ring-olleey-yellow/20 bg-olleey-yellow/[0.02]'
+                      : 'border-white/5'
+                      }`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
 
@@ -614,7 +633,11 @@ export default function AllMediaPage() {
                       return (
                         <tr
                           key={video.video_id}
-                          className="group hover:bg-white/[0.03] transition-all duration-300 cursor-pointer"
+                          id={`video-row-${video.video_id}`}
+                          className={`group hover:bg-white/[0.03] transition-all duration-300 cursor-pointer ${highlightedVideoId === video.video_id
+                            ? 'bg-olleey-yellow/5 border-l-2 border-olleey-yellow'
+                            : ''
+                            }`}
                           onClick={() => {
                             if (status === "draft") {
                               const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "draft") || "es";

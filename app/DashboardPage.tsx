@@ -61,8 +61,8 @@ export default function DashboardPage() {
     language?: string;
   }>({ isOpen: false, jobId: null });
 
-  const { selectedProject } = useProject();
-  const { dashboard, loading: dashboardLoading, refetch: refetchDashboard } = useDashboard();
+  const { selectedProject, projects, isLoading: projectLoading } = useProject();
+  const { dashboard, loading: dashboardLoading, refetch: refetchDashboard } = useDashboard({ projectId: selectedProject?.id });
   const { isDemoMode, getVideoState, startProcessing, refreshTrigger } = useDemo();
   const { toast } = useToast();
 
@@ -131,7 +131,7 @@ export default function DashboardPage() {
         setActivities(activityData);
 
         // Load Graph
-        const graph = await youtubeAPI.getChannelGraph();
+        const graph = await youtubeAPI.getChannelGraph(selectedProject!.id);
         setChannelGraph(graph.master_nodes || []);
       } catch (error) {
         logger.error("DashboardPage", "Coordinated fetch failed", error);
@@ -159,7 +159,7 @@ export default function DashboardPage() {
           refetchDashboard(),
           refetchVideos(),
           (async () => {
-            const graph = await youtubeAPI.getChannelGraph();
+            const graph = await youtubeAPI.getChannelGraph(selectedProject?.id);
             setChannelGraph(graph.master_nodes || []);
           })(),
           (async () => {
@@ -383,8 +383,11 @@ export default function DashboardPage() {
         videoTitle: video.title,
         language: LANGUAGE_OPTIONS.find(l => l.code === langCode)?.name
       });
+    } else if (status === "live") {
+      // Redirect to All Media for live assets
+      router.push(`/app?page=All Media&video_id=${video.video_id}`);
     } else {
-      // Both Draft and Live use the Global QuickCheckModal via useReview
+      // Open QuickCheckModal via useReview for non-live assets (Drafts, etc.)
       const fakeText = getFakeLocalizedText(langCode || "en");
       openReview({
         videoId: loc?.job_id || id,
@@ -393,13 +396,16 @@ export default function DashboardPage() {
         dubbedVideoUrl: loc?.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
         videoTitle: fakeText.title,
         videoDescription: fakeText.description,
-        isApproved: status === "live",
+        isApproved: false, // In this block, it's never live due to the 'else if' above
         approvedAt: (video as any).published_at || (video as any).created_at
       });
     }
   }, [filteredVideos, getOverallVideoStatus, isDemoMode, getVideoState, startProcessing, openReview]);
 
   const isInitialLoading = useMemo(() => {
+    // If project list is still loading
+    if (projectLoading && projects.length === 0) return true;
+
     // If dashboard is still loading, it's definitely initial loading
     if (dashboardLoading && !dashboard) return true;
 
@@ -411,8 +417,11 @@ export default function DashboardPage() {
       if (activitiesLoading && activities.length === 0) return true;
     }
 
+    // If we are authenticated but don't have a project yet (and more could be coming)
+    if (!selectedProject && projectLoading) return true;
+
     return false;
-  }, [dashboardLoading, dashboard, canFetchContent, videosLoading, videos.length, activitiesLoading, activities.length]);
+  }, [projectLoading, projects.length, dashboardLoading, dashboard, canFetchContent, videosLoading, videos.length, activitiesLoading, activities.length, selectedProject]);
 
   return (
     <div className={`w-full h-full ${bgClass} flex flex-col pr-3 pt-8`}>

@@ -84,8 +84,8 @@ function AppContent() {
         localStorage.setItem("sidebarOpen", String(isSidebarOpen));
     }, [isSidebarOpen]);
 
-    const { dashboard } = useDashboard({ enabled: isAuthenticated });
     const { projects, selectedProject, setSelectedProject } = useProject();
+    const { dashboard } = useDashboard({ projectId: selectedProject?.id, enabled: isAuthenticated });
     const { videos } = useVideos({ project_id: selectedProject?.id }, { enabled: isAuthenticated });
 
     const projectAvatars = useMemo(() => {
@@ -245,7 +245,10 @@ function AppContent() {
                         <div className="flex-shrink-0 hidden sm:block">
                             <Sidebar
                                 currentPage={currentPage}
-                                onNavigate={setCurrentPage}
+                                onNavigate={(page) => {
+                                    setCurrentPage(page);
+                                    router.push(`/app?page=${encodeURIComponent(page)}`, { scroll: false });
+                                }}
                                 isLocked={false}
                                 onLogout={handleLogout}
                                 isOpen={isSidebarOpen}
@@ -273,13 +276,13 @@ function AppContent() {
                                     <PanelLeft className="h-4 w-4" />
                                 </Button>
 
-                                {/* Breadcrumbs */}
-                                <div className="flex items-center gap-3 overflow-hidden py-1">
-                                    <div className={`flex items-center gap-3 px-3 py-1.5 rounded-xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-gray-50 border-gray-100'} transition-all hover:border-white/10 group`}>
+                                {/* Breadcrumbs - High Fidelity Capsule Design */}
+                                <div className="flex items-center gap-2 overflow-hidden py-1">
+                                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-gray-50 border-gray-100'} transition-all hover:border-white/10 group shadow-sm`}>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
-                                                    className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} hover:${textClass} transition-colors truncate max-w-[180px] outline-none font-mono`}
+                                                    className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} hover:${textClass} transition-colors truncate max-w-[140px] outline-none font-mono`}
                                                     title={selectedProject?.name || "All Projects"}
                                                 >
                                                     <div className={`w-2 h-2 rounded-full ${selectedProject ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'bg-white/20'}`} />
@@ -317,14 +320,16 @@ function AppContent() {
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
+                                    </div>
 
-                                        <div className="h-3 w-px bg-white/10 hidden sm:block" />
+                                    <div className={`${isDark ? 'text-white/10' : 'text-gray-200'} mx-0.5`}>
+                                        <ChevronRight className="w-3 h-3" />
+                                    </div>
 
-                                        <div className="flex items-center gap-2">
-                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] font-mono ${textClass} opacity-90`}>
-                                                {currentPage}
-                                            </span>
-                                        </div>
+                                    <div className={`flex items-center gap-3 px-4 py-1.5 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-gray-50 border-gray-100'} shadow-sm`}>
+                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] font-mono ${textClass} opacity-90`}>
+                                            {currentPage}
+                                        </span>
                                     </div>
                                 </div>
 

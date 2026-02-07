@@ -242,7 +242,7 @@ export function GridDashboard({
                                     <div className="w-full h-full">
                                         <QueueAndReview
                                             videosLoading={videosLoading}
-                                            filteredVideos={queueVideos.slice(0, 5)}
+                                            filteredVideos={queueVideos.slice(0, 4)}
                                             isDark={isDark}
                                             textClass={textClass}
                                             textSecondaryClass={textSecondaryClass}
@@ -312,7 +312,7 @@ export function GridDashboard({
                                 return (
                                     <div className="w-full h-full overflow-y-auto custom-scrollbar">
                                         <ReleasedMedia
-                                            filteredVideos={releasedVideos.slice(0, 8)}
+                                            filteredVideos={releasedVideos.slice(0, 4)}
                                             textClass={textClass}
                                             textSecondaryClass={textSecondaryClass}
                                             cardClass="bg-transparent"
