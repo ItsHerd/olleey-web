@@ -102,7 +102,7 @@ export default function AllMediaPage() {
   // Process videos with localizations
   const videosWithLocalizations = useMemo(() => {
     if (!videos || videos.length === 0) return [];
-    
+
     return videos.map(video => {
       const localizations: Record<string, LocalizationInfo> = {};
 
@@ -175,10 +175,10 @@ export default function AllMediaPage() {
   // Filter and sort videos - use raw videos for 'all' tab if localizations not ready
   const filteredAndSortedVideos = useMemo(() => {
     // If on 'all' tab and we have videos but localizations aren't processed yet, show raw videos
-    const sourceVideos = videosWithLocalizations.length > 0 
-      ? videosWithLocalizations 
+    const sourceVideos = videosWithLocalizations.length > 0
+      ? videosWithLocalizations
       : videos.map(v => ({ ...v, localizations: {} as Record<string, LocalizationInfo> }));
-    
+
     let filtered = sourceVideos;
 
     // Filter by search query

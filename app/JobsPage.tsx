@@ -109,10 +109,23 @@ export default function JobsPage() {
 
     if (loading && jobs.length === 0) {
         return (
-            <div className={`w-full h-full ${bgClass} flex items-center justify-center`}>
-                <div className="text-center">
-                    <Loader2 className={`h-8 w-8 animate-spin ${textSecondaryClass} mx-auto mb-4`} />
-                    <p className={`${textSecondaryClass} animate-pulse`}>Loading workflows...</p>
+            <div className={`w-full h-full ${bgClass} p-8`}>
+                <div className="h-40 w-full bg-white/[0.03] rounded-[2.5rem] mb-12 animate-pulse flex flex-col justify-center p-12">
+                    <div className="h-10 w-48 bg-white/10 rounded-full mb-4" />
+                    <div className="h-4 w-96 bg-white/5 rounded-full" />
+                </div>
+                <div className="space-y-4">
+                    {[...Array(8)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-6 p-6 border border-white/[0.03] bg-white/[0.01] rounded-[1.5rem] animate-pulse">
+                            <div className="w-24 h-14 bg-white/5 rounded-xl shrink-0" />
+                            <div className="flex-1 space-y-3">
+                                <div className="h-4 bg-white/10 rounded-full w-1/3" />
+                                <div className="h-3 bg-white/5 rounded-full w-1/4" />
+                            </div>
+                            <div className="w-32 h-8 bg-white/10 rounded-full" />
+                            <div className="w-40 h-8 bg-white/5 rounded-full" />
+                        </div>
+                    ))}
                 </div>
             </div>
         );

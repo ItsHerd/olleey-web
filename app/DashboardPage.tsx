@@ -421,21 +421,7 @@ export default function DashboardPage() {
         description="Manage your global content production, monitor translation jobs, and distribute to international channels from your creative command center."
       />
 
-      <DashboardHeader
-        textClass={textClass}
-        textSecondaryClass={textSecondaryClass}
-        isDark={isDark}
-        videosLoading={videosLoading}
-        showManualProcessView={false}
-        refetchVideos={refetchVideos}
-        setShowManualProcessView={() => router.push("/app?page=Manual Upload")}
-        totalVideos={filteredVideos.length}
-        totalTranslations={filteredVideos.reduce((acc, video) => {
-          const localizations = video.localizations || {};
-          return acc + Object.values(localizations).filter(l => l.status === "live").length;
-        }, 0)}
-        userName={dashboard?.name}
-      />
+
 
 
 
