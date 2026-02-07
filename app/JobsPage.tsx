@@ -11,6 +11,8 @@ import { useProject } from "@/lib/ProjectContext";
 import { JobsTable } from "@/components/JobsTable";
 import { WorkflowModal } from "@/components/WorkflowModal";
 import { useToast } from "@/components/ui/use-toast";
+import { useReview } from "@/lib/ReviewContext";
+import { getFakeLocalizedText } from "@/lib/languages";
 
 type JobFilter = "all" | "processing" | "completed" | "failed" | "waiting";
 
@@ -25,6 +27,7 @@ export default function JobsPage() {
     const [filter, setFilter] = useState<JobFilter>("all");
     const { theme } = useTheme();
     const { toast } = useToast();
+    const { openReview } = useReview();
 
     // Theme tokens
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -297,8 +300,23 @@ export default function JobsPage() {
                     }}
                     onPreview={() => {
                         if (!selectedGraphJobId) return;
-                        // Open preview logic
-                        logger.info("JobsPage", "Opening preview for job", selectedGraphJobId);
+                        const job = jobs.find(j => j.job_id === selectedGraphJobId);
+                        const video = videos.find(v => v.video_id === job?.source_video_id);
+                        if (!job || !video) return;
+
+                        const langCode = job.target_languages[0] || "es";
+                        const fakeText = getFakeLocalizedText(langCode);
+
+                        openReview({
+                            videoId: job.job_id,
+                            languageCode: langCode,
+                            originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                            dubbedVideoUrl: (job as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                            videoTitle: video.title,
+                            videoDescription: video.description,
+                            isApproved: job.status === "completed",
+                            approvedAt: job.updated_at
+                        });
                     }}
                 />
             </div>

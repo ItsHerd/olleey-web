@@ -2,12 +2,13 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Zap, ArrowRight, ExternalLink, User, BarChart3, Clock, LayoutGrid, Layers, History, CheckCircle, Settings, Shield, Sparkles, TrendingUp, Target, Rocket } from "lucide-react";
+import { Plus, Zap, ArrowRight, ExternalLink, User, BarChart3, Clock, LayoutGrid, Layers, History, CheckCircle, Settings, Shield, Sparkles, TrendingUp, Target, Rocket, Activity, ChevronRight, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatViews } from "@/lib/utils";
 import { QueueAndReview } from "./QueueAndReview";
 import { ReleasedMedia } from "./ReleasedMedia";
 import { ActivityFeed } from "./ActivityFeed";
+import { motion } from "framer-motion";
 
 interface GridDashboardProps {
     userName: string;
@@ -51,17 +52,33 @@ export function GridDashboard({
     totalTranslations
 }: GridDashboardProps) {
     const router = useRouter();
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+    };
+
     // Specialized Row-based Skeleton for lists/tables
     const RowSkeleton = ({ count = 5 }) => (
         <div className="flex flex-col w-full divide-y divide-white/[0.02]">
             {Array.from({ length: count }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4 w-full py-4 px-6">
-                    <div className={`w-16 h-10 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-none shrink-0 animate-pulse border border-white/5 opacity-40`} />
+                <div key={i} className="flex items-center gap-4 w-full py-5 px-6">
+                    <div className={`w-20 h-11 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-lg shrink-0 animate-pulse border border-white/5 opacity-40`} />
                     <div className="flex-1 space-y-2 min-w-0">
-                        <div className={`h-2.5 ${isDark ? "bg-white/10" : "bg-gray-300"} rounded-none w-1/4 animate-pulse`} />
-                        <div className={`h-1.5 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-none w-1/3 animate-pulse opacity-30`} />
+                        <div className={`h-2.5 ${isDark ? "bg-white/10" : "bg-gray-300"} rounded-full w-1/4 animate-pulse`} />
+                        <div className={`h-1.5 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-full w-1/3 animate-pulse opacity-30`} />
                     </div>
-                    <div className={`w-20 h-7 ${isDark ? "bg-white/5" : "bg-gray-100"} rounded-none shrink-0 animate-pulse border border-white/5`} />
+                    <div className={`w-24 h-8 ${isDark ? "bg-white/5" : "bg-gray-100"} rounded-full shrink-0 animate-pulse border border-white/5`} />
                 </div>
             ))}
         </div>
@@ -71,12 +88,12 @@ export function GridDashboard({
     const MediaGridSkeleton = () => (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 w-full p-6">
             {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={`flex flex-col gap-3 p-4 border ${borderClass} bg-white/5 rounded-none animate-pulse`}>
-                    <div className={`aspect-video xl:aspect-[9/14] ${isDark ? "bg-white/5" : "bg-gray-100"} rounded-none w-full border border-white/5`} />
+                <div key={i} className={`flex flex-col gap-3 p-4 border ${borderClass} bg-white/5 rounded-2xl animate-pulse`}>
+                    <div className={`aspect-video ${isDark ? "bg-white/5" : "bg-gray-100"} rounded-xl w-full border border-white/5`} />
                     <div className="space-y-2 mt-auto border-t border-white/[0.04] pt-3">
-                        <div className={`h-2.5 ${isDark ? "bg-white/10" : "bg-gray-300"} rounded-none w-3/4`} />
+                        <div className={`h-2.5 ${isDark ? "bg-white/10" : "bg-gray-300"} rounded-full w-3/4`} />
                         <div className="flex justify-between items-center">
-                            <div className={`h-1.5 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-none w-1/3 opacity-30`} />
+                            <div className={`h-1.5 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-full w-1/3 opacity-30`} />
                             <div className={`w-5 h-5 ${isDark ? "bg-white/10" : "bg-gray-200"} rounded-full opacity-25`} />
                         </div>
                     </div>
@@ -86,106 +103,127 @@ export function GridDashboard({
     );
 
     return (
-        <div className="w-full h-auto pb-20">
-            <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+        <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="w-full h-auto pb-20"
+        >
+            <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
 
                 {/* --- Row 1: Top Sections --- */}
 
                 {/* 1. Profile Hero Card - Spans 2 cols (Left) */}
-                <div className={`col-span-1 md:col-span-2 relative rounded-none overflow-hidden group border ${borderClass} shadow-2xl flex flex-col min-h-[450px] bg-black/20`}>
+                <motion.div
+                    variants={itemVariants}
+                    className={`col-span-1 md:col-span-2 relative rounded-[2.5rem] overflow-hidden group border ${borderClass} shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] flex flex-col min-h-[480px] bg-[#0c0c0c]`}
+                >
                     <img
-                        src="https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&q=80&w=2000"
-                        className="absolute inset-0 w-full h-full object-cover brightness-[0.35] group-hover:scale-105 transition-transform duration-1000"
+                        src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=2000"
+                        className="absolute inset-0 w-full h-full object-cover brightness-[0.4] group-hover:scale-110 transition-transform duration-[3000ms] ease-out"
                         alt="Hero"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-olleey-yellow/10 via-transparent to-black/80" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.1),transparent_40%)]" />
 
-                    <div className="relative flex-1 p-10 flex flex-col justify-between">
+                    <div className="relative flex-1 p-12 flex flex-col justify-between">
                         <div>
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-none bg-olleey-yellow/20 backdrop-blur-md border border-olleey-yellow/30 text-[11px] font-black uppercase tracking-widest text-olleey-yellow mb-8 shadow-[0_0_20px_rgba(251,191,36,0.15)]">
-                                <Sparkles className="w-4 h-4" /> Professional Tier
-                            </div>
-                            <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-normal text-white tracking-tighter mb-4 leading-none">
-                                {userName || "Creator"}
-                            </h2>
-
-                            {/* Stats Row */}
-                            <div className="flex items-center gap-8 mb-8 pb-8 border-b border-white/5">
-                                <div className="flex flex-col group cursor-default">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <LayoutGrid className="w-3.5 h-3.5 text-white/30 group-hover:text-white/50 transition-colors" />
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 group-hover:text-white/40 transition-colors">Total Assets</span>
-                                    </div>
-                                    <span className="text-3xl font-normal text-white group-hover:text-olleey-yellow transition-colors">{totalVideos}</span>
-                                </div>
-                                <div className="flex flex-col group cursor-default">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <TrendingUp className="w-3.5 h-3.5 text-olleey-yellow/40 group-hover:text-olleey-yellow/60 transition-colors" />
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-olleey-yellow/40 group-hover:text-olleey-yellow/60 transition-colors">Distributions</span>
-                                    </div>
-                                    <span className="text-3xl font-normal text-olleey-yellow group-hover:scale-105 transition-transform">{totalTranslations}</span>
-                                </div>
+                            <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-olleey-yellow/10 backdrop-blur-2xl border border-olleey-yellow/20 text-[10px] font-black uppercase tracking-[0.3em] text-olleey-yellow mb-10 shadow-[0_0_40px_rgba(251,191,36,0.1)] group-hover:bg-olleey-yellow/20 transition-all">
+                                <Sparkles className="w-4 h-4 animate-pulse" /> Global Creative Command
                             </div>
 
-                            {/* Quick Links Row */}
-                            <div className="flex flex-wrap gap-2">
-                                <Button
-                                    onClick={onCreateProject}
-                                    variant="ghost"
-                                    size="sm"
-                                    className={`h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none group`}
-                                >
-                                    <Rocket className="w-3.5 h-3.5 mr-2 group-hover:rotate-12 transition-transform" /> New Project
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => router.push('/app?page=Settings')}
-                                    className={`h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none group`}
-                                >
-                                    <Settings className="w-3.5 h-3.5 mr-2 group-hover:rotate-90 transition-transform duration-300" /> Settings
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => router.push('/app?page=Guardrails')}
-                                    className={`h-8 px-4 text-[10px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none group`}
-                                >
-                                    <Shield className="w-3.5 h-3.5 mr-2 group-hover:scale-110 transition-transform" /> Guardrails
-                                </Button>
+                            <div className="space-y-2 mb-10">
+                                <span className={`text-[12px] font-black uppercase tracking-[0.4em] ${isDark ? 'text-white/30' : 'text-black/30'} flex items-center gap-3`}>
+                                    <span className="w-4 h-[1px] bg-olleey-yellow/40" />
+                                    Authorized Access
+                                </span>
+                                <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal text-white tracking-tighter leading-tight">
+                                    {userName || "Creator"}
+                                </h2>
+                            </div>
+
+                            {/* Stats Row with improved design */}
+                            <div className="grid grid-cols-2 gap-12 mb-10 pt-10 border-t border-white/5">
+                                <div className="flex flex-col group cursor-default">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:bg-olleey-yellow/10 group-hover:border-olleey-yellow/20 transition-all">
+                                            <LayoutGrid className="w-4 h-4 text-white/40 group-hover:text-olleey-yellow transition-colors" />
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/30 group-hover:text-white/50 transition-colors">Digital Assets</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-5xl font-normal text-white group-hover:text-olleey-yellow transition-colors duration-500 tracking-tighter">{totalVideos}</span>
+                                        <span className="text-xs font-bold text-white/20 uppercase tracking-widest ml-1">Units</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col group cursor-default">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-8 h-8 rounded-xl bg-olleey-yellow/5 flex items-center justify-center border border-olleey-yellow/10 group-hover:bg-olleey-yellow/20 group-hover:border-olleey-yellow/30 transition-all">
+                                            <Rocket className="w-4 h-4 text-olleey-yellow/60 group-hover:text-olleey-yellow transition-colors" />
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-olleey-yellow/40 group-hover:text-olleey-yellow transition-colors">Market Deployments</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-5xl font-normal text-olleey-yellow group-hover:scale-105 transition-transform duration-500 tracking-tighter shadow-olleey-yellow/20 shadow-2xl">{totalTranslations}</span>
+                                        <span className="text-xs font-bold text-olleey-yellow/20 uppercase tracking-widest ml-1">Live</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-
+                        {/* Premium Action Row */}
+                        <div className="flex flex-wrap gap-3">
+                            <Button
+                                onClick={onCreateProject}
+                                className={`h-12 px-8 text-[11px] text-black font-black uppercase tracking-[0.2em] bg-olleey-yellow hover:bg-white hover:scale-105 active:scale-[0.98] transition-all rounded-full group shadow-[0_20px_40px_rgba(251,191,36,0.2)]`}
+                            >
+                                <Plus className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-500" /> Start Workflow
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                onClick={() => router.push('/app?page=All Media')}
+                                className={`h-12 px-8 text-[11px] text-white font-black uppercase tracking-[0.2em] bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all rounded-full group`}
+                            >
+                                <PlayCircle className="w-4 h-4 mr-2 opacity-60 group-hover:opacity-100" /> Open Library
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* 2. Queue & Review Container */}
-                <div className="col-span-1 md:col-span-2 flex flex-col gap-2 min-h-[450px]">
-                    <div className="flex items-center justify-between px-2 shrink-0">
-                        <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-olleey-yellow/10 rounded-sm border border-olleey-yellow/20">
-                                <Clock className="w-4 h-4 text-olleey-yellow" />
+                <motion.div
+                    variants={itemVariants}
+                    className="col-span-1 md:col-span-2 flex flex-col gap-4 min-h-[480px]"
+                >
+                    <div className="flex items-center justify-between px-4 shrink-0">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-olleey-yellow/10 rounded-2xl border border-olleey-yellow/20 flex items-center justify-center shadow-inner">
+                                <Activity className="w-5 h-5 text-olleey-yellow" />
                             </div>
-                            <h3 className={`text-base md:text-lg font-300 ${textClass} tracking-tight`}>Queue & Review</h3>
+                            <div className="flex flex-col">
+                                <h3 className={`text-xl font-normal ${textClass} tracking-tight leading-none`}>Production Pipeline</h3>
+                                <p className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest opacity-40 mt-1`}>Real-time processing</p>
+                            </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 bg-olleey-yellow/10 rounded-none border border-olleey-yellow/20">
+                            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-olleey-yellow/5 rounded-full border border-olleey-yellow/10">
                                 <div className="w-1.5 h-1.5 rounded-full bg-olleey-yellow animate-pulse" />
-                                <span className="text-[9px] font-black text-olleey-yellow uppercase tracking-widest">Active</span>
+                                <span className="text-[10px] font-black text-olleey-yellow uppercase tracking-widest italic">{videos.filter(v => getOverallVideoStatus(v.localizations || {}) === 'processing').length} Processing</span>
                             </div>
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => router.push('/app?page=Workflows')}
-                                className={`h-7 px-3 text-[9px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none`}
+                                className={`h-9 px-4 text-[10px] text-white/60 font-black uppercase tracking-[0.2em] hover:text-olleey-yellow hover:bg-white/5 transition-all rounded-full group`}
                             >
-                                View All
+                                View Pipeline <ChevronRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
                             </Button>
                         </div>
                     </div>
 
-                    <div className={`flex-1 rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden relative`}>
+                    <div className={`flex-1 rounded-[2.5rem] border ${borderClass} ${cardClass} shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] flex flex-col z-10 overflow-hidden relative backdrop-blur-md`}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
                         <div className="flex-1 overflow-hidden">
                             {(() => {
                                 const queueVideos = videos.filter(v => ["draft", "processing"].includes(getOverallVideoStatus(v.localizations || {})));
@@ -217,30 +255,37 @@ export function GridDashboard({
                             })()}
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* --- Row 2: Bottom Sections --- */}
 
                 {/* 3. Released Media Container */}
-                <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-2 min-h-[450px]">
-                    <div className="flex items-center justify-between px-2 shrink-0">
-                        <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-green-500/10 rounded-sm border border-green-500/20">
-                                <Layers className="w-4 h-4 text-green-500" />
+                <motion.div
+                    variants={itemVariants}
+                    className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-4 min-h-[480px]"
+                >
+                    <div className="flex items-center justify-between px-4 shrink-0">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 flex items-center justify-center">
+                                <Layers className="w-5 h-5 text-emerald-500" />
                             </div>
-                            <h3 className={`text-base md:text-lg font-300 ${textClass} tracking-tight`}>Released Media</h3>
+                            <div className="flex flex-col">
+                                <h3 className={`text-xl font-normal ${textClass} tracking-tight leading-none`}>Active Distributions</h3>
+                                <p className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest opacity-40 mt-1`}>Validated releases</p>
+                            </div>
                         </div>
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => router.push('/app?page=All Media')}
-                            className={`h-7 px-3 text-[9px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none`}
+                            className={`h-9 px-4 text-[10px] text-white/60 font-black uppercase tracking-[0.2em] hover:text-emerald-400 hover:bg-white/5 transition-all rounded-full group`}
                         >
-                            View All
+                            Explore All <ChevronRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
                         </Button>
                     </div>
 
-                    <div className={`flex-1 rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden relative`}>
+                    <div className={`flex-1 rounded-[2.5rem] border ${borderClass} ${cardClass} shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] flex flex-col z-10 overflow-hidden relative backdrop-blur-md`}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] to-transparent pointer-events-none" />
                         <div className="flex-1 overflow-hidden">
                             {(() => {
                                 const releasedVideos = videos.filter(v =>
@@ -248,8 +293,11 @@ export function GridDashboard({
                                 );
                                 if (!videosLoading && releasedVideos.length === 0) {
                                     return (
-                                        <div className="flex flex-col h-full items-center justify-center opacity-25 p-8">
-                                            <p className={`text-sm ${textSecondaryClass} text-center font-medium`}>No released media yet</p>
+                                        <div className="flex flex-col h-full items-center justify-center opacity-25 p-12">
+                                            <div className="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center mb-6">
+                                                <Target className="w-8 h-8 opacity-20" />
+                                            </div>
+                                            <p className={`text-xs ${textSecondaryClass} text-center font-black uppercase tracking-[0.2em] opacity-40`}>Grid optimized for live media</p>
                                         </div>
                                     );
                                 }
@@ -276,32 +324,38 @@ export function GridDashboard({
                             })()}
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* 4. Activity Feed Container */}
-                <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-2 min-h-[450px]">
-                    <div className="flex items-center justify-between px-2 shrink-0">
-                        <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-blue-500/10 rounded-sm border border-blue-500/20">
-                                <History className="w-4 h-4 text-blue-500" />
+                <motion.div
+                    variants={itemVariants}
+                    className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-4 min-h-[480px]"
+                >
+                    <div className="flex items-center justify-between px-4 shrink-0">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-blue-500/10 rounded-2xl border border-blue-500/20 flex items-center justify-center">
+                                <History className="w-5 h-5 text-blue-500" />
                             </div>
-                            <h3 className={`text-base md:text-lg font-300 ${textClass} tracking-tight`}>Activity Feed</h3>
+                            <div className="flex flex-col">
+                                <h3 className={`text-xl font-normal ${textClass} tracking-tight leading-none`}>System Heartbeat</h3>
+                                <p className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest opacity-40 mt-1`}>Audit trail</p>
+                            </div>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.push('/app?page=Workflows')}
-                            className={`h-7 px-3 text-[9px] text-white font-black uppercase tracking-widest bg-white/5 border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow transition-all rounded-none`}
-                        >
-                            View All
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-blue-500/5 rounded-full border border-blue-500/10">
+                                <BarChart3 className="w-3 h-3 text-blue-400" />
+                                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest italic">{activities.length} Events</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className={`flex-1 rounded-none border ${borderClass} ${cardClass} shadow-2xl flex flex-col z-10 overflow-hidden relative`}>
+                    <div className={`flex-1 rounded-[2.5rem] border ${borderClass} ${cardClass} shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] flex flex-col z-10 overflow-hidden relative backdrop-blur-md`}>
+                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/[0.02] to-transparent pointer-events-none" />
                         <div className="flex-1 overflow-hidden">
                             {!activitiesLoading && activities.length === 0 ? (
-                                <div className="flex flex-col h-full items-center justify-center opacity-30 p-8">
-                                    <p className={`text-sm ${textSecondaryClass} text-center font-medium`}>No recent activity</p>
+                                <div className="flex flex-col h-full items-center justify-center opacity-30 p-12">
+                                    <Activity className="w-8 h-8 opacity-20 mb-4" />
+                                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-40`}>Awaiting system interaction</p>
                                 </div>
                             ) : activitiesLoading ? (
                                 <div className="p-4 h-full">
@@ -311,7 +365,7 @@ export function GridDashboard({
                                 <div className="w-full h-full overflow-y-auto custom-scrollbar">
                                     <ActivityFeed
                                         activitiesLoading={activitiesLoading}
-                                        activities={activities.slice(0, 8)}
+                                        activities={activities.slice(0, 10)}
                                         textClass={textClass}
                                         textSecondaryClass={textSecondaryClass}
                                         cardClass="bg-transparent"
@@ -321,7 +375,7 @@ export function GridDashboard({
                             )}
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
             {/* Custom Styles to make sub-components fit better in grid */}
@@ -341,55 +395,50 @@ export function GridDashboard({
                     }
                 }
                 .dashboard-grid td, .dashboard-grid th {
-                    padding: 0.5rem 0.75rem !important;
-                }
-                @media (min-width: 768px) {
-                    .dashboard-grid td, .dashboard-grid th {
-                        padding: 0.5rem 0.75rem !important;
-                    }
+                    padding: 1.25rem 1.5rem !important;
                 }
                 .dashboard-grid th {
-                    font-size: 0.7rem !important;
+                    font-size: 0.75rem !important;
                     font-weight: 900 !important;
                     text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                }
-                @media (min-width: 768px) {
-                    .dashboard-grid th {
-                        font-size: 0.85rem !important;
-                    }
+                    letter-spacing: 0.2em;
+                    opacity: 0.4;
+                    padding-top: 1.5rem !important;
+                    padding-bottom: 1rem !important;
                 }
                 .dashboard-grid .aspect-video {
-                    width: 5rem !important;
+                    width: 7rem !important;
+                    border-radius: 0.75rem !important;
                 }
-                @media (min-width: 768px) {
+                @media (min-width: 1024px) {
                     .dashboard-grid .aspect-video {
-                        width: 7rem !important;
+                        width: 9rem !important;
                     }
                 }
                 .dashboard-grid h4 {
-                    font-size: 1rem !important;
+                    font-size: 1.1rem !important;
                     font-weight: 900 !important;
-                    letter-spacing: -0.02em;
-                }
-                @media (min-width: 768px) {
-                    .dashboard-grid h4 {
-                        font-size: 1.5rem !important;
-                    }
+                    letter-spacing: -0.01em;
                 }
                 .dashboard-grid p {
                     font-size: 0.9rem !important;
+                    opacity: 0.7;
                 }
-                @media (min-width: 1024px) {
-                    .dashboard-grid p {
-                        font-size: 1.1rem !important;
-                    }
+                /* Higher quality scrollbar */
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 4px;
                 }
-                /* Ensure tables don't break layout on narrow windows */
-                .dashboard-grid .overflow-y-auto, .dashboard-grid .overflow-hidden {
-                    max-width: 100%;
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 20px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.1);
                 }
             `}</style>
-        </div>
+        </motion.div>
     );
 }

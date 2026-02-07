@@ -823,7 +823,7 @@ export function QuickCheckModal({
                                 className="group relative flex items-center gap-3 px-10 py-3 bg-olleey-yellow hover:bg-olleey-yellow/90 text-black font-black uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_30px_rgba(251,191,36,0.2)]"
                             >
                                 <CheckCircle className="w-4 h-4" />
-                                Approve & Distribute
+                                Approve & Publish
                                 <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none skew-x-12" />
                             </button>
                         )}

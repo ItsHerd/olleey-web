@@ -9,6 +9,8 @@ import { useTheme } from "@/lib/useTheme";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { Button } from "@/components/ui/button";
 import { useDemo } from "@/lib/DemoContext";
+import { useReview } from "@/lib/ReviewContext";
+import { getFakeLocalizedText } from "@/lib/languages";
 import {
   Loader2,
   Video,
@@ -74,6 +76,7 @@ export default function AllMediaPage() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLanguages] = useState<string[]>(["es", "fr", "de", "pt", "ja", "it"]);
+  const { openReview } = useReview();
 
   // Theme classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -411,7 +414,27 @@ export default function AllMediaPage() {
                   <motion.div
                     key={video.video_id}
                     variants={itemVariants}
-                    onClick={() => router.push(`/app?page=Workflows&video=${video.video_id}`)}
+                    onClick={() => {
+                      if (status === "draft") {
+                        // Find the first draft localization
+                        const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "draft") || "es";
+                        const loc = video.localizations[langCode];
+                        const fakeText = getFakeLocalizedText(langCode);
+
+                        openReview({
+                          videoId: loc?.job_id || video.video_id,
+                          languageCode: langCode,
+                          originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                          dubbedVideoUrl: (loc as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                          videoTitle: fakeText.title,
+                          videoDescription: fakeText.description,
+                          isApproved: false,
+                          approvedAt: (video as any).published_at
+                        });
+                      } else {
+                        router.push(`/app?page=Workflows&video=${video.video_id}`);
+                      }
+                    }}
                     className={`${cardClass} border border-white/5 rounded-none overflow-hidden cursor-pointer hover:border-olleey-yellow/40 transition-all hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] group relative`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -614,7 +637,26 @@ export default function AllMediaPage() {
                       <tr
                         key={video.video_id}
                         className="group hover:bg-white/[0.02] transition-colors cursor-pointer"
-                        onClick={() => router.push(`/app?page=Workflows&video=${video.video_id}`)}
+                        onClick={() => {
+                          if (status === "draft") {
+                            const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "draft") || "es";
+                            const loc = video.localizations[langCode];
+                            const fakeText = getFakeLocalizedText(langCode);
+
+                            openReview({
+                              videoId: loc?.job_id || video.video_id,
+                              languageCode: langCode,
+                              originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                              dubbedVideoUrl: (loc as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                              videoTitle: fakeText.title,
+                              videoDescription: fakeText.description,
+                              isApproved: false,
+                              approvedAt: (video as any).published_at
+                            });
+                          } else {
+                            router.push(`/app?page=Workflows&video=${video.video_id}`);
+                          }
+                        }}
                       >
                         <td className="px-6 py-5">
                           <div className="flex items-center gap-4">
@@ -697,7 +739,7 @@ export default function AllMediaPage() {
                             variant="ghost"
                             className="h-10 px-4 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-olleey-yellow hover:bg-white/5 rounded-none"
                           >
-                            Open Workflow
+                            {status === "draft" ? "Review" : "Open Workflow"}
                             <ChevronRight className="w-4 h-4 ml-1" />
                           </Button>
                         </td>

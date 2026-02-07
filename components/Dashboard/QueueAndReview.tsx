@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, CheckCircle, Loader2, RefreshCw, FileCheck, ChevronRight, Sparkles, LayoutGrid } from "lucide-react";
+import { Trash2, ExternalLink, ChevronRight, Clock, CheckCircle, AlertCircle, Sparkles, Play, ShieldAlert, Zap, Globe, Eye, Loader2, RefreshCw, FileCheck, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { getRelativeTime } from "@/lib/utils";
@@ -176,11 +176,10 @@ export function QueueAndReview({
                                                                             title={LANGUAGE_OPTIONS.find(l => l.code === lang)?.name}
                                                                         >
                                                                             <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
-                                                                            <div className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full border ${isDark ? 'border-[#0a0a0a]' : 'border-white'} ${
-                                                                                video.localizations?.[lang].status === 'queued' ? 'bg-purple-500' :
+                                                                            <div className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full border ${isDark ? 'border-[#0a0a0a]' : 'border-white'} ${video.localizations?.[lang].status === 'queued' ? 'bg-purple-500' :
                                                                                 video.localizations?.[lang].status === 'draft' ? 'bg-olleey-yellow' :
-                                                                                'bg-blue-500 animate-pulse'
-                                                                            }`} />
+                                                                                    'bg-blue-500 animate-pulse'
+                                                                                }`} />
                                                                         </div>
                                                                     ))}
                                                                     {activeLangs.length > 5 && (
@@ -197,12 +196,12 @@ export function QueueAndReview({
                                                                 size="sm"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    // For queued videos, directly navigate (don't open WorkflowModal)
-                                                                    if (isQueued) {
+                                                                    // For queued or review-ready videos, use the main navigation (Review Modal / Start Proc)
+                                                                    if (isQueued || isReview) {
                                                                         onNavigate(video.video_id);
                                                                         return;
                                                                     }
-                                                                    // For other statuses, try to find job and open modal
+                                                                    // For other statuses (processing/failed), try to find job and open technical modal
                                                                     const job = jobs.find(j => j.source_video_id === video.video_id);
                                                                     if (job) {
                                                                         setSelectedWorkflowJobId(job.job_id);
@@ -210,13 +209,12 @@ export function QueueAndReview({
                                                                         onNavigate(video.video_id);
                                                                     }
                                                                 }}
-                                                                className={`h-7 px-3 text-[9px] font-black transition-all ${
-                                                                    isReview
+                                                                className={`h-7 px-3 text-[9px] font-black transition-all ${isReview
                                                                     ? 'bg-olleey-yellow text-black hover:bg-olleey-yellow/90 shadow-lg shadow-olleey-yellow/20'
                                                                     : isQueued
                                                                         ? 'bg-purple-500 text-white hover:bg-purple-600 shadow-lg shadow-purple-500/20'
                                                                         : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`
-                                                                }`}
+                                                                    }`}
                                                             >
                                                                 {isQueued ? (
                                                                     <div className="flex items-center gap-1.5">
@@ -225,8 +223,8 @@ export function QueueAndReview({
                                                                     </div>
                                                                 ) : isReview ? (
                                                                     <div className="flex items-center gap-1.5">
-                                                                        <Sparkles className="w-3 h-3" />
-                                                                        <span>Approve & Preview</span>
+                                                                        <Eye className="w-3 h-3" />
+                                                                        <span>Review</span>
                                                                     </div>
                                                                 ) : (
                                                                     <div className="flex items-center gap-1.5">

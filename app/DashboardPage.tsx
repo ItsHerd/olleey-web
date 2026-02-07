@@ -12,9 +12,9 @@ import { LANGUAGE_OPTIONS, getFakeLocalizedText } from "@/lib/languages";
 import { youtubeAPI, jobsAPI, dashboardAPI, type MasterNode, type Video, type ActivityItem, type LocalizationInfo } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
-import { QuickCheckModal } from "@/components/SmartTable/QuickCheckModal";
 import { JobTerminalPanel } from "@/components/JobTerminalPanel";
 import { useToast } from "@/components/ui/use-toast";
+import { useReview } from "@/lib/ReviewContext";
 import { SEO } from "@/components/SEO";
 
 // Extracted Dashboard Components
@@ -31,6 +31,8 @@ interface VideoWithLocalizations extends Video {
 
 type LocalizationStatus = "queued" | "live" | "draft" | "processing" | "not-started" | "failed";
 
+
+
 export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,18 +44,8 @@ export default function DashboardPage() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
-  // Quick Check Modal State
-  const [quickCheckState, setQuickCheckState] = useState<{
-    isOpen: boolean;
-    videoId: string | null;
-    languageCode: string | null;
-    originalVideoUrl?: string;
-    dubbedVideoUrl?: string;
-    videoTitle?: string;
-    videoDescription?: string;
-    isApproved?: boolean;
-    approvedAt?: string;
-  }>({ isOpen: false, videoId: null, languageCode: null });
+  // Global Review State
+  const { openReview } = useReview();
 
   // Enhanced Review Modal State (for demo draft review)
   const [reviewModalState, setReviewModalState] = useState<{
@@ -187,35 +179,7 @@ export default function DashboardPage() {
   }, [refetchDashboard, refetchVideos, selectedProject?.id]);
 
 
-  const handleApproveQuickCheck = async () => {
-    const { videoId, languageCode } = quickCheckState;
-    console.log("[Dashboard] Approving job:", videoId, "language:", languageCode);
-    if (videoId) {
-      try {
-        const result = await jobsAPI.approveJob(videoId);
-        console.log("[Dashboard] Approval result:", result);
-        toast("Approved! Publishing to channel...", "success");
-        // Refresh data after short delay to allow backend to process
-        setTimeout(() => {
-          refetchDashboard();
-          refetchVideos();
-        }, 1500);
-      } catch (err: any) {
-        console.error("[Dashboard] Approval failed:", err);
-        logger.error("DashboardPage", "Failed to approve job", err);
-        toast(err.message || "Failed to approve", "error");
-      }
-      setQuickCheckState({ ...quickCheckState, isOpen: false });
-    } else {
-      console.error("[Dashboard] No videoId for approval");
-      toast("Unable to approve - missing job ID", "error");
-    }
-  };
 
-  const handleFlagQuickCheck = (reason: string) => {
-    logger.info("DashboardPage", `Flagged video ${quickCheckState.videoId} (${quickCheckState.languageCode}): ${reason}`);
-    setQuickCheckState({ ...quickCheckState, isOpen: false });
-  };
 
   // Memoized Video Processing
   const videosWithLocalizations: VideoWithLocalizations[] = useMemo(() => {
@@ -398,8 +362,7 @@ export default function DashboardPage() {
       } else if (demoState?.status === 'draft') {
         // Open quick check modal (Review Hub) for draft videos in demo mode
         const fakeText = getFakeLocalizedText(langCode || "es");
-        setQuickCheckState({
-          isOpen: true,
+        openReview({
           videoId: video.video_id,
           languageCode: langCode || 'es',
           originalVideoUrl: 'https://olleey-videos.s3.us-west-1.amazonaws.com/en.mp4',
@@ -421,12 +384,11 @@ export default function DashboardPage() {
         language: LANGUAGE_OPTIONS.find(l => l.code === langCode)?.name
       });
     } else {
-      // Both Draft and Live use the QuickCheckModal
+      // Both Draft and Live use the Global QuickCheckModal via useReview
       const fakeText = getFakeLocalizedText(langCode || "en");
-      setQuickCheckState({
-        isOpen: true,
+      openReview({
         videoId: loc?.job_id || id,
-        languageCode: langCode || null,
+        languageCode: langCode || "",
         originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         dubbedVideoUrl: loc?.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
         videoTitle: fakeText.title,
@@ -435,7 +397,7 @@ export default function DashboardPage() {
         approvedAt: (video as any).published_at || (video as any).created_at
       });
     }
-  }, [filteredVideos, getOverallVideoStatus, isDemoMode, getVideoState, startProcessing]);
+  }, [filteredVideos, getOverallVideoStatus, isDemoMode, getVideoState, startProcessing, openReview]);
 
   const isInitialLoading = useMemo(() => {
     // If dashboard is still loading, it's definitely initial loading
@@ -475,6 +437,8 @@ export default function DashboardPage() {
         userName={dashboard?.name}
       />
 
+
+
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
         <div className="w-full">
           {isInitialLoading ? (
@@ -509,19 +473,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <QuickCheckModal
-        isOpen={quickCheckState.isOpen}
-        onClose={() => setQuickCheckState({ ...quickCheckState, isOpen: false })}
-        languageName={LANGUAGE_OPTIONS.find(l => l.code === quickCheckState.languageCode)?.name || ""}
-        originalVideoUrl={quickCheckState.originalVideoUrl}
-        dubbedVideoUrl={quickCheckState.dubbedVideoUrl}
-        videoTitle={quickCheckState.videoTitle}
-        videoDescription={quickCheckState.videoDescription}
-        onApprove={handleApproveQuickCheck}
-        onFlag={handleFlagQuickCheck}
-        isApproved={quickCheckState.isApproved}
-        approvedAt={quickCheckState.approvedAt}
-      />
+
 
 
       <JobTerminalPanel
