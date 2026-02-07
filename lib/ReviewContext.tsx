@@ -58,7 +58,7 @@ export function ReviewProvider({ children }: { children: React.ReactNode }) {
         });
 
         // Navigate based on status state
-        const processingStatuses = ['processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending', 'uploading'];
+        const processingStatuses = ['queued', 'processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending', 'uploading'];
 
         if (params.isApproved || params.status === 'live' || params.status === 'ready') {
             router.push(`/app?page=Preview&video_id=${params.videoId}&lang=${params.languageCode || 'es'}`, { scroll: false });

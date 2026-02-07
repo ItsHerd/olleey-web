@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+    ArrowLeft,
     ChevronLeft,
     Play,
     Share2,
@@ -19,7 +20,8 @@ import {
     CheckCircle,
     Zap,
     Download,
-    RefreshCw
+    RefreshCw,
+    Languages
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,19 +29,29 @@ import { useReview } from "@/lib/ReviewContext";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { useTheme } from "@/lib/useTheme";
 import { cn } from "@/lib/utils";
+import { useVideos } from "@/lib/useVideos";
+import { useProject } from "@/lib/ProjectContext";
 
 export default function PreviewPage() {
     const { theme } = useTheme();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { quickCheckState, handleApprove } = useReview();
+    const { quickCheckState, handleApprove, openReview } = useReview();
     const [isPublishing, setIsPublishing] = useState(false);
 
-    // Fallback if state is missing (though should be handled by context)
+    // Fetch full video data to get all localizations
+    const { selectedProject } = useProject();
+    const { videos } = useVideos({ project_id: selectedProject?.id });
+    const currentVideo = videos.find(v => v.video_id === quickCheckState.videoId);
+
+    const [viewMode, setViewMode] = useState<'dubbed' | 'original'>('dubbed');
+
+    // Fallback if state is missing
     const {
         videoTitle,
         videoDescription,
         dubbedVideoUrl,
+        originalVideoUrl,
         languageCode,
         isApproved
     } = quickCheckState;
@@ -72,35 +84,76 @@ export default function PreviewPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const handleSwitchToDub = (code: string, loc: any) => {
+        if (!currentVideo) return;
+
+        openReview({
+            videoId: currentVideo.video_id,
+            languageCode: code,
+            originalVideoUrl: (currentVideo as any).video_url || originalVideoUrl,
+            dubbedVideoUrl: loc.video_url,
+            videoTitle: currentVideo.title,
+            videoDescription: currentVideo.description,
+            isApproved: loc.status === "live",
+            approvedAt: currentVideo.published_at || (currentVideo as any).created_at
+        });
+        setViewMode('dubbed');
+    };
+
     return (
-        <div className="w-full h-full flex flex-col overflow-hidden bg-[#020202] text-white selection:bg-olleey-yellow selection:text-black">
+        <div className="w-full h-full flex flex-col overflow-hidden bg-[#0c0c0c] text-white selection:bg-olleey-yellow selection:text-black">
             {/* Minimal Command Header */}
-            <header className="h-16 border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-50">
+            <header className="h-20 border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-50">
                 <div className="flex items-center gap-6">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => router.back()}
-                        className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group"
+                        className="w-10 h-10 hover:bg-white/10 rounded-full"
                     >
-                        <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Return to Monitoring</span>
-                    </button>
-                    <div className="h-4 w-px bg-white/10" />
+                        <ArrowLeft className="w-5 h-5 opacity-60" />
+                    </Button>
+
                     <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black uppercase text-olleey-yellow bg-olleey-yellow/10 px-2 py-0.5 border border-olleey-yellow/20">Final Preview</span>
-                            {isApproved ? (
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-xl font-normal tracking-tight">Final Preview</h1>
+                            {viewMode === 'original' ? (
+                                <Badge className="bg-white/10 border-white/20 text-white text-[8px] font-black uppercase rounded-full px-3 tracking-widest">Original Source</Badge>
+                            ) : isApproved ? (
                                 <Badge className="bg-green-500/10 border-green-500/20 text-green-500 text-[8px] font-black uppercase rounded-full px-3 tracking-widest">Distributed_Live</Badge>
                             ) : (
                                 <Badge className="bg-blue-500/10 border-blue-500/20 text-blue-500 text-[8px] font-black uppercase rounded-full px-3 tracking-widest">Processed_Node</Badge>
                             )}
-                            <h1 className="text-xs font-black uppercase tracking-tight text-white/90 truncate max-w-[300px]">
-                                {videoTitle || "Unnamed_Asset_01"}
-                            </h1>
                         </div>
+                        <p className="text-xs text-white/60 font-medium tracking-wide opacity-60 truncate max-w-md mt-0.5">
+                            {videoTitle || "Unnamed_Asset_01"}
+                        </p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {/* View Toggle Button */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setViewMode(prev => prev === 'original' ? 'dubbed' : 'original')}
+                        className="rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase tracking-widest h-9 px-4 text-white/80 hover:text-white"
+                    >
+                        {viewMode === 'dubbed' ? (
+                            <>
+                                <Layout className="w-3.5 h-3.5 mr-2" />
+                                View Original
+                            </>
+                        ) : (
+                            <>
+                                <Monitor className="w-3.5 h-3.5 mr-2" />
+                                Return to Dub
+                            </>
+                        )}
+                    </Button>
+
+                    <div className="h-4 w-px bg-white/10 mx-1" />
+
                     <Button
                         variant="outline"
                         size="sm"
@@ -112,8 +165,11 @@ export default function PreviewPage() {
                     <Button
                         size="sm"
                         onClick={handlePublish}
-                        disabled={isPublishing}
-                        className="rounded-full bg-olleey-yellow hover:bg-olleey-yellow/90 text-black text-[9px] font-black uppercase tracking-widest h-9 shadow-[0_0_20px_rgba(251,191,36,0.2)]"
+                        disabled={isPublishing || viewMode === 'original'}
+                        className={cn(
+                            "rounded-full bg-olleey-yellow hover:bg-olleey-yellow/90 text-black text-[9px] font-black uppercase tracking-widest h-9 shadow-[0_0_20px_rgba(251,191,36,0.2)]",
+                            viewMode === 'original' && "opacity-50 grayscale cursor-not-allowed"
+                        )}
                     >
                         {isPublishing ? (
                             <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
@@ -132,7 +188,8 @@ export default function PreviewPage() {
                         {/* Video Player Section */}
                         <section className="relative aspect-video bg-[#050505] border border-white/5 group overflow-hidden rounded-[2.5rem] shadow-2xl">
                             <video
-                                src={dubbedVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"}
+                                key={viewMode === 'original' ? originalVideoUrl : dubbedVideoUrl}
+                                src={viewMode === 'original' ? originalVideoUrl : (dubbedVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4")}
                                 controls
                                 className="w-full h-full"
                                 poster="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200"
@@ -141,10 +198,10 @@ export default function PreviewPage() {
                             {/* Cinematic Overlay UI */}
                             <div className="absolute top-6 right-6 flex items-center gap-2 z-10 pointer-events-none">
                                 <Badge className="bg-black/60 backdrop-blur-md border border-olleey-yellow/30 text-olleey-yellow text-[8px] font-black uppercase px-3 py-1.5 rounded-full">
-                                    4K Localized
+                                    {viewMode === 'original' ? "Source Master" : "4K Localized"}
                                 </Badge>
                                 <Badge className="bg-black/60 backdrop-blur-md border border-white/10 text-white/60 text-[8px] font-black uppercase px-3 py-1.5 rounded-full">
-                                    {languageName}
+                                    {viewMode === 'original' ? "Original" : languageName}
                                 </Badge>
                             </div>
                         </section>
@@ -152,52 +209,105 @@ export default function PreviewPage() {
                         {/* Content Info Grid */}
                         <div className="grid grid-cols-3 gap-8">
                             <div className="col-span-2 space-y-8">
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Asset Manifest</h2>
-                                        <div className="flex items-center gap-4">
-                                            <button onClick={handleCopy} className="text-white/40 hover:text-white transition-colors flex items-center gap-1.5">
-                                                <Copy className="w-3 h-3" />
-                                                <span className="text-[8px] font-black uppercase tracking-wider">{copied ? "Copied" : "Copy Data"}</span>
-                                            </button>
+                                {viewMode === 'original' ? (
+                                    /* Original Mode: Show List of Dubbed Versions */
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Global Localization Hub</h2>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {currentVideo?.localizations && Object.entries(currentVideo.localizations).map(([code, loc]: [string, any]) => {
+                                                const lang = LANGUAGE_OPTIONS.find(l => l.code === code);
+                                                return (
+                                                    <button
+                                                        key={code}
+                                                        onClick={() => handleSwitchToDub(code, loc)}
+                                                        className="w-full flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/5 hover:border-white/10 transition-all group text-left"
+                                                    >
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-lg shadow-inner">
+                                                                {lang?.flag || "🌐"}
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="text-sm font-bold text-white group-hover:text-olleey-yellow transition-colors">
+                                                                    {lang?.name || code.toUpperCase()} Dub
+                                                                </h3>
+                                                                <p className="text-[9px] font-mono text-white/30 uppercase tracking-wider mt-0.5">
+                                                                    Status: {loc.status || "Processing"}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-4">
+                                                            <Badge className={cn(
+                                                                "border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-full",
+                                                                loc.status === 'live'
+                                                                    ? "bg-green-500/10 border-green-500/20 text-green-500"
+                                                                    : "bg-blue-500/10 border-blue-500/20 text-blue-500"
+                                                            )}>
+                                                                {loc.status === 'live' ? 'Verified' : 'In Review'}
+                                                            </Badge>
+                                                            <ChevronLeft className="w-4 h-4 text-white/20 rotate-180 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                            {(!currentVideo?.localizations || Object.keys(currentVideo.localizations).length === 0) && (
+                                                <div className="p-8 text-center border border-white/5 border-dashed rounded-2xl">
+                                                    <p className="text-xs text-white/30 font-mono">No localizations found for this asset.</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="p-8 border border-white/5 bg-white/[0.02] space-y-6 rounded-[2rem]">
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-xl font-black text-white/90 leading-tight tracking-tight">{videoTitle}</h3>
-                                                <div className="flex items-center gap-2">
-                                                    <Badge variant="outline" className="rounded-full border-green-500/20 text-green-500 bg-green-500/5 text-[8px] font-black uppercase px-2.5">Production Ready</Badge>
-                                                </div>
+                                ) : (
+                                    /* Dubbed Mode: Show Asset Manifest */
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Asset Manifest</h2>
+                                            <div className="flex items-center gap-4">
+                                                <button onClick={handleCopy} className="text-white/40 hover:text-white transition-colors flex items-center gap-1.5">
+                                                    <Copy className="w-3 h-3" />
+                                                    <span className="text-[8px] font-black uppercase tracking-wider">{copied ? "Copied" : "Copy Data"}</span>
+                                                </button>
                                             </div>
+                                        </div>
+                                        <div className="p-8 border border-white/5 bg-white/[0.02] space-y-6 rounded-[2rem]">
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-xl font-black text-white/90 leading-tight tracking-tight">{videoTitle}</h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="outline" className="rounded-full border-green-500/20 text-green-500 bg-green-500/5 text-[8px] font-black uppercase px-2.5">Production Ready</Badge>
+                                                    </div>
+                                                </div>
 
-                                            {/* Channel Attribution */}
-                                            <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/5 rounded-2xl w-fit">
-                                                <div className="w-8 h-8 rounded-full bg-olleey-yellow/10 flex items-center justify-center border border-white/10">
-                                                    <Youtube className="w-4 h-4 text-olleey-yellow" />
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-[7px] font-black uppercase tracking-widest text-white/20">Target Channel</span>
-                                                    <span className="text-xs font-bold text-white/80">Olleey Global Labs</span>
-                                                </div>
-                                                <div className="w-px h-6 bg-white/10 mx-2" />
-                                                <div className="flex flex-col">
-                                                    <span className="text-[7px] font-black uppercase tracking-widest text-white/20">Language</span>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.flag || "🇪🇸"}</span>
-                                                        <span className="text-xs font-bold text-white/80">{languageName}</span>
+                                                {/* Channel Attribution */}
+                                                <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/5 rounded-2xl w-fit">
+                                                    <div className="w-8 h-8 rounded-full bg-olleey-yellow/10 flex items-center justify-center border border-white/10">
+                                                        <Youtube className="w-4 h-4 text-olleey-yellow" />
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[7px] font-black uppercase tracking-widest text-white/20">Target Channel</span>
+                                                        <span className="text-xs font-bold text-white/80">Olleey Global Labs</span>
+                                                    </div>
+                                                    <div className="w-px h-6 bg-white/10 mx-2" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[7px] font-black uppercase tracking-widest text-white/20">Language</span>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.flag || "🇪🇸"}</span>
+                                                            <span className="text-xs font-bold text-white/80">{languageName}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                            <div className="h-px bg-white/5" />
+                                            <p className="text-sm text-white/50 leading-relaxed font-medium">
+                                                {videoDescription || "No localized description available for this production cycle."}
+                                            </p>
                                         </div>
-                                        <div className="h-px bg-white/5" />
-                                        <p className="text-sm text-white/50 leading-relaxed font-medium">
-                                            {videoDescription || "No localized description available for this production cycle."}
-                                        </p>
                                     </div>
-                                </div>
+                                )}
 
-                                {/* Industrial Metrics */}
+                                {/* Industrial Metrics (Always Visible) */}
                                 <div className="grid grid-cols-4 gap-4">
                                     {[
                                         { label: "Sync Fidelity", value: stats.qualityScore + "%", icon: Zap },
@@ -243,7 +353,7 @@ export default function PreviewPage() {
                                         </p>
                                         <Button
                                             onClick={handlePublish}
-                                            disabled={isPublishing}
+                                            disabled={isPublishing || viewMode === 'original'}
                                             className="w-full rounded-full bg-olleey-yellow hover:bg-olleey-yellow/90 text-black text-[9px] font-black uppercase tracking-widest h-10"
                                         >
                                             {isPublishing ? "Processing..." : (isApproved ? "Update Distributed Feed" : "Schedule Channel Post")}

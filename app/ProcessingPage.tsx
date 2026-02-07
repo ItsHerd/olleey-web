@@ -79,7 +79,7 @@ export default function ProcessingPage() {
     const languageName = LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.name || "Spanish";
 
     return (
-        <div className="w-full h-full flex flex-col overflow-hidden bg-[#020202] text-white selection:bg-olleey-yellow selection:text-black">
+        <div className="w-full h-full flex flex-col overflow-hidden bg-[#0a0a0a] text-white selection:bg-olleey-yellow selection:text-black">
             {/* Minimal Command Header */}
             <header className="h-16 border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-50">
                 <div className="flex items-center gap-6">

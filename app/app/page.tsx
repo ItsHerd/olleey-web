@@ -446,7 +446,7 @@ function AppContent() {
                                         className={`h-10 px-4 gap-2 rounded-xl group ${isDark ? 'bg-white/5 text-white' : 'bg-gray-100 text-gray-900'}`}
                                     >
                                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                        <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest transition-colors opacity-70 group-hover:opacity-100 italic">Sync Connection</span>
+                                        <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest transition-colors opacity-70 group-hover:opacity-100 italic">Connect Account</span>
                                     </Button>
 
                                     <div className={`h-6 w-[1px] ${isDark ? 'bg-white/5' : 'bg-gray-200'} mx-2 hidden sm:block`} />

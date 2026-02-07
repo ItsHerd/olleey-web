@@ -137,6 +137,25 @@ export default function JobsPage() {
         }
     }, [jobs, filter]);
 
+    const handlePreview = (job: Job) => {
+        const video = videos.find(v => v.video_id === job?.source_video_id);
+        if (!job || !video) return;
+
+        const langCode = job.target_languages[0] || "es";
+
+        openReview({
+            videoId: job.source_video_id,
+            languageCode: langCode,
+            originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+            dubbedVideoUrl: (job as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+            videoTitle: video.title,
+            videoDescription: video.description,
+            isApproved: job.status === "completed",
+            status: job.status,
+            approvedAt: job.updated_at
+        });
+    };
+
     if (loading && jobs.length === 0) {
         return (
             <div className={`w-full h-full ${bgClass} p-8`}>
@@ -317,6 +336,7 @@ export default function JobsPage() {
                             jobs={filteredJobs}
                             projectId={selectedProject?.id}
                             onViewWorkflow={(jobId) => setSelectedGraphJobId(jobId)}
+                            onPreview={handlePreview}
                         />
                     </div>
                 </motion.div>
@@ -366,25 +386,8 @@ export default function JobsPage() {
                         toast("Retrying production pipeline...", "info");
                     }}
                     onPreview={() => {
-                        if (!selectedGraphJobId) return;
                         const job = jobs.find(j => j.job_id === selectedGraphJobId);
-                        const video = videos.find(v => v.video_id === job?.source_video_id);
-                        if (!job || !video) return;
-
-                        const langCode = job.target_languages[0] || "es";
-                        const fakeText = getFakeLocalizedText(langCode);
-
-                        openReview({
-                            videoId: job.job_id,
-                            languageCode: langCode,
-                            originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                            dubbedVideoUrl: (job as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                            videoTitle: video.title,
-                            videoDescription: video.description,
-                            isApproved: job.status === "completed",
-                            status: job.status,
-                            approvedAt: job.updated_at
-                        });
+                        if (job) handlePreview(job);
                     }}
                 />
             </motion.div>

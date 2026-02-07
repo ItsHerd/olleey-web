@@ -50,6 +50,7 @@ import { motion, AnimatePresence } from "framer-motion";
 interface JobsTableProps {
     jobs: Job[];
     onViewWorkflow: (jobId: string) => void;
+    onPreview: (job: Job) => void;
     projectId?: string;
 }
 
@@ -62,7 +63,7 @@ interface VideoGroup {
     status_counts: Record<string, number>;
 }
 
-export function JobsTable({ jobs, onViewWorkflow, projectId }: JobsTableProps) {
+export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTableProps) {
     const { theme } = useTheme();
     const router = useRouter();
     const { videos } = useVideos();
@@ -437,11 +438,30 @@ export function JobsTable({ jobs, onViewWorkflow, projectId }: JobsTableProps) {
 
                                                         {/* Action Column */}
                                                         <TableCell>
-                                                            <div className="flex justify-end pr-8">
+                                                            <div className="flex justify-end pr-8 gap-2">
                                                                 <Button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         onViewWorkflow(job.job_id);
+                                                                    }}
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className={`
+                                                                        h-9 w-9 rounded-full transition-all
+                                                                        ${isDark
+                                                                            ? "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white border border-white/5"
+                                                                            : "bg-white text-gray-400 hover:text-gray-900 border border-gray-200"
+                                                                        }
+                                                                    `}
+                                                                    title="View Workflow Graph"
+                                                                >
+                                                                    <Layers className="w-4 h-4" />
+                                                                </Button>
+
+                                                                <Button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        onPreview(job);
                                                                     }}
                                                                     variant="ghost"
                                                                     className={`
