@@ -73,7 +73,7 @@ export default function Sidebar({
       <div className="px-2 sm:px-3 pt-3 sm:pt-4 pb-3 sm:pb-4">
         <div className={`flex items-center ${isExpanded ? 'px-4 py-3 gap-3 justify-center' : 'justify-center p-2'} bg-white text-black rounded-xl transition-all duration-200`}>
           {isExpanded ? (
-            <h1 className="text-xl font-300 tracking-tight">olleey.com</h1>
+            <h1 className="text-xl font-300 tracking-tight cursor-pointer" onClick={() => onNavigate("dashboard")}>olleey.com</h1>
           ) : (
             <img
               src="/logo-transparent.png"

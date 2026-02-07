@@ -66,7 +66,7 @@ export default function UsagePage() {
     }
 
     return (
-        <div className={`flex-1 p-3 pr-6 pb-32 ${bgClass} overflow-y-auto custom-scrollbar pt-8`}>
+        <div className={`h-full flex-1 p-3 pr-6 pb-32 ${bgClass} overflow-y-auto custom-scrollbar pt-8`}>
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
