@@ -499,9 +499,18 @@ export function QuickCheckModal({
                                 <div className="space-y-2">
                                     {Object.entries(checklist).map(([key, value]) => (
                                         <div key={key} className="relative group/qa">
-                                            <button
-                                                disabled={isApproved || reprocessingItems[key]}
-                                                onClick={() => !isApproved && setChecklist(prev => ({ ...prev, [key]: !value }))}
+                                            <div
+                                                role="button"
+                                                tabIndex={isApproved || reprocessingItems[key] ? -1 : 0}
+                                                onClick={() => !isApproved && !reprocessingItems[key] && setChecklist(prev => ({ ...prev, [key]: !value }))}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        if (!isApproved && !reprocessingItems[key]) {
+                                                            setChecklist(prev => ({ ...prev, [key]: !value }));
+                                                        }
+                                                    }
+                                                }}
                                                 className={`w-full flex items-center justify-between p-3 border transition-all rounded-none 
                                                     ${reprocessingItems[key] ? 'border-olleey-yellow/30 bg-olleey-yellow/5 animate-pulse' :
                                                         value ? 'border-green-500/50 bg-green-500/5' : 'border-white/5 bg-white/5 hover:border-white/20'} 
@@ -536,7 +545,7 @@ export function QuickCheckModal({
                                                         )}
                                                     </div>
                                                 </div>
-                                            </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

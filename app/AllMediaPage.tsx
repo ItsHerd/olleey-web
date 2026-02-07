@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
@@ -46,7 +46,7 @@ interface LocalizationInfo {
 }
 
 const containerVariants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 1 },
   visible: {
     opacity: 1,
     transition: {
@@ -56,7 +56,7 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 1, y: 0 },
   visible: { opacity: 1, y: 0 }
 };
 
@@ -65,7 +65,7 @@ export default function AllMediaPage() {
   const { theme } = useTheme();
   const { selectedProject } = useProject();
   const { dashboard } = useDashboard();
-  const { videos, loading: videosLoading } = useVideos(
+  const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
     selectedProject?.id ? { project_id: selectedProject.id } : {}
   );
   const { isDemoMode, updateVideoState, refreshTrigger } = useDemo();
@@ -78,6 +78,19 @@ export default function AllMediaPage() {
   const [selectedLanguages] = useState<string[]>(["es", "fr", "de", "pt", "ja", "it"]);
   const { openReview } = useReview();
 
+  const [hasAttemptedRefetch, setHasAttemptedRefetch] = useState(false);
+
+  // Determine if we're in initial loading state
+  const isInitialLoading = videosLoading && videos.length === 0;
+
+  // Auto-refetch immediately if library is empty after initial load
+  useEffect(() => {
+    if (!videosLoading && (!videos || videos.length === 0) && !hasAttemptedRefetch) {
+      setHasAttemptedRefetch(true);
+      refetchVideos();
+    }
+  }, [videosLoading, videos?.length, hasAttemptedRefetch, refetchVideos]);
+
   // Theme classes
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
   const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
@@ -88,6 +101,8 @@ export default function AllMediaPage() {
 
   // Process videos with localizations
   const videosWithLocalizations = useMemo(() => {
+    if (!videos || videos.length === 0) return [];
+    
     return videos.map(video => {
       const localizations: Record<string, LocalizationInfo> = {};
 
@@ -142,7 +157,7 @@ export default function AllMediaPage() {
 
       return { ...video, localizations };
     });
-  }, [videos, selectedLanguages, dashboard?.recent_jobs, refreshTrigger]);
+  }, [videos, selectedLanguages, dashboard, refreshTrigger]);
 
   const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): FilterStatus | "queued" | "failed" => {
     const statuses = Object.values(localizations).map(l => l.status);
@@ -157,9 +172,14 @@ export default function AllMediaPage() {
     return "all";
   };
 
-  // Filter and sort videos
+  // Filter and sort videos - use raw videos for 'all' tab if localizations not ready
   const filteredAndSortedVideos = useMemo(() => {
-    let filtered = videosWithLocalizations;
+    // If on 'all' tab and we have videos but localizations aren't processed yet, show raw videos
+    const sourceVideos = videosWithLocalizations.length > 0 
+      ? videosWithLocalizations 
+      : videos.map(v => ({ ...v, localizations: {} as Record<string, LocalizationInfo> }));
+    
+    let filtered = sourceVideos;
 
     // Filter by search query
     if (searchQuery) {
@@ -215,10 +235,17 @@ export default function AllMediaPage() {
     return { total, live, draft, processing };
   }, [videosWithLocalizations]);
 
+  const statsItems = [
+    { label: "Total Assets", value: stats.total, icon: Video, color: "text-white/40", bg: "bg-white/5", border: "border-white/5" },
+    { label: "Released", value: stats.live, icon: Radio, color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/20", pulse: true },
+    { label: "Pending Review", value: stats.draft, icon: CheckCircle, color: "text-olleey-yellow", bg: "bg-olleey-yellow/10", border: "border-olleey-yellow/20" },
+    { label: "Processing", value: stats.processing, icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" }
+  ];
+
   return (
     <div className={`w-full h-full ${bgClass} flex flex-col pl-3 pr-6 pb-20 overflow-y-auto custom-scrollbar`}>
       {/* Header with Mesh Gradient */}
-      <div className="relative mb-8 pt-6 group overflow-hidden bg-black/5 border-b border-white/5 pb-8 -mx-6 px-6">
+      <div className="relative pt-6 group overflow-hidden bg-black/5 border-b border-white/5 pb-6 -mx-6 px-6 shrink-0">
         <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
           <div className="absolute -top-24 -left-24 w-96 h-96 bg-olleey-yellow/20 rounded-full blur-[100px]" />
           <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px]" />
@@ -254,118 +281,113 @@ export default function AllMediaPage() {
               </Button>
             </div>
           </div>
-
-          {/* Stats Cards Row */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-10">
-            {[
-              { label: "Total Assets", value: stats.total, icon: Video, color: "text-white/40", bg: "bg-white/5", border: "border-white/5" },
-              { label: "Released", value: stats.live, icon: Radio, color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/20", pulse: true },
-              { label: "Pending Review", value: stats.draft, icon: CheckCircle, color: "text-olleey-yellow", bg: "bg-olleey-yellow/10", border: "border-olleey-yellow/20" },
-              { label: "Processing", value: stats.processing, icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" }
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className={`${cardClass} border ${item.border} ${item.bg} rounded-none p-5 flex flex-col justify-between group/card relative overflow-hidden`}
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/[0.02] -mr-8 -mt-8 rounded-full blur-2xl group-hover/card:bg-white/[0.05] transition-colors" />
-                <div className="flex items-center justify-between relative z-10 mb-6">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 group-hover/card:text-white/60 transition-colors">
-                    {item.label}
-                  </span>
-                  <div className={`p-2 rounded-none ${item.bg} border ${item.border}`}>
-                    <item.icon className={`w-4 h-4 ${item.color} ${item.pulse ? 'animate-pulse' : ''}`} />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2 relative z-10">
-                  <span className={`text-4xl font-normal ${item.color.includes('white') ? 'text-white' : item.color}`}>
-                    {item.value}
-                  </span>
-                  <span className="text-[10px] text-white/20 font-black uppercase">Units</span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* Modern Filter Bar */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-6 sticky top-0 z-40 bg-dark-bg/80 backdrop-blur-md py-4 border-b border-white/5">
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-          {/* Search */}
-          <div className="relative min-w-[300px] group">
-            <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-olleey-yellow transition-colors`} />
-            <input
-              type="text"
-              placeholder="Filter library by title or channel..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-none text-sm text-white focus:ring-0 focus:border-olleey-yellow/50 transition-all outline-none placeholder:text-white/20"
-            />
-          </div>
-
-          <div className="h-10 w-px bg-white/5 mx-2 hidden lg:block" />
-
-          {/* Filters */}
-          <div className="flex items-center gap-2">
-            {[
-              { id: "all", label: "All" },
-              { id: "live", label: "Live" },
-              { id: "draft", label: "Needs Review" },
-              { id: "processing", label: "Active Jobs" }
-            ].map(f => (
-              <button
-                key={f.id}
-                onClick={() => setFilterStatus(f.id as any)}
-                className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest border transition-all ${filterStatus === f.id
-                  ? 'bg-olleey-yellow border-olleey-yellow text-black'
-                  : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/20'
-                  }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+      {/* Modern Filter & Stats Bar - Sticky */}
+      <div className="flex flex-col gap-4 sticky top-0 z-20 bg-dark-bg/95 backdrop-blur-xl py-4 border-b border-white/5 -mx-6 px-6">
+        {/* Stats Mini Row - STICKY */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {statsItems.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.05 }}
+              className={`${cardClass} border ${item.border} ${item.bg} rounded-none p-4 flex items-center justify-between group/card relative overflow-hidden h-20`}
+            >
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white/30 truncate">
+                  {item.label}
+                </span>
+                <div className="flex items-baseline gap-1.5 mt-1">
+                  <span className={`text-2xl font-normal ${item.color.includes('white') ? 'text-white' : item.color}`}>
+                    {item.value}
+                  </span>
+                </div>
+              </div>
+              <div className={`p-2.5 rounded-none ${item.bg} border ${item.border} group-hover/card:scale-110 transition-transform`}>
+                <item.icon className={`w-4 h-4 ${item.color} ${item.pulse ? 'animate-pulse' : ''}`} />
+              </div>
+            </motion.div>
+          ))}
         </div>
 
-        <div className="flex items-center gap-4 w-full lg:w-auto justify-between lg:justify-end">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mr-2">Sort:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortBy)}
-              className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-white/60 focus:ring-0 cursor-pointer hover:text-white"
-            >
-              <option value="date" className="bg-[#0a0a0a]">Date Published</option>
-              <option value="views" className="bg-[#0a0a0a]">View Count</option>
-              <option value="title" className="bg-[#0a0a0a]">Alphabetical</option>
-              <option value="status" className="bg-[#0a0a0a]">Job Status</option>
-            </select>
-            <button
-              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-              className="p-2 text-white/40 hover:text-white transition-colors"
-            >
-              {sortOrder === "asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
-            </button>
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mt-2">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            {/* Search */}
+            <div className="relative min-w-[300px] group">
+              <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-olleey-yellow transition-colors`} />
+              <input
+                type="text"
+                placeholder="Filter library by title or channel..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-none text-sm text-white focus:ring-0 focus:border-olleey-yellow/50 transition-all outline-none placeholder:text-white/20"
+              />
+            </div>
+
+            <div className="h-10 w-px bg-white/5 mx-2 hidden lg:block" />
+
+            {/* Filters */}
+            <div className="flex items-center gap-2">
+              {[
+                { id: "all", label: "All" },
+                { id: "live", label: "Live" },
+                { id: "draft", label: "Needs Review" },
+                { id: "processing", label: "Active Jobs" }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setFilterStatus(f.id as any)}
+                  className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest border transition-all ${filterStatus === f.id
+                    ? 'bg-olleey-yellow border-olleey-yellow text-black'
+                    : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/20'
+                    }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="h-6 w-px bg-white/10" />
+          <div className="flex items-center gap-4 w-full lg:w-auto justify-between lg:justify-end">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mr-2">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortBy)}
+                className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-white/60 focus:ring-0 cursor-pointer hover:text-white"
+              >
+                <option value="date" className="bg-[#0a0a0a]">Date Published</option>
+                <option value="views" className="bg-[#0a0a0a]">View Count</option>
+                <option value="title" className="bg-[#0a0a0a]">Alphabetical</option>
+                <option value="status" className="bg-[#0a0a0a]">Job Status</option>
+              </select>
+              <button
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                className="p-2 text-white/40 hover:text-white transition-colors"
+              >
+                {sortOrder === "asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+              </button>
+            </div>
 
-          <div className="flex items-center gap-1 p-1 bg-white/5 border border-white/10 rounded-none">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`p-2 transition-all ${viewMode === "grid" ? 'bg-olleey-yellow text-black' : 'text-white/40 hover:text-white'}`}
-            >
-              <Grid3x3 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-2 transition-all ${viewMode === "list" ? 'bg-olleey-yellow text-black' : 'text-white/40 hover:text-white'}`}
-            >
-              <List className="w-4 h-4" />
-            </button>
+            <div className="h-6 w-px bg-white/10" />
+
+            <div className="flex items-center gap-1 p-1 bg-white/5 border border-white/10 rounded-none">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 transition-all ${viewMode === "grid" ? 'bg-olleey-yellow text-black' : 'text-white/40 hover:text-white'}`}
+              >
+                <Grid3x3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 transition-all ${viewMode === "list" ? 'bg-olleey-yellow text-black' : 'text-white/40 hover:text-white'}`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -375,11 +397,11 @@ export default function AllMediaPage() {
         <motion.div
           key={viewMode + filterStatus + sortBy + sortOrder + searchQuery}
           variants={containerVariants}
-          initial="hidden"
+          initial={false}
           animate="visible"
-          className="w-full"
+          className="w-full mt-6 relative z-10"
         >
-          {videosLoading ? (
+          {isInitialLoading ? (
             <div className="flex flex-col items-center justify-center py-40">
               <div className="relative">
                 <div className="w-16 h-16 border-2 border-olleey-yellow/20 rounded-full animate-ping absolute inset-0" />

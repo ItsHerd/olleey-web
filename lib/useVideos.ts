@@ -110,7 +110,7 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
 
     // Fetch fresh data
     loadVideos(false);
-  }, [params?.page, params?.page_size, params?.channel_id, params?.project_id]);
+  }, [enabled, params?.page, params?.page_size, params?.channel_id, params?.project_id]);
 
   // Debug logging
   useEffect(() => {
