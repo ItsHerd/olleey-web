@@ -8,7 +8,31 @@ import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
 import { useProject } from "@/lib/ProjectContext";
 import { useVideos } from "@/lib/useVideos";
-import { Loader2 } from "lucide-react";
+import { Loader2, Zap, LayoutGrid, Rocket } from "lucide-react";
+import { motion } from "framer-motion";
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            type: "spring",
+            stiffness: 300,
+            damping: 25
+        } as const
+    }
+};
 
 export default function ManualUploadPage() {
     const router = useRouter();
@@ -18,7 +42,6 @@ export default function ManualUploadPage() {
     const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Theme-aware classes
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
     const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
     const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
@@ -27,17 +50,14 @@ export default function ManualUploadPage() {
         const loadChannelGraph = async () => {
             try {
                 setIsLoading(true);
-                // Add timeout for faster UX
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Loading timeout')), 5000)
                 );
                 const dataPromise = youtubeAPI.getChannelGraph();
-
                 const graph = await Promise.race([dataPromise, timeoutPromise]) as any;
                 setChannelGraph(graph.master_nodes || []);
             } catch (error) {
                 logger.error("ManualUploadPage", "Failed to load channel graph", error);
-                // Continue anyway with empty channels - user can still upload
                 setChannelGraph([]);
             } finally {
                 setIsLoading(false);
@@ -48,8 +68,11 @@ export default function ManualUploadPage() {
 
     if (isLoading) {
         return (
-            <div className={`flex items-center justify-center h-full ${bgClass}`}>
-                <Loader2 className={`h-8 w-8 animate-spin ${textSecondaryClass}`} />
+            <div className={`flex flex-col items-center justify-center h-full ${bgClass} p-8 animate-pulse`}>
+                <div className="w-20 h-20 rounded-[2.5rem] bg-white/5 border border-white/10 flex items-center justify-center mb-8">
+                    <Loader2 className={`h-10 w-10 animate-spin text-olleey-yellow stroke-[1.5px]`} />
+                </div>
+                <p className="text-xs font-black uppercase tracking-[0.4em] text-white/30">Calibrating Engines...</p>
             </div>
         );
     }
@@ -74,25 +97,48 @@ export default function ManualUploadPage() {
     ];
 
     return (
-        <div className={`w-full h-full ${bgClass} overflow-y-auto pt-8 pb-20`}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="mb-10">
-                    <h1 className={`text-3xl font-normal ${textClass} tracking-tight mb-2`}>Manual Workflow</h1>
-                    <p className={`${textSecondaryClass} text-sm`}>
-                        Configure your AI dubbing pipeline and international distribution strategy.
-                    </p>
-                </div>
+        <div className={`w-full h-full ${bgClass} overflow-y-auto pt-8 pb-32 px-6 custom-scrollbar`}>
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="max-w-7xl mx-auto space-y-12"
+            >
+                {/* Immersive Header */}
+                <motion.div variants={itemVariants} className="relative group rounded-[2.5rem] overflow-hidden border border-white/5 min-h-[280px] flex items-end shadow-2xl bg-[#0c0c0c]">
+                    <img
+                        src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2000"
+                        className="absolute inset-0 w-full h-full object-cover brightness-[0.25] group-hover:scale-105 transition-transform duration-[10000ms]"
+                        alt=""
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0c] via-[#0c0c0c]/60 to-transparent" />
 
-                <ManualProcessView
-                    availableChannels={allChannels}
-                    projectId={selectedProject?.id}
-                    onSuccess={() => {
-                        router.push("/app?page=Dashboard");
-                        refetchVideos();
-                    }}
-                    onCancel={() => router.push("/app?page=Dashboard")}
-                />
-            </div>
+                    <div className="relative z-10 p-12 w-full">
+                        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-olleey-yellow/10 backdrop-blur-3xl border border-olleey-yellow/20 text-[10px] font-black uppercase tracking-[0.3em] text-olleey-yellow mb-6 shadow-[0_0_30px_rgba(251,191,36,0.1)]">
+                            <Rocket className="w-4 h-4 shadow-sm" /> Deployment Interface
+                        </div>
+                        <h1 className={`text-4xl md:text-6xl font-normal text-white tracking-tighter mb-3 leading-none`}>
+                            Manual Ingestion
+                        </h1>
+                        <p className={`${textSecondaryClass} text-sm md:text-base max-w-2xl font-light tracking-tight opacity-60 leading-relaxed`}>
+                            Bridge the gap between languages. Configure your AI dubbing pipeline, define audio-visual synthesis parameters, and scale your content for international markets.
+                        </p>
+                    </div>
+                </motion.div>
+
+                {/* Main Action View */}
+                <motion.div variants={itemVariants} className="relative z-20">
+                    <ManualProcessView
+                        availableChannels={allChannels}
+                        projectId={selectedProject?.id}
+                        onSuccess={() => {
+                            router.push("/app?page=Dashboard");
+                            refetchVideos();
+                        }}
+                        onCancel={() => router.push("/app?page=Dashboard")}
+                    />
+                </motion.div>
+            </motion.div>
         </div>
     );
 }

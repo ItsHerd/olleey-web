@@ -1,104 +1,114 @@
 "use client";
-import { getAnimalAvatar, getInitialsAvatar } from "@/lib/utils";
 
-import { useState, useEffect, useMemo } from "react";
-import { youtubeAPI, channelsAPI, type MasterNode, type LanguageChannel } from "@/lib/api";
+import React, { useState, useEffect, useMemo } from "react";
+import { youtubeAPI, channelsAPI, type MasterNode } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
-import { Loader2, Youtube, Plus, RefreshCw, CheckCircle, XCircle, AlertCircle, Radio, ChevronRight, Video, Globe2, Pause, Play, Trash2, Star, Check, Languages } from "lucide-react";
+import {
+  Loader2,
+  Youtube,
+  Plus,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+  Radio,
+  Video,
+  Globe,
+  Pause,
+  Play,
+  Trash2,
+  Star,
+  Activity,
+  Layers,
+  Shield,
+  Sparkles,
+  ChevronRight,
+  TrendingUp,
+  ShieldCheck,
+  Cpu,
+  Zap,
+  Globe2
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
+import { getInitialsAvatar } from "@/lib/utils";
 
 type ConnectionStatus = "active" | "expired" | "restricted" | "disconnected";
-
-const LANGUAGE_FLAGS: Record<string, string> = {
-  en: "🇺🇸",
-  es: "🇪🇸",
-  fr: "🇫🇷",
-  de: "🇩🇪",
-  pt: "🇵🇹",
-  ja: "🇯🇵",
-  ko: "🇰🇷",
-  hi: "🇮🇳",
-  ar: "🇸🇦",
-  ru: "🇷🇺",
-  it: "🇮🇹",
-  zh: "🇨🇳",
-};
 
 const getStatusConfig = (status: ConnectionStatus) => {
   switch (status) {
     case "active":
       return {
-        icon: CheckCircle,
-        label: "Active",
-        emoji: "🟢",
-        color: "text-green-600",
-        bgColor: "bg-green-50",
-        borderColor: "border-green-200",
-        dotColor: "bg-green-500",
+        label: "Operational",
+        color: "text-emerald-400",
+        dotColor: "bg-emerald-500",
+        glow: "shadow-[0_0_12px_rgba(16,185,129,0.3)]"
       };
     case "expired":
       return {
-        icon: XCircle,
         label: "Token Expired",
-        emoji: "🔴",
-        color: "text-red-600",
-        bgColor: "bg-red-50",
-        borderColor: "border-red-200",
+        color: "text-red-400",
         dotColor: "bg-red-500",
+        glow: "shadow-[0_0_12px_rgba(239,68,68,0.3)]"
       };
     case "restricted":
       return {
-        icon: AlertCircle,
-        label: "Restricted Access",
-        emoji: "🟡",
-        color: "text-yellow-600",
-        bgColor: "bg-yellow-50",
-        borderColor: "border-yellow-200",
-        dotColor: "bg-yellow-500",
+        label: "Limited Scope",
+        color: "text-olleey-yellow",
+        dotColor: "bg-olleey-yellow",
+        glow: "shadow-[0_0_12px_rgba(251,191,36,0.3)]"
       };
-    case "disconnected":
+    default:
       return {
-        icon: XCircle,
-        label: "Disconnected",
-        emoji: "⚫",
-        color: "text-gray-600",
-        bgColor: "bg-gray-50",
-        borderColor: "border-gray-200",
-        dotColor: "bg-gray-500",
+        label: "Offline",
+        color: "text-zinc-500",
+        dotColor: "bg-zinc-500",
+        glow: "shadow-none"
       };
   }
 };
 
-const getLanguageFlag = (langCode: string): string => {
-  return LANGUAGE_FLAGS[langCode] || "🌍";
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
 };
 
-type ChannelFilter = "all" | "primary" | "unassigned";
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 25
+    } as const
+  }
+};
 
 export default function ChannelsPage() {
   const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
-  const [isLoadingConnections, setIsLoadingConnections] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [reconnectingId, setReconnectingId] = useState<string | null>(null);
-  const [selectedMaster, setSelectedMaster] = useState<MasterNode | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
-  const [channelFilter, setChannelFilter] = useState<ChannelFilter>("all");
+  const [channelFilter, setChannelFilter] = useState<"all" | "primary" | "unassigned">("all");
   const [graphStats, setGraphStats] = useState({
     total_connections: 0,
     active_connections: 0,
     expired_connections: 0,
   });
   const { theme } = useTheme();
-
-  // Theme tokens
-  const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
-  const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
-  const cardAltClass = theme === "light" ? "bg-light-cardAlt" : "bg-dark-cardAlt";
-  const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
-  const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
-  const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
   const isDark = theme === "dark";
-  const hoverClass = isDark ? "hover:bg-white/5" : "hover:bg-gray-50/50";
+
+  const bgClass = isDark ? "bg-[#080808]" : "bg-light-bg";
+  const textClass = isDark ? "text-white" : "text-light-text";
+  const textSecondaryClass = isDark ? "text-white/40" : "text-light-textSecondary";
+  const borderClass = isDark ? "border-white/5" : "border-light-border";
 
   useEffect(() => {
     loadChannelGraph();
@@ -106,7 +116,7 @@ export default function ChannelsPage() {
 
   const loadChannelGraph = async () => {
     try {
-      setIsLoadingConnections(true);
+      setIsLoading(true);
       const graph = await youtubeAPI.getChannelGraph();
       setChannelGraph(graph.master_nodes || []);
       setGraphStats({
@@ -114,47 +124,20 @@ export default function ChannelsPage() {
         active_connections: graph.active_connections,
         expired_connections: graph.expired_connections,
       });
-
-      // Preserve selected channel or auto-select first
-      if (graph.master_nodes && graph.master_nodes.length > 0) {
-        if (selectedMaster) {
-          // Find the updated version of the currently selected channel
-          const updatedSelected = graph.master_nodes.find(
-            (node) => node.connection_id === selectedMaster.connection_id
-          );
-          if (updatedSelected) {
-            // Update with fresh data
-            setSelectedMaster(updatedSelected);
-          } else {
-            // Selected channel was removed, select first available
-            setSelectedMaster(graph.master_nodes[0]);
-          }
-        } else {
-          // No selection yet, auto-select first
-          setSelectedMaster(graph.master_nodes[0]);
-        }
-      } else {
-        // No channels available
-        setSelectedMaster(null);
-      }
     } catch (error) {
       logger.error("Channels", "Failed to load channel graph", error);
     } finally {
-      setIsLoadingConnections(false);
+      setIsLoading(false);
     }
   };
 
   const handleReconnect = async (connectionId: string, channelName: string) => {
     try {
       setReconnectingId(connectionId);
-      const currentOrigin = window.location.origin;
-      const successRedirectUri = `${currentOrigin}/youtube/connect/success?connection_type=reconnect&connection_id=${connectionId}&redirect_to=/channels`;
-
-      const response = await youtubeAPI.initiateConnection(successRedirectUri);
-
-      if (response.auth_url) {
-        window.location.href = response.auth_url;
-      }
+      const response = await youtubeAPI.initiateConnection(
+        `${window.location.origin}/youtube/connect/success?connection_type=reconnect&connection_id=${connectionId}&redirect_to=/channels`
+      );
+      if (response.auth_url) window.location.href = response.auth_url;
     } catch (error) {
       logger.error("Channels", `Failed to reconnect ${channelName}`, error);
       setReconnectingId(null);
@@ -163,14 +146,10 @@ export default function ChannelsPage() {
 
   const handleAddChannel = async () => {
     try {
-      const currentOrigin = window.location.origin;
-      const successRedirectUri = `${currentOrigin}/youtube/connect/success?connection_type=satellite&redirect_to=/channels`;
-
-      const response = await youtubeAPI.initiateConnection(successRedirectUri);
-
-      if (response.auth_url) {
-        window.location.href = response.auth_url;
-      }
+      const response = await youtubeAPI.initiateConnection(
+        `${window.location.origin}/youtube/connect/success?connection_type=satellite&redirect_to=/channels`
+      );
+      if (response.auth_url) window.location.href = response.auth_url;
     } catch (error) {
       logger.error("Channels", "Failed to add channel", error);
     }
@@ -179,8 +158,6 @@ export default function ChannelsPage() {
   const handleSetPrimary = async (connectionId: string, channelName: string) => {
     try {
       await youtubeAPI.setPrimaryConnection(connectionId);
-      logger.info("Channels", `Set ${channelName} as primary`);
-      // Reload the graph to reflect changes
       await loadChannelGraph();
     } catch (error) {
       logger.error("Channels", `Failed to set ${channelName} as primary`, error);
@@ -188,14 +165,9 @@ export default function ChannelsPage() {
   };
 
   const handleRemoveChannel = async (connectionId: string, channelName: string) => {
-    if (!confirm(`Are you sure you want to remove ${channelName}? This action cannot be undone.`)) {
-      return;
-    }
-
+    if (!confirm(`Are you sure you want to remove ${channelName}? This action cannot be undone.`)) return;
     try {
       await youtubeAPI.disconnectChannel(connectionId);
-      logger.info("Channels", `Removed ${channelName}`);
-      // Reload the graph (will handle selection automatically)
       await loadChannelGraph();
     } catch (error) {
       logger.error("Channels", `Failed to remove ${channelName}`, error);
@@ -205,18 +177,15 @@ export default function ChannelsPage() {
   const handleUpdateLanguage = async (connectionId: string, languageCode: string) => {
     try {
       await youtubeAPI.updateConnection(connectionId, { language_code: languageCode });
-      logger.info("Channels", `Updated language to ${languageCode}`);
       await loadChannelGraph();
     } catch (error) {
       logger.error("Channels", "Failed to update language", error);
     }
   };
 
-  // Flatten the graph for a table view
   const tableData = useMemo(() => {
     const flat: any[] = [];
     channelGraph.forEach(master => {
-      // Add master
       flat.push({
         id: master.connection_id,
         type: "master",
@@ -230,10 +199,8 @@ export default function ChannelsPage() {
         videos: master.total_videos,
         translations: master.total_translations,
         languagesCount: master.language_channels.length,
-        masterName: null
       });
 
-      // Add satellites
       master.language_channels.forEach(lang => {
         flat.push({
           id: lang.id,
@@ -251,7 +218,6 @@ export default function ChannelsPage() {
       });
     });
 
-    // Apply filter
     return flat.filter(item => {
       if (channelFilter === "primary") return item.is_primary;
       if (channelFilter === "unassigned") return item.type === "master" && item.languagesCount === 0;
@@ -259,265 +225,292 @@ export default function ChannelsPage() {
     });
   }, [channelGraph, channelFilter]);
 
-  if (isLoadingConnections) {
+  if (isLoading) {
     return (
-      <div className={`flex items-center justify-center h-full ${bgClass}`}>
-        <Loader2 className={`h-8 w-8 animate-spin ${textSecondaryClass}`} />
+      <div className={`flex flex-col items-center justify-center flex-1 ${bgClass} p-8 animate-pulse`}>
+        <div className="w-20 h-20 rounded-[2.5rem] bg-white/5 border border-white/10 flex items-center justify-center mb-8">
+          <Radio className="w-10 h-10 text-olleey-yellow stroke-[1.5px]" />
+        </div>
+        <p className="text-xs font-black uppercase tracking-[0.4em] text-white/30">Synchronizing Signals...</p>
       </div>
     );
   }
 
   return (
-    <div className={`h-full overflow-y-auto ${bgClass}`}>
-      {/* Header */}
-      <div className={`relative px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12 border-b ${borderClass} overflow-hidden`}>
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=2000"
-            className="w-full h-full object-cover opacity-20"
-            alt=""
-          />
-          <div className={`absolute inset-0 bg-gradient-to-r ${isDark ? 'from-dark-bg via-dark-bg/80 to-transparent' : 'from-light-bg via-light-bg/80 to-transparent'}`} />
-        </div>
+    <div className={`flex-1 flex flex-col min-h-screen ${bgClass} p-4 sm:p-6 md:p-10 space-y-10 overflow-y-auto custom-scrollbar`}>
+      {/* Cinematic Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative h-[340px] shrink-0 rounded-[2.5rem] overflow-hidden group shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-olleey-yellow/20 via-transparent to-transparent opacity-50 z-10 pointer-events-none" />
+        <motion.img
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 2, ease: "easeOut" }}
+          src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2000"
+          className="absolute inset-0 w-full h-full object-cover grayscale opacity-40 group-hover:scale-105 transition-transform duration-[10s] ease-linear"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/60 to-transparent z-10" />
 
-        <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div className="flex-1">
-              <h1 className={`text-xl sm:text-2xl md:text-3xl font-300 ${textClass} mb-2 tracking-tight`}>Channel Network</h1>
-              <p className={`text-sm sm:text-base ${textSecondaryClass} max-w-2xl`}>
-                Manage your YouTube channel connections and secure your global infrastructure with ease.
+        <div className="absolute inset-0 z-20 p-8 flex flex-col justify-end">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="space-y-4 max-w-2xl">
+              <div className="flex items-center gap-4">
+                <div className="px-4 py-1.5 bg-olleey-yellow/10 border border-olleey-yellow/20 rounded-full">
+                  <span className="text-[9px] font-black text-olleey-yellow uppercase tracking-[0.3em]">Network Architecture</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full">
+                  <Globe2 className="w-3.5 h-3.5 text-white/40" />
+                  <span className="text-[9px] font-black text-white/60 uppercase tracking-[0.3em]">Global Grid v2.4</span>
+                </div>
+              </div>
+              <h1 className="text-4xl md:text-6xl font-normal text-white tracking-tighter leading-[0.9] flex flex-col">
+                <span className="text-olleey-yellow">Satellite</span>
+                <span>Deployment</span>
+              </h1>
+              <p className="text-base text-white/40 font-light leading-relaxed max-w-xl">
+                Command and control your YouTube satellite network. Map primary assets to localized distribution nodes with cinema-grade synchronization.
               </p>
             </div>
-            <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-lg">
-              <div className={`flex items-center gap-4 sm:gap-8 text-xs sm:text-sm ${textSecondaryClass}`}>
-                <div className="flex flex-col">
-                  <span className="opacity-60 uppercase text-[9px] font-bold tracking-widest mb-1">Total Assets</span>
-                  <span className={`text-lg font-semibold ${textClass}`}>{graphStats.total_connections}</span>
+
+            <div className="grid grid-cols-2 gap-4 min-w-[300px]">
+              <div className="p-6 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.2rem] flex flex-col justify-between">
+                <TrendingUp className="w-5 h-5 text-olleey-yellow mb-4" />
+                <div>
+                  <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] block mb-1">Grid Load</span>
+                  <span className="text-2xl font-normal text-white tracking-tighter">{graphStats.total_connections} Nodes</span>
                 </div>
-                <div className="w-[1px] h-8 bg-white/10" />
-                <div className="flex flex-col">
-                  <span className="opacity-60 uppercase text-[9px] font-bold tracking-widest mb-1">Health</span>
-                  <span className="text-lg font-semibold text-green-500">Active</span>
+              </div>
+              <div className="p-6 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.2rem] flex flex-col justify-between">
+                <ShieldCheck className="w-5 h-5 text-emerald-500 mb-4" />
+                <div>
+                  <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] block mb-1">Signal Integrity</span>
+                  <span className="text-2xl font-normal text-white tracking-tighter">Verified</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </motion.div>
+
+      {/* Application Toolbar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-3 p-1.5 bg-white/[0.02] border border-white/5 rounded-[1.5rem] backdrop-blur-xl">
+          <button
+            onClick={() => setChannelFilter("all")}
+            className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "all" ? "bg-olleey-yellow text-black" : "text-white/40 hover:text-white"}`}
+          >
+            Synchronized
+          </button>
+          <button
+            onClick={() => setChannelFilter("primary")}
+            className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "primary" ? "bg-olleey-yellow text-black" : "text-white/40 hover:text-white"}`}
+          >
+            Command Nodes
+          </button>
+          <button
+            onClick={() => setChannelFilter("unassigned")}
+            className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "unassigned" ? "bg-olleey-yellow text-black" : "text-white/40 hover:text-white"}`}
+          >
+            Ghost Signals
+          </button>
+        </div>
+
+        <Button
+          onClick={handleAddChannel}
+          className="h-14 px-10 bg-white/5 border border-white/10 text-white hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow font-black uppercase tracking-[0.2em] rounded-full transition-all group"
+        >
+          <Plus className="w-4 h-4 mr-3 group-hover:rotate-90 transition-transform" />
+          Deploy Satellite
+        </Button>
       </div>
 
-      <div className="px-4 md:px-6 py-4">
-        {channelGraph.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center max-w-md mx-auto">
-            <Youtube className={`h-16 w-16 ${textSecondaryClass} mb-4`} />
-            <h2 className={`text-xl font-semibold ${textClass} mb-2`}>No Channels Connected</h2>
-            <p className={`${textSecondaryClass} mb-6`}>
-              Connect your YouTube channels to start managing your global content distribution.
-            </p>
-            <button
-              onClick={handleAddChannel}
-              className={`inline-flex items-center gap-2 bg-olleey-yellow text-black px-6 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-all`}
-            >
-              <Plus className="h-5 w-5" />
-              Connect First Channel
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Filter Toggle */}
-            <div className="flex items-center justify-between">
-              <div className={`flex items-center gap-1 ${cardClass} border ${borderClass} rounded-lg p-1 shadow-sm w-fit`}>
-                <button
-                  onClick={() => setChannelFilter("all")}
-                  className={`px-4 py-1.5 rounded text-xs font-medium transition-colors ${channelFilter === "all"
-                    ? "bg-olleey-yellow text-black"
-                    : `${textSecondaryClass} hover:opacity-80`
-                    }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setChannelFilter("primary")}
-                  className={`px-4 py-1.5 rounded text-xs font-medium transition-colors ${channelFilter === "primary"
-                    ? "bg-olleey-yellow text-black"
-                    : `${textSecondaryClass} hover:opacity-80`
-                    }`}
-                >
-                  Primary
-                </button>
-                <button
-                  onClick={() => setChannelFilter("unassigned")}
-                  className={`px-4 py-1.5 rounded text-xs font-medium transition-colors ${channelFilter === "unassigned"
-                    ? "bg-olleey-yellow text-black"
-                    : `${textSecondaryClass} hover:opacity-80`
-                    }`}
-                >
-                  Unassigned
-                </button>
-              </div>
+      {/* Network Table */}
+      <div className="w-full bg-[#0c0c0c]/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] overflow-hidden shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[1100px]">
+            <thead>
+              <tr className="bg-white/2">
+                <th className="px-10 py-8 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5">Asset Signature</th>
+                <th className="px-10 py-8 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5">Role</th>
+                <th className="px-10 py-8 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5">Signal Status</th>
+                <th className="px-10 py-8 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5">Temporal Map</th>
+                <th className="px-10 py-8 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5 text-right w-64">Protocols</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              <AnimatePresence mode="popLayout">
+                {tableData.map((item: any, idx) => {
+                  const statusConfig = getStatusConfig(item.status);
+                  const isMaster = item.type === "master";
 
-              <button
-                onClick={handleAddChannel}
-                className="inline-flex items-center gap-2 bg-olleey-yellow text-black px-4 py-2 rounded-lg text-sm font-bold hover:scale-105 transition-all shadow-lg shadow-olleey-yellow/10"
-              >
-                <Plus className="h-4 w-4" />
-                Add Connection
-              </button>
-            </div>
-
-            {/* Table */}
-            <div className={`${cardClass} border ${borderClass} rounded-2xl overflow-hidden shadow-sm`}>
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full text-left border-collapse min-w-[1000px]">
-                  <thead>
-                    <tr className={`${isDark ? 'bg-white/5' : 'bg-gray-50'} border-b ${borderClass}`}>
-                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Channel</th>
-                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Role</th>
-                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Language</th>
-                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest`}>Status</th>
-                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest text-center`}>Content</th>
-                      <th className={`px-6 py-4 text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest text-right`}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className={`divide-y ${borderClass} ${textClass}`}>
-                    {tableData.map((item: any) => {
-                      const statusConfig = getStatusConfig(item.status);
-                      const isMaster = item.type === "master";
-
-                      return (
-                        <tr key={item.id} className={`border-b ${borderClass} ${hoverClass} transition-all group last:border-0`}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-3">
-                              <div className="relative">
-                                <img
-                                  src={item.avatar || getInitialsAvatar(item.name || item.id)}
-                                  alt={item.name}
-                                  className={`w-10 h-10 rounded-full object-cover border ${borderClass} bg-white/5 opacity-90 hover:opacity-100 transition-opacity`}
-                                />
-                                {!isMaster && (
-                                  <span className="absolute -bottom-1 -right-1 text-base bg-white dark:bg-black rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
-                                    {getLanguageFlag(item.language_code)}
-                                  </span>
-                                )}
+                  return (
+                    <motion.tr
+                      key={item.id}
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="visible"
+                      transition={{ delay: idx * 0.05 }}
+                      className="group hover:bg-white/[0.02] transition-colors"
+                    >
+                      <td className="px-10 py-10">
+                        <div className="flex items-center gap-6">
+                          <div className="relative shrink-0">
+                            <div className="absolute inset-0 bg-olleey-yellow/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <img
+                              src={item.avatar || getInitialsAvatar(item.name || item.id)}
+                              alt={item.name}
+                              className="relative w-14 h-14 rounded-2xl object-cover border border-white/10 shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-500"
+                            />
+                            {isMaster && (
+                              <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-olleey-yellow rounded-full flex items-center justify-center border-2 border-black shadow-lg">
+                                <Star className="w-2.5 h-2.5 text-black fill-black" />
                               </div>
-                              <div className="min-w-0">
-                                <p className={`text-sm font-medium ${textClass} truncate max-w-[200px]`}>
-                                  {item.name}
-                                </p>
-                                {isMaster && item.is_primary && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-olleey-yellow">
-                                    PRIMARY
-                                  </span>
-                                )}
-                                {!isMaster && (
-                                  <p className={`text-[11px] ${textSecondaryClass} truncate`}>
-                                    via {item.masterName}
-                                  </p>
-                                )}
+                            )}
+                          </div>
+                          <div className="min-w-0 space-y-1">
+                            <p className="text-base font-bold text-white group-hover:text-olleey-yellow transition-colors tracking-tight truncate max-w-[280px]">
+                              {item.name}
+                            </p>
+                            {!isMaster && (
+                              <div className="flex items-center gap-2">
+                                <div className="w-1 h-1 rounded-full bg-white/10" />
+                                <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Linked to {item.masterName}</p>
                               </div>
+                            )}
+                            {isMaster && item.is_primary && (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 bg-olleey-yellow/10 border border-olleey-yellow/20 rounded-full">
+                                <Shield className="w-2.5 h-2.5 text-olleey-yellow" />
+                                <span className="text-[9px] font-black text-olleey-yellow uppercase tracking-widest">Primary Command</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-10 py-10">
+                        <div className={`inline-flex items-center px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${isMaster ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" : "bg-white/5 border-white/10 text-white/40"}`}>
+                          {isMaster ? <Cpu className="w-3 h-3 mr-2" /> : <Layers className="w-3 h-3 mr-2" />}
+                          {isMaster ? "Command Node" : "Satellite"}
+                        </div>
+                      </td>
+
+                      <td className="px-10 py-10">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full ${statusConfig.dotColor} ${statusConfig.glow} ${item.status === 'active' ? 'animate-pulse' : ''}`} />
+                            <span className={`text-[11px] font-black uppercase tracking-[0.1em] ${statusConfig.color}`}>{statusConfig.label}</span>
+                          </div>
+                          {item.is_paused && (
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full w-fit">
+                              <Pause className="w-2.5 h-2.5" />
+                              <span className="text-[9px] font-black uppercase tracking-widest">Protocol Stalled</span>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider w-fit ${isMaster ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20" : "bg-olleey-yellow/10 text-olleey-yellow border border-olleey-yellow/20"}`}>
-                              {isMaster ? "Master" : "Satellite"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap min-w-[180px]">
-                            <select
-                              value={item.language_code || ""}
-                              onChange={(e) => handleUpdateLanguage(item.id, e.target.value)}
-                              className={`w-full bg-white/5 border ${borderClass} text-[11px] font-bold ${item.language_code ? 'text-olleey-yellow' : textSecondaryClass} rounded-lg px-3 py-2 focus:border-olleey-yellow outline-none appearance-none cursor-pointer transition-all hover:bg-white/10`}
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="px-10 py-10">
+                        <div className="relative group/select w-64">
+                          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                            <Globe className="w-4 h-4 text-white/20 group-hover/select:text-olleey-yellow/60 transition-colors" />
+                          </div>
+                          <select
+                            value={item.language_code || ""}
+                            onChange={(e) => handleUpdateLanguage(item.id, e.target.value)}
+                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl pl-12 pr-6 py-4 text-[11px] font-black uppercase tracking-widest text-white/60 focus:ring-0 focus:border-olleey-yellow/40 transition-all cursor-pointer appearance-none hover:bg-white/5"
+                          >
+                            <option value="" className="bg-[#080808]">Initialization Required...</option>
+                            {LANGUAGE_OPTIONS.map(l => (
+                              <option key={l.code} value={l.code} className="bg-[#080808]">
+                                {l.flag} {l.name}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-white/10">
+                            <ChevronRight className="w-4 h-4 rotate-90" />
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-10 py-10">
+                        <div className="flex items-center justify-end gap-3">
+                          {isMaster && !item.is_primary && (
+                            <Button
+                              onClick={(e) => { e.stopPropagation(); handleSetPrimary(item.id, item.name); }}
+                              variant="ghost"
+                              size="icon"
+                              className="w-11 h-11 rounded-[1.2rem] bg-white/[0.03] border border-white/10 text-white/30 hover:text-olleey-yellow hover:bg-white/5 transition-all"
                             >
-                              <option value="" className={isDark ? "bg-dark-bg" : "bg-white"}>Assign Language...</option>
-                              {LANGUAGE_OPTIONS.map(l => (
-                                <option key={l.code} value={l.code} className={isDark ? "bg-dark-bg" : "bg-white text-black"}>
-                                  {l.flag} {l.name}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${statusConfig.dotColor}`} />
-                              <span className={`text-sm ${statusConfig.color} font-medium`}>{statusConfig.label}</span>
-                              {item.is_paused && (
-                                <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold flex items-center gap-1">
-                                  <Pause className="h-2.5 w-2.5" /> PAUSED
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex flex-col items-center">
-                              <span className={`text-sm font-semibold ${textClass}`}>{item.videos}</span>
-                              <span className={`text-[10px] ${textSecondaryClass} uppercase`}>Videos</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {isMaster && !item.is_primary && (
-                                <button
-                                  onClick={() => handleSetPrimary(item.id, item.name)}
-                                  className={`p-2 rounded-lg ${cardAltClass} ${textSecondaryClass} hover:text-olleey-yellow transition-colors`}
-                                  title="Set as Primary"
-                                >
-                                  <Star className="h-4 w-4" />
-                                </button>
-                              )}
-                              {item.status !== "active" && (
-                                <button
-                                  onClick={() => handleReconnect(item.id, item.name)}
-                                  className={`p-2 rounded-lg ${cardAltClass} ${textSecondaryClass} hover:text-olleey-yellow transition-colors`}
-                                  title="Reconnect"
-                                >
-                                  <RefreshCw className="h-4 w-4" />
-                                </button>
-                              )}
-                              <button
-                                onClick={() => {
-                                  if (isMaster) {
-                                    // Handle master pause toggle (logic from existing handleMasterPauseToggle)
-                                    const togglePause = async () => {
-                                      try {
-                                        if (item.is_paused) await channelsAPI.unpauseChannel(item.id);
-                                        else await channelsAPI.pauseChannel(item.id);
-                                        await loadChannelGraph();
-                                      } catch (e) { logger.error("Channels", "Error toggling pause", e); }
-                                    };
-                                    togglePause();
-                                  } else {
-                                    // Handle satellite pause toggle (logic from existing handlePauseToggle)
-                                    const togglePause = async () => {
-                                      try {
-                                        if (item.is_paused) await channelsAPI.unpauseChannel(item.id);
-                                        else await channelsAPI.pauseChannel(item.id);
-                                        await loadChannelGraph();
-                                      } catch (e) { logger.error("Channels", "Error toggling pause", e); }
-                                    };
-                                    togglePause();
-                                  }
-                                }}
-                                className={`p-2 rounded-lg ${cardAltClass} ${textSecondaryClass} hover:${item.is_paused ? 'text-green-500' : 'text-amber-500'} transition-colors`}
-                                title={item.is_paused ? "Resume" : "Pause"}
-                              >
-                                {item.is_paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                              </button>
-                              <button
-                                onClick={() => handleRemoveChannel(isMaster ? item.id : item.id, item.name)}
-                                className={`p-2 rounded-lg ${cardAltClass} ${textSecondaryClass} hover:text-red-500 transition-colors`}
-                                title="Remove"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                              <Star className="w-4 h-4" />
+                            </Button>
+                          )}
+
+                          {!isMaster && (
+                            <Button
+                              onClick={(e) => { e.stopPropagation(); handleReconnect(item.id, item.name); }}
+                              variant="ghost"
+                              size="icon"
+                              className={`w-11 h-11 rounded-[1.2rem] bg-white/[0.03] border border-white/10 text-white/30 hover:text-olleey-yellow hover:bg-white/5 transition-all ${reconnectingId === item.id ? 'animate-spin' : ''}`}
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                            </Button>
+                          )}
+
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const togglePause = async () => {
+                                try {
+                                  if (item.is_paused) await channelsAPI.unpauseChannel(item.id);
+                                  else await channelsAPI.pauseChannel(item.id);
+                                  await loadChannelGraph();
+                                } catch (e) { logger.error("Channels", "Error toggling pause", e); }
+                              };
+                              togglePause();
+                            }}
+                            variant="ghost"
+                            size="icon"
+                            className={`w-11 h-11 rounded-[1.2rem] bg-white/[0.03] border border-white/10 text-white/30 hover:${item.is_paused ? 'text-emerald-500' : 'text-amber-500'} hover:bg-white/5 transition-all`}
+                          >
+                            {item.is_paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                          </Button>
+
+                          <Button
+                            onClick={(e) => { e.stopPropagation(); handleRemoveChannel(item.id, item.name); }}
+                            variant="ghost"
+                            size="icon"
+                            className="w-11 h-11 rounded-[1.2rem] bg-white/[0.03] border border-white/10 text-white/30 hover:text-red-500 hover:bg-white/5 transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </AnimatePresence>
+            </tbody>
+          </table>
+        </div>
+
+        {tableData.length === 0 && (
+          <div className="p-32 text-center flex flex-col items-center">
+            <div className="w-24 h-24 bg-white/5 rounded-[2.5rem] flex items-center justify-center border border-white/10 mb-8 opacity-20">
+              <Radio className="w-12 h-12 text-white" />
             </div>
+            <h3 className="text-2xl font-normal text-white mb-3 tracking-tighter">Zero active connections</h3>
+            <p className="text-sm text-white/40 mb-10 max-w-sm mx-auto font-light leading-relaxed">
+              Initialize your network by deploying your first satellite node.
+            </p>
+            <Button
+              onClick={handleAddChannel}
+              className="h-14 px-12 bg-olleey-yellow text-black hover:opacity-90 font-black uppercase tracking-[0.2em] rounded-full transition-all"
+            >
+              Deploy First satellite
+            </Button>
           </div>
         )}
       </div>

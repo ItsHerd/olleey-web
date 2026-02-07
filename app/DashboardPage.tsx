@@ -415,7 +415,7 @@ export default function DashboardPage() {
   }, [dashboardLoading, dashboard, canFetchContent, videosLoading, videos.length, activitiesLoading, activities.length]);
 
   return (
-    <div className={`w-full h-full ${bgClass} flex flex-col pr-3`}>
+    <div className={`w-full h-full ${bgClass} flex flex-col pr-3 pt-8`}>
       <SEO
         title="Dashboard | Olleey"
         description="Manage your global content production, monitor translation jobs, and distribute to international channels from your creative command center."
