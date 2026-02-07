@@ -69,40 +69,40 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
 
     return (
         <section className="py-16 md:py-24 bg-black border-t border-white/10 relative overflow-hidden">
-             {/* Background Grid - Visible Boxes */}
-             <div className="absolute inset-0 z-0 opacity-20" 
-                style={{ 
+            {/* Background Grid - Visible Boxes */}
+            <div className="absolute inset-0 z-0 opacity-20"
+                style={{
                     backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
                     backgroundSize: '40px 40px'
-                }} 
+                }}
             />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Header */}
                 <div className="mb-12 md:mb-16">
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                         className="inline-flex items-center gap-3 px-3 py-1 border border-white/30 backdrop-blur-sm mb-6 bg-black"
                     >
-                         <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white">System Capabilities</span>
+                        <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white">System Capabilities</span>
                     </motion.div>
-                    <motion.h2 
+                    <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="text-3xl md:text-5xl lg:text-[48px] leading-[1.1] font-normal text-white font-mono uppercase tracking-tight"
                     >
-                        AI is changing how <br/>
+                        AI is changing how <br />
                         <span className="text-white/50">stories are told.</span>
                     </motion.h2>
                 </div>
 
                 {/* Product Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/10 border border-white/10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {displayProducts.map((product, index) => (
                         <motion.div
                             key={index}
@@ -110,7 +110,7 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className="group flex flex-col bg-black p-6 relative hover:bg-white/5 transition-colors duration-200"
+                            className="group flex flex-col bg-white/5 border border-white/10 p-6 relative hover:bg-white/10 transition-colors duration-200 rounded-[2rem] overflow-hidden"
                         >
                             {/* Technical Corner Markers */}
                             <div className="absolute top-0 right-0 p-1">
@@ -121,14 +121,14 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
                             </div>
 
                             {/* Image Frame */}
-                            <div className="aspect-[4/3] w-full overflow-hidden mb-6 relative border border-white/10 group-hover:border-white/30 transition-colors">
+                            <div className="aspect-[4/3] w-full overflow-hidden mb-6 relative border border-white/10 group-hover:border-white/30 transition-colors rounded-3xl">
                                 <img
                                     src={product.image}
                                     alt={product.title}
                                     className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 grayscale group-hover:grayscale-0"
                                 />
                                 <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.5)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none opacity-20" />
-                                <div className="absolute top-2 left-2 text-[9px] font-mono text-white bg-black px-1 border border-white/20">
+                                <div className="absolute top-2 left-2 text-[9px] font-mono text-white bg-black px-1 border border-white/20 rounded-md">
                                     IMG.0{index + 1}
                                 </div>
                             </div>
@@ -148,7 +148,7 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
                                     {product.primaryAction && (
                                         <button
                                             onClick={product.primaryAction.onClick}
-                                            className="text-[10px] bg-white text-black font-bold font-mono px-3 py-1.5 uppercase tracking-wider hover:bg-white/80 transition-colors"
+                                            className="text-[10px] bg-white text-black font-bold font-mono px-4 py-2 uppercase tracking-wider hover:bg-white/80 transition-colors rounded-full"
                                         >
                                             <span className="mr-1">&gt;</span> {product.primaryAction.label}
                                         </button>
@@ -156,9 +156,9 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
                                     {product.secondaryAction && (
                                         <button
                                             onClick={product.secondaryAction.onClick}
-                                            className="text-[10px] font-bold font-mono text-white/60 hover:text-white transition-colors uppercase tracking-wider"
+                                            className="text-[10px] font-bold font-mono text-white/60 hover:text-white transition-colors uppercase tracking-wider px-3 py-2 border border-white/20 hover:border-white/60 rounded-full"
                                         >
-                                            [ {product.secondaryAction.label} ]
+                                            {product.secondaryAction.label}
                                         </button>
                                     )}
                                 </div>

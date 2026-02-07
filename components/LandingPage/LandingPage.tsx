@@ -38,7 +38,7 @@ export default function LandingPage({ onNavigation, initialAuthMode = 'login', a
 
 
     return (
-        <div className="min-h-screen bg-white font-sans">
+        <div className="min-h-screen bg-black text-white font-sans selection:bg-white/20 selection:text-white">
             <SEO
                 title="Olleey | Translate & Distribute Your Content Globally"
                 description="The ultimate AI-powered workflow for creators. Build automated pipelines that translate and distribute your content to 10+ languages instantly."

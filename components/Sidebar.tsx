@@ -71,19 +71,17 @@ export default function Sidebar({
     >
       {/* Logo Section at Top */}
       <div className="px-2 sm:px-3 pt-3 sm:pt-4 pb-3 sm:pb-4">
-        {isExpanded ? (
-          <div className="flex items-center gap-2 sm:gap-3">
-            <h1 className={`text-2xl font-300 ${textClass}`}>olleey.com</h1>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 sm:gap-3 bg-amber-50 rounded-lg p-1">
+        <div className={`flex items-center ${isExpanded ? 'px-4 py-3 gap-3 justify-center' : 'justify-center p-2'} bg-white text-black rounded-xl transition-all duration-200`}>
+          {isExpanded ? (
+            <h1 className="text-xl font-300 tracking-tight">olleey.com</h1>
+          ) : (
             <img
               src="/logo-transparent.png"
               alt="olleey"
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-contain mx-auto"
+              className="w-8 h-8 object-contain"
             />
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Project Selector */}

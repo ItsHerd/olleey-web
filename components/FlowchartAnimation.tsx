@@ -44,7 +44,7 @@ const WorkflowNode = ({ data }: any) => {
 
                 {data.image && (
                     <div className="aspect-video relative bg-white/5 border border-white/10 mb-3 grayscale overflow-hidden">
-                         <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_50%,transparent_75%)] bg-[length:250%_250%] animate-scan" />
+                        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_50%,transparent_75%)] bg-[length:250%_250%] animate-scan" />
                         {data.videoUrl ? (
                             <video
                                 src={data.videoUrl}
@@ -293,16 +293,16 @@ export function FlowchartAnimation({ onGetStarted }: { onGetStarted?: () => void
     return (
         <div id="workflows" className="relative w-full min-h-[900px] bg-black py-24 px-8 overflow-hidden z-10 border-t border-white/20">
             {/* Grid Background */}
-            <div className="absolute inset-0 z-0 opacity-20" 
-                style={{ 
+            <div className="absolute inset-0 z-0 opacity-20"
+                style={{
                     backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
                     backgroundSize: '40px 40px'
-                }} 
+                }}
             />
 
             {/* Header */}
             <div className="relative z-10 text-center mb-20 max-w-4xl mx-auto">
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -312,19 +312,19 @@ export function FlowchartAnimation({ onGetStarted }: { onGetStarted?: () => void
                     <span className="w-1.5 h-1.5 bg-white animate-pulse" />
                     <span className="text-[10px] font-mono tracking-[0.3em] text-white">THE ENGINE</span>
                 </motion.div>
-                
-                <motion.h2 
+
+                <motion.h2
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.1 }}
                     className="text-3xl md:text-5xl font-bold font-mono text-white mb-6 uppercase tracking-wider"
                 >
-                    Architect Your <br/>
+                    Architect Your <br />
                     <span className="text-white/50">Global Release.</span>
                 </motion.h2>
-                
-                <motion.p 
+
+                <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -334,7 +334,7 @@ export function FlowchartAnimation({ onGetStarted }: { onGetStarted?: () => void
                     Our zero-latency pipeline handles everything from neural voice cloning to regional ad-injection, ensuring you feel native in every language.
                 </motion.p>
 
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -343,13 +343,13 @@ export function FlowchartAnimation({ onGetStarted }: { onGetStarted?: () => void
                 >
                     <button
                         onClick={onGetStarted}
-                        className="group relative px-6 py-2.5 bg-white text-black font-mono text-xs uppercase tracking-widest hover:bg-transparent hover:text-white hover:border-white border border-transparent transition-all"
+                        className="group relative px-8 py-3 bg-white text-black font-mono text-xs uppercase tracking-widest hover:bg-transparent hover:text-white hover:border-white border border-transparent transition-all rounded-full overflow-hidden"
                     >
                         Start Your First Pipeline
-                        <div className="absolute inset-0 border border-white translate-x-1 translate-y-1 -z-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform" />
+                        <div className="absolute inset-0 bg-white translate-x-1 translate-y-1 -z-10 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform rounded-full bg-white/10 px-4 py-2 rounded-full border border-white/10 hover:bg-white/20" />
                     </button>
-                    
-                    <button className="px-6 py-2.5 border border-white/40 text-white font-mono text-xs uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+
+                    <button className="px-8 py-3 border border-white/40 text-white font-mono text-xs uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2 rounded-full">
                         <span className="w-2 h-2 border border-white rounded-full flex items-center justify-center">
                             <span className="w-0.5 h-0.5 bg-white rounded-full" />
                         </span>

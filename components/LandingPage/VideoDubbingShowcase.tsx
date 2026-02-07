@@ -23,8 +23,8 @@ function VideoPlayer({ src, label, isMuted, onToggleMute, isPlaying, onTogglePla
         <div
             onClick={onActivate}
             className={cn(
-                "relative bg-black transition-all duration-300 aspect-video group overflow-hidden cursor-pointer",
-                isActive ? "ring-2 ring-green-500 scale-[1.01] z-20 shadow-[0_0_20px_rgba(34,197,94,0.3)]" : "border border-white/20 opacity-60 hover:opacity-100"
+                "relative bg-black transition-all duration-300 aspect-video group overflow-hidden cursor-pointer rounded-[2rem]",
+                isActive ? "ring-2 ring-green-500 scale-[1.01] z-20 shadow-[0_0_20px_rgba(34,197,94,0.3)]" : "border border-white/10 opacity-60 hover:opacity-100"
             )}
         >
             {/* Technical Overlay */}
@@ -145,7 +145,7 @@ export default function VideoDubbingShowcase() {
     }, [isPlaying]);
 
     return (
-        <section className="py-24 bg-black border-b border-white/10 relative overflow-hidden">
+        <section className="py-24 bg-black border-t border-white/10 relative overflow-hidden">
             {/* Background Grid */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
@@ -214,14 +214,14 @@ export default function VideoDubbingShowcase() {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => togglePlay()}
-                            className="bg-white text-black px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white/90 transition-colors flex items-center gap-3"
+                            className="bg-white text-black px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white/90 transition-colors flex items-center gap-3 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                         >
                             {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
                             {isPlaying ? "Sync Pause" : "Sync Play Comparison"}
                         </button>
                         <button
                             onClick={handleReset}
-                            className="border border-white/20 text-white p-3 hover:bg-white/10 transition-colors"
+                            className="border border-white/20 text-white p-3 hover:bg-white/10 transition-colors rounded-full"
                             title="Reset Videos"
                         >
                             <RotateCcw size={14} />

@@ -262,7 +262,7 @@ export default function HeroAscii({
                 setAuthMode('register');
                 setShowAuth(true);
               }}
-              className="px-4 py-1.5 border border-white/40 text-xs font-mono text-white hover:bg-white hover:text-black transition-all duration-200 tracking-wider"
+              className="px-6 py-2 border border-white/20 text-xs font-mono text-white hover:bg-white/10 transition-all duration-200 tracking-wider rounded-full"
             >
               GET STARTED
             </button>
@@ -452,16 +452,14 @@ export default function HeroAscii({
                         setAuthMode('register');
                         setShowAuth(true);
                       }}
-                      className="relative px-5 lg:px-6 py-2 lg:py-2.5 bg-transparent text-white font-mono text-xs lg:text-sm border border-white hover:bg-white hover:text-black transition-all duration-200 group"
+                      className="relative px-6 py-3 bg-white text-black font-mono text-xs lg:text-sm hover:bg-white/90 transition-all duration-200 group rounded-full"
                     >
-                      <span className="hidden lg:block absolute -top-1 -left-1 w-2 h-2 border-t border-l border-white opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                      <span className="hidden lg:block absolute -bottom-1 -right-1 w-2 h-2 border-b border-r border-white opacity-0 group-hover:opacity-100 transition-opacity"></span>
                       START PIPELINE
                     </button>
 
                     <button
                       onClick={() => setShowDemo(true)}
-                      className="relative px-5 lg:px-6 py-2 lg:py-2.5 bg-transparent border border-white text-white font-mono text-xs lg:text-sm hover:bg-white hover:text-black transition-all duration-200" style={{ borderWidth: '1px' }}
+                      className="relative px-6 py-3 bg-transparent border border-white text-white font-mono text-xs lg:text-sm hover:bg-white/10 transition-all duration-200 rounded-full"
                     >
                       WATCH DEMO
                     </button>

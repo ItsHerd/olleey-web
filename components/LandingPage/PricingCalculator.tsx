@@ -78,17 +78,17 @@ export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }
         <div className="max-w-[1200px] mx-auto">
             <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-stretch">
                 {/* Left Side - Interactive Hub */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    className="bg-black border border-white/20 p-6 md:p-8 flex flex-col justify-between relative overflow-hidden group"
+                    className="bg-black border border-white/20 p-6 md:p-8 flex flex-col justify-between relative overflow-hidden group rounded-[2.5rem]"
                 >
                     {/* Corner Markers */}
                     <div className="absolute top-0 left-0 p-2 border-b border-r border-white/20 w-8 h-8" />
                     <div className="absolute bottom-0 right-0 p-2 border-t border-l border-white/20 w-8 h-8" />
-                    
+
                     <div>
                         <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
                             <div className="p-2 bg-white/10">
@@ -154,7 +154,7 @@ export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }
                             <p className="text-xs font-mono text-white/40 leading-relaxed">Need more than 500 minutes? Our enterprise team can build a custom buffer for your fleet.</p>
                         </div>
                         <div className="flex flex-col items-start sm:items-end justify-end">
-                            <button className="group text-xs font-mono font-bold text-white inline-flex items-center gap-2 hover:opacity-70 transition-all uppercase tracking-wider">
+                            <button className="group text-xs font-mono font-bold text-white inline-flex items-center gap-2 hover:bg-white/10 transition-all uppercase tracking-wider px-4 py-2 border border-white/20 rounded-full">
                                 Contact Sales <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
@@ -162,17 +162,17 @@ export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }
                 </motion.div>
 
                 {/* Right Side - Dynamic Plan Card */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="relative group"
                 >
-                    <div className="h-full bg-white border border-black p-6 md:p-8 text-black flex flex-col justify-between transition-all duration-700 relative overflow-hidden">
+                    <div className="h-full bg-white border border-black p-6 md:p-8 text-black flex flex-col justify-between transition-all duration-700 relative overflow-hidden rounded-[2.5rem]">
                         {/* Technical Grid Background */}
-                        <div className="absolute inset-0 z-0 opacity-5 pointer-events-none" 
-                             style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
+                        <div className="absolute inset-0 z-0 opacity-5 pointer-events-none"
+                            style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '20px 20px' }}
                         />
 
                         <div className="relative z-10">
@@ -217,7 +217,7 @@ export function PricingCalculator({ onGetStarted }: { onGetStarted: () => void }
                         <div className="relative z-10 mt-6">
                             <Button
                                 onClick={onGetStarted}
-                                className="w-full bg-black text-white hover:bg-black/80 h-14 rounded-none text-xs font-mono font-bold uppercase tracking-widest transition-all border border-transparent hover:border-black"
+                                className="w-full bg-black text-white hover:bg-black/80 h-14 rounded-full text-xs font-mono font-bold uppercase tracking-widest transition-all border border-transparent hover:border-black shadow-none"
                             >
                                 Deploy Pipeline
                             </Button>

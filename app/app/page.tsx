@@ -433,13 +433,7 @@ function AppContent() {
 
                                 {/* Action Toolbar */}
                                 <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`h-8 w-[1px] ${isDark ? 'bg-white/5' : 'bg-gray-200'} mx-2`} />
-                                        <div className="flex flex-col">
-                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white/20' : 'text-gray-400'}`}>Production Hub</span>
-                                            <span className={`text-sm font-bold ${textClass} tracking-tight truncate`}>{currentPage}</span>
-                                        </div>
-                                    </div>
+
 
                                     <Button
                                         variant="ghost"
@@ -510,7 +504,7 @@ function AppContent() {
                                                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-red-400 hover:bg-red-500/10 transition-all group/out`}
                                                 >
                                                     <LogOut className="w-4 h-4 group-hover/out:-translate-x-1 transition-transform" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest font-mono">Terminate Session</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest font-mono">Log out</span>
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>

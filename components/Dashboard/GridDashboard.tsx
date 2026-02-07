@@ -356,7 +356,7 @@ export function GridDashboard({
                             {!activitiesLoading && activities.length === 0 ? (
                                 <div className="flex flex-col h-full items-center justify-center opacity-30 p-12">
                                     <Activity className="w-8 h-8 opacity-20 mb-4" />
-                                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-40`}>Awaiting system interaction</p>
+                                    <p className={`text-[10px] font-white text-blue-400 uppercase tracking-[0.2em]`}>Awaiting system interaction</p>
                                 </div>
                             ) : activitiesLoading ? (
                                 <div className="p-4 h-full">

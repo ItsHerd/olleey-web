@@ -200,57 +200,70 @@ export default function AllMediaPage() {
   };
 
   const filteredAndSortedVideos = useMemo(() => {
-    const sourceVideos = videosWithLocalizations.length > 0
-      ? videosWithLocalizations
-      : videos.map(v => ({ ...v, localizations: {} as Record<string, LocalizationInfo> }));
+    // If videos are loading or empty, return empty
+    if (!videosWithLocalizations || videosWithLocalizations.length === 0) return [];
 
-    let filtered = sourceVideos;
+    let filtered = [...videosWithLocalizations];
 
+    // 1. Search Filter
     if (searchQuery) {
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(v =>
-        v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        v.channel_name?.toLowerCase().includes(searchQuery.toLowerCase())
+        (v.title && v.title.toLowerCase().includes(query)) ||
+        (v.channel_name && v.channel_name.toLowerCase().includes(query))
       );
     }
 
+    // 2. Status Filter
     if (filterStatus !== "all") {
       filtered = filtered.filter(v => {
         const s = getOverallVideoStatus(v.localizations);
-        if (filterStatus === "live") return s === "live" || Object.values(v.localizations || {}).some((l: any) => l.status === "live");
+
+        // Special case for "live" to include any video with at least one live localization
+        if (filterStatus === "live") {
+          return s === "live" || Object.values(v.localizations || {}).some((l: any) => l.status === "live");
+        }
+
+        // Special case for "processing" to include detailed states
+        if (filterStatus === "processing") {
+          return s === "processing" || s === "queued";
+        }
+
         return s === filterStatus;
       });
     }
 
-    filtered = [...filtered].sort((a, b) => {
+    // 3. Sorting
+    filtered.sort((a, b) => {
       let comparison = 0;
       switch (sortBy) {
         case "date":
-          comparison = new Date(a.published_at).getTime() - new Date(b.published_at).getTime();
+          comparison = new Date(a.published_at || 0).getTime() - new Date(b.published_at || 0).getTime();
           break;
         case "views":
           comparison = (a.view_count || 0) - (b.view_count || 0);
           break;
         case "title":
-          comparison = a.title.localeCompare(b.title);
+          comparison = (a.title || "").localeCompare(b.title || "");
           break;
         case "status":
           const statusOrder: Record<string, number> = { live: 0, draft: 1, processing: 2, queued: 3, failed: 4, all: 5 };
           const aStatus = getOverallVideoStatus(a.localizations);
           const bStatus = getOverallVideoStatus(b.localizations);
-          comparison = statusOrder[aStatus] - statusOrder[bStatus];
+          comparison = (statusOrder[aStatus] || 99) - (statusOrder[bStatus] || 99);
           break;
       }
       return sortOrder === "asc" ? comparison : -comparison;
     });
 
-    // Deduplicate by video_id
+    // 4. Unique check (safety)
     const seen = new Set();
     return filtered.filter(v => {
       if (seen.has(v.video_id)) return false;
       seen.add(v.video_id);
       return true;
     });
-  }, [videosWithLocalizations, videos, searchQuery, filterStatus, sortBy, sortOrder]);
+  }, [videosWithLocalizations, searchQuery, filterStatus, sortBy, sortOrder]);
 
   const stats = useMemo(() => {
     const total = videosWithLocalizations.length;
