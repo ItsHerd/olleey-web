@@ -37,9 +37,10 @@ type SortBy = "date" | "views" | "title" | "status";
 type FilterStatus = "all" | "live" | "draft" | "processing";
 
 interface LocalizationInfo {
-  status: "live" | "draft" | "processing" | "not-started";
+  status: "queued" | "live" | "draft" | "processing" | "not-started" | "failed";
   progress: number;
   job_id?: string;
+  video_url?: string;
 }
 
 const containerVariants = {
@@ -138,14 +139,16 @@ export default function AllMediaPage() {
 
       return { ...video, localizations };
     });
-  }, [videos, selectedLanguages, dashboard?.recent_jobs]);
+  }, [videos, selectedLanguages, dashboard?.recent_jobs, refreshTrigger]);
 
-  const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): FilterStatus => {
+  const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): FilterStatus | "queued" | "failed" => {
     const statuses = Object.values(localizations).map(l => l.status);
     const activeStatuses = statuses.filter(s => s !== "not-started");
 
     if (activeStatuses.length === 0) return "all";
+    if (activeStatuses.some(s => s === "failed")) return "failed";
     if (activeStatuses.some(s => s === "processing")) return "processing";
+    if (activeStatuses.some(s => s === "queued")) return "queued";
     if (activeStatuses.some(s => s === "draft")) return "draft";
     if (activeStatuses.every(s => s === "live")) return "live";
     return "all";
@@ -187,7 +190,7 @@ export default function AllMediaPage() {
           comparison = a.title.localeCompare(b.title);
           break;
         case "status":
-          const statusOrder = { live: 0, draft: 1, processing: 2, all: 3 };
+          const statusOrder: Record<string, number> = { live: 0, draft: 1, processing: 2, queued: 3, failed: 4, all: 5 };
           const aStatus = getOverallVideoStatus(a.localizations);
           const bStatus = getOverallVideoStatus(b.localizations);
           comparison = statusOrder[aStatus] - statusOrder[bStatus];
@@ -399,7 +402,7 @@ export default function AllMediaPage() {
               </Button>
             </div>
           ) : viewMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
               {filteredAndSortedVideos.map((video) => {
                 const status = getOverallVideoStatus(video.localizations);
                 const hasLive = Object.values(video.localizations || {}).some((l: any) => l.status === "live");
@@ -442,6 +445,18 @@ export default function AllMediaPage() {
                           <div className="px-2 py-1 bg-blue-500/90 backdrop-blur-md rounded-none flex items-center gap-1 shadow-lg">
                             <Clock className="w-2.5 h-2.5 text-white animate-spin" />
                             <span className="text-[8px] font-black text-white uppercase tracking-tighter">Running</span>
+                          </div>
+                        )}
+                        {status === "queued" && (
+                          <div className="px-2 py-1 bg-gray-500/90 backdrop-blur-md rounded-none flex items-center gap-1 shadow-lg">
+                            <Layers className="w-2.5 h-2.5 text-white animate-pulse" />
+                            <span className="text-[8px] font-black text-white uppercase tracking-tighter">Queued</span>
+                          </div>
+                        )}
+                        {status === "failed" && (
+                          <div className="px-2 py-1 bg-red-600/90 backdrop-blur-md rounded-none flex items-center gap-1 shadow-lg">
+                            <Shield className="w-2.5 h-2.5 text-white" />
+                            <span className="text-[8px] font-black text-white uppercase tracking-tighter">Failed</span>
                           </div>
                         )}
                       </div>
