@@ -31,87 +31,149 @@ export default function ReviewHubPage() {
     const { selectedProject } = useProject();
     const { videos, loading: videosLoading } = useVideos({ project_id: selectedProject?.id });
 
-    // Try to recover state from URL if quickCheckState is empty (e.g. direct link)
+    // Synchronize state with backend when video_id or lang changes in URL
     useEffect(() => {
-        if (videoIdFromUrl && !quickCheckState.videoId && !videosLoading) {
-            // First try to find as a video_id
+        if (!videoIdFromUrl || videosLoading) return;
+
+        const isCurrentVideo = quickCheckState.videoId === videoIdFromUrl &&
+            quickCheckState.languageCode === (langFromUrl || quickCheckState.languageCode);
+
+        // If we don't have the video loaded in state, or if we want to ensure freshness
+        if (!isCurrentVideo || !quickCheckState.originalVideoUrl) {
+            // First try to find as a video_id in the already loaded videos list
             let video = videos.find(v => v.video_id === videoIdFromUrl);
+            console.log('[ReviewHubPage] Initial lookup:', {
+                videoIdFromUrl,
+                foundInList: !!video,
+                totalVideos: videos.length,
+                videoData: video ? {
+                    title: video.title,
+                    storage_url: (video as any).storage_url,
+                    video_url: (video as any).video_url
+                } : null
+            });
 
-            // If not found, it might be a job_id - fetch job and localized videos
-            if (!video) {
-                (async () => {
+            // Fetch sequence to ensure we have the most accurate backend data
+            (async () => {
+                try {
+                    let targetVideo = video;
+                    let targetJob: any = null;
+                    let jobVideos: any[] = [];
+
+                    // Try to get job data - first as job_id, then by finding job with source_video_id
                     try {
-                        const job = await jobsAPI.getJobById(videoIdFromUrl);
-                        const jobVideos = await jobsAPI.getJobVideos(videoIdFromUrl);
+                        // First, try as a job_id
+                        targetJob = await jobsAPI.getJobById(videoIdFromUrl);
+                        jobVideos = await jobsAPI.getJobVideos(videoIdFromUrl);
 
-                        // Find the source video
-                        video = videos.find(v => v.video_id === job.source_video_id);
-
-                        if (video) {
-                            const langCode = langFromUrl || job.target_languages[0] || "es";
-
-                            // Find the localized video for this language
-                            const localizedVideo = jobVideos.find(jv => jv.language_code === langCode);
-
-                            // Helper to construct full URL for storage paths
-                            const getFullUrl = (url: string | undefined) => {
-                                if (!url) return undefined;
-                                if (url.startsWith('http')) return url;
-                                return `${API_BASE_URL}${url}`;
-                            };
-
-                            // Get source video URL - check storage_url first for uploaded videos
-                            const sourceVideoUrl = (video as any).storage_url
-                                ? getFullUrl((video as any).storage_url)
-                                : (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-
-                            openReview({
-                                videoId: videoIdFromUrl, // Use job_id as the identifier
-                                languageCode: langCode,
-                                originalVideoUrl: sourceVideoUrl,
-                                dubbedVideoUrl: getFullUrl(localizedVideo?.storage_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                                videoTitle: localizedVideo?.title || video.title,
-                                videoDescription: localizedVideo?.description || video.description,
-                                thumbnailUrl: getFullUrl(localizedVideo?.thumbnail_url || video.thumbnail_url),
-                                isApproved: localizedVideo?.status === "published",
-                                approvedAt: video.published_at || (video as any).created_at
-                            });
+                        // If it's a job, the source video is what we want for "original"
+                        if (!targetVideo) {
+                            targetVideo = videos.find(v => v.video_id === targetJob.source_video_id);
                         }
-                    } catch (error) {
-                        console.error("Failed to fetch job details:", error);
+                    } catch (e) {
+                        // Not a job_id, treat as video_id and find associated job
+                        console.log("Not a job ID, treating as video ID and finding associated job");
+
+                        try {
+                            // Find job by source_video_id
+                            const jobsResponse = await jobsAPI.listJobs();
+                            const associatedJob = jobsResponse.jobs.find(j => j.source_video_id === videoIdFromUrl);
+
+                            if (associatedJob) {
+                                targetJob = associatedJob;
+                                jobVideos = await jobsAPI.getJobVideos(associatedJob.job_id);
+                                console.log("Found associated job:", associatedJob.job_id);
+                            }
+                        } catch (jobError) {
+                            console.log("Could not find associated job, using video data only");
+                        }
                     }
-                })();
-            } else {
-                // Found as video_id - use localizations from video object
-                const langCode = langFromUrl || Object.keys(video.localizations || {})[0] || "es";
-                const loc = video.localizations?.[langCode];
 
-                // Helper to construct full URL for storage paths
-                const getFullUrl = (url: string | undefined) => {
-                    if (!url) return undefined;
-                    if (url.startsWith('http')) return url;
-                    return `${API_BASE_URL}${url}`;
-                };
+                    // If we still don't have the video, try to fetch it directly
+                    if (!targetVideo && videoIdFromUrl) {
+                        try {
+                            console.log("Fetching video directly by ID:", videoIdFromUrl);
+                            const videoData = await videosAPI.getVideoById(videoIdFromUrl);
+                            targetVideo = videoData;
+                            console.log("Fetched video data:", videoData);
+                        } catch (err) {
+                            console.error("Failed to fetch video directly:", err);
+                        }
+                    }
 
-                // Get source video URL - check storage_url first for uploaded videos
-                const sourceVideoUrl = (video as any).storage_url
-                    ? getFullUrl((video as any).storage_url)
-                    : (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+                    if (targetVideo) {
+                        const langCode = langFromUrl || targetJob?.target_languages?.[0] || Object.keys(targetVideo.localizations || {})[0] || "es";
 
-                openReview({
-                    videoId: video.video_id,
-                    languageCode: langCode,
-                    originalVideoUrl: sourceVideoUrl,
-                    dubbedVideoUrl: getFullUrl(loc?.video_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                    videoTitle: loc?.title || video.title,
-                    videoDescription: loc?.description || video.description,
-                    thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
-                    isApproved: loc?.status === "live",
-                    approvedAt: video.published_at || (video as any).created_at
-                });
-            }
+                        // Find localization info (either from jobVideos for active jobs or video.localizations for existing)
+                        const localizedVideo = jobVideos.find(jv => jv.language_code === langCode);
+                        const loc = targetVideo.localizations?.[langCode];
+
+                        // Helper to construct full URL for storage paths
+                        const getFullUrl = (url: string | undefined) => {
+                            if (!url) return undefined;
+                            if (url.startsWith('http')) return url;
+                            return `${API_BASE_URL}${url}`;
+                        };
+
+                        // Get source video URL - favor storage_url for uploaded videos, then video_url
+                        const sourceVideoUrl = getFullUrl((targetVideo as any).storage_url || (targetVideo as any).video_url) ||
+                            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+
+                        // Get dubbed video URL - favor storage_url from the localized video (can be empty if not ready)
+                        const dubbedVideoUrl = getFullUrl(localizedVideo?.storage_url || loc?.video_url) || "";
+
+                        // Get localized metadata (for the Localized Metadata section)
+                        const localizedTitle = localizedVideo?.title || loc?.title || "";
+                        const localizedDescription = localizedVideo?.description || loc?.description || "";
+
+                        // Debug logging
+                        console.log('[ReviewHubPage] Video data:', {
+                            videoId: videoIdFromUrl,
+                            langCode,
+                            hasJobVideos: jobVideos.length > 0,
+                            sourceVideo: {
+                                title: targetVideo.title,
+                                storage_url: (targetVideo as any).storage_url,
+                                video_url: (targetVideo as any).video_url,
+                                thumbnail_url: targetVideo.thumbnail_url
+                            },
+                            localizedVideo: localizedVideo ? {
+                                title: localizedVideo.title,
+                                storage_url: localizedVideo.storage_url,
+                                thumbnail_url: localizedVideo.thumbnail_url
+                            } : null,
+                            locFromVideo: loc ? {
+                                title: loc.title,
+                                video_url: loc.video_url,
+                                thumbnail_url: loc.thumbnail_url
+                            } : null,
+                            constructedUrls: {
+                                sourceVideoUrl,
+                                dubbedVideoUrl: dubbedVideoUrl || '(empty - not ready)',
+                                sourceThumbnail: getFullUrl(targetVideo.thumbnail_url)
+                            }
+                        });
+
+                        openReview({
+                            videoId: videoIdFromUrl,
+                            languageCode: langCode,
+                            originalVideoUrl: sourceVideoUrl,
+                            dubbedVideoUrl: dubbedVideoUrl,
+                            videoTitle: targetVideo.title, // Use SOURCE video title for header
+                            videoDescription: targetVideo.description || "", // Use SOURCE description
+                            thumbnailUrl: getFullUrl(targetVideo.thumbnail_url), // Use SOURCE thumbnail
+                            localizedTitle: localizedTitle, // Add localized metadata
+                            localizedDescription: localizedDescription,
+                            isApproved: localizedVideo?.status === "published" || loc?.status === "live",
+                            approvedAt: targetVideo.published_at || (targetVideo as any).created_at
+                        });
+                    }
+                } catch (error) {
+                    console.error("Failed to synchronize video details:", error);
+                }
+            })();
         }
-    }, [videoIdFromUrl, langFromUrl, quickCheckState.videoId, videos, videosLoading, openReview]);
+    }, [videoIdFromUrl, langFromUrl, videos, videosLoading, openReview, quickCheckState.videoId, quickCheckState.languageCode, quickCheckState.originalVideoUrl]);
 
     const {
         originalVideoUrl,
@@ -119,6 +181,8 @@ export default function ReviewHubPage() {
         languageCode,
         videoTitle,
         videoDescription,
+        localizedTitle,
+        localizedDescription,
         isApproved,
         approvedAt
     } = quickCheckState;
@@ -150,8 +214,10 @@ export default function ReviewHubPage() {
     const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
     const [showThumbnailPreview, setShowThumbnailPreview] = useState(false);
     const [customThumbnail, setCustomThumbnail] = useState<string | null>(null);
-    const [editedTitle, setEditedTitle] = useState(videoTitle || "");
-    const [editedDescription, setEditedDescription] = useState(videoDescription || "No description provided.");
+    const [customThumbnailFile, setCustomThumbnailFile] = useState<File | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editedTitle, setEditedTitle] = useState(localizedTitle || "");
+    const [editedDescription, setEditedDescription] = useState(localizedDescription || "No description provided.");
     const [isGeneratingInfo, setIsGeneratingInfo] = useState(false);
     const [showInfoPreview, setShowInfoPreview] = useState(false);
     const [tempTitle, setTempTitle] = useState("");
@@ -164,9 +230,9 @@ export default function ReviewHubPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (videoTitle) setEditedTitle(videoTitle);
-        if (videoDescription) setEditedDescription(videoDescription);
-    }, [videoTitle, videoDescription]);
+        if (localizedTitle) setEditedTitle(localizedTitle);
+        if (localizedDescription) setEditedDescription(localizedDescription);
+    }, [localizedTitle, localizedDescription]);
 
     const handleRedo = (key: string) => {
         setReprocessingItems(prev => ({ ...prev, [key]: true }));
@@ -191,6 +257,7 @@ export default function ReviewHubPage() {
         if (file) {
             const url = URL.createObjectURL(file);
             setCustomThumbnail(url);
+            setCustomThumbnailFile(file);
             setThumbnailStrategy("upload");
             setShowThumbnailPreview(true);
         }
@@ -213,10 +280,53 @@ export default function ReviewHubPage() {
         setShowInfoPreview(true);
     };
 
-    const handleApprove = () => {
-        // No longer calls baseHandleApprove (publishing) here
-        // Just move to the final preview stage
-        router.push('/app?page=Preview', { scroll: false });
+    const handleApprove = async () => {
+        setIsSaving(true);
+
+        try {
+            // Check if there are any changes to save
+            const titleChanged = editedTitle !== (localizedTitle || "");
+            const descriptionChanged = editedDescription !== (localizedDescription || "");
+            const thumbnailChanged = thumbnailStrategy === "upload" && customThumbnailFile;
+
+            if (titleChanged || descriptionChanged || thumbnailChanged) {
+                // We need the job_id to save changes
+                // Try to find it from the video_id
+                const jobsResponse = await jobsAPI.listJobs();
+                const job = jobsResponse.jobs.find(j => j.source_video_id === quickCheckState.videoId);
+
+                if (job && languageCode) {
+                    console.log('[ReviewHubPage] Saving changes:', {
+                        titleChanged,
+                        descriptionChanged,
+                        thumbnailChanged,
+                        job_id: job.job_id,
+                        language_code: languageCode
+                    });
+
+                    await jobsAPI.updateLocalizedVideo(job.job_id, languageCode, {
+                        title: titleChanged ? editedTitle : undefined,
+                        description: descriptionChanged ? editedDescription : undefined,
+                        thumbnailFile: thumbnailChanged ? customThumbnailFile : undefined,
+                    });
+
+                    console.log('[ReviewHubPage] Changes saved successfully');
+
+                    // Trigger refresh
+                    window.dispatchEvent(new CustomEvent('olleey-refresh'));
+                } else {
+                    console.warn('[ReviewHubPage] Could not find job to save changes');
+                }
+            }
+
+            // Navigate to Preview page
+            router.push(`/app?page=Preview&video_id=${quickCheckState.videoId}&lang=${languageCode}`, { scroll: false });
+        } catch (error) {
+            console.error('[ReviewHubPage] Failed to save changes:', error);
+            alert('Failed to save changes. Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleCommit = () => {
@@ -439,9 +549,14 @@ export default function ReviewHubPage() {
                             </Button>
                             <Button
                                 onClick={handleApprove}
-                                className={`h-10 px-6 rounded-full bg-green-600 hover:bg-green-500 text-black text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-green-900/20`}
+                                disabled={isSaving}
+                                className={`h-10 px-6 rounded-full bg-green-600 hover:bg-green-500 text-black text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-green-900/20 disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                                <CheckCircle className="w-3.5 h-3.5 mr-2" /> Verify & Preview
+                                {isSaving ? (
+                                    <><RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" /> Saving...</>
+                                ) : (
+                                    <><CheckCircle className="w-3.5 h-3.5 mr-2" /> Verify & Preview</>
+                                )}
                             </Button>
                         </>
                     )}
@@ -515,21 +630,32 @@ export default function ReviewHubPage() {
                                     {languageName} Output
                                 </Badge>
                             </div>
-                            <video
-                                ref={dubbedVideoRef}
-                                src={dubbedVideoUrl}
-                                className="w-full h-full object-contain"
-                                muted={dubbedMuted}
-                                onTimeUpdate={handleVideoTimeUpdate}
-                                onLoadedMetadata={handleVideoLoadedMetadata}
-                                onPlay={handleVideoPlay}
-                                onPause={handleVideoPause}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleDubbedMute();
-                                    setSelectedFocus("prod");
-                                }}
-                            />
+                            {dubbedVideoUrl ? (
+                                <video
+                                    ref={dubbedVideoRef}
+                                    src={dubbedVideoUrl}
+                                    className="w-full h-full object-contain"
+                                    muted={dubbedMuted}
+                                    onTimeUpdate={handleVideoTimeUpdate}
+                                    onLoadedMetadata={handleVideoLoadedMetadata}
+                                    onPlay={handleVideoPlay}
+                                    onPause={handleVideoPause}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleDubbedMute();
+                                        setSelectedFocus("prod");
+                                    }}
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <div className="text-center space-y-3">
+                                        <RefreshCw className="w-8 h-8 text-white/20 animate-spin mx-auto" />
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">
+                                            Localized Output Processing
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Center Play Button Overlay */}
@@ -708,7 +834,7 @@ export default function ReviewHubPage() {
                                 <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
                                     <ImageIcon className="w-4 h-4 text-purple-400" />
                                 </div>
-                                <h3 className="text-sm font-medium tracking-tight">Visual Identity</h3>
+                                <h3 className="text-sm font-medium tracking-tight">Thumbnail</h3>
                             </div>
                             <div className="flex bg-white/5 rounded-full p-0.5 border border-white/5">
                                 {(['original', 'generate', 'upload'] as const).map((strategy) => (

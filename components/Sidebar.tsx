@@ -1,8 +1,9 @@
 "use client";
 
 import { useTheme } from "@/lib/useTheme";
-import { ChevronDown, Check, Plus, Zap, LayoutGrid, Grid3x3, Layers, Shield, Settings, Activity, MessageSquare, ExternalLink, PlaySquare, CheckCircle } from "lucide-react";
+import { Search, ChevronDown, Check, Plus, Zap, LayoutGrid, Grid3x3, Layers, Shield, Settings, Activity, MessageSquare, ExternalLink, PlaySquare, CheckCircle } from "lucide-react";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Project } from "@/lib/api";
 
 
@@ -12,13 +13,12 @@ type SidebarProps = {
   isLocked?: boolean;
   onLogout?: () => void;
   isOpen?: boolean;
-  projects?: Project[];
-  selectedProject?: Project | null;
-  selectedProjectChannelName?: string;
-  selectedProjectChannelAvatar?: string;
-  projectAvatars?: Record<string, string>;
-  onProjectSelect?: (project: Project) => void;
-  onCreateProject?: () => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  isSearchFocused?: boolean;
+  onSearchFocusChange?: (focused: boolean) => void;
+  filteredSearchResults?: { videos: any[]; jobs: any[] };
+  videos?: any[];
 };
 
 export default function Sidebar({
@@ -27,16 +27,14 @@ export default function Sidebar({
   isLocked = false,
   onLogout,
   isOpen = false,
-  projects = [],
-  selectedProject,
-  selectedProjectChannelName,
-  selectedProjectChannelAvatar,
-  projectAvatars = {},
-  onProjectSelect,
-  onCreateProject
+  searchQuery = "",
+  onSearchChange,
+  isSearchFocused = false,
+  onSearchFocusChange,
+  filteredSearchResults = { videos: [], jobs: [] },
+  videos = []
 }: SidebarProps) {
   const { theme } = useTheme();
-  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
 
   // Sidebar is expanded only when forced open (pinned)
   const isExpanded = isOpen;
@@ -46,6 +44,7 @@ export default function Sidebar({
   const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
   const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
   const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
+  const isDark = theme === "dark";
 
   const mainNavItems = [
     { name: "Dashboard", icon: <LayoutGrid className="w-5 h-5" /> },
@@ -67,110 +66,126 @@ export default function Sidebar({
   return (
     <aside
       className={`${isExpanded ? "w-48 sm:w-56 md:w-60" : "w-14 sm:w-16"
-        } ${bgClass} border ${borderClass} rounded-2xl m-3 flex flex-col h-[calc(100vh-1.5rem)] transition-all duration-200 ease-in-out overflow-hidden shadow-xl z-30`}
+        } ${bgClass} border ${borderClass} rounded-2xl m-3 flex flex-col h-[calc(100vh-1.5rem)] transition-all duration-200 ease-in-out relative shadow-xl z-30`}
     >
       {/* Logo Section at Top */}
       <div className="px-2 sm:px-3 pt-3 sm:pt-4 pb-3 sm:pb-4">
-        <div className={`flex items-center ${isExpanded ? 'px-4 py-3 gap-3 justify-center' : 'justify-center p-2'} bg-white text-black rounded-xl transition-all duration-200`}>
-          {isExpanded ? (
-            <h1 className="text-xl font-300 tracking-tight cursor-pointer" onClick={() => onNavigate("dashboard")}>olleey.com</h1>
-          ) : (
+        <div className={`flex items-center ${isExpanded ? 'px-4 py-3 gap-3 justify-start' : 'justify-center p-2'} transition-all duration-200`}>
+          <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center p-1.5 shadow-sm shrink-0">
             <img
               src="/logo-transparent.png"
               alt="olleey"
-              className="w-8 h-8 object-contain"
+              className="w-full h-full object-contain"
             />
+          </div>
+          {isExpanded && (
+            <h1 className={`text-xl font-300 tracking-tight cursor-pointer ${textClass}`} onClick={() => onNavigate("dashboard")}>olleey.com</h1>
           )}
         </div>
       </div>
 
-      {/* Project Selector */}
-      {projects.length > 0 && (
-        <div className="px-2 sm:px-3 pb-3">
-          <div className="relative">
-            <button
-              onClick={() => isExpanded && setProjectDropdownOpen(!projectDropdownOpen)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isExpanded
-                ? `${cardClass} border ${borderClass} hover:shadow-md cursor-pointer transition-shadow`
-                : 'justify-center'
-                }`}
-            >
-              <div className={`w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ${!selectedProjectChannelAvatar ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-[12px] text-white font-bold shadow-sm' : ''}`}>
-                {selectedProjectChannelAvatar ? (
-                  <img src={selectedProjectChannelAvatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  selectedProject?.name?.charAt(0) || "P"
-                )}
-              </div>
-              {isExpanded && (
-                <>
-                  <div className="flex flex-col flex-1 text-left min-w-0">
-                    <span className={`text-sm ${textClass} font-semibold truncate`}>
-                      {selectedProject?.name || "Select Project"}
-                    </span>
-                    {selectedProjectChannelName && (
-                      <span className={`text-[10px] ${textSecondaryClass} opacity-60 truncate font-medium`}>
-                        {selectedProjectChannelName}
-                      </span>
-                    )}
-                  </div>
-                  <ChevronDown className={`h-4 w-4 ${textClass} opacity-50 transition-transform ${projectDropdownOpen ? 'rotate-180' : ''}`} />
-                </>
-              )}
-            </button>
+      {/* Replaced Project Selector with Search Bar */}
+      <div className="px-2 sm:px-3 pb-3">
+        {isExpanded ? (
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+              <Search className={`h-3.5 w-3.5 ${textSecondaryClass} group-focus-within:text-olleey-yellow transition-colors opacity-50`} />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              onFocus={() => onSearchFocusChange?.(true)}
+              onBlur={() => setTimeout(() => onSearchFocusChange?.(false), 200)}
+              placeholder="Search..."
+              className={`block w-full pl-9 pr-3 py-2 text-xs border ${isDark ? 'bg-white/[0.03] border-white/5 text-white placeholder-white/20' : 'bg-gray-100 border-gray-200 text-black placeholder-gray-400'} rounded-xl focus:ring-0 focus:border-olleey-yellow/30 focus:bg-olleey-yellow/[0.01] outline-none transition-all duration-300 font-mono`}
+            />
 
-            {/* Project Dropdown */}
-            {isExpanded && projectDropdownOpen && (
-              <div className={`absolute top-full left-0 right-0 mt-1 ${cardClass} border ${borderClass} rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
-                <div className="p-1">
-                  {projects.map((project) => (
-                    <button
-                      key={project.id}
-                      onClick={() => {
-                        onProjectSelect?.(project);
-                        setProjectDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${selectedProject?.id === project.id
-                        ? `${cardClass} ${textClass} font-medium`
-                        : `${textSecondaryClass} hover:${cardClass} hover:${textClass}`
-                        }`}
-                    >
-                      <div className={`w-6 h-6 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center ${!projectAvatars[project.id] ? 'bg-yellow-100 dark:bg-yellow-900/30 text-xs font-bold text-yellow-600 dark:text-yellow-400' : ''}`}>
-                        {projectAvatars[project.id] ? (
-                          <img src={projectAvatars[project.id]} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          project.name.charAt(0)
-                        )}
-                      </div>
-                      <span className="truncate flex-1 text-left">{project.name}</span>
-                      {selectedProject?.id === project.id && (
-                        <Check className="w-4 h-4 text-yellow-500" />
-                      )}
-                    </button>
-                  ))}
-
-                  {/* Divider */}
-                  <div className={`my-1 border-t ${borderClass}`} />
-
-                  {/* Add Project */}
-                  <button
-                    onClick={() => {
-                      onCreateProject?.();
-                      setProjectDropdownOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm ${textSecondaryClass} hover:${cardClass} hover:${textClass} transition-colors`}
-                  >
-                    <div className="w-6 h-6 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
-                      <Plus className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+            {/* Floating Search Results - Displaced to Right */}
+            <AnimatePresence>
+              {isSearchFocused && searchQuery.trim().length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -10, scale: 0.95 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className={`fixed left-[240px] top-24 w-80 p-2 rounded-2xl border ${isDark ? 'bg-[#0f0f11]/95 border-white/10 shadow-2xl backdrop-blur-2xl' : 'bg-white border-gray-200 shadow-xl'} z-[110] overflow-hidden max-h-[500px] overflow-y-auto`}
+                >
+                  {filteredSearchResults.videos.length === 0 && filteredSearchResults.jobs.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${textSecondaryClass} opacity-40`}>Zero results</p>
                     </div>
-                    <span className="flex-1 text-left">Add Project</span>
-                  </button>
-                </div>
-              </div>
-            )}
+                  ) : (
+                    <div className="space-y-4 p-2">
+                      {filteredSearchResults.jobs.length > 0 && (
+                        <div>
+                          <div className={`px-2 mb-2 text-[9px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} opacity-40 font-mono`}>Operations</div>
+                          <div className="space-y-1">
+                            {filteredSearchResults.jobs.map(job => (
+                              <button
+                                key={job.job_id}
+                                onClick={() => {
+                                  onNavigate("Workflows");
+                                  onSearchChange?.("");
+                                }}
+                                className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'} text-left truncate`}
+                              >
+                                <div className="w-1.5 h-1.5 rounded-full bg-olleey-yellow animate-pulse shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <div className={`text-xs font-bold truncate ${textClass}`}>{job.job_id.slice(0, 12)}...</div>
+                                  <div className={`text-[8px] ${textSecondaryClass} font-black uppercase tracking-tighter`}>{job.status}</div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {filteredSearchResults.videos.length > 0 && (
+                        <div>
+                          <div className={`px-2 mb-2 text-[9px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} opacity-40 font-mono`}>Library</div>
+                          <div className="space-y-1">
+                            {filteredSearchResults.videos.map(video => (
+                              <button
+                                key={video.video_id}
+                                onClick={() => {
+                                  onNavigate("All Media");
+                                  onSearchChange?.("");
+                                }}
+                                className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'} text-left`}
+                              >
+                                {video.thumbnail_url ? (
+                                  <img src={video.thumbnail_url} className="w-8 h-8 rounded-lg object-cover shrink-0 bg-white/5" alt="" />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-olleey-yellow/10 shrink-0">
+                                    <PlaySquare className="w-4 h-4 text-olleey-yellow" />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className={`text-xs font-bold truncate ${textClass}`}>{video.title}</div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="flex justify-center">
+            <button
+              onClick={() => onNavigate("Dashboard")}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center ${cardClass} border ${borderClass} hover:text-olleey-yellow transition-colors shadow-sm`}
+            >
+              <Search className="w-4 h-4 opacity-50" />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Main Navigation - Moved Up */}
       <nav className="flex-1 px-2 sm:px-3 flex flex-col justify-start pt-4 space-y-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">

@@ -240,13 +240,12 @@ function AppContent() {
                                 isLocked={false}
                                 onLogout={handleLogout}
                                 isOpen={isSidebarOpen}
-                                projects={projects}
-                                selectedProject={selectedProject}
-                                selectedProjectChannelName={selectedProjectChannelName}
-                                selectedProjectChannelAvatar={selectedProjectChannelAvatar}
-                                projectAvatars={projectAvatars}
-                                onProjectSelect={setSelectedProject}
-                                onCreateProject={() => setIsCreateProjectModalOpen(true)}
+                                searchQuery={searchQuery}
+                                onSearchChange={setSearchQuery}
+                                isSearchFocused={isSearchFocused}
+                                onSearchFocusChange={setIsSearchFocused}
+                                filteredSearchResults={filteredSearchResults}
+                                videos={videos}
                             />
                         </div>
 
@@ -314,119 +313,35 @@ function AppContent() {
                                         <ChevronRight className="w-3 h-3" />
                                     </div>
 
-                                    <div className={`flex items-center gap-3 px-4 py-1.5 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-gray-50 border-gray-100'} shadow-sm`}>
-                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] font-mono ${textClass} opacity-90`}>
-                                            {currentPage}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Search Bar - Quick Command Center */}
-                                <div className="hidden md:flex flex-1 max-w-md mx-6 relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                        <Search className={`h-3.5 w-3.5 ${textSecondaryClass} group-focus-within:text-olleey-yellow transition-colors opacity-50`} />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        onFocus={() => setIsSearchFocused(true)}
-                                        onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                                        placeholder="Search library, jobs or documentation..."
-                                        className={`block w-full pl-11 pr-12 py-2.5 text-xs border ${isDark ? 'bg-white/[0.03] border-white/5 text-white placeholder-white/20' : 'bg-gray-100 border-gray-200 text-black placeholder-gray-400'} rounded-xl focus:ring-0 focus:border-olleey-yellow/30 focus:bg-olleey-yellow/[0.02] outline-none transition-all duration-300 font-mono`}
-                                    />
-                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                        <kbd className={`hidden lg:inline-flex items-center px-2 py-1 rounded-lg border ${isDark ? 'border-white/10 bg-white/5 text-white/30' : 'border-gray-200 bg-white text-gray-400'} text-[9px] font-black tracking-tighter font-mono`}>
-                                            ⌘K
-                                        </kbd>
-                                    </div>
-
-                                    {/* Search Results Overlay */}
-                                    <AnimatePresence>
-                                        {(isSearchFocused && searchQuery.trim().length > 0) && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: 10 }}
-                                                className={`absolute top-full left-0 right-0 mt-2 p-2 rounded-2xl border ${isDark ? 'bg-[#121212]/95 border-white/5 shadow-2xl backdrop-blur-2xl' : 'bg-white border-gray-200 shadow-xl'} z-[110] overflow-hidden max-h-[400px] overflow-y-auto`}
-                                            >
-                                                {filteredSearchResults.videos.length === 0 && filteredSearchResults.jobs.length === 0 ? (
-                                                    <div className="p-8 text-center">
-                                                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
-                                                            <Search className="w-5 h-5 opacity-20" />
-                                                        </div>
-                                                        <p className={`text-[10px] font-black uppercase tracking-widest ${textSecondaryClass}`}>No matching records found</p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-4 p-2">
-                                                        {filteredSearchResults.jobs.length > 0 && (
-                                                            <div>
-                                                                <div className={`px-2 mb-2 text-[9px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} opacity-50 font-mono`}>Active Processes</div>
-                                                                <div className="space-y-1">
-                                                                    {filteredSearchResults.jobs.map(job => {
-                                                                        const video = videos.find(v => v.video_id === job.source_video_id);
-                                                                        return (
-                                                                            <button
-                                                                                key={job.job_id}
-                                                                                onClick={() => {
-                                                                                    setCurrentPage("Workflows");
-                                                                                    setSearchQuery("");
-                                                                                }}
-                                                                                className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'} text-left group`}
-                                                                            >
-                                                                                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                                                                                    <Clock className="w-4 h-4 text-blue-500 animate-spin" />
-                                                                                </div>
-                                                                                <div className="flex-1 min-w-0">
-                                                                                    <div className="flex items-center gap-2">
-                                                                                        <span className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-black'}`}>{video?.title || 'Unknown Video'}</span>
-                                                                                        <span className={`text-[8px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-500 font-black uppercase tracking-tighter`}>{job.status}</span>
-                                                                                    </div>
-                                                                                    <div className={`text-[9px] ${isDark ? 'text-white/40' : 'text-black/40'} font-mono truncate`}>{job.job_id}</div>
-                                                                                </div>
-                                                                                <ExternalLink className={`w-3.5 h-3.5 ${isDark ? 'text-white/40' : 'text-black/40'} opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap`} />
-                                                                            </button>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {filteredSearchResults.videos.length > 0 && (
-                                                            <div>
-                                                                <div className={`px-2 mb-2 text-[9px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} opacity-50 font-mono`}>Media Library</div>
-                                                                <div className="space-y-1">
-                                                                    {filteredSearchResults.videos.map(video => (
-                                                                        <button
-                                                                            key={video.video_id}
-                                                                            onClick={() => {
-                                                                                setCurrentPage("All Media");
-                                                                                setSearchQuery("");
-                                                                            }}
-                                                                            className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'} text-left group`}
-                                                                        >
-                                                                            {video.thumbnail_url ? (
-                                                                                <div className={`w-12 aspect-video ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-md overflow-hidden shrink-0`}>
-                                                                                    <img src={video.thumbnail_url} className="w-full h-full object-cover" alt="" />
-                                                                                </div>
-                                                                            ) : (
-                                                                                <div className={`w-12 aspect-video ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-md flex items-center justify-center shrink-0`}>
-                                                                                    <Youtube className="w-4 h-4 text-olleey-yellow" />
-                                                                                </div>
-                                                                            )}
-                                                                            <div className="flex-1 min-w-0">
-                                                                                <div className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-black'}`}>{video.title}</div>
-                                                                            </div>
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </motion.div>
+                                    {/* Refined Navigation Trail */}
+                                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-gray-50 border-gray-200'} shadow-sm backdrop-blur-md`}>
+                                        {(currentPage === "Review Hub" || currentPage === "Processing") ? (
+                                            <>
+                                                <span className={`text-[9px] font-black uppercase tracking-[0.2em] font-mono ${textSecondaryClass} opacity-40 hover:opacity-100 transition-opacity cursor-default`}>
+                                                    workflows
+                                                </span>
+                                                <div className={`${isDark ? 'text-white/10' : 'text-gray-200'} mx-0.5 select-none`}>
+                                                    <span className="text-[10px] font-light">/</span>
+                                                </div>
+                                                <span className={`text-[9px] font-black uppercase tracking-[0.2em] font-mono ${textSecondaryClass} opacity-40 hover:opacity-100 transition-opacity cursor-default`}>
+                                                    {currentPage === "Review Hub" ? "review" : "processing"}
+                                                </span>
+                                                <div className={`${isDark ? 'text-white/10' : 'text-gray-200'} mx-0.5 select-none`}>
+                                                    <span className="text-[10px] font-light">/</span>
+                                                </div>
+                                                <div className={`flex items-center gap-2 pr-1`}>
+                                                    <div className={`w-1 h-1 rounded-full bg-olleey-yellow animate-pulse shrink-0`} />
+                                                    <span className={`text-[10px] font-bold uppercase tracking-[0.1em] font-mono ${textClass} opacity-90 truncate max-w-[80px] sm:max-w-none`}>
+                                                        {searchParams?.get("video_id")?.slice(0, 8) || "..."}
+                                                    </span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] font-mono ${textClass} opacity-90`}>
+                                                {currentPage}
+                                            </span>
                                         )}
-                                    </AnimatePresence>
+                                    </div>
                                 </div>
 
                                 <div className="flex-1" />

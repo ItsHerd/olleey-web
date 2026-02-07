@@ -40,6 +40,7 @@ import type { Video as VideoType, MasterNode, LocalizationInfo } from "@/lib/api
 import { motion, AnimatePresence } from "framer-motion";
 import { ManualProcessView } from "@/components/ui/manual-process-view";
 import { X } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 import { LoadingPanda } from "@/components/ui/LoadingPanda";
 
 type ViewMode = "grid" | "list";
@@ -86,6 +87,15 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
     selectedProject?.id ? { project_id: selectedProject.id } : {}
   );
   const { isDemoMode, updateVideoState, refreshTrigger } = useDemo();
+
+  // Helper to construct full URL for storage paths
+  const getFullUrl = (url: string | undefined) => {
+    if (!url) return undefined;
+    if (url.startsWith('http')) return url;
+    const fullUrl = `${API_BASE_URL}${url}`;
+    console.log('[AllMediaPage] Thumbnail URL:', { original: url, full: fullUrl });
+    return fullUrl;
+  };
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [sortBy, setSortBy] = useState<SortBy>("date");
@@ -506,10 +516,11 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                         openReview({
                           videoId: loc?.job_id || video.video_id,
                           languageCode: langCode,
-                          originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                          dubbedVideoUrl: (loc as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                          videoTitle: fakeText.title,
-                          videoDescription: fakeText.description,
+                          originalVideoUrl: getFullUrl((video as any).storage_url || (video as any).video_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                          dubbedVideoUrl: getFullUrl((loc as any).video_url || (loc as any).storage_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                          videoTitle: loc?.title || video.title || fakeText.title,
+                          videoDescription: loc?.description || video.description || fakeText.description,
+                          thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
                           isApproved: false,
                           approvedAt: (video as any).published_at
                         });
@@ -530,10 +541,11 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                         openReview({
                           videoId: loc?.job_id || video.video_id,
                           languageCode: langCode,
-                          originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                          dubbedVideoUrl: (loc as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                          videoTitle: video.title,
-                          videoDescription: video.description || fakeText.description,
+                          originalVideoUrl: getFullUrl((video as any).storage_url || (video as any).video_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                          dubbedVideoUrl: getFullUrl((loc as any).video_url || (loc as any).storage_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                          videoTitle: loc?.title || video.title,
+                          videoDescription: loc?.description || video.description || fakeText.description,
+                          thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
                           isApproved: true,
                           approvedAt: (video as any).published_at
                         });
@@ -551,7 +563,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                     {/* High-fidelity Thumbnail with gloss effect */}
                     <div className="relative aspect-video bg-gray-900 overflow-hidden">
                       <img
-                        src={video.thumbnail_url}
+                        src={getFullUrl(video.thumbnail_url) || video.thumbnail_url}
                         alt={video.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[3000ms] grayscale-[0.2] group-hover:grayscale-0"
                       />
@@ -694,11 +706,11 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                               openReview({
                                 videoId: loc?.job_id || video.video_id,
                                 languageCode: langCode,
-                                originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                                dubbedVideoUrl: (loc as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                                originalVideoUrl: getFullUrl((video as any).storage_url || (video as any).video_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                                dubbedVideoUrl: getFullUrl((loc as any).video_url || (loc as any).storage_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
                                 videoTitle: loc?.title || video.title || fakeText.title,
                                 videoDescription: loc?.description || video.description || fakeText.description,
-                                thumbnailUrl: loc?.thumbnail_url || video.thumbnail_url,
+                                thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
                                 isApproved: false,
                                 approvedAt: (video as any).published_at
                               });
@@ -719,11 +731,11 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                               openReview({
                                 videoId: loc?.job_id || video.video_id,
                                 languageCode: langCode,
-                                originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                                dubbedVideoUrl: (loc as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                                originalVideoUrl: getFullUrl((video as any).storage_url || (video as any).video_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                                dubbedVideoUrl: getFullUrl((loc as any).video_url || (loc as any).storage_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
                                 videoTitle: loc?.title || video.title,
                                 videoDescription: loc?.description || video.description || fakeText.description,
-                                thumbnailUrl: loc?.thumbnail_url || video.thumbnail_url,
+                                thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
                                 isApproved: true,
                                 approvedAt: (video as any).published_at
                               });
@@ -735,7 +747,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-6">
                               <div className="relative w-32 aspect-video rounded-2xl overflow-hidden bg-black shrink-0 border border-white/5 group-hover:border-olleey-yellow/20 transition-all shadow-xl">
-                                <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" />
+                                <img src={getFullUrl(video.thumbnail_url) || video.thumbnail_url} alt={video.title} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-end p-2.5">
                                   <span className="text-[10px] font-black text-white/40 font-mono tracking-tighter">
                                     {Math.floor((video.duration || 0) / 60)}:{(video.duration || 0) % 60}

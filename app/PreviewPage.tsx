@@ -101,74 +101,95 @@ export default function PreviewPage() {
         setViewMode('dubbed');
     };
 
+    // Theme-aware classes matching Dashboard
+    const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
+    const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
+    const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
+    const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
+    const borderClass = theme === "light" ? "border-gray-200" : "border-white/10";
+    const isDark = theme === "dark";
+
     return (
-        <div className="w-full h-full flex flex-col overflow-hidden bg-[#0c0c0c] text-white selection:bg-olleey-yellow selection:text-black">
-            {/* Minimal Command Header */}
-            <header className="h-20 border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-50">
-                <div className="flex items-center gap-6">
+        <div className={`w-full h-full flex flex-col overflow-hidden ${bgClass} ${textClass} selection:bg-olleey-yellow selection:text-black transition-colors duration-500`}>
+            {/* Refined Command Header */}
+            <header className={`h-16 border-b ${borderClass} ${isDark ? "bg-[#0a0a0b]/80" : "bg-white/80"} backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-50 sticky top-0`}>
+                <div className="flex items-center gap-4">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => router.back()}
-                        className="w-10 h-10 hover:bg-white/10 rounded-full"
+                        className={`w-9 h-9 ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"} rounded-xl transition-all`}
                     >
-                        <ArrowLeft className="w-5 h-5 opacity-60" />
+                        <ChevronLeft className={`w-5 h-5 ${textSecondaryClass}`} />
                     </Button>
 
-                    <div className="flex flex-col">
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-xl font-normal tracking-tight">Final Preview</h1>
-                            {viewMode === 'original' ? (
-                                <Badge className="bg-white/10 border-white/20 text-white text-[8px] font-black uppercase rounded-full px-3 tracking-widest">Original Source</Badge>
-                            ) : isApproved ? (
-                                <Badge className="bg-green-500/10 border-green-500/20 text-green-500 text-[8px] font-black uppercase rounded-full px-3 tracking-widest">Distributed_Live</Badge>
-                            ) : (
-                                <Badge className="bg-blue-500/10 border-blue-500/20 text-blue-500 text-[8px] font-black uppercase rounded-full px-3 tracking-widest">Processed_Node</Badge>
-                            )}
-                        </div>
-                        <p className="text-xs text-white/60 font-medium tracking-wide opacity-60 truncate max-w-md mt-0.5">
-                            {videoTitle || "Unnamed_Asset_01"}
-                        </p>
+                    <div className={`h-4 w-px ${isDark ? "bg-white/10" : "bg-gray-200"} mx-1`} />
+
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-white/20" : "text-black/30"} shrink-0`}>Preview</span>
+                        <ChevronLeft className="w-3 h-3 rotate-180 opacity-20 shrink-0" />
+                        <h1 className="text-sm font-bold tracking-tight truncate max-w-[180px] sm:max-w-md">
+                            {videoTitle || "Unnamed_Asset"}
+                        </h1>
+
+                        {viewMode === 'original' ? (
+                            <Badge className={`${isDark ? "bg-white/10 text-white" : "bg-gray-100 text-black"} border-none text-[7px] h-4 font-black uppercase rounded-full px-2 tracking-tighter`}>Source</Badge>
+                        ) : isApproved ? (
+                            <Badge className="bg-green-500/10 text-green-500 border-none text-[7px] h-4 font-black uppercase rounded-full px-2 tracking-tighter">Live</Badge>
+                        ) : (
+                            <Badge className="bg-blue-500/10 text-blue-500 border-none text-[7px] h-4 font-black uppercase rounded-full px-2 tracking-tighter">Ready</Badge>
+                        )}
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {/* View Toggle Button */}
+                    {/* Unified View Switch */}
+                    <div className={`flex items-center ${isDark ? "bg-white/[0.03]" : "bg-gray-100"} border ${borderClass} rounded-full p-1 hidden sm:flex`}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setViewMode('original')}
+                            className={cn(
+                                "h-7 px-4 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all",
+                                viewMode === 'original'
+                                    ? (isDark ? "bg-white/10 text-white shadow-sm" : "bg-white text-black shadow-sm")
+                                    : (isDark ? "text-white/30 hover:text-white" : "text-black/40 hover:text-black")
+                            )}
+                        >
+                            Original
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setViewMode('dubbed')}
+                            className={cn(
+                                "h-7 px-4 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all",
+                                viewMode === 'dubbed'
+                                    ? (isDark ? "bg-white/10 text-white shadow-sm" : "bg-white text-black shadow-sm")
+                                    : (isDark ? "text-white/30 hover:text-white" : "text-black/40 hover:text-black")
+                            )}
+                        >
+                            Localized
+                        </Button>
+                    </div>
+
+                    <div className={`h-4 w-px ${isDark ? "bg-white/10" : "bg-gray-200"} mx-1 hidden sm:block`} />
+
                     <Button
                         variant="ghost"
-                        size="sm"
-                        onClick={() => setViewMode(prev => prev === 'original' ? 'dubbed' : 'original')}
-                        className="rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase tracking-widest h-9 px-4 text-white/80 hover:text-white"
+                        size="icon"
+                        className={`w-9 h-9 border ${borderClass} rounded-full transition-all hover:border-olleey-yellow/30 group hidden xs:flex`}
+                        title="Export Master"
                     >
-                        {viewMode === 'dubbed' ? (
-                            <>
-                                <Layout className="w-3.5 h-3.5 mr-2" />
-                                View Original
-                            </>
-                        ) : (
-                            <>
-                                <Monitor className="w-3.5 h-3.5 mr-2" />
-                                Return to Dub
-                            </>
-                        )}
+                        <Download className={`w-4 h-4 ${isDark ? "text-white/40" : "text-black/40"} group-hover:text-olleey-yellow transition-colors`} />
                     </Button>
 
-                    <div className="h-4 w-px bg-white/10 mx-1" />
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full border-white/10 bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase tracking-widest h-9"
-                    >
-                        <Download className="w-3.5 h-3.5 mr-2" />
-                        Export Master
-                    </Button>
                     <Button
                         size="sm"
                         onClick={handlePublish}
                         disabled={isPublishing || viewMode === 'original'}
                         className={cn(
-                            "rounded-full bg-olleey-yellow hover:bg-olleey-yellow/90 text-black text-[9px] font-black uppercase tracking-widest h-9 shadow-[0_0_20px_rgba(251,191,36,0.2)]",
+                            "rounded-full bg-olleey-yellow hover:bg-olleey-yellow/90 text-black text-[10px] font-black uppercase tracking-[0.1em] h-9 px-6 shadow-lg hover:shadow-olleey-yellow/10 transition-all",
                             viewMode === 'original' && "opacity-50 grayscale cursor-not-allowed"
                         )}
                     >
@@ -177,17 +198,22 @@ export default function PreviewPage() {
                         ) : (
                             <ExternalLink className="w-3.5 h-3.5 mr-2" />
                         )}
-                        {isPublishing ? "Publishing..." : (isApproved ? "Redistribute Asset" : "Global Release")}
+                        {isPublishing ? "Processing" : (isApproved ? "Update" : "Launch")}
                     </Button>
                 </div>
             </header>
 
             <div className="flex-1 flex overflow-hidden">
                 {/* Main Viewport */}
-                <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar bg-black relative p-8">
-                    <div className="max-w-5xl mx-auto space-y-8">
+                <main className={`flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar ${isDark ? "bg-[#0a0a0b]" : "bg-gray-50/50"} relative p-8 lg:p-12`}>
+                    {/* Subtle Background Aesthetic */}
+                    {isDark && (
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-gradient-to-b from-olleey-yellow/5 to-transparent pointer-events-none opacity-50 blur-[120px]" />
+                    )}
+
+                    <div className="max-w-6xl mx-auto space-y-12 relative z-10">
                         {/* Video Player Section */}
-                        <section className="relative aspect-video bg-[#050505] border border-white/5 group overflow-hidden rounded-[2.5rem] shadow-2xl">
+                        <section className={`relative aspect-video ${isDark ? "bg-black" : "bg-white"} border ${borderClass} group overflow-hidden rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)]`}>
                             <video
                                 key={viewMode === 'original' ? originalVideoUrl : dubbedVideoUrl}
                                 src={viewMode === 'original' ? originalVideoUrl : (dubbedVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4")}
@@ -197,167 +223,175 @@ export default function PreviewPage() {
                             />
 
                             {/* Cinematic Overlay UI */}
-                            <div className="absolute top-6 right-6 flex items-center gap-2 z-10 pointer-events-none">
-                                <Badge className="bg-black/60 backdrop-blur-md border border-olleey-yellow/30 text-olleey-yellow text-[8px] font-black uppercase px-3 py-1.5 rounded-full">
+                            <div className="absolute top-8 right-8 flex items-center gap-2 z-10 pointer-events-none">
+                                <Badge className="bg-black/70 backdrop-blur-xl border border-olleey-yellow/30 text-olleey-yellow text-[9px] font-bold uppercase px-4 py-2 rounded-full shadow-lg">
                                     {viewMode === 'original' ? "Source Master" : "4K Localized"}
                                 </Badge>
-                                <Badge className="bg-black/60 backdrop-blur-md border border-white/10 text-white/60 text-[8px] font-black uppercase px-3 py-1.5 rounded-full">
+                                <Badge className="bg-black/70 backdrop-blur-xl border border-white/10 text-white/90 text-[9px] font-bold uppercase px-4 py-2 rounded-full shadow-lg">
                                     {viewMode === 'original' ? "Original" : languageName}
                                 </Badge>
                             </div>
                         </section>
 
                         {/* Content Info Grid */}
-                        <div className="grid grid-cols-3 gap-8">
-                            <div className="col-span-2 space-y-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                            <div className="lg:col-span-2 space-y-10">
                                 {viewMode === 'original' ? (
                                     /* Original Mode: Show List of Dubbed Versions */
-                                    <div className="space-y-4">
+                                    <div className="space-y-6">
                                         <div className="flex items-center justify-between">
-                                            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Global Localization Hub</h2>
+                                            <h2 className={`text-[10px] font-black uppercase tracking-[0.3em] ${isDark ? "text-white/20" : "text-black/30"}`}>Global Localization Hub</h2>
                                         </div>
                                         <div className="grid grid-cols-1 gap-4">
                                             {currentVideo?.localizations && Object.entries(currentVideo.localizations).map(([code, loc]: [string, any]) => {
                                                 const lang = LANGUAGE_OPTIONS.find(l => l.code === code);
                                                 return (
-                                                    <button
+                                                    <motion.button
                                                         key={code}
+                                                        whileHover={{ scale: 1.005, y: -2 }}
                                                         onClick={() => handleSwitchToDub(code, loc)}
-                                                        className="w-full flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/5 hover:border-white/10 transition-all group text-left"
+                                                        className={`w-full flex items-center justify-between p-6 rounded-3xl border ${borderClass} ${cardClass} hover:border-olleey-yellow/30 transition-all group text-left shadow-sm hover:shadow-xl`}
                                                     >
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-lg shadow-inner">
+                                                        <div className="flex items-center gap-5">
+                                                            <div className={`w-12 h-12 rounded-2xl ${isDark ? "bg-white/5" : "bg-gray-100"} flex items-center justify-center text-xl shadow-inner group-hover:bg-olleey-yellow/10 transition-colors`}>
                                                                 {lang?.flag || "🌐"}
                                                             </div>
                                                             <div>
-                                                                <h3 className="text-sm font-bold text-white group-hover:text-olleey-yellow transition-colors">
+                                                                <h3 className="text-base font-bold transition-colors group-hover:text-olleey-yellow">
                                                                     {lang?.name || code.toUpperCase()} Dub
                                                                 </h3>
-                                                                <p className="text-[9px] font-mono text-white/30 uppercase tracking-wider mt-0.5">
+                                                                <p className={`text-[10px] font-medium ${isDark ? "text-white/30" : "text-black/40"} uppercase tracking-wider mt-1`}>
                                                                     Status: {loc.status || "Processing"}
                                                                 </p>
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex items-center gap-4">
+                                                        <div className="flex items-center gap-5">
                                                             <Badge className={cn(
-                                                                "border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-full",
+                                                                "border px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-full",
                                                                 loc.status === 'live'
                                                                     ? "bg-green-500/10 border-green-500/20 text-green-500"
                                                                     : "bg-blue-500/10 border-blue-500/20 text-blue-500"
                                                             )}>
                                                                 {loc.status === 'live' ? 'Verified' : 'In Review'}
                                                             </Badge>
-                                                            <ChevronLeft className="w-4 h-4 text-white/20 rotate-180 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                                                            <ChevronLeft className={`w-5 h-5 ${isDark ? "text-white/20" : "text-black/20"} rotate-180 group-hover:text-current group-hover:translate-x-1 transition-all`} />
                                                         </div>
-                                                    </button>
+                                                    </motion.button>
                                                 );
                                             })}
-                                            {(!currentVideo?.localizations || Object.keys(currentVideo.localizations).length === 0) && (
-                                                <div className="p-8 text-center border border-white/5 border-dashed rounded-2xl">
-                                                    <p className="text-xs text-white/30 font-mono">No localizations found for this asset.</p>
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 ) : (
                                     /* Dubbed Mode: Show Asset Manifest */
-                                    <div className="space-y-4">
+                                    <div className="space-y-6">
                                         <div className="flex items-center justify-between">
-                                            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Asset Manifest</h2>
-                                            <div className="flex items-center gap-4">
-                                                <button onClick={handleCopy} className="text-white/40 hover:text-white transition-colors flex items-center gap-1.5">
-                                                    <Copy className="w-3 h-3" />
-                                                    <span className="text-[8px] font-black uppercase tracking-wider">{copied ? "Copied" : "Copy Data"}</span>
-                                                </button>
-                                            </div>
+                                            <h2 className={`text-[10px] font-black uppercase tracking-[0.3em] ${isDark ? "text-white/20" : "text-black/30"}`}>Asset Manifest</h2>
+                                            <button onClick={handleCopy} className={`${isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black"} transition-colors flex items-center gap-2 group`}>
+                                                <Copy className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                                                <span className="text-[9px] font-bold uppercase tracking-wider">{copied ? "Copied" : "Copy Manifest"}</span>
+                                            </button>
                                         </div>
-                                        <div className="p-8 border border-white/5 bg-white/[0.02] space-y-6 rounded-[2rem]">
-                                            <div className="space-y-4">
-                                                <div className="flex items-center justify-between">
-                                                    <h3 className="text-xl font-black text-white/90 leading-tight tracking-tight">{videoTitle}</h3>
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge variant="outline" className="rounded-full border-green-500/20 text-green-500 bg-green-500/5 text-[8px] font-black uppercase px-2.5">Production Ready</Badge>
-                                                    </div>
+                                        <div className={`p-10 border ${borderClass} ${cardClass} space-y-8 rounded-[2.5rem] shadow-xl relative overflow-hidden`}>
+                                            {isDark && <div className="absolute top-0 right-0 w-64 h-64 bg-olleey-yellow/5 rounded-full -mr-32 -mt-32 blur-[80px] pointer-events-none" />}
+
+                                            <div className="space-y-6 relative z-10">
+                                                <div className="flex items-start justify-between gap-6">
+                                                    <h3 className="text-2xl font-bold leading-tight tracking-tight">{videoTitle}</h3>
+                                                    <Badge variant="outline" className="rounded-full border-green-500/20 text-green-500 bg-green-500/5 text-[9px] font-bold uppercase px-4 py-1 shrink-0">Production Ready</Badge>
                                                 </div>
 
-                                                {/* Channel Attribution */}
-                                                <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/5 rounded-2xl w-fit">
-                                                    <div className="w-8 h-8 rounded-full bg-olleey-yellow/10 flex items-center justify-center border border-white/10">
-                                                        <Youtube className="w-4 h-4 text-olleey-yellow" />
+                                                {/* Meta Row */}
+                                                <div className="flex flex-wrap gap-4">
+                                                    <div className={`flex items-center gap-3 p-2.5 pr-5 ${isDark ? "bg-white/5" : "bg-gray-100"} border ${borderClass} rounded-2xl`}>
+                                                        <div className={`w-9 h-9 rounded-xl ${isDark ? "bg-olleey-yellow/10" : "bg-olleey-yellow/20"} flex items-center justify-center border border-olleey-yellow/10`}>
+                                                            <Youtube className="w-5 h-5 text-olleey-yellow" />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className={`text-[8px] font-bold uppercase tracking-widest ${isDark ? "text-white/20" : "text-black/30"}`}>Target Feed</span>
+                                                            <span className="text-sm font-bold">Olleey Global Labs</span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[7px] font-black uppercase tracking-widest text-white/20">Target Channel</span>
-                                                        <span className="text-xs font-bold text-white/80">Olleey Global Labs</span>
-                                                    </div>
-                                                    <div className="w-px h-6 bg-white/10 mx-2" />
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[7px] font-black uppercase tracking-widest text-white/20">Language</span>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.flag || "🇪🇸"}</span>
-                                                            <span className="text-xs font-bold text-white/80">{languageName}</span>
+
+                                                    <div className={`flex items-center gap-3 p-2.5 pr-5 ${isDark ? "bg-white/5" : "bg-gray-100"} border ${borderClass} rounded-2xl`}>
+                                                        <div className={`w-9 h-9 rounded-xl ${isDark ? "bg-blue-500/10" : "bg-blue-500/20"} flex items-center justify-center border border-blue-500/10`}>
+                                                            <Globe className="w-5 h-5 text-blue-500" />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className={`text-[8px] font-bold uppercase tracking-widest ${isDark ? "text-white/20" : "text-black/30"}`}>Local Audience</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-sm font-bold">{languageName}</span>
+                                                                <span className="text-sm">{LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.flag}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="h-px bg-white/5" />
-                                            <p className="text-sm text-white/50 leading-relaxed font-medium">
-                                                {videoDescription || "No localized description available for this production cycle."}
+                                            <div className={`h-px ${isDark ? "bg-white/5" : "bg-gray-200"}`} />
+                                            <p className={`text-base leading-relaxed font-medium ${isDark ? "text-white/50" : "text-black/60"} relative z-10`}>
+                                                {videoDescription || "No localized description available for this production cycle. The automated synthesis engine has processed the visual layer with high-fidelity alignment."}
                                             </p>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Industrial Metrics (Always Visible) */}
-                                <div className="grid grid-cols-4 gap-4">
+                                {/* Industrial Metrics */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
                                     {[
-                                        { label: "Sync Fidelity", value: stats.qualityScore + "%", icon: Zap },
-                                        { label: "Vocal Latency", value: stats.syncDrift, icon: Monitor },
-                                        { label: "Cultural Tone", value: stats.culturalMatch, icon: Globe },
-                                        { label: "AI Engine", value: stats.aiProcessing, icon: Layout }
+                                        { label: "Sync Fidelity", value: stats.qualityScore + "%", icon: Zap, color: "text-olleey-yellow" },
+                                        { label: "Vocal Latency", value: stats.syncDrift, icon: Monitor, color: "text-blue-400" },
+                                        { label: "Cultural Tone", value: stats.culturalMatch, icon: Globe, color: "text-purple-400" },
+                                        { label: "AI Synthesis", value: stats.aiProcessing, icon: Layout, color: "text-green-400" }
                                     ].map((metric, i) => (
-                                        <div key={i} className="p-4 border border-white/5 bg-white/[0.01] space-y-2 rounded-2xl">
-                                            <div className="flex items-center gap-2 text-white/20">
-                                                <metric.icon className="w-3 h-3" />
-                                                <span className="text-[7px] font-black uppercase tracking-widest">{metric.label}</span>
+                                        <div key={i} className={`p-5 border ${borderClass} ${cardClass} space-y-3 rounded-3xl shadow-sm hover:shadow-md transition-shadow`}>
+                                            <div className={`flex items-center gap-2 ${isDark ? "text-white/20" : "text-black/30"}`}>
+                                                <metric.icon className="w-3.5 h-3.5" />
+                                                <span className="text-[8px] font-black uppercase tracking-[0.2em]">{metric.label}</span>
                                             </div>
-                                            <p className="text-xs font-mono font-bold text-olleey-yellow">{metric.value}</p>
+                                            <p className={`text-sm font-bold tracking-tight ${metric.color}`}>{metric.value}</p>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            <div className="space-y-8">
-                                <div className="space-y-4">
-                                    <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Visual Identity</h2>
-                                    <div className="aspect-video border border-white/5 overflow-hidden group/thumb relative rounded-[2rem]">
+                            <div className="space-y-10">
+                                <div className="space-y-6">
+                                    <h2 className={`text-[10px] font-black uppercase tracking-[0.3em] ${isDark ? "text-white/20" : "text-black/30"}`}>Visual Identity</h2>
+                                    <div className={`aspect-video border-2 ${borderClass} overflow-hidden group/thumb relative rounded-[2.5rem] shadow-2xl transition-all hover:border-olleey-yellow/40`}>
                                         <img
                                             src={quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800"}
                                             alt="Localized Thumbnail"
-                                            className="w-full h-full object-cover grayscale opacity-60 group-hover/thumb:grayscale-0 group-hover/thumb:opacity-100 transition-all duration-700 scale-110 group-hover/thumb:scale-100"
+                                            className="w-full h-full object-cover transition-all duration-[2000ms] group-hover/thumb:scale-110"
                                         />
-                                        <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black to-transparent">
-                                            <span className="text-[8px] font-black uppercase tracking-widest text-white/60">Active Production Cover</span>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover/thumb:opacity-40 transition-opacity" />
+                                        <div className="absolute inset-x-0 bottom-0 p-6">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-white/90 drop-shadow-md">Active Production Cover</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="p-6 border border-olleey-yellow/10 bg-olleey-yellow/[0.02] space-y-4 relative overflow-hidden group rounded-[2rem]">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-olleey-yellow/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-olleey-yellow/10 transition-colors" />
-                                    <div className="relative z-10 space-y-4">
-                                        <div className="flex items-center gap-2">
-                                            <CheckCircle2 className="w-4 h-4 text-olleey-yellow" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-olleey-yellow">Verification Logic</span>
+                                <div className={`p-8 border-2 border-olleey-yellow/20 bg-olleey-yellow/[0.03] space-y-6 relative overflow-hidden group rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(251,191,36,0.1)]`}>
+                                    <div className="absolute top-0 right-0 w-48 h-48 bg-olleey-yellow/10 rounded-full -mr-24 -mt-24 blur-[60px] group-hover:bg-olleey-yellow/20 transition-colors" />
+                                    <div className="relative z-10 space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-2xl bg-olleey-yellow/20 flex items-center justify-center border border-olleey-yellow/30">
+                                                <CheckCircle2 className="w-5 h-5 text-olleey-yellow" />
+                                            </div>
+                                            <span className="text-xs font-bold uppercase tracking-[0.15em] text-olleey-yellow">Verification Hub</span>
                                         </div>
-                                        <p className="text-[11px] text-white/40 leading-relaxed font-medium">
-                                            This asset has passed all 4 security and quality gates. It is ready for distribution across global networks.
+                                        <p className={`text-sm leading-relaxed font-medium ${isDark ? "text-white/50" : "text-black/60"}`}>
+                                            Synthesis protocol completed. This asset is ready for deployment across verified global channels.
                                         </p>
                                         <Button
                                             onClick={handlePublish}
                                             disabled={isPublishing || viewMode === 'original'}
-                                            className="w-full rounded-full bg-olleey-yellow hover:bg-olleey-yellow/90 text-black text-[9px] font-black uppercase tracking-widest h-10"
+                                            className="w-full rounded-full bg-olleey-yellow hover:bg-olleey-yellow-dark text-black text-[10px] font-black uppercase tracking-widest h-14 shadow-xl hover:shadow-olleey-yellow/20 transition-all hover:-translate-y-0.5"
                                         >
-                                            {isPublishing ? "Processing..." : (isApproved ? "Update Distributed Feed" : "Schedule Channel Post")}
+                                            {isPublishing ? (
+                                                <><RefreshCw className="w-4 h-4 mr-3 animate-spin" /> Processing</>
+                                            ) : (
+                                                <><ExternalLink className="w-4 h-4 mr-3" /> {isApproved ? "Redeploy Asset" : "Deploy Master"}</>
+                                            )}
                                         </Button>
                                     </div>
                                 </div>
@@ -368,16 +402,22 @@ export default function PreviewPage() {
             </div>
 
             {/* Bottom HUD */}
-            <footer className="h-8 border-t border-white/5 bg-[#050505] flex items-center justify-between px-6 shrink-0">
+            <footer className={`h-12 border-t ${borderClass} ${isDark ? "bg-[#050505]" : "bg-white"} flex items-center justify-between px-8 shrink-0 transition-colors`}>
+                <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-3">
+                        <div className="relative flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-ping absolute opacity-40" />
+                            <div className="w-2 h-2 rounded-full bg-green-500 relative" />
+                        </div>
+                        <span className={`text-[8px] font-bold uppercase tracking-[0.25em] ${isDark ? "text-white/40" : "text-black/40"}`}>Production Core: Nominal</span>
+                    </div>
+                    <span className={`text-[8px] font-mono ${isDark ? "text-white/20" : "text-black/20"} uppercase tracking-widest`}>Asset ID: OLX_{Math.floor(Math.random() * 99999)}</span>
+                </div>
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[7px] font-black uppercase tracking-[0.2em] text-white/30">Secure Connection Established</span>
+                        <Languages className={`w-3.5 h-3.5 ${isDark ? "text-white/20" : "text-black/20"}`} />
+                        <span className={`text-[8px] font-bold uppercase tracking-[0.25em] ${isDark ? "text-white/40" : "text-black/40"}`}>Live Synthesis Active</span>
                     </div>
-                    <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">Node ID: OL_NX_{Math.floor(Math.random() * 99999)}</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <span className="text-[7px] font-black uppercase tracking-[0.2em] text-white/30">System Status: Nominal</span>
                 </div>
             </footer>
         </div>

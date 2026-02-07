@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { getRelativeTime } from "@/lib/utils";
 import { WorkflowModal } from "@/components/WorkflowModal";
-import { jobsAPI, type Job } from "@/lib/api";
+import { jobsAPI, type Job, API_BASE_URL } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { motion } from "framer-motion";
 
@@ -50,6 +50,13 @@ export function QueueAndReview({
 }: QueueAndReviewProps) {
     const [selectedWorkflowJobId, setSelectedWorkflowJobId] = useState<string | null>(null);
     const [jobs, setJobs] = useState<Job[]>([]);
+
+    // Helper to construct full URL for storage paths
+    const getFullUrl = (url: string | undefined) => {
+        if (!url) return undefined;
+        if (url.startsWith('http')) return url;
+        return `${API_BASE_URL}${url}`;
+    };
 
     useEffect(() => {
         const loadJobs = async () => {
@@ -115,7 +122,7 @@ export function QueueAndReview({
                                         <div className="relative w-full md:w-32 aspect-video rounded-2xl overflow-hidden bg-black/40 shrink-0 border border-white/10 shadow-lg group-hover:scale-[1.02] transition-transform duration-500">
                                             {video.thumbnail_url ? (
                                                 <img
-                                                    src={video.thumbnail_url}
+                                                    src={getFullUrl(video.thumbnail_url) || video.thumbnail_url}
                                                     className={`w-full h-full object-cover transition-opacity duration-700 ${isProcessing ? 'opacity-30' : 'opacity-60 group-hover:opacity-80'}`}
                                                     alt=""
                                                 />
@@ -260,10 +267,10 @@ export function QueueAndReview({
                     const job = jobs.find(j => j.job_id === selectedWorkflowJobId);
                     return v.video_id === job?.source_video_id;
                 })?.title}
-                videoThumbnail={activeVideos.find(v => {
+                videoThumbnail={getFullUrl(activeVideos.find(v => {
                     const job = jobs.find(j => j.job_id === selectedWorkflowJobId);
                     return v.video_id === job?.source_video_id;
-                })?.thumbnail_url}
+                })?.thumbnail_url)}
                 onApprove={async () => {
                     if (!selectedWorkflowJobId) return;
                     try {

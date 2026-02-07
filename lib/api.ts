@@ -1423,6 +1423,54 @@ export const jobsAPI = {
 
     return await response.json();
   },
+
+  /**
+   * Update localized video metadata (title, description, thumbnail)
+   * PATCH /jobs/{job_id}/videos/{language_code}
+   */
+  updateLocalizedVideo: async (
+    jobId: string,
+    languageCode: string,
+    data: {
+      title?: string;
+      description?: string;
+      thumbnailFile?: File;
+    }
+  ): Promise<{ success: boolean; message: string; updated_fields: string[] }> => {
+    const formData = new FormData();
+
+    if (data.title !== undefined) {
+      formData.append("title", data.title);
+    }
+
+    if (data.description !== undefined) {
+      formData.append("description", data.description);
+    }
+
+    if (data.thumbnailFile) {
+      formData.append("thumbnail_file", data.thumbnailFile);
+    }
+
+    const token = tokenStorage.getAccessToken();
+    if (!token) {
+      throw new Error("No access token available");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/videos/${languageCode}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to update localized video");
+    }
+
+    return await response.json();
+  },
 };
 
 /**
