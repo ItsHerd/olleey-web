@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { jobsAPI, type Job } from '@/lib/api';
 import { useJobEvents } from './useJobEvents';
 import { logger } from "@/lib/logger";
@@ -13,9 +14,9 @@ export function useActiveJobs(options: UseActiveJobsOptions = {}) {
   // Use the refined connection state from useJobEvents
   const { jobs, isConnected, isSseActive, isPollingActive, refetch } = useJobEvents();
 
-  const activeJobs = jobs.filter(j => ACTIVE_STATUSES.includes(j.status));
-  const completedJobs = jobs.filter(j => j.status === 'completed');
-  const failedJobs = jobs.filter(j => j.status === 'failed');
+  const activeJobs = useMemo(() => jobs.filter(j => ACTIVE_STATUSES.includes(j.status)), [jobs]);
+  const completedJobs = useMemo(() => jobs.filter(j => j.status === 'completed'), [jobs]);
+  const failedJobs = useMemo(() => jobs.filter(j => j.status === 'failed'), [jobs]);
   const hasActiveJobs = activeJobs.length > 0;
 
   return {

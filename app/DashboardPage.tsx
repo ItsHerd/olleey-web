@@ -24,6 +24,7 @@ import { ReleasedMedia } from "@/components/Dashboard/ReleasedMedia";
 import { ActivityFeed } from "@/components/Dashboard/ActivityFeed";
 import { GridDashboard } from "@/components/Dashboard/GridDashboard";
 import { DashboardSkeleton } from "@/components/Dashboard/DashboardSkeleton";
+import { LoadingPanda } from "@/components/ui/LoadingPanda";
 
 interface VideoWithLocalizations extends Video {
   estimated_credits?: number;
@@ -460,7 +461,13 @@ export default function DashboardPage() {
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
         <div className="w-full">
           {isInitialLoading ? (
-            <DashboardSkeleton borderClass={borderClass} cardClass={cardClass} />
+            <div className="min-h-[80vh] flex flex-col items-center justify-center">
+              <LoadingPanda size={240} className="mb-6" />
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-olleey-yellow animate-pulse">Initializing Synthesis Hub...</p>
+              <div className="w-full max-w-6xl mt-12 opacity-30 blur-[2px] pointer-events-none">
+                <DashboardSkeleton borderClass={borderClass} cardClass={cardClass} />
+              </div>
+            </div>
           ) : (
             <>
               <GridDashboard

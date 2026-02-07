@@ -36,19 +36,17 @@ import {
   HardDrive
 } from "lucide-react";
 import { formatViews, getRelativeTime } from "@/lib/utils";
-import type { Video as VideoType } from "@/lib/api";
+import type { Video as VideoType, MasterNode, LocalizationInfo } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
+import { ManualProcessView } from "@/components/ui/manual-process-view";
+import { X } from "lucide-react";
+import { LoadingPanda } from "@/components/ui/LoadingPanda";
 
 type ViewMode = "grid" | "list";
 type SortBy = "date" | "views" | "title" | "status";
 type FilterStatus = "all" | "live" | "draft" | "processing";
 
-interface LocalizationInfo {
-  status: "queued" | "live" | "draft" | "processing" | "not-started" | "failed";
-  progress: number;
-  job_id?: string;
-  video_url?: string;
-}
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -73,7 +71,11 @@ const itemVariants = {
   }
 };
 
-export default function AllMediaPage() {
+interface AllMediaPageProps {
+  channelGraph?: MasterNode[];
+}
+
+export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const highlightedVideoId = searchParams.get("video_id");
@@ -92,6 +94,7 @@ export default function AllMediaPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLanguages] = useState<string[]>(["es", "fr", "de", "pt", "ja", "it"]);
   const { openReview } = useReview();
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const [hasAttemptedRefetch, setHasAttemptedRefetch] = useState(false);
 
@@ -316,11 +319,11 @@ export default function AllMediaPage() {
               </div>
               <div className="w-px h-12 bg-white/5 hidden lg:block" />
               <Button
-                onClick={() => router.push("/app?page=Manual Upload")}
+                onClick={() => setIsUploadModalOpen(true)}
                 className="h-14 px-10 bg-olleey-yellow text-black hover:bg-white hover:scale-105 font-black uppercase tracking-[0.2em] text-[11px] rounded-full shadow-[0_20px_40px_rgba(251,191,36,0.2)] transition-all active:scale-[0.98] group"
               >
                 <Plus className="w-4 h-4 mr-3 group-hover:rotate-180 transition-transform duration-500" />
-                Ingest Asset
+                Upload Video
               </Button>
             </div>
           </div>
@@ -446,21 +449,23 @@ export default function AllMediaPage() {
           className="w-full mt-10 relative z-10"
         >
           {isInitialLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-8 animate-pulse">
-              {[...Array(20)].map((_, i) => (
-                <div key={i} className={`${cardClass} border border-white/5 rounded-[2.5rem] overflow-hidden min-h-[320px] bg-white/[0.02]`}>
-                  <div className="aspect-video bg-white/5" />
-                  <div className="p-8 space-y-5">
-                    <div className="h-4 bg-white/10 rounded-full w-3/4" />
-                    <div className="h-3 bg-white/5 rounded-full w-1/2" />
-                    <div className="flex gap-3 pt-4">
-                      <div className="w-8 h-8 rounded-full bg-white/5" />
-                      <div className="w-8 h-8 rounded-full bg-white/5" />
-                      <div className="w-8 h-8 rounded-full bg-white/5" />
+            <div className="w-full min-h-[400px] flex flex-col items-center justify-center py-20">
+              <LoadingPanda size={200} className="mb-8" />
+              <div className="space-y-2 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-olleey-yellow animate-pulse">Syncing Asset Metadata...</p>
+                <p className="text-[9px] font-medium text-white/20 uppercase tracking-[0.2em]">Olleey_Library_Node_01</p>
+              </div>
+              <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-8 mt-16 opacity-20 blur-[1px] pointer-events-none">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className={`${cardClass} border border-white/5 rounded-[2.5rem] overflow-hidden min-h-[320px] bg-white/[0.02]`}>
+                    <div className="aspect-video bg-white/5" />
+                    <div className="p-8 space-y-5">
+                      <div className="h-4 bg-white/10 rounded-full w-3/4" />
+                      <div className="h-3 bg-white/5 rounded-full w-1/2" />
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : filteredAndSortedVideos.length === 0 ? (
             <div className="border border-dashed border-white/10 rounded-[2.5rem] p-32 text-center mt-4 bg-white/[0.01]">
@@ -472,11 +477,11 @@ export default function AllMediaPage() {
                 {searchQuery ? "Your active search filters are excluding all media. Try widening your capture parameters." : "Your content repository is currently offline or empty."}
               </p>
               <Button
-                onClick={() => router.push("/app?page=Manual Upload")}
+                onClick={() => setIsUploadModalOpen(true)}
                 className="h-12 px-10 bg-white/5 border border-white/10 text-white hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow font-black uppercase tracking-widest rounded-full transition-all"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Capture New Stream
+                Upload First Video
               </Button>
             </div>
           ) : viewMode === "grid" ? (
@@ -691,8 +696,9 @@ export default function AllMediaPage() {
                                 languageCode: langCode,
                                 originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
                                 dubbedVideoUrl: (loc as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                                videoTitle: fakeText.title,
-                                videoDescription: fakeText.description,
+                                videoTitle: loc?.title || video.title || fakeText.title,
+                                videoDescription: loc?.description || video.description || fakeText.description,
+                                thumbnailUrl: loc?.thumbnail_url || video.thumbnail_url,
                                 isApproved: false,
                                 approvedAt: (video as any).published_at
                               });
@@ -715,8 +721,9 @@ export default function AllMediaPage() {
                                 languageCode: langCode,
                                 originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
                                 dubbedVideoUrl: (loc as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                                videoTitle: video.title,
-                                videoDescription: video.description || fakeText.description,
+                                videoTitle: loc?.title || video.title,
+                                videoDescription: loc?.description || video.description || fakeText.description,
+                                thumbnailUrl: loc?.thumbnail_url || video.thumbnail_url,
                                 isApproved: true,
                                 approvedAt: (video as any).published_at
                               });
@@ -820,6 +827,74 @@ export default function AllMediaPage() {
             </div>
           )}
         </motion.div>
+      </AnimatePresence>
+
+      {/* High-Fidelity Upload Modal */}
+      <AnimatePresence>
+        {isUploadModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsUploadModalOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-6xl max-h-full bg-dark-bg border border-white/10 rounded-[3rem] shadow-[0_64px_128px_-32px_rgba(0,0,0,1)] overflow-hidden flex flex-col"
+            >
+              <div className="flex items-center justify-between px-10 py-6 border-b border-white/5 bg-[#0c0c0c]/50">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-olleey-yellow/10 border border-olleey-yellow/20 flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-olleey-yellow" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white tracking-tight">Upload Asset</h2>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Global Content Ingestion Pipeline</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsUploadModalOpen(false)}
+                  className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10">
+                <ManualProcessView
+                  availableChannels={[
+                    ...channelGraph.map(m => ({
+                      id: m.channel_id,
+                      name: m.channel_name,
+                      language_code: m.language_code,
+                      language_name: m.language_name,
+                      is_master: true
+                    })),
+                    ...channelGraph.flatMap((master: any) =>
+                      master.language_channels.map((lc: any) => ({
+                        id: lc.channel_id,
+                        name: lc.channel_name,
+                        language_code: lc.language_code,
+                        language_name: lc.language_name,
+                        is_master: false
+                      }))
+                    )
+                  ]}
+                  projectId={selectedProject?.id}
+                  onSuccess={() => {
+                    setIsUploadModalOpen(false);
+                    refetchVideos();
+                  }}
+                  onCancel={() => setIsUploadModalOpen(false)}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
     </div>
   );

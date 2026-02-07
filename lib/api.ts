@@ -173,6 +173,7 @@ export interface ActivityItem {
   time: string;
   icon: string;
   color: string;
+  timestamp?: string;
   type?: string;
 }
 
@@ -487,6 +488,11 @@ export interface LocalizationInfo {
   progress: number;
   video_url?: string;
   job_id?: string;
+  title?: string;
+  description?: string;
+  thumbnail_url?: string;
+  channel_id?: string;
+  published_at?: string;
 }
 
 export interface Video {
@@ -521,6 +527,7 @@ export interface UploadVideoRequest {
   title: string;
   description?: string;
   channel_id?: string;
+  thumbnail_file?: File;
 }
 
 export interface SubscribeRequest {
@@ -831,6 +838,7 @@ export const videosAPI = {
     formData.append("title", data.title);
     if (data.description) formData.append("description", data.description);
     if (data.channel_id) formData.append("channel_id", data.channel_id);
+    if (data.thumbnail_file) formData.append("thumbnail_file", data.thumbnail_file);
     // Note: uploadVideo typically takes channel_id which is linked to a project, so project_id might not be strictly needed in body if channel implies it.
     // But if creating a raw video without channel?
     // User said "Everything... is scoped to a Project."
@@ -1394,6 +1402,23 @@ export const jobsAPI = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.detail || "Failed to approve job");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Cancel a job
+   * DELETE /jobs/{job_id}
+   */
+  cancelJob: async (jobId: string): Promise<{ success: boolean; message: string; cancelled_videos: number }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to cancel job");
     }
 
     return await response.json();

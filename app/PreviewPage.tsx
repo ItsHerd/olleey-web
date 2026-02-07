@@ -92,8 +92,9 @@ export default function PreviewPage() {
             languageCode: code,
             originalVideoUrl: (currentVideo as any).video_url || originalVideoUrl,
             dubbedVideoUrl: loc.video_url,
-            videoTitle: currentVideo.title,
-            videoDescription: currentVideo.description,
+            videoTitle: loc.title || currentVideo.title,
+            videoDescription: loc.description || currentVideo.description,
+            thumbnailUrl: loc.thumbnail_url || currentVideo.thumbnail_url,
             isApproved: loc.status === "live",
             approvedAt: currentVideo.published_at || (currentVideo as any).created_at
         });
@@ -192,7 +193,7 @@ export default function PreviewPage() {
                                 src={viewMode === 'original' ? originalVideoUrl : (dubbedVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4")}
                                 controls
                                 className="w-full h-full"
-                                poster="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200"
+                                poster={quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200"}
                             />
 
                             {/* Cinematic Overlay UI */}
@@ -331,7 +332,7 @@ export default function PreviewPage() {
                                     <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Visual Identity</h2>
                                     <div className="aspect-video border border-white/5 overflow-hidden group/thumb relative rounded-[2rem]">
                                         <img
-                                            src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800"
+                                            src={quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800"}
                                             alt="Localized Thumbnail"
                                             className="w-full h-full object-cover grayscale opacity-60 group-hover/thumb:grayscale-0 group-hover/thumb:opacity-100 transition-all duration-700 scale-110 group-hover/thumb:scale-100"
                                         />

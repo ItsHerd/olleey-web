@@ -33,6 +33,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { getInitialsAvatar } from "@/lib/utils";
+import { LoadingPanda } from "@/components/ui/LoadingPanda";
 
 type ConnectionStatus = "active" | "expired" | "restricted" | "disconnected";
 
@@ -227,11 +228,22 @@ export default function ChannelsPage() {
 
   if (isLoading) {
     return (
-      <div className={`flex flex-col items-center justify-center flex-1 ${bgClass} p-8 animate-pulse`}>
-        <div className="w-20 h-20 rounded-[2.5rem] bg-white/5 border border-white/10 flex items-center justify-center mb-8">
-          <Radio className="w-10 h-10 text-olleey-yellow stroke-[1.5px]" />
+      <div className={`flex flex-col items-center justify-center flex-1 ${bgClass} p-8`}>
+        <LoadingPanda size={200} className="mb-8" />
+        <div className="text-center space-y-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-olleey-yellow animate-pulse">Syncing Global Grid...</p>
+          <div className="flex items-center justify-center gap-1.5 pt-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="w-1 h-4 bg-olleey-yellow/20 rounded-full overflow-hidden">
+                <motion.div
+                  className="w-full bg-olleey-yellow"
+                  animate={{ height: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                />
+              </div>
+            ))}
+          </div>
         </div>
-        <p className="text-xs font-black uppercase tracking-[0.4em] text-white/30">Synchronizing Signals...</p>
       </div>
     );
   }
@@ -268,11 +280,11 @@ export default function ChannelsPage() {
                   </div>
                 </div>
                 <h1 className="text-4xl md:text-6xl font-normal text-white tracking-tighter leading-[0.9] flex flex-col">
-                  <span className="text-olleey-yellow">Satellite</span>
-                  <span>Deployment</span>
+                  <span className="text-olleey-yellow">Channels</span>
+                  <span>Management</span>
                 </h1>
                 <p className="text-base text-white/40 font-light leading-relaxed max-w-xl">
-                  Command and control your YouTube satellite network. Map primary assets to localized distribution nodes with cinema-grade synchronization.
+                  Command and control your YouTube channel network. Map primary assets to localized distribution nodes with cinema-grade synchronization.
                 </p>
               </div>
 
@@ -281,7 +293,7 @@ export default function ChannelsPage() {
                   <TrendingUp className="w-5 h-5 text-olleey-yellow mb-4" />
                   <div>
                     <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] block mb-1">Grid Load</span>
-                    <span className="text-2xl font-normal text-white tracking-tighter">{graphStats.total_connections} Nodes</span>
+                    <span className="text-2xl font-normal text-white tracking-tighter">{graphStats.total_connections} Channels</span>
                   </div>
                 </div>
                 <div className="p-6 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.2rem] flex flex-col justify-between">
@@ -303,19 +315,19 @@ export default function ChannelsPage() {
               onClick={() => setChannelFilter("all")}
               className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "all" ? "bg-olleey-yellow text-black" : "text-white/40 hover:text-white"}`}
             >
-              Synchronized
+              All Channels
             </button>
             <button
               onClick={() => setChannelFilter("primary")}
               className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "primary" ? "bg-olleey-yellow text-black" : "text-white/40 hover:text-white"}`}
             >
-              Command Nodes
+              Primary Channels
             </button>
             <button
               onClick={() => setChannelFilter("unassigned")}
               className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "unassigned" ? "bg-olleey-yellow text-black" : "text-white/40 hover:text-white"}`}
             >
-              Ghost Signals
+              Unassigned Channels
             </button>
           </div>
 
@@ -324,7 +336,7 @@ export default function ChannelsPage() {
             className="h-14 px-10 bg-white/5 border border-white/10 text-white hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow font-black uppercase tracking-[0.2em] rounded-full transition-all group"
           >
             <Plus className="w-4 h-4 mr-3 group-hover:rotate-90 transition-transform" />
-            Deploy Satellite
+            Add Channel
           </Button>
         </div>
 
@@ -510,7 +522,7 @@ export default function ChannelsPage() {
                 onClick={handleAddChannel}
                 className="h-14 px-12 bg-olleey-yellow text-black hover:opacity-90 font-black uppercase tracking-[0.2em] rounded-full transition-all"
               >
-                Deploy First satellite
+                Add a channel
               </Button>
             </div>
           )}

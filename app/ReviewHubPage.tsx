@@ -12,6 +12,7 @@ import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { jobsAPI, videosAPI, API_BASE_URL } from "@/lib/api";
 
 export default function ReviewHubPage() {
     const { theme } = useTheme();
@@ -33,19 +34,78 @@ export default function ReviewHubPage() {
     // Try to recover state from URL if quickCheckState is empty (e.g. direct link)
     useEffect(() => {
         if (videoIdFromUrl && !quickCheckState.videoId && !videosLoading) {
-            const video = videos.find(v => v.video_id === videoIdFromUrl);
-            if (video) {
+            // First try to find as a video_id
+            let video = videos.find(v => v.video_id === videoIdFromUrl);
+
+            // If not found, it might be a job_id - fetch job and localized videos
+            if (!video) {
+                (async () => {
+                    try {
+                        const job = await jobsAPI.getJobById(videoIdFromUrl);
+                        const jobVideos = await jobsAPI.getJobVideos(videoIdFromUrl);
+
+                        // Find the source video
+                        video = videos.find(v => v.video_id === job.source_video_id);
+
+                        if (video) {
+                            const langCode = langFromUrl || job.target_languages[0] || "es";
+
+                            // Find the localized video for this language
+                            const localizedVideo = jobVideos.find(jv => jv.language_code === langCode);
+
+                            // Helper to construct full URL for storage paths
+                            const getFullUrl = (url: string | undefined) => {
+                                if (!url) return undefined;
+                                if (url.startsWith('http')) return url;
+                                return `${API_BASE_URL}${url}`;
+                            };
+
+                            // Get source video URL - check storage_url first for uploaded videos
+                            const sourceVideoUrl = (video as any).storage_url
+                                ? getFullUrl((video as any).storage_url)
+                                : (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+
+                            openReview({
+                                videoId: videoIdFromUrl, // Use job_id as the identifier
+                                languageCode: langCode,
+                                originalVideoUrl: sourceVideoUrl,
+                                dubbedVideoUrl: getFullUrl(localizedVideo?.storage_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                                videoTitle: localizedVideo?.title || video.title,
+                                videoDescription: localizedVideo?.description || video.description,
+                                thumbnailUrl: getFullUrl(localizedVideo?.thumbnail_url || video.thumbnail_url),
+                                isApproved: localizedVideo?.status === "published",
+                                approvedAt: video.published_at || (video as any).created_at
+                            });
+                        }
+                    } catch (error) {
+                        console.error("Failed to fetch job details:", error);
+                    }
+                })();
+            } else {
+                // Found as video_id - use localizations from video object
                 const langCode = langFromUrl || Object.keys(video.localizations || {})[0] || "es";
                 const loc = video.localizations?.[langCode];
-                const fakeText = getFakeLocalizedText(langCode);
+
+                // Helper to construct full URL for storage paths
+                const getFullUrl = (url: string | undefined) => {
+                    if (!url) return undefined;
+                    if (url.startsWith('http')) return url;
+                    return `${API_BASE_URL}${url}`;
+                };
+
+                // Get source video URL - check storage_url first for uploaded videos
+                const sourceVideoUrl = (video as any).storage_url
+                    ? getFullUrl((video as any).storage_url)
+                    : (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
                 openReview({
                     videoId: video.video_id,
                     languageCode: langCode,
-                    originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                    dubbedVideoUrl: loc?.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                    videoTitle: video.title,
-                    videoDescription: video.description,
+                    originalVideoUrl: sourceVideoUrl,
+                    dubbedVideoUrl: getFullUrl(loc?.video_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                    videoTitle: loc?.title || video.title,
+                    videoDescription: loc?.description || video.description,
+                    thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
                     isApproved: loc?.status === "live",
                     approvedAt: video.published_at || (video as any).created_at
                 });
@@ -355,12 +415,35 @@ export default function ReviewHubPage() {
 
                 <div className="flex items-center gap-4">
                     {!isApproved && (
-                        <Button
-                            onClick={handleApprove}
-                            className={`h-10 px-6 rounded-full bg-green-600 hover:bg-green-500 text-black text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-green-900/20`}
-                        >
-                            <CheckCircle className="w-3.5 h-3.5 mr-2" /> Verify & Preview
-                        </Button>
+                        <>
+                            <Button
+                                onClick={async () => {
+                                    if (confirm("Cancel this review? The job will be cancelled and removed from the pipeline.")) {
+                                        try {
+                                            if (quickCheckState.videoId) {
+                                                await jobsAPI.cancelJob(quickCheckState.videoId);
+                                            }
+                                            // Trigger refresh
+                                            window.dispatchEvent(new CustomEvent('olleey-refresh'));
+                                            router.push('/app?page=All Media');
+                                        } catch (error) {
+                                            console.error("Failed to cancel job:", error);
+                                            alert("Failed to cancel job. Please try again.");
+                                        }
+                                    }
+                                }}
+                                variant="outline"
+                                className={`h-10 px-6 rounded-full bg-transparent hover:bg-red-500/10 text-red-500 border-red-500/20 hover:border-red-500/40 text-[10px] font-black uppercase tracking-[0.2em]`}
+                            >
+                                <X className="w-3.5 h-3.5 mr-2" /> Cancel Review
+                            </Button>
+                            <Button
+                                onClick={handleApprove}
+                                className={`h-10 px-6 rounded-full bg-green-600 hover:bg-green-500 text-black text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-green-900/20`}
+                            >
+                                <CheckCircle className="w-3.5 h-3.5 mr-2" /> Verify & Preview
+                            </Button>
+                        </>
                     )}
                     {isApproved && (
                         <div className="h-10 px-6 rounded-full border border-green-500/20 bg-green-500/5 flex items-center gap-2">
@@ -656,7 +739,7 @@ export default function ReviewHubPage() {
                             ) : (
                                 <>
                                     <img
-                                        src={thumbnailStrategy === 'upload' && customThumbnail ? customThumbnail : (thumbnailStrategy === 'generate' ? "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800" : (quickCheckState.originalVideoUrl ? "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800" : ""))}
+                                        src={thumbnailStrategy === 'upload' && customThumbnail ? customThumbnail : (thumbnailStrategy === 'generate' ? "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800" : (quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"))}
                                         alt="Thumbnail Preview"
                                         className="w-full h-full object-cover opacity-80 group-hover/thumb:opacity-100 transition-opacity"
                                     />

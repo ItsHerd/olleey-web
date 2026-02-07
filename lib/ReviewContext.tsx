@@ -16,6 +16,7 @@ interface QuickCheckState {
     dubbedVideoUrl?: string;
     videoTitle?: string;
     videoDescription?: string;
+    thumbnailUrl?: string;
     isApproved?: boolean;
     approvedAt?: string;
     status?: 'queued' | 'live' | 'draft' | 'processing' | 'not-started' | 'failed' | 'completed' | 'pending' | 'downloading' | 'voice_cloning' | 'lip_sync' | 'uploading' | 'waiting_approval' | 'ready';
@@ -30,6 +31,7 @@ interface ReviewContextType {
         dubbedVideoUrl?: string;
         videoTitle?: string;
         videoDescription?: string;
+        thumbnailUrl?: string;
         isApproved?: boolean;
         approvedAt?: string;
         status?: 'queued' | 'live' | 'draft' | 'processing' | 'not-started' | 'failed' | 'completed' | 'pending' | 'downloading' | 'voice_cloning' | 'lip_sync' | 'uploading' | 'waiting_approval' | 'ready';

@@ -198,28 +198,40 @@ export function ManualProcessView({
                     video_file: uploadedFile,
                     title: customTitle || uploadedFile.name,
                     description: customDescription,
-                    channel_id: sourceChannelId || availableChannels[0]?.id
+                    channel_id: sourceChannelId || availableChannels[0]?.id,
+                    thumbnail_file: uploadedThumbnail || undefined
                 });
                 videoId = uploadRes.video_id;
                 setUploadProgress(50);
             }
 
             if (selectedTargetChannels.length === 0) {
-                setError("Please select at least one target channel");
+                setError("Please select at least one target language/channel");
                 setIsSubmitting(false);
                 return;
             }
 
             const targetLanguages = selectedTargetChannels
                 .map(id => {
+                    // Check if it's a direct language selection (starts with "lang_")
+                    if (id.startsWith('lang_')) {
+                        return targetLanguageOverrides[id] || id.replace('lang_', '');
+                    }
+                    // Otherwise, it's a channel ID
                     const ch = availableChannels.find(c => c.id === id);
                     return targetLanguageOverrides[id] || ch?.language_code;
                 })
                 .filter(Boolean) as string[];
 
+            if (targetLanguages.length === 0) {
+                setError("No valid languages found. Please configure language channels or select valid targets.");
+                setIsSubmitting(false);
+                return;
+            }
+
             await jobsAPI.createJob({
                 source_video_id: videoId!,
-                source_channel_id: sourceChannelId || availableChannels[0]?.id,
+                source_channel_id: sourceChannelId || availableChannels[0]?.id || "uploaded",
                 target_languages: targetLanguages,
                 project_id: projectId || "",
                 title: customTitle,
@@ -560,7 +572,7 @@ export function ManualProcessView({
                         <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-10 lg:p-14 shadow-2xl bg-white/[0.01] backdrop-blur-3xl`}>
                             <div className="space-y-6">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-4 block">Select Synchronization Nodes <span className="text-emerald-500 ml-2 font-bold opacity-50 underline underline-offset-4">CRITICAL STEP</span></label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {availableChannels.filter(c => c.id !== sourceChannelId).map(c => (
                                         <div
                                             key={c.id}
@@ -611,18 +623,52 @@ export function ManualProcessView({
                                         </div>
                                     ))}
                                     {availableChannels.filter(c => c.id !== sourceChannelId).length === 0 && (
-                                        <div className={`col-span-full p-12 text-center rounded-[2rem] border border-dashed border-white/10 bg-white/[0.01]`}>
-                                            <div className="p-6 bg-white/3 inline-flex rounded-3xl mb-6 opacity-20">
-                                                <Radio className="w-10 h-10 text-white" />
+                                        <div className={`col-span-full space-y-6`}>
+                                            <div className={`p-12 text-center rounded-[2rem] border border-dashed border-white/10 bg-white/[0.01]`}>
+                                                <div className="p-6 bg-white/3 inline-flex rounded-3xl mb-6 opacity-20">
+                                                    <Globe className="w-10 h-10 text-white" />
+                                                </div>
+                                                <p className="text-base font-normal text-white/40 tracking-tighter mb-2">No channels connected</p>
+                                                <p className="text-xs text-white/20 mb-6">Select target languages below to create drafts</p>
                                             </div>
-                                            <p className="text-base font-normal text-white/40 tracking-tighter mb-4">Zero synchronized hubs connected</p>
-                                            <Button
-                                                variant="outline"
-                                                className="h-12 px-8 rounded-full border-white/10 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow font-black uppercase tracking-widest text-[10px]"
-                                                onClick={() => router.push('/connections/add')}
-                                            >
-                                                Add Distribution Hub
-                                            </Button>
+
+                                            {/* Direct Language Selection */}
+                                            <div className="space-y-4">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-white/20 block">
+                                                    Select Target Languages <span className="text-emerald-500 ml-2">For Drafts</span>
+                                                </label>
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                    {LANGUAGE_OPTIONS.slice(0, 12).map(lang => (
+                                                        <div
+                                                            key={lang.code}
+                                                            onClick={() => {
+                                                                const langId = `lang_${lang.code}`;
+                                                                if (selectedTargetChannels.includes(langId)) {
+                                                                    setSelectedTargetChannels(prev => prev.filter(id => id !== langId));
+                                                                    setTargetLanguageOverrides(prev => {
+                                                                        const newOverrides = { ...prev };
+                                                                        delete newOverrides[langId];
+                                                                        return newOverrides;
+                                                                    });
+                                                                } else {
+                                                                    setSelectedTargetChannels(prev => [...prev, langId]);
+                                                                    setTargetLanguageOverrides(prev => ({ ...prev, [langId]: lang.code }));
+                                                                }
+                                                            }}
+                                                            className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${selectedTargetChannels.includes(`lang_${lang.code}`)
+                                                                ? 'border-emerald-500/30 bg-emerald-500/5'
+                                                                : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05]'
+                                                                }`}
+                                                        >
+                                                            <span className="text-2xl">{lang.flag}</span>
+                                                            <span className="text-xs font-bold text-white/70">{lang.name}</span>
+                                                            {selectedTargetChannels.includes(`lang_${lang.code}`) && (
+                                                                <CheckCircle className="w-4 h-4 text-emerald-500 ml-auto" />
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

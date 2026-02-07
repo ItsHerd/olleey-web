@@ -34,19 +34,28 @@ const itemVariants = {
     }
 };
 
-export default function ManualUploadPage() {
+interface ManualUploadPageProps {
+    channelGraph?: MasterNode[];
+}
+
+export default function ManualUploadPage({ channelGraph: initialChannelGraph }: ManualUploadPageProps) {
     const router = useRouter();
     const { theme } = useTheme();
     const { selectedProject } = useProject();
     const { refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id });
-    const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [channelGraph, setChannelGraph] = useState<MasterNode[]>(initialChannelGraph || []);
+    const [isLoading, setIsLoading] = useState(!initialChannelGraph);
 
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
     const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
     const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
 
     useEffect(() => {
+        if (initialChannelGraph) {
+            setChannelGraph(initialChannelGraph);
+            setIsLoading(false);
+            return;
+        }
         const loadChannelGraph = async () => {
             try {
                 setIsLoading(true);

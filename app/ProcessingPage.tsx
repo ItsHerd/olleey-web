@@ -11,7 +11,6 @@ import {
     Mic2,
     MessageSquare,
     Zap,
-    Loader2,
     Shield,
     BarChart3,
     Terminal as TerminalIcon,
@@ -25,6 +24,7 @@ import {
     Play,
     Eye
 } from "lucide-react";
+import { LoadingPanda } from "@/components/ui/LoadingPanda";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useReview } from "@/lib/ReviewContext";
@@ -171,7 +171,7 @@ export default function ProcessingPage() {
                                         ) : isPaused ? (
                                             <Pause className="w-16 h-16 text-olleey-yellow" />
                                         ) : (
-                                            <Loader2 className="w-16 h-16 text-olleey-yellow animate-spin" />
+                                            <LoadingPanda size={160} />
                                         )}
                                         <div className={cn(
                                             "absolute inset-0 blur-2xl rounded-full",

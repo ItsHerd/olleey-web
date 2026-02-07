@@ -196,8 +196,8 @@ function AppContent() {
                 />
             );
             case "Settings": return <SettingsPage />;
-            case "Manual Upload": return <ManualUploadPage />;
-            case "All Media": return <AllMediaPage />;
+            case "Manual Upload": return <ManualUploadPage channelGraph={channelGraph} />;
+            case "All Media": return <AllMediaPage channelGraph={channelGraph} />;
             case "Review Hub": return <ReviewHubPage />;
             case "Preview": return <PreviewPage />;
             case "Processing": return <ProcessingPage />;
