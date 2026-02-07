@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "@/lib/useTheme";
-import { ChevronDown, Check, Plus, Zap, LayoutGrid, Grid3x3, Layers, Shield, Settings, Activity, MessageSquare, ExternalLink, PlaySquare } from "lucide-react";
+import { ChevronDown, Check, Plus, Zap, LayoutGrid, Grid3x3, Layers, Shield, Settings, Activity, MessageSquare, ExternalLink, PlaySquare, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import type { Project } from "@/lib/api";
 

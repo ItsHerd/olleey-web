@@ -207,7 +207,7 @@ export function QueueAndReview({
                                             <Button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    if (isQueued || isReview) {
+                                                    if (isQueued || isReview || isProcessing) {
                                                         onNavigate(video.video_id);
                                                         return;
                                                     }

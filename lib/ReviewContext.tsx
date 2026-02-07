@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { jobsAPI, type LocalizationInfo } from './api';
 import { useToast } from '@/components/ui/use-toast';
 import { logger } from './logger';
@@ -17,6 +18,7 @@ interface QuickCheckState {
     videoDescription?: string;
     isApproved?: boolean;
     approvedAt?: string;
+    status?: 'queued' | 'live' | 'draft' | 'processing' | 'not-started' | 'failed' | 'completed' | 'pending' | 'downloading' | 'voice_cloning' | 'lip_sync' | 'uploading' | 'waiting_approval' | 'ready';
 }
 
 interface ReviewContextType {
@@ -30,6 +32,7 @@ interface ReviewContextType {
         videoDescription?: string;
         isApproved?: boolean;
         approvedAt?: string;
+        status?: 'queued' | 'live' | 'draft' | 'processing' | 'not-started' | 'failed' | 'completed' | 'pending' | 'downloading' | 'voice_cloning' | 'lip_sync' | 'uploading' | 'waiting_approval' | 'ready';
     }) => void;
     closeReview: () => void;
     handleApprove: () => Promise<void>;
@@ -40,6 +43,7 @@ const ReviewContext = createContext<ReviewContextType | undefined>(undefined);
 
 export function ReviewProvider({ children }: { children: React.ReactNode }) {
     const { toast } = useToast();
+    const router = useRouter();
     const { isDemoMode, updateVideoState } = useDemo();
     const [quickCheckState, setQuickCheckState] = useState<QuickCheckState>({
         isOpen: false,
@@ -52,11 +56,24 @@ export function ReviewProvider({ children }: { children: React.ReactNode }) {
             isOpen: true,
             ...params,
         });
-    }, []);
+
+        // Navigate based on status state
+        const processingStatuses = ['processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending', 'uploading'];
+
+        if (params.isApproved || params.status === 'live' || params.status === 'ready') {
+            router.push(`/app?page=Preview&video_id=${params.videoId}&lang=${params.languageCode || 'es'}`, { scroll: false });
+        } else if (processingStatuses.includes(params.status || '')) {
+            router.push(`/app?page=Processing&video_id=${params.videoId}&lang=${params.languageCode || 'es'}`, { scroll: false });
+        } else {
+            router.push(`/app?page=Review Hub&video_id=${params.videoId}&lang=${params.languageCode || 'es'}`, { scroll: false });
+        }
+    }, [router]);
 
     const closeReview = useCallback(() => {
         setQuickCheckState(prev => ({ ...prev, isOpen: false }));
-    }, []);
+        // Optionally navigate back if we were on the Review Hub page
+        router.push('/app?page=All Media', { scroll: false });
+    }, [router]);
 
     const handleApprove = useCallback(async () => {
         const { videoId, languageCode } = quickCheckState;

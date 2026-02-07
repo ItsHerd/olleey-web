@@ -19,6 +19,9 @@ import NotificationsPage from "../NotificationsPage";
 import SettingsPage from "../SettingsPage";
 import UsagePage from "../UsagePage";
 import ManualUploadPage from "../ManualUploadPage";
+import ReviewHubPage from "../ReviewHubPage";
+import PreviewPage from "../PreviewPage";
+import ProcessingPage from "../ProcessingPage";
 import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
@@ -38,25 +41,7 @@ import { ReviewProvider, useReview } from "@/lib/ReviewContext";
 import { QuickCheckModal } from "@/components/SmartTable/QuickCheckModal";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 
-function GlobalModals() {
-    const { quickCheckState, closeReview, handleApprove, handleFlag } = useReview();
-
-    return (
-        <QuickCheckModal
-            isOpen={quickCheckState.isOpen}
-            onClose={closeReview}
-            languageName={LANGUAGE_OPTIONS.find(l => l.code === quickCheckState.languageCode)?.name || ""}
-            originalVideoUrl={quickCheckState.originalVideoUrl}
-            dubbedVideoUrl={quickCheckState.dubbedVideoUrl}
-            videoTitle={quickCheckState.videoTitle}
-            videoDescription={quickCheckState.videoDescription}
-            onApprove={handleApprove}
-            onFlag={handleFlag}
-            isApproved={quickCheckState.isApproved}
-            approvedAt={quickCheckState.approvedAt}
-        />
-    );
-}
+// function GlobalModals() removed as it's now a dedicated page
 
 function AppContent() {
     const { theme } = useTheme();
@@ -213,6 +198,9 @@ function AppContent() {
             case "Settings": return <SettingsPage />;
             case "Manual Upload": return <ManualUploadPage />;
             case "All Media": return <AllMediaPage />;
+            case "Review Hub": return <ReviewHubPage />;
+            case "Preview": return <PreviewPage />;
+            case "Processing": return <ProcessingPage />;
             default: return <DashboardPage />;
         }
     };
@@ -537,7 +525,7 @@ function AppContent() {
                     </div>
 
                     {/* Global Modals */}
-                    <GlobalModals />
+                    {/* <GlobalModals /> - Removed in favor of ReviewHubPage */}
 
                     {/* Create Project Modal */}
                     <CreateProjectModal

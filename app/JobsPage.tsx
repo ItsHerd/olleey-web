@@ -382,6 +382,7 @@ export default function JobsPage() {
                             videoTitle: video.title,
                             videoDescription: video.description,
                             isApproved: job.status === "completed",
+                            status: job.status,
                             approvedAt: job.updated_at
                         });
                     }}

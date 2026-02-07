@@ -478,6 +478,9 @@ export default function AllMediaPage() {
                     id={`video-${video.video_id}`}
                     variants={itemVariants}
                     onClick={() => {
+                      const status = getOverallVideoStatus(video.localizations);
+                      const hasLive = Object.values(video.localizations || {}).some((l: any) => l.status === "live");
+
                       if (status === "draft") {
                         const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "draft") || "es";
                         const loc = video.localizations[langCode];
@@ -490,6 +493,30 @@ export default function AllMediaPage() {
                           videoTitle: fakeText.title,
                           videoDescription: fakeText.description,
                           isApproved: false,
+                          approvedAt: (video as any).published_at
+                        });
+                      } else if (status === "processing") {
+                        const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "processing") || "es";
+                        const loc = video.localizations[langCode];
+                        openReview({
+                          videoId: loc?.job_id || video.video_id,
+                          languageCode: langCode,
+                          status: 'processing',
+                          videoTitle: video.title,
+                          isApproved: false
+                        });
+                      } else if (hasLive) {
+                        const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "live") || "es";
+                        const loc = video.localizations[langCode];
+                        const fakeText = getFakeLocalizedText(langCode);
+                        openReview({
+                          videoId: loc?.job_id || video.video_id,
+                          languageCode: langCode,
+                          originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                          dubbedVideoUrl: (loc as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                          videoTitle: video.title,
+                          videoDescription: video.description || fakeText.description,
+                          isApproved: true,
                           approvedAt: (video as any).published_at
                         });
                       } else {
@@ -639,6 +666,9 @@ export default function AllMediaPage() {
                             : ''
                             }`}
                           onClick={() => {
+                            const status = getOverallVideoStatus(video.localizations);
+                            const hasLive = Object.values(video.localizations || {}).some((l: any) => l.status === "live");
+
                             if (status === "draft") {
                               const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "draft") || "es";
                               const loc = video.localizations[langCode];
@@ -651,6 +681,30 @@ export default function AllMediaPage() {
                                 videoTitle: fakeText.title,
                                 videoDescription: fakeText.description,
                                 isApproved: false,
+                                approvedAt: (video as any).published_at
+                              });
+                            } else if (status === "processing") {
+                              const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "processing") || "es";
+                              const loc = video.localizations[langCode];
+                              openReview({
+                                videoId: loc?.job_id || video.video_id,
+                                languageCode: langCode,
+                                status: 'processing',
+                                videoTitle: video.title,
+                                isApproved: false
+                              });
+                            } else if (hasLive) {
+                              const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "live") || "es";
+                              const loc = video.localizations[langCode];
+                              const fakeText = getFakeLocalizedText(langCode);
+                              openReview({
+                                videoId: loc?.job_id || video.video_id,
+                                languageCode: langCode,
+                                originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                                dubbedVideoUrl: (loc as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                                videoTitle: video.title,
+                                videoDescription: video.description || fakeText.description,
+                                isApproved: true,
                                 approvedAt: (video as any).published_at
                               });
                             } else {

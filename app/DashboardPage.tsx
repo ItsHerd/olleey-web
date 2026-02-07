@@ -373,19 +373,42 @@ export default function DashboardPage() {
           approvedAt: video.published_at
         });
         return;
+      } else if (demoState?.status === 'live') {
+        const fakeText = getFakeLocalizedText(langCode || 'es');
+        openReview({
+          videoId: video.video_id,
+          languageCode: langCode || 'es',
+          originalVideoUrl: (video as any).video_url || 'https://olleey-videos.s3.us-west-1.amazonaws.com/en.mp4',
+          dubbedVideoUrl: (video as any).dubbed_url || 'https://olleey-videos.s3.us-west-1.amazonaws.com/es.mov',
+          videoTitle: video.title,
+          videoDescription: video.description || fakeText.description,
+          isApproved: true,
+          approvedAt: video.published_at
+        });
+        return;
       }
     }
 
     if (status === "processing") {
-      setTerminalState({
-        isOpen: true,
-        jobId: loc?.job_id || id,
+      openReview({
+        videoId: loc?.job_id || id,
+        languageCode: langCode || "",
+        status: 'processing',
         videoTitle: video.title,
-        language: LANGUAGE_OPTIONS.find(l => l.code === langCode)?.name
+        isApproved: false
       });
     } else if (status === "live") {
-      // Redirect to All Media for live assets
-      router.push(`/app?page=All Media&video_id=${video.video_id}`);
+      const fakeText = getFakeLocalizedText(langCode || "es");
+      openReview({
+        videoId: loc?.job_id || id,
+        languageCode: langCode || "",
+        originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        dubbedVideoUrl: loc?.video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+        videoTitle: video.title,
+        videoDescription: video.description || fakeText.description,
+        isApproved: true,
+        approvedAt: (video as any).published_at
+      });
     } else {
       // Open QuickCheckModal via useReview for non-live assets (Drafts, etc.)
       const fakeText = getFakeLocalizedText(langCode || "en");
