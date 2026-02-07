@@ -2,8 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import ThemeProviderWrapper from "./ThemeProviderWrapper";
-
-import { ReduxProvider } from "@/components/ReduxProvider";
+import { ThemeProvider } from "@/lib/ThemeContext";
 import { ToastProvider } from "@/components/ui/use-toast";
 
 export const metadata: Metadata = {
@@ -24,13 +23,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={GeistSans.className}>
-        <ReduxProvider>
+        <ThemeProvider>
           <ThemeProviderWrapper>
             <ToastProvider>
               {children}
             </ToastProvider>
           </ThemeProviderWrapper>
-        </ReduxProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

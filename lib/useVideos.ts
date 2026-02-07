@@ -13,6 +13,9 @@ interface CacheEntry {
 // Module-level cache storage
 const cacheStore = new Map<string, CacheEntry>();
 
+// Module-level in-flight request tracking (prevents duplicate simultaneous requests)
+const inflightRequests = new Map<string, Promise<VideoListResponse>>();
+
 // Generate cache key from params
 function getCacheKey(params?: { page?: number; page_size?: number; channel_id?: string; project_id?: string }): string {
   const key = JSON.stringify({
@@ -73,10 +76,36 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
         return;
       }
 
+      // Check if there's already an in-flight request for this key
+      const existingRequest = inflightRequests.get(cacheKey);
+      if (existingRequest) {
+        console.log('[useVideos] Reusing in-flight request for:', cacheKey);
+        try {
+          setLoading(true);
+          const data = await existingRequest;
+          setVideos(data.videos || []);
+          setTotal(data.total || 0);
+          setLoading(false);
+          isInitialMountRef.current = false;
+          return;
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Failed to load videos");
+          console.error("Videos error:", err);
+          setLoading(false);
+          isInitialMountRef.current = false;
+          return;
+        }
+      }
+
       try {
         setLoading(true);
         setError(null);
-        const data: VideoListResponse = await videosAPI.listVideos(currentParams);
+
+        // Create and store the promise for this request
+        const requestPromise = videosAPI.listVideos(currentParams);
+        inflightRequests.set(cacheKey, requestPromise);
+
+        const data: VideoListResponse = await requestPromise;
 
         // Update cache
         cacheStore.set(cacheKey, {
@@ -90,6 +119,8 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
         setError(err instanceof Error ? err.message : "Failed to load videos");
         console.error("Videos error:", err);
       } finally {
+        // Remove from in-flight requests
+        inflightRequests.delete(cacheKey);
         setLoading(false);
         isInitialMountRef.current = false;
       }
@@ -133,10 +164,33 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
     const currentParams = paramsRef.current;
     const cacheKey = getCacheKey(currentParams);
 
+    // Check if there's already an in-flight request for this key
+    const existingRequest = inflightRequests.get(cacheKey);
+    if (existingRequest) {
+      console.log('[useVideos] Refetch reusing in-flight request');
+      try {
+        setLoading(true);
+        const data = await existingRequest;
+        setVideos(data.videos || []);
+        setTotal(data.total || 0);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load videos");
+        console.error("Videos error:", err);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const data: VideoListResponse = await videosAPI.listVideos(currentParams);
+
+      // Create and store the promise for this request
+      const requestPromise = videosAPI.listVideos(currentParams);
+      inflightRequests.set(cacheKey, requestPromise);
+
+      const data: VideoListResponse = await requestPromise;
 
       // Update cache
       cacheStore.set(cacheKey, {
@@ -150,6 +204,8 @@ export function useVideos(params?: { page?: number; page_size?: number; channel_
       setError(err instanceof Error ? err.message : "Failed to load videos");
       console.error("Videos error:", err);
     } finally {
+      // Remove from in-flight requests
+      inflightRequests.delete(cacheKey);
       setLoading(false);
     }
   }, []);

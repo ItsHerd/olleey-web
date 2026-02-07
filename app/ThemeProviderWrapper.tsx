@@ -1,6 +1,5 @@
 "use client";
 
-import { ThemeManager } from "@/components/ThemeManager";
 import { ProjectProvider } from "@/lib/ProjectContext";
 
 export default function ThemeProviderWrapper({
@@ -9,11 +8,8 @@ export default function ThemeProviderWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <>
-      <ThemeManager />
-      <ProjectProvider>
-        {children}
-      </ProjectProvider>
-    </>
+    <ProjectProvider>
+      {children}
+    </ProjectProvider>
   );
 }

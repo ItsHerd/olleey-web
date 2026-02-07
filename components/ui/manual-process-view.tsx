@@ -119,15 +119,22 @@ export function ManualProcessView({
 
     const extractVideoId = (url: string): string | null => {
         try {
-            const patterns = [
+            // Accept any URL or video ID
+            const trimmed = url.trim();
+            if (!trimmed) return null;
+
+            // Check if it's a YouTube URL and extract the ID
+            const youtubePatterns = [
                 /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
                 /^([a-zA-Z0-9_-]{11})$/,
             ];
-            for (const pattern of patterns) {
-                const match = url.match(pattern);
+            for (const pattern of youtubePatterns) {
+                const match = trimmed.match(pattern);
                 if (match && match[1]) return match[1];
             }
-            return null;
+
+            // For any other URL or identifier, return as-is
+            return trimmed;
         } catch { return null; }
     };
 
@@ -175,7 +182,7 @@ export function ManualProcessView({
             } else if (activeTab === "url") {
                 videoId = extractVideoId(sourceVideoUrl.trim());
                 if (!videoId || !sourceChannelId) {
-                    setError("Please enter a valid YouTube URL and select a source channel");
+                    setError("Please enter a valid video URL or ID and select a source channel");
                     setIsSubmitting(false);
                     return;
                 }
@@ -241,7 +248,11 @@ export function ManualProcessView({
         }
         if (activeTab === 'url' && sourceVideoUrl) {
             const vid = extractVideoId(sourceVideoUrl);
-            if (vid) return `https://img.youtube.com/vi/${vid}/mqdefault.jpg`;
+            // Only generate YouTube thumbnail if it's a valid YouTube ID (11 chars)
+            if (vid && vid.length === 11 && /^[a-zA-Z0-9_-]{11}$/.test(vid)) {
+                return `https://img.youtube.com/vi/${vid}/mqdefault.jpg`;
+            }
+            // For other URLs, don't try to generate a thumbnail
         }
         return null;
     })();
@@ -370,10 +381,10 @@ export function ManualProcessView({
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <LinkIcon className="w-4 h-4 text-olleey-yellow" />
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-white/20">Protocol Endpoint URL</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-white/20">Video Source URL</label>
                                             </div>
                                             <Input
-                                                placeholder="https://youtube.com/watch?v=..."
+                                                placeholder="https://example.com/video.mp4 or any video URL..."
                                                 value={sourceVideoUrl}
                                                 onChange={(e) => setSourceVideoUrl(e.target.value)}
                                                 className={`bg-white/[0.03] border-white/5 text-white h-16 rounded-2xl px-8 text-[13px] font-medium focus:border-olleey-yellow/40 focus:bg-white/[0.05] transition-all outline-none placeholder:text-white/10`}

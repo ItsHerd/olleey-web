@@ -69,20 +69,20 @@ module.exports = {
         },
       },
       colors: {
-        // Light Theme
+        // Light Theme - Enhanced Visibility
         light: {
-          bg: "#F9FAFB",
-          bgAlt: "#F3F4F6",
+          bg: "#f8f9fa",
+          bgAlt: "#f1f3f5",
           card: "#ffffff",
-          cardAlt: "#F9FAFB",
-          text: "#000000",
-          textSecondary: "#4a5568",
-          accent: "#F05D5E",
-          accentAlt: "#F05D5E",
-          accentSecondary: "#e4b363",
-          accentSecondaryAlt: "#d4a353",
-          border: "#e2e8f0",
-          borderAlt: "#cbd5e1",
+          cardAlt: "#f8f9fa",
+          text: "#111827",
+          textSecondary: "#374151",
+          accent: "#dc2626",
+          accentAlt: "#b91c1c",
+          accentSecondary: "#d97706",
+          accentSecondaryAlt: "#b45309",
+          border: "#d1d5db",
+          borderAlt: "#9ca3af",
         },
         // Dark Theme
         dark: {

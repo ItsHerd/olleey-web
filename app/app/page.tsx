@@ -437,6 +437,7 @@ function AppContent() {
 
                                     <Button
                                         variant="ghost"
+                                        onClick={() => setCurrentPage("Channels")}
                                         className={`h-10 px-4 gap-2 rounded-xl group ${isDark ? 'bg-white/5 text-white' : 'bg-gray-100 text-gray-900'}`}
                                     >
                                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
