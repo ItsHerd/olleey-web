@@ -229,8 +229,9 @@ export function GridDashboard({
                                 const queueVideos = videos.filter(v => ["draft", "processing"].includes(getOverallVideoStatus(v.localizations || {})));
                                 if (!videosLoading && queueVideos.length === 0) {
                                     return (
-                                        <div className="flex flex-col h-full opacity-30">
-                                            <RowSkeleton count={5} />
+                                        <div className="flex flex-col h-full items-center justify-center py-20 bg-white/[0.01] rounded-[2rem] border border-white/5 border-dashed m-4">
+                                            <LayoutGrid className="h-8 w-8 text-white/10 mb-4" />
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Pipeline Idle</p>
                                         </div>
                                     );
                                 }
@@ -378,53 +379,8 @@ export function GridDashboard({
                 </motion.div>
             </div>
 
-            {/* Custom Styles to make sub-components fit better in grid */}
+            {/* Dashboard Layout Optimization */}
             <style jsx global>{`
-                .dashboard-grid section {
-                    padding: 0 !important;
-                }
-                .dashboard-grid section > div:first-child {
-                    display: none !important;
-                }
-                .dashboard-grid table {
-                    font-size: 0.9rem;
-                }
-                @media (min-width: 1024px) {
-                    .dashboard-grid table {
-                        font-size: 1.1rem;
-                    }
-                }
-                .dashboard-grid td, .dashboard-grid th {
-                    padding: 1.25rem 1.5rem !important;
-                }
-                .dashboard-grid th {
-                    font-size: 0.75rem !important;
-                    font-weight: 900 !important;
-                    text-transform: uppercase;
-                    letter-spacing: 0.2em;
-                    opacity: 0.4;
-                    padding-top: 1.5rem !important;
-                    padding-bottom: 1rem !important;
-                }
-                .dashboard-grid .aspect-video {
-                    width: 7rem !important;
-                    border-radius: 0.75rem !important;
-                }
-                @media (min-width: 1024px) {
-                    .dashboard-grid .aspect-video {
-                        width: 9rem !important;
-                    }
-                }
-                .dashboard-grid h4 {
-                    font-size: 1.1rem !important;
-                    font-weight: 900 !important;
-                    letter-spacing: -0.01em;
-                }
-                .dashboard-grid p {
-                    font-size: 0.9rem !important;
-                    opacity: 0.7;
-                }
-                /* Higher quality scrollbar */
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 4px;
                 }

@@ -116,8 +116,8 @@ export default function DashboardPage() {
     }
   }, [isDemoMode]); // Only depend on isDemoMode
 
-  const canFetchContent = useMemo(() => !!dashboard && !!selectedProject && !!selectedChannelId,
-    [dashboard, selectedProject, selectedChannelId]);
+  const canFetchContent = useMemo(() => !!dashboard && !!selectedProject,
+    [dashboard, selectedProject]);
 
   // 2. Coordinated Background Fetches (Graph & Activity)
   useEffect(() => {

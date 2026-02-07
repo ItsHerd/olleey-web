@@ -326,9 +326,9 @@ export function ManualProcessView({
                                                     </div>
                                                 ) : (
                                                     <div className="divide-y divide-white/[0.03]">
-                                                        {channelVideos.map(video => (
+                                                        {channelVideos.map((video, idx) => (
                                                             <div
-                                                                key={video.video_id}
+                                                                key={`${video.video_id}-${idx}`}
                                                                 onClick={() => {
                                                                     setSelectedVideoId(video.video_id);
                                                                     setCustomTitle(video.title);
