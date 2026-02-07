@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Play, Pause, AlertCircle, CheckCircle, Flag, Volume2, VolumeX, Maximize2, SkipBack, SkipForward, Sparkles, User, RotateCcw, Languages, Image as ImageIcon, Check } from "lucide-react";
+import { X, Play, Pause, AlertCircle, CheckCircle, Flag, Volume2, VolumeX, Maximize2, SkipBack, SkipForward, Sparkles, User, RotateCcw, Languages, Image as ImageIcon, Check, Upload, Wand2, RefreshCw, Eye, Edit3, Type, Save } from "lucide-react";
 import { useTheme } from "@/lib/useTheme";
+import { cn } from "@/lib/utils";
 
 interface QuickCheckModalProps {
     isOpen: boolean;
@@ -58,8 +59,18 @@ export function QuickCheckModal({
         audioQuality: isApproved
     });
     const [targetLanguage, setTargetLanguage] = useState(languageName === "Spanish" ? "ES" : "EN");
-    const [thumbnailStrategy, setThumbnailStrategy] = useState<"original" | "converted">("converted");
+    const [thumbnailStrategy, setThumbnailStrategy] = useState<"original" | "converted" | "upload" | "generate">("original");
+    const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
+    const [showThumbnailPreview, setShowThumbnailPreview] = useState(false);
+    const [customThumbnail, setCustomThumbnail] = useState<string | null>(null);
+    const [editedTitle, setEditedTitle] = useState(videoTitle || "");
+    const [editedDescription, setEditedDescription] = useState(videoDescription || "No description provided.");
+    const [isGeneratingInfo, setIsGeneratingInfo] = useState(false);
+    const [showInfoPreview, setShowInfoPreview] = useState(false);
+    const [tempTitle, setTempTitle] = useState("");
+    const [tempDescription, setTempDescription] = useState("");
     const [reprocessingItems, setReprocessingItems] = useState<Record<string, boolean>>({});
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleRedo = (key: string) => {
         setReprocessingItems(prev => ({ ...prev, [key]: true }));
@@ -68,6 +79,45 @@ export function QuickCheckModal({
             setReprocessingItems(prev => ({ ...prev, [key]: false }));
             setChecklist(prev => ({ ...prev, [key]: true }));
         }, 3000);
+    };
+
+    const handleGenerateThumbnail = () => {
+        setThumbnailStrategy("generate");
+        setIsGeneratingThumbnail(true);
+        setShowThumbnailPreview(false);
+        // Simulate AI generation delay
+        setTimeout(() => {
+            setIsGeneratingThumbnail(false);
+            setShowThumbnailPreview(true);
+        }, 3500);
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            setCustomThumbnail(url);
+            setThumbnailStrategy("upload");
+            setShowThumbnailPreview(true);
+        }
+    };
+
+    const handleGenerateInfo = () => {
+        setIsGeneratingInfo(true);
+        setShowInfoPreview(false);
+        // Simulate AI Metadata Translation
+        setTimeout(() => {
+            setIsGeneratingInfo(false);
+            setTempTitle(`${videoTitle || "Untitled"} [${targetLanguage === "ES" ? "SPAIN" : "EN"}_LOCALIZED]`);
+            setTempDescription(`${videoDescription || "No original description."} \n\nLocalized for global distribution via Olleey AI.`);
+            setShowInfoPreview(true);
+        }, 2500);
+    };
+
+    const handleManualEdit = () => {
+        setTempTitle(editedTitle);
+        setTempDescription(editedDescription);
+        setShowInfoPreview(true);
     };
 
     // Theme classes
@@ -108,16 +158,20 @@ export function QuickCheckModal({
     };
 
     const toggleOriginalMute = () => {
-        if (originalVideoRef.current) {
-            originalVideoRef.current.muted = !originalMuted;
-            setOriginalMuted(!originalMuted);
+        if (originalVideoRef.current && dubbedVideoRef.current) {
+            setOriginalMuted(false);
+            setDubbedMuted(true);
+            originalVideoRef.current.muted = false;
+            dubbedVideoRef.current.muted = true;
         }
     };
 
     const toggleDubbedMute = () => {
-        if (dubbedVideoRef.current) {
-            dubbedVideoRef.current.muted = !dubbedMuted;
-            setDubbedMuted(!dubbedMuted);
+        if (originalVideoRef.current && dubbedVideoRef.current) {
+            setOriginalMuted(true);
+            setDubbedMuted(false);
+            originalVideoRef.current.muted = true;
+            dubbedVideoRef.current.muted = false;
         }
     };
 
@@ -137,41 +191,37 @@ export function QuickCheckModal({
     };
 
     const formatTime = (time: number) => {
+        if (!time || isNaN(time)) return "0:00";
         const minutes = Math.floor(time / 60);
         const seconds = Math.floor(time % 60);
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    // Sync playback events (fail-safe)
-    useEffect(() => {
-        const onTimeUpdate = () => {
-            if (originalVideoRef.current) {
-                setCurrentTime(originalVideoRef.current.currentTime);
-                // Force sync if DRIFT exceeds 0.1s
-                if (dubbedVideoRef.current && Math.abs(dubbedVideoRef.current.currentTime - originalVideoRef.current.currentTime) > 0.1) {
-                    dubbedVideoRef.current.currentTime = originalVideoRef.current.currentTime;
-                }
-            }
-        };
+    const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+        const video = e.currentTarget;
+        setCurrentTime(video.currentTime);
 
-        const onLoadedMetadata = () => {
-            if (originalVideoRef.current) {
-                setDuration(originalVideoRef.current.duration);
-            }
-        };
-
-        const original = originalVideoRef.current;
-        if (original) {
-            original.addEventListener('timeupdate', onTimeUpdate);
-            original.addEventListener('loadedmetadata', onLoadedMetadata);
+        // Sync the other video if it exists
+        const otherVideo = video === originalVideoRef.current ? dubbedVideoRef.current : originalVideoRef.current;
+        if (otherVideo && Math.abs(video.currentTime - otherVideo.currentTime) > 0.1) {
+            otherVideo.currentTime = video.currentTime;
         }
-        return () => {
-            if (original) {
-                original.removeEventListener('timeupdate', onTimeUpdate);
-                original.removeEventListener('loadedmetadata', onLoadedMetadata);
-            }
-        };
-    }, []);
+    };
+
+    const handleVideoLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+        setDuration(e.currentTarget.duration);
+    };
+
+    const handleVideoPlay = () => setIsPlaying(true);
+    const handleVideoPause = () => setIsPlaying(false);
+
+    // Simplified effect - we'll use event props instead
+    useEffect(() => {
+        if (!isOpen) {
+            setIsPlaying(false);
+            setCurrentTime(0);
+        }
+    }, [isOpen]);
 
     // Also update checklist if isApproved changes
     useEffect(() => {
@@ -212,13 +262,13 @@ export function QuickCheckModal({
                                     </span>
                                     {!isApproved && (
                                         <div className="flex bg-white/5 border border-white/10 p-0.5 rounded-none">
-                                            <button 
+                                            <button
                                                 onClick={() => setTargetLanguage("EN")}
                                                 className={`px-1.5 py-0.5 text-[8px] font-black uppercase transition-all ${targetLanguage === "EN" ? 'bg-white/20 text-white' : 'text-white/30 hover:text-white/60'}`}
                                             >
                                                 EN
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => setTargetLanguage("ES")}
                                                 className={`px-1.5 py-0.5 text-[8px] font-black uppercase transition-all ${targetLanguage === "ES" ? 'bg-white/20 text-white' : 'text-white/30 hover:text-white/60'}`}
                                             >
@@ -257,19 +307,22 @@ export function QuickCheckModal({
                     <div className="flex-1 flex flex-col bg-black overflow-hidden border-r border-white/10">
                         <div className="flex-1 grid grid-cols-2 gap-px relative group">
                             {/* Original */}
-                            <div className="relative bg-black group/orig overflow-hidden">
+                            <div
+                                onClick={toggleOriginalMute}
+                                className={cn(
+                                    "relative bg-black group/orig overflow-hidden transition-all duration-300 cursor-pointer",
+                                    !originalMuted ? "ring-2 ring-olleey-yellow scale-[1.01] z-20 shadow-[0_0_40px_rgba(251,191,36,0.2)]" : "opacity-40 hover:opacity-100 grayscale-[0.5] hover:grayscale-0"
+                                )}
+                            >
                                 <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
                                     <div className="flex items-center gap-2">
-                                        <span className="bg-black/80 backdrop-blur-md text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest border border-white/20">
+                                        <span className={cn(
+                                            "backdrop-blur-md text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest border transition-all",
+                                            !originalMuted ? "bg-olleey-yellow text-black border-olleey-yellow" : "bg-black/80 border-white/20"
+                                        )}>
                                             Original Master
                                         </span>
-                                        <button 
-                                            onClick={toggleOriginalMute}
-                                            className={`${originalMuted ? 'bg-red-500/80 border-red-500/50' : 'bg-green-500/80 border-green-500/50'} backdrop-blur-md text-white px-2 py-1 text-[9px] font-black flex items-center gap-1.5 border transition-all hover:scale-105 active:scale-95`}
-                                        >
-                                            {originalMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                                            {originalMuted ? 'MUTED' : 'LIVE'}
-                                        </button>
+                                        {!originalMuted && <div className="bg-olleey-yellow w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.8)]" />}
                                     </div>
                                 </div>
                                 <video
@@ -277,24 +330,31 @@ export function QuickCheckModal({
                                     src={originalVideoUrl}
                                     className="w-full h-full object-contain"
                                     muted={originalMuted}
+                                    onTimeUpdate={handleVideoTimeUpdate}
+                                    onLoadedMetadata={handleVideoLoadedMetadata}
+                                    onPlay={handleVideoPlay}
+                                    onPause={handleVideoPause}
                                 />
                                 <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/80 to-transparent pointer-events-none opacity-0 group-hover/orig:opacity-100 transition-opacity" />
                             </div>
 
                             {/* Dubbed */}
-                            <div className="relative bg-black group/dub overflow-hidden border-l border-white/10">
+                            <div
+                                onClick={toggleDubbedMute}
+                                className={cn(
+                                    "relative bg-black group/dub overflow-hidden transition-all duration-300 cursor-pointer",
+                                    !dubbedMuted ? "ring-2 ring-olleey-yellow scale-[1.01] z-20 shadow-[0_0_40px_rgba(251,191,36,0.2)]" : "opacity-40 hover:opacity-100 grayscale-[0.5] hover:grayscale-0"
+                                )}
+                            >
                                 <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
                                     <div className="flex items-center gap-2">
-                                        <span className={`${isApproved ? 'bg-green-500 text-white' : 'bg-olleey-yellow text-black'} px-3 py-1 text-[10px] font-black uppercase tracking-widest border ${isApproved ? 'border-green-500 shadow-green-500/20' : 'border-olleey-yellow shadow-olleey-yellow/20'} shadow-lg`}>
+                                        <span className={cn(
+                                            "backdrop-blur-md px-3 py-1 text-[10px] font-black uppercase tracking-widest border transition-all",
+                                            !dubbedMuted ? "bg-olleey-yellow text-black border-olleey-yellow" : "bg-black/80 text-white border-white/20"
+                                        )}>
                                             {targetLanguage === "ES" ? "Spanish" : "English"} Production
                                         </span>
-                                        <button 
-                                            onClick={toggleDubbedMute}
-                                            className={`${dubbedMuted ? 'bg-red-500/80 border-red-500/50' : 'bg-green-500/80 border-green-500/50'} backdrop-blur-md text-white px-2 py-1 text-[9px] font-black flex items-center gap-1.5 border transition-all hover:scale-105 active:scale-95`}
-                                        >
-                                            {dubbedMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                                            {dubbedMuted ? 'MUTED' : 'STEREOPHONIC'}
-                                        </button>
+                                        {!dubbedMuted && <div className="bg-olleey-yellow w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.8)]" />}
                                     </div>
                                 </div>
                                 <video
@@ -302,6 +362,10 @@ export function QuickCheckModal({
                                     src={dubbedVideoUrl}
                                     className="w-full h-full object-contain"
                                     muted={dubbedMuted}
+                                    onTimeUpdate={handleVideoTimeUpdate}
+                                    onLoadedMetadata={handleVideoLoadedMetadata}
+                                    onPlay={handleVideoPlay}
+                                    onPause={handleVideoPause}
                                 />
                                 <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/80 to-transparent pointer-events-none opacity-0 group-hover/dub:opacity-100 transition-opacity" />
                             </div>
@@ -353,16 +417,16 @@ export function QuickCheckModal({
                                 <div className="flex items-center gap-4 border-l border-white/10 pl-6">
                                     <div className="flex items-center gap-2">
                                         <div className="flex items-center bg-white/5 border border-white/10 p-0.5 rounded-none mr-2">
-                                            <button 
-                                                onClick={() => { setOriginalMuted(false); setDubbedMuted(true); }}
-                                                className={`px-2 py-1 text-[8px] font-black uppercase transition-all ${(!originalMuted && dubbedMuted) ? 'bg-white/20 text-white' : 'text-white/30 hover:text-white/60'}`}
+                                            <button
+                                                onClick={toggleOriginalMute}
+                                                className={`px-2 py-1 text-[8px] font-black uppercase transition-all ${(!originalMuted) ? 'bg-white/20 text-white' : 'text-white/30 hover:text-white/60'}`}
                                                 title="Solo Original"
                                             >
                                                 ORIG
                                             </button>
-                                            <button 
-                                                onClick={() => { setOriginalMuted(true); setDubbedMuted(false); }}
-                                                className={`px-2 py-1 text-[8px] font-black uppercase transition-all ${(originalMuted && !dubbedMuted) ? 'bg-white/20 text-white' : 'text-white/30 hover:text-white/60'}`}
+                                            <button
+                                                onClick={toggleDubbedMute}
+                                                className={`px-2 py-1 text-[8px] font-black uppercase transition-all ${(!dubbedMuted) ? 'bg-white/20 text-white' : 'text-white/30 hover:text-white/60'}`}
                                                 title="Solo Dubbed"
                                             >
                                                 DUB
@@ -439,8 +503,8 @@ export function QuickCheckModal({
                                                 disabled={isApproved || reprocessingItems[key]}
                                                 onClick={() => !isApproved && setChecklist(prev => ({ ...prev, [key]: !value }))}
                                                 className={`w-full flex items-center justify-between p-3 border transition-all rounded-none 
-                                                    ${reprocessingItems[key] ? 'border-olleey-yellow/30 bg-olleey-yellow/5 animate-pulse' : 
-                                                      value ? 'border-green-500/50 bg-green-500/5' : 'border-white/5 bg-white/5 hover:border-white/20'} 
+                                                    ${reprocessingItems[key] ? 'border-olleey-yellow/30 bg-olleey-yellow/5 animate-pulse' :
+                                                        value ? 'border-green-500/50 bg-green-500/5' : 'border-white/5 bg-white/5 hover:border-white/20'} 
                                                     ${isApproved ? 'cursor-default' : 'cursor-pointer'}`}
                                             >
                                                 <div className="flex flex-col items-start gap-0.5">
@@ -485,7 +549,7 @@ export function QuickCheckModal({
                                 </h4>
                                 <div className="space-y-2">
                                     <button
-                                        onClick={() => setThumbnailStrategy("original")}
+                                        onClick={() => { setThumbnailStrategy("original"); setShowThumbnailPreview(false); }}
                                         className={`w-full flex items-center gap-3 p-3 border transition-all rounded-none ${thumbnailStrategy === "original" ? 'border-olleey-yellow bg-olleey-yellow/5' : 'border-white/5 bg-white/5 hover:border-white/20'}`}
                                     >
                                         <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${thumbnailStrategy === "original" ? 'border-olleey-yellow bg-olleey-yellow' : 'border-white/20'}`}>
@@ -496,33 +560,181 @@ export function QuickCheckModal({
                                             <span className="text-[8px] font-medium text-white/20">Source thumbnail will be reused</span>
                                         </div>
                                     </button>
+
+                                    {/* Upload Option */}
                                     <button
-                                        onClick={() => setThumbnailStrategy("converted")}
-                                        className={`w-full flex items-center gap-3 p-3 border transition-all rounded-none ${thumbnailStrategy === "converted" ? 'border-olleey-yellow bg-olleey-yellow/5' : 'border-white/5 bg-white/5 hover:border-white/20'}`}
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className={`w-full flex items-center gap-3 p-3 border transition-all rounded-none ${thumbnailStrategy === "upload" ? 'border-olleey-yellow bg-olleey-yellow/5' : 'border-white/5 bg-white/5 hover:border-white/20'}`}
                                     >
-                                        <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${thumbnailStrategy === "converted" ? 'border-olleey-yellow bg-olleey-yellow' : 'border-white/20'}`}>
-                                            {thumbnailStrategy === "converted" && <div className="w-1.5 h-1.5 bg-black rounded-full" />}
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleFileUpload}
+                                            accept="image/*"
+                                            className="hidden"
+                                        />
+                                        <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${thumbnailStrategy === "upload" ? 'border-olleey-yellow bg-olleey-yellow' : 'border-white/20'}`}>
+                                            {thumbnailStrategy === "upload" && <div className="w-1.5 h-1.5 bg-black rounded-full" />}
                                         </div>
-                                        <div className="flex flex-col items-start">
-                                            <span className={`text-[10px] font-black uppercase ${thumbnailStrategy === "converted" ? 'text-white' : 'text-white/40'}`}>Convert Thumbnail</span>
-                                            <span className="text-[8px] font-medium text-olleey-yellow/60">AI-localization for {targetLanguage === "ES" ? "Spanish" : "English"}</span>
+                                        <div className="flex flex-col items-start text-left">
+                                            <span className={`text-[10px] font-black uppercase ${thumbnailStrategy === "upload" ? 'text-white' : 'text-white/40'} flex items-center gap-2`}>
+                                                Upload Custom <Upload className="w-2.5 h-2.5" />
+                                            </span>
+                                            <span className="text-[8px] font-medium text-white/20">Manually select localized asset</span>
                                         </div>
                                     </button>
+
+                                    {/* Generate Option */}
+                                    <button
+                                        onClick={handleGenerateThumbnail}
+                                        disabled={isGeneratingThumbnail}
+                                        className={`w-full flex items-center gap-3 p-3 border transition-all rounded-none ${thumbnailStrategy === "generate" ? 'border-olleey-yellow bg-olleey-yellow/5' : 'border-white/5 bg-white/5 hover:border-white/20'} ${isGeneratingThumbnail ? 'opacity-50 cursor-wait' : ''}`}
+                                    >
+                                        <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${thumbnailStrategy === "generate" ? 'border-olleey-yellow bg-olleey-yellow' : 'border-white/20'}`}>
+                                            {thumbnailStrategy === "generate" && !isGeneratingThumbnail && <div className="w-1.5 h-1.5 bg-black rounded-full" />}
+                                            {isGeneratingThumbnail && <RefreshCw className="w-2 h-2 text-olleey-yellow animate-spin" />}
+                                        </div>
+                                        <div className="flex flex-col items-start text-left flex-1">
+                                            <span className={`text-[10px] font-black uppercase ${thumbnailStrategy === "generate" ? 'text-white' : 'text-white/40'} flex items-center gap-2`}>
+                                                AI Generate <Wand2 className="w-2.5 h-2.5" />
+                                            </span>
+                                            <span className="text-[8px] font-medium text-olleey-yellow/60">
+                                                {isGeneratingThumbnail ? "Neural Engine active..." : "Synthesize localized thumbnail"}
+                                            </span>
+                                        </div>
+                                    </button>
+
+                                    {/* Preview State */}
+                                    {showThumbnailPreview && (
+                                        <div className="p-3 bg-olleey-yellow border border-olleey-yellow rounded-none animate-in fade-in slide-in-from-top-1">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[9px] font-black text-black uppercase tracking-widest flex items-center gap-2">
+                                                    <Eye className="w-3 h-3" /> Preview Ready
+                                                </span>
+                                                <button
+                                                    onClick={() => setShowThumbnailPreview(false)}
+                                                    className="text-[8px] font-black text-black/40 hover:text-black uppercase underline"
+                                                >
+                                                    Dismiss
+                                                </button>
+                                            </div>
+                                            <div className="aspect-video bg-black/20 border border-black/10 overflow-hidden relative group">
+                                                {thumbnailStrategy === "upload" && customThumbnail ? (
+                                                    <img src={customThumbnail} className="w-full h-full object-cover" alt="Custom" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-black/20 italic text-[10px] font-mono">
+                                                        [ AI_GEN_THUMBNAIL_DRAFT ]
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <button className="bg-white text-black px-3 py-1 text-[8px] font-black uppercase">Click to Expand</button>
+                                                </div>
+                                            </div>
+                                            <button
+                                                className="w-full mt-2 py-1.5 bg-black text-white text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-colors border border-black"
+                                                onClick={() => setShowThumbnailPreview(false)}
+                                            >
+                                                Confirm Selection
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Metadata Section - Compact */}
+                            {/* Metadata Section - Interactive */}
                             <div>
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-3">Production Info</h4>
-                                <div className="p-3 bg-[#050505] border border-white/5 rounded-none">
-                                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1.5">Primary Title</p>
-                                    <p className="text-[11px] font-bold text-white mb-3 leading-tight">{videoTitle || "Unnamed Project"}</p>
-                                    <div className="pt-2 border-t border-white/[0.04]">
-                                        <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Status</p>
-                                        <p className="text-[10px] text-white/50 italic line-clamp-2">
-                                            {isApproved ? "Production Live" : "Review Stage Active"}
-                                        </p>
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-3 flex items-center gap-2">
+                                    <Type className="w-3.5 h-3.5" /> Production Info
+                                </h4>
+
+                                <div className="flex gap-1.5 mb-4">
+                                    <button
+                                        onClick={handleManualEdit}
+                                        className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 text-[8px] font-black text-white hover:bg-white/10 uppercase transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Edit3 className="w-2.5 h-2.5" /> Manual Edit
+                                    </button>
+                                    <button
+                                        onClick={handleGenerateInfo}
+                                        disabled={isGeneratingInfo}
+                                        className="flex-[2] px-4 py-1.5 bg-olleey-yellow text-[9px] font-black text-black hover:bg-olleey-yellow/90 uppercase transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:scale-[1.02] active:scale-[0.98]"
+                                    >
+                                        {isGeneratingInfo ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3 fill-current" />}
+                                        {isGeneratingInfo ? "Processing..." : "AI Generate Metadata"}
+                                    </button>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="p-3 bg-[#050505] border border-white/5 rounded-none relative group">
+                                        <div className="mb-3">
+                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1.5 flex justify-between items-center">
+                                                Primary Title
+                                                <Edit3 className="w-2.5 h-2.5 opacity-0 group-hover:opacity-40 transition-opacity" />
+                                            </p>
+                                            <p className="text-[11px] font-bold text-white leading-tight">{editedTitle || "Unnamed Project"}</p>
+                                        </div>
+                                        <div className="mb-3">
+                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1.5">Description</p>
+                                            <p className="text-[10px] text-white/40 line-clamp-2 leading-relaxed">{editedDescription}</p>
+                                        </div>
+                                        <div className="pt-2 border-t border-white/[0.04]">
+                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Current Status</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-1 h-1 rounded-full ${isApproved ? 'bg-green-500' : 'bg-olleey-yellow animate-pulse'}`} />
+                                                <p className="text-[10px] text-white/50 italic">
+                                                    {isApproved ? "Production Live" : "Review Stage Active"}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {/* Info Preview State */}
+                                    {showInfoPreview && (
+                                        <div className="p-3 bg-olleey-yellow border border-olleey-yellow rounded-none animate-in fade-in slide-in-from-top-1">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <span className="text-[9px] font-black text-black uppercase tracking-widest flex items-center gap-2">
+                                                    <Save className="w-3 h-3" /> Metadata Update
+                                                </span>
+                                                <button
+                                                    onClick={() => setShowInfoPreview(false)}
+                                                    className="text-[8px] font-black text-black/40 hover:text-black uppercase underline"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-4 mb-4">
+                                                <div>
+                                                    <label className="text-[8px] font-black text-black/60 uppercase block mb-1">Localized Title</label>
+                                                    <input
+                                                        type="text"
+                                                        value={tempTitle}
+                                                        onChange={(e) => setTempTitle(e.target.value)}
+                                                        className="w-full bg-black/10 border border-black/10 p-2 text-[11px] font-bold text-black outline-none focus:border-black/30"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[8px] font-black text-black/60 uppercase block mb-1">Localized Description</label>
+                                                    <textarea
+                                                        value={tempDescription}
+                                                        onChange={(e) => setTempDescription(e.target.value)}
+                                                        className="w-full bg-black/10 border border-black/10 p-2 text-[10px] font-medium text-black outline-none focus:border-black/30 min-h-[100px] resize-none"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                className="w-full py-2 bg-black text-white text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-colors"
+                                                onClick={() => {
+                                                    setEditedTitle(tempTitle);
+                                                    setEditedDescription(tempDescription);
+                                                    setShowInfoPreview(false);
+                                                }}
+                                            >
+                                                Commit Metadata
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

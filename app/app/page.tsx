@@ -7,7 +7,10 @@ import ActivityQueue from "@/components/ActivityQueue";
 import DashboardPage from "../DashboardPage";
 import ChannelsPage from "../ChannelsPage";
 import AccountsPage from "../AccountsPage";
-import { PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings, Plus, ChevronRight, Zap, LogOut, RefreshCw } from "lucide-react";
+import AllMediaPage from "../AllMediaPage";
+import { useVideos } from "@/lib/useVideos";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, PanelLeft, ChevronDown, Check, Youtube, Bell, User, Settings, Plus, ChevronRight, Zap, LogOut, RefreshCw, Clock, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguagesPage from "../LanguagesPage";
 import GuardrailsPage from "../GuardrailsPage";
@@ -17,7 +20,6 @@ import SettingsPage from "../SettingsPage";
 import UsagePage from "../UsagePage";
 import SupportPage from "../SupportPage";
 import ManualUploadPage from "../ManualUploadPage";
-import AllMediaPage from "../AllMediaPage";
 import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
@@ -48,6 +50,8 @@ function AppContent() {
     const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
     const [userEmail, setUserEmail] = useState<string>();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
 
     // Persist sidebar state
     useEffect(() => {
@@ -64,6 +68,7 @@ function AppContent() {
     // Use the dashboard hook for data - only enabled when authenticated
     const { dashboard, loading: dashboardLoading } = useDashboard({ enabled: isAuthenticated });
     const { projects, selectedProject, setSelectedProject } = useProject();
+    const { videos } = useVideos({ project_id: selectedProject?.id }, { enabled: isAuthenticated });
 
     const projectAvatars = useMemo(() => {
         const map: Record<string, string> = {};
@@ -92,6 +97,26 @@ function AppContent() {
     const cardClass = theme === "light" ? "bg-light-card" : "bg-dark-card";
     const isDark = theme === "dark";
     const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
+
+    const filteredSearchResults = useMemo(() => {
+        if (!searchQuery.trim()) return { videos: [], jobs: [] };
+
+        const query = searchQuery.toLowerCase();
+
+        const matchingVideos = videos.filter(v =>
+            v.title.toLowerCase().includes(query) ||
+            v.channel_name?.toLowerCase().includes(query)
+        ).slice(0, 5);
+
+        const matchingJobs = (dashboard?.recent_jobs || []).filter(j => {
+            const video = videos.find(v => v.video_id === j.source_video_id);
+            return (video?.title.toLowerCase().includes(query) ||
+                j.job_id.toLowerCase().includes(query) ||
+                j.source_video_id.toLowerCase().includes(query));
+        }).slice(0, 3);
+
+        return { videos: matchingVideos, jobs: matchingJobs };
+    }, [searchQuery, videos, dashboard?.recent_jobs]);
 
     const getChannelAvatar = (channelId?: string) => {
         if (!channelId) return undefined;
@@ -318,192 +343,279 @@ function AppContent() {
                     <div className={`flex-1 flex flex-col overflow-hidden ${bgClass} relative min-w-0`}>
 
                         {/* Breadcrumb Header */}
-                        <header className={`flex items-center h-14 px-4 border-b ${isDark ? 'border-dark-border bg-dark-bg/80' : 'border-light-border bg-white/80'} shrink-0 gap-2 backdrop-blur-md z-20`}>
+                        <header className={`flex items-center h-16 px-6 border-b ${isDark ? 'border-white/5 bg-dark-bg/60' : 'border-gray-200 bg-white/60'} shrink-0 gap-4 backdrop-blur-xl z-20 sticky top-0`}>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className={`h-9 w-9 rounded-none transition-all ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10' : `${textClass} hover:bg-white/5`}`}
+                                className={`h-10 w-10 transition-all rounded-xl ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10 ring-1 ring-olleey-yellow/20' : `${textClass} hover:bg-white/5`}`}
                             >
                                 <PanelLeft className="h-4 w-4" />
                             </Button>
 
                             {/* Breadcrumbs */}
-                            <div className="flex items-center gap-1 sm:gap-2 ml-2 overflow-hidden">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <button
-                                            className={`flex items-center gap-1 text-sm font-medium ${textSecondaryClass} hover:${textClass} transition-colors truncate max-w-[150px] outline-none group`}
-                                            title={selectedProject?.name || "All Projects"}
-                                        >
-                                            <span className="truncate">{selectedProject?.name || "All Projects"}</span>
-                                            <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
-                                        </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-none shadow-xl overflow-hidden z-[100]`}>
-                                        <DropdownMenuLabel className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest px-3 py-2`}>
-                                            Select Project
-                                        </DropdownMenuLabel>
-                                        <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
-                                        {projects.map((project) => (
-                                            <DropdownMenuItem
-                                                key={project.id}
-                                                onClick={() => setSelectedProject(project)}
-                                                className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${selectedProject?.id === project.id
-                                                    ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/5 text-olleey-yellow font-bold')
-                                                    : (isDark ? 'text-dark-textSecondary hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-black')
-                                                    }`}
+                            <div className="flex items-center gap-3 overflow-hidden py-1">
+                                <div className={`flex items-center gap-3 px-3 py-1.5 rounded-xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-gray-50 border-gray-100'} transition-all hover:border-white/10 group`}>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <button
+                                                className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} hover:${textClass} transition-colors truncate max-w-[180px] outline-none font-mono`}
+                                                title={selectedProject?.name || "All Projects"}
                                             >
-                                                <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === project.id ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-transparent'}`} />
-                                                <span className="truncate text-sm">{project.name}</span>
+                                                <div className={`w-2 h-2 rounded-full ${selectedProject ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'bg-white/20'}`} />
+                                                <span className="truncate">{selectedProject?.name || "Standard Project"}</span>
+                                                <ChevronDown className="h-3 w-3 opacity-30 group-hover:opacity-100 transition-opacity shrink-0" />
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start" className={`${isDark ? 'bg-[#0f0f0f]/95 backdrop-blur-xl border-white/5' : 'bg-white border-gray-200'} w-64 p-2 rounded-2xl shadow-2xl overflow-hidden z-[100] border`}>
+                                            <DropdownMenuLabel className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-[0.25em] px-3 py-3 font-mono opacity-50`}>
+                                                Project Directory
+                                            </DropdownMenuLabel>
+                                            <div className="space-y-1">
+                                                {projects.map((project) => (
+                                                    <DropdownMenuItem
+                                                        key={project.id}
+                                                        onClick={() => setSelectedProject(project)}
+                                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${selectedProject?.id === project.id
+                                                            ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/5 text-olleey-yellow')
+                                                            : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-black')
+                                                            }`}
+                                                    >
+                                                        <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === project.id ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`} />
+                                                        <span className="truncate text-xs font-bold font-mono tracking-tight">{project.name}</span>
+                                                        {selectedProject?.id === project.id && <Check className="ml-auto w-3.5 h-3.5 text-olleey-yellow" />}
+                                                    </DropdownMenuItem>
+                                                ))}
+                                            </div>
+                                            <DropdownMenuSeparator className={`my-2 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                            <DropdownMenuItem
+                                                onClick={() => setIsCreateProjectModalOpen(true)}
+                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer ${isDark ? 'text-olleey-yellow hover:bg-olleey-yellow/10' : 'text-olleey-yellow hover:bg-olleey-yellow/5'} font-black transition-all group/new`}
+                                            >
+                                                <Plus className="w-4 h-4 group-hover/new:rotate-90 transition-transform" />
+                                                <span className="text-[10px] uppercase tracking-widest font-mono">Create New Instance</span>
                                             </DropdownMenuItem>
-                                        ))}
-                                        <DropdownMenuItem
-                                            onClick={() => setIsCreateProjectModalOpen(true)}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer ${isDark ? 'text-olleey-yellow hover:bg-olleey-yellow/10' : 'text-olleey-yellow hover:bg-olleey-yellow/5'} font-bold transition-colors`}
-                                        >
-                                            <Plus className="w-3.5 h-3.5" />
-                                            <span className="text-sm">New Project</span>
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
 
-                                <ChevronRight className={`h-3 w-3 ${textSecondaryClass} opacity-40 shrink-0`} />
+                                    <div className="h-3 w-px bg-white/10 hidden sm:block" />
 
-                                <button
-                                    className={`text-sm sm:text-base font-bold ${textClass} truncate cursor-default transition-opacity`}
-                                >
-                                    {currentPage}
-                                </button>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] font-mono ${textClass} opacity-90`}>
+                                            {currentPage}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Search Bar - Quick Command Center */}
                             <div className="hidden md:flex flex-1 max-w-md mx-6 relative group">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10">
-                                    <svg className={`h-4 w-4 ${textSecondaryClass} group-focus-within:text-olleey-yellow transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                    <Search className={`h-3.5 w-3.5 ${textSecondaryClass} group-focus-within:text-olleey-yellow transition-colors opacity-50`} />
                                 </div>
                                 <input
                                     type="text"
-                                    placeholder="Search videos, workflows or help..."
-                                    className={`block w-full pl-10 pr-12 py-2 text-sm border-0 ${isDark ? 'bg-white/5 text-white placeholder-white/20' : 'bg-gray-100 text-black placeholder-gray-400'} rounded-xl focus:ring-1 focus:ring-olleey-yellow focus:bg-olleey-yellow/[0.03] outline-none transition-all duration-300`}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onFocus={() => setIsSearchFocused(true)}
+                                    onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                                    placeholder="Search library, jobs or documentation..."
+                                    className={`block w-full pl-11 pr-12 py-2.5 text-xs border ${isDark ? 'bg-white/[0.03] border-white/5 text-white placeholder-white/20' : 'bg-gray-100 border-gray-200 text-black placeholder-gray-400'} rounded-xl focus:ring-0 focus:border-olleey-yellow/30 focus:bg-olleey-yellow/[0.02] outline-none transition-all duration-300 font-mono`}
                                 />
                                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <kbd className={`hidden lg:inline-flex items-center px-1.5 py-0.5 rounded border ${isDark ? 'border-white/10 bg-white/5 text-white/40' : 'border-gray-200 bg-white text-gray-400'} text-[10px] font-bold tracking-tighter`}>
+                                    <kbd className={`hidden lg:inline-flex items-center px-2 py-1 rounded-lg border ${isDark ? 'border-white/10 bg-white/5 text-white/30' : 'border-gray-200 bg-white text-gray-400'} text-[9px] font-black tracking-tighter font-mono`}>
                                         ⌘K
                                     </kbd>
                                 </div>
+
+                                {/* Search Results Overlay */}
+                                <AnimatePresence>
+                                    {(isSearchFocused && searchQuery.trim().length > 0) && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            className={`absolute top-full left-0 right-0 mt-2 p-2 rounded-2xl border ${isDark ? 'bg-[#121212]/95 border-white/5 shadow-2xl backdrop-blur-2xl' : 'bg-white border-gray-200 shadow-xl'} z-[110] overflow-hidden max-h-[400px] overflow-y-auto`}
+                                        >
+                                            {filteredSearchResults.videos.length === 0 && filteredSearchResults.jobs.length === 0 ? (
+                                                <div className="p-8 text-center">
+                                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
+                                                        <Search className="w-5 h-5 opacity-20" />
+                                                    </div>
+                                                    <p className={`text-[10px] font-black uppercase tracking-widest ${textSecondaryClass}`}>No matching records found</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4 p-2">
+                                                    {filteredSearchResults.jobs.length > 0 && (
+                                                        <div>
+                                                            <div className={`px-2 mb-2 text-[9px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} opacity-50 font-mono`}>Active Processes</div>
+                                                            <div className="space-y-1">
+                                                                {filteredSearchResults.jobs.map(job => {
+                                                                    const video = videos.find(v => v.video_id === job.source_video_id);
+                                                                    return (
+                                                                        <button
+                                                                            key={job.job_id}
+                                                                            onClick={() => {
+                                                                                setCurrentPage("Workflows");
+                                                                                setSearchQuery("");
+                                                                            }}
+                                                                            className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'} text-left group`}
+                                                                        >
+                                                                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                                                                                <Clock className="w-4 h-4 text-blue-500 animate-spin" />
+                                                                            </div>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-black'}`}>{video?.title || 'Unknown Video'}</span>
+                                                                                    <span className={`text-[8px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-500 font-black uppercase tracking-tighter`}>{job.status}</span>
+                                                                                </div>
+                                                                                <div className={`text-[9px] ${isDark ? 'text-white/40' : 'text-black/40'} font-mono truncate`}>{job.job_id}</div>
+                                                                            </div>
+                                                                            <ExternalLink className={`w-3.5 h-3.5 ${isDark ? 'text-white/40' : 'text-black/40'} opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap`} />
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {filteredSearchResults.videos.length > 0 && (
+                                                        <div>
+                                                            <div className={`px-2 mb-2 text-[9px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} opacity-50 font-mono`}>Media Library</div>
+                                                            <div className="space-y-1">
+                                                                {filteredSearchResults.videos.map(video => (
+                                                                    <button
+                                                                        key={video.video_id}
+                                                                        onClick={() => {
+                                                                            // Handle video selection - maybe go to all media with filter or specific page
+                                                                            setCurrentPage("All Media");
+                                                                            setSearchQuery("");
+                                                                        }}
+                                                                        className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'} text-left group`}
+                                                                    >
+                                                                        {video.thumbnail_url ? (
+                                                                            <div className={`w-12 aspect-video ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-md overflow-hidden shrink-0`}>
+                                                                                <img src={video.thumbnail_url} className="w-full h-full object-cover" alt="" />
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className={`w-12 aspect-video ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-md flex items-center justify-center shrink-0`}>
+                                                                                <Youtube className="w-4 h-4 text-olleey-yellow" />
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-black'}`}>{video.title}</div>
+                                                                            <div className={`text-[9px] ${isDark ? 'text-white/40' : 'text-black/40'} font-mono truncate flex items-center gap-2`}>
+                                                                                {video.channel_name}
+                                                                                {video.video_type === 'translated' && <span className="text-olleey-yellow">● Translated</span>}
+                                                                            </div>
+                                                                        </div>
+                                                                        <ExternalLink className={`w-3.5 h-3.5 ${isDark ? 'text-white/40' : 'text-black/40'} opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap`} />
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
 
-                            <div className="ml-auto flex items-center gap-1 sm:gap-2">
+                            <div className="ml-auto flex items-center gap-2">
                                 {/* Manual Process Button */}
                                 <Button
                                     onClick={() => {
-                                        // Direct navigation for speed
                                         window.location.href = "/app?page=Manual Upload";
                                     }}
-                                    className={`h-9 px-4 gap-2 bg-olleey-yellow hover:bg-white text-black font-black uppercase tracking-wider text-[10px] rounded-none transition-all shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] mr-2`}
+                                    className={`h-10 px-5 gap-2.5 bg-olleey-yellow hover:bg-white text-black font-black uppercase tracking-[0.15em] text-[10px] rounded-xl transition-all shadow-xl hover:shadow-olleey-yellow/20 font-mono group active:scale-95`}
                                 >
-                                    <Zap className="h-4 w-4" />
-                                    <span className="hidden md:inline">Manual Process</span>
+                                    <Zap className="h-3.5 w-3.5 fill-black group-hover:scale-125 transition-transform" />
+                                    <span className="hidden lg:inline">Initiate Process</span>
                                 </Button>
 
-                                {/* Add Channel Button - Compact */}
+                                {/* Add Channel Button */}
                                 <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => router.push("/connections/add")}
-                                    className={`h-9 px-3 gap-2 ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-olleey-yellow' : 'bg-white border-gray-200 text-black hover:border-olleey-yellow'} transition-all rounded-none group`}
-                                    title="Add Channel"
+                                    className={`h-10 px-4 gap-2.5 ${isDark ? 'bg-white/[0.02] border-white/10 text-white hover:bg-white/5 hover:border-olleey-yellow/50' : 'bg-white border-gray-200 text-black hover:border-olleey-yellow/50'} transition-all rounded-xl group font-mono active:scale-95`}
                                 >
                                     <div className="relative">
                                         <Youtube className="h-4 w-4 text-olleey-yellow" />
-                                        <div className="absolute -top-1 -right-1 bg-olleey-yellow rounded-none w-2 h-2 border border-black flex items-center justify-center">
-                                            <Plus className="h-1.5 w-1.5 text-black" />
+                                        <div className="absolute -top-1.5 -right-1.5 bg-olleey-yellow rounded-full w-2.5 h-2.5 border-2 border-dark-bg flex items-center justify-center">
+                                            <Plus className="h-1.5 w-1.5 text-dark-bg scale-[0.6]" />
                                         </div>
                                     </div>
-                                    <span className="hidden lg:inline text-[10px] font-black uppercase tracking-widest transition-colors group-hover:text-olleey-yellow">Add Connection</span>
+                                    <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest transition-colors opacity-70 group-hover:opacity-100 italic">Sync Connection</span>
                                 </Button>
 
-                                <div className={`h-4 w-[1px] ${borderClass} mx-1 hidden sm:block`} />
+                                <div className={`h-6 w-[1px] ${isDark ? 'bg-white/5' : 'bg-gray-200'} mx-2 hidden sm:block`} />
 
-                                {/* Global Refresh Button */}
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => {
-                                        window.dispatchEvent(new CustomEvent('olleey-refresh'));
-                                    }}
-                                    className={`h-9 w-9 rounded-none transition-all ${textSecondaryClass} hover:${textClass} hover:bg-white/5`}
-                                    title="Refresh Page Data"
-                                >
-                                    <RefreshCw className="h-4 w-4" />
-                                </Button>
-
-                                {/* Notifications Link */}
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setCurrentPage("Notifications")}
-                                    className={`h-9 w-9 rounded-none transition-all ${currentPage === "Notifications" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
-                                    title="Notifications"
-                                >
-                                    <Bell className="h-4 w-4" />
-                                </Button>
-
-                                {/* Settings Link */}
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setCurrentPage("Settings")}
-                                    className={`h-9 w-9 rounded-none transition-all ${currentPage === "Settings" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
-                                    title="Settings"
-                                >
-                                    <Settings className="h-4 w-4" />
-                                </Button>
-
-                                {/* Account/User Dropdown */}
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
+                                {/* Control Group */}
+                                <div className="flex items-center gap-1">
+                                    {[
+                                        { icon: RefreshCw, title: "Refresh", onClick: () => window.dispatchEvent(new CustomEvent('olleey-refresh')) },
+                                        { icon: Bell, title: "Alerts", onClick: () => setCurrentPage("Notifications"), active: currentPage === "Notifications" },
+                                        { icon: Settings, title: "Config", onClick: () => setCurrentPage("Settings"), active: currentPage === "Settings" }
+                                    ].map((ctrl, i) => (
                                         <Button
+                                            key={i}
                                             variant="ghost"
                                             size="icon"
-                                            className={`h-9 w-9 rounded-none transition-all ${currentPage === "Accounts" ? 'bg-olleey-yellow/10 text-olleey-yellow' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
-                                            title="Account"
+                                            onClick={ctrl.onClick}
+                                            className={`h-10 w-10 rounded-xl transition-all ${ctrl.active ? 'bg-olleey-yellow/10 text-olleey-yellow ring-1 ring-olleey-yellow/20' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
+                                            title={ctrl.title}
                                         >
-                                            <User className="h-4 w-4" />
+                                            <ctrl.icon className={`h-4 w-4 ${ctrl.icon === RefreshCw ? 'hover:rotate-180 transition-transform duration-500' : ''}`} />
                                         </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className={`${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-gray-200'} w-56 p-1 rounded-none shadow-xl overflow-hidden z-[100]`}>
-                                        <DropdownMenuLabel className={`text-[10px] font-bold ${textSecondaryClass} uppercase tracking-widest px-3 py-2 text-white/40`}>
-                                            Manage Account
-                                        </DropdownMenuLabel>
-                                        <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
-                                        <DropdownMenuItem
-                                            onClick={() => setCurrentPage("Accounts")}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
-                                        >
-                                            <User className="w-4 h-4 text-olleey-yellow" />
-                                            <span className="text-sm">Account Page</span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() => setCurrentPage("Usage")}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer transition-colors ${isDark ? 'text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
-                                        >
-                                            <Zap className="w-4 h-4 text-olleey-yellow" />
-                                            <span className="text-sm">See Usage</span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator className={`${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
-                                        <DropdownMenuItem
-                                            onClick={handleLogout}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer text-red-500 hover:bg-red-500/10 transition-colors`}
-                                        >
-                                            <LogOut className="w-4 h-4" />
-                                            <span className="text-sm font-bold">Sign Out</span>
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                    ))}
+
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className={`h-10 w-10 rounded-xl transition-all ${currentPage === "Accounts" ? 'bg-olleey-yellow/10 text-olleey-yellow ring-1 ring-olleey-yellow/20' : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`}`}
+                                                title="Environment"
+                                            >
+                                                <User className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className={`${isDark ? 'bg-[#0f0f0f]/95 backdrop-blur-xl border-white/5' : 'bg-white border-gray-200'} w-64 p-2 rounded-2xl shadow-2xl overflow-hidden z-[100] border`}>
+                                            <DropdownMenuLabel className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-[0.25em] px-3 py-3 font-mono opacity-50`}>
+                                                User Context
+                                            </DropdownMenuLabel>
+                                            <div className="space-y-1">
+                                                <DropdownMenuItem
+                                                    onClick={() => setCurrentPage("Accounts")}
+                                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${isDark ? 'text-white/80 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                >
+                                                    <div className="w-8 h-8 rounded-full bg-olleey-yellow/20 flex items-center justify-center text-olleey-yellow text-[10px] font-black">US</div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-bold leading-none mb-1">Account Dashboard</span>
+                                                        <span className="text-[9px] opacity-40 uppercase tracking-tighter">View personal metrics</span>
+                                                    </div>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => setCurrentPage("Usage")}
+                                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${isDark ? 'text-white/80 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                >
+                                                    <Zap className="w-4 h-4 text-olleey-yellow" />
+                                                    <span className="text-xs font-bold">Resource Usage</span>
+                                                </DropdownMenuItem>
+                                            </div>
+                                            <DropdownMenuSeparator className={`my-2 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                            <DropdownMenuItem
+                                                onClick={handleLogout}
+                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-red-400 hover:bg-red-500/10 transition-all group/out`}
+                                            >
+                                                <LogOut className="w-4 h-4 group-hover/out:-translate-x-1 transition-transform" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest font-mono">Terminate Session</span>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
                             </div>
                         </header>
 
