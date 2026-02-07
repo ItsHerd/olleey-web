@@ -287,20 +287,6 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* Support Button - Bottom Anchor */}
-      <div className={`mt-auto px-2 sm:px-3 pb-3 sm:pb-4`}>
-        <button
-          onClick={() => onNavigate("Support")}
-          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all ${cardClass} border ${borderClass} hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow group`}
-        >
-          <span className={`${isExpanded ? "" : "mx-auto"} flex-shrink-0 transition-colors`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-white">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          </span>
-          {isExpanded && <span className="font-bold truncate text-white">Support Center</span>}
-        </button>
-      </div>
     </aside>
   );
 }

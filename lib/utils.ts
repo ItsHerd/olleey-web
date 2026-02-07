@@ -32,23 +32,27 @@ export function getRelativeTime(timestamp: string) {
 }
 
 /**
- * Returns a stable random animated animal avatar URL for a given seed
+ * Returns a clean, professional placeholder avatar URL using DiceBear API
+ * Creates unique, consistent avatars based on the seed string
  */
 export function getAnimalAvatar(seed: string): string {
-  const avatars = [
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7abKhOpu0NPGHXYc/giphy.gif", // Bunny
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/l41lTfuxmFALRjPyg/giphy.gif", // Cat
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxofQH9CY6I/giphy.gif", // Dog
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/l0HlxUqA2iP17n6BW/giphy.gif", // Axolotl
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKv6f5XpW6W6W6M/giphy.gif", // Sloth
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4Z3R4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKSjP305c4z7u0U/giphy.gif", // Panda
-  ];
+  // Use DiceBear's shapes style for a clean, modern look
+  // The seed ensures the same ID always gets the same avatar
+  const encodedSeed = encodeURIComponent(seed);
+  return `https://api.dicebear.com/7.x/shapes/svg?seed=${encodedSeed}&backgroundColor=0a0a0a&shape1Color=fbbf24&shape2Color=3b82f6&shape3Color=22c55e`;
+}
 
-  // Deterministic random index based on seed string
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % avatars.length;
-  return avatars[index];
+/**
+ * Generates initials-based avatar as an alternative fallback
+ */
+export function getInitialsAvatar(name: string): string {
+  const initials = name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+  
+  const encodedInitials = encodeURIComponent(initials);
+  return `https://api.dicebear.com/7.x/initials/svg?seed=${encodedInitials}&backgroundColor=1a1a1a&textColor=fbbf24&fontSize=40`;
 }

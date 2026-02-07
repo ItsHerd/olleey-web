@@ -1,5 +1,5 @@
 "use client";
-import { getAnimalAvatar } from "@/lib/utils";
+import { getAnimalAvatar, getInitialsAvatar } from "@/lib/utils";
 
 import { useState, useEffect, useMemo } from "react";
 import { youtubeAPI, channelsAPI, type MasterNode, type LanguageChannel } from "@/lib/api";
@@ -390,7 +390,7 @@ export default function ChannelsPage() {
                             <div className="flex items-center gap-3">
                               <div className="relative">
                                 <img
-                                  src={item.avatar || getAnimalAvatar(item.id)}
+                                  src={item.avatar || getInitialsAvatar(item.name || item.id)}
                                   alt={item.name}
                                   className={`w-10 h-10 rounded-full object-cover border ${borderClass} bg-white/5 opacity-90 hover:opacity-100 transition-opacity`}
                                 />
