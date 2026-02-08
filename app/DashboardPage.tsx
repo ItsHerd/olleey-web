@@ -260,9 +260,13 @@ export default function DashboardPage() {
           );
 
           if (activeJob) {
+            // Map backend statuses to frontend display statuses
+            // "waiting_approval" and "ready" mean the video is ready for review (draft status)
+            const isDraftStatus = activeJob.status === "waiting_approval" || activeJob.status === "ready";
+
             localizations[lang] = {
-              status: activeJob.status === "waiting_approval" ? "draft" : "processing",
-              progress: activeJob.progress || 0,
+              status: isDraftStatus ? "draft" : "processing",
+              progress: activeJob.progress || (isDraftStatus ? 100 : 0),
               job_id: activeJob.job_id,
               video_url: (activeJob as any).video_url,
             };
@@ -362,7 +366,6 @@ export default function DashboardPage() {
         return;
       } else if (demoState?.status === 'draft') {
         // Open quick check modal (Review Hub) for draft videos in demo mode
-        const fakeText = getFakeLocalizedText(langCode || "es");
         openReview({
           videoId: video.video_id,
           languageCode: langCode || 'es',

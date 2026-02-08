@@ -247,7 +247,7 @@ export default function NotificationsPage() {
       />
 
       {/* Narrative Header */}
-      <div className={`relative px-6 sm:px-10 py-16 border-b ${borderClass} overflow-hidden`}>
+      <div className={`relative px-6 sm:px-10 py-10 border-b ${borderClass} overflow-hidden`}>
         <div className="absolute inset-0 z-0">
           <img
             src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2000"
@@ -264,38 +264,32 @@ export default function NotificationsPage() {
           animate={{ opacity: 1, x: 0 }}
           className="relative z-10 max-w-5xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-8"
         >
-          <div className="space-y-4">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-olleey-yellow/10 border border-olleey-yellow/20 flex items-center justify-center">
-                <Bell className="w-4 h-4 text-olleey-yellow" />
+              <div className="w-6 h-6 rounded-lg bg-olleey-yellow/10 border border-olleey-yellow/20 flex items-center justify-center">
+                <Bell className="w-3 h-3 text-olleey-yellow" />
               </div>
-              <span className="text-[10px] uppercase font-black tracking-[0.3em] text-olleey-yellow font-mono">Transmission Hub</span>
+              <span className="text-[9px] uppercase font-black tracking-[0.3em] text-olleey-yellow font-mono">Transmission Hub</span>
             </div>
-            <h1 className={`text-4xl md:text-5xl font-300 ${textClass} tracking-tight leading-tight`}>
+            <h1 className={`text-2xl md:text-3xl font-300 ${textClass} tracking-tight leading-tight`}>
               Signal <span className="font-bold">Log</span>
             </h1>
-            <p className={`text-base ${textSecondaryClass} max-w-lg leading-relaxed`}>
+            <p className={`text-sm ${textSecondaryClass} max-w-lg leading-relaxed`}>
               Real-time telemetry from the global neural network. Monitor asset localization and system integrity.
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {unreadCount > 0 && (
               <Button
                 onClick={markAllAsRead}
                 variant="ghost"
-                className="rounded-2xl bg-white/5 border border-white/5 text-[10px] font-black uppercase tracking-widest px-6 py-6 hover:bg-white/10 transition-all flex items-center gap-2"
+                className="rounded-xl bg-white/5 border border-white/5 text-[9px] font-black uppercase tracking-widest px-4 py-4 h-auto hover:bg-white/10 transition-all flex items-center gap-2"
               >
                 <Check className="w-3 h-3" />
                 Clear Matrix
               </Button>
             )}
-            <Button
-              variant="ghost"
-              className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 p-0"
-            >
-              <Settings className="w-4 h-4 text-white/40" />
-            </Button>
           </div>
         </motion.div>
       </div>

@@ -2,26 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-    ArrowLeft,
-    ChevronLeft,
-    Play,
-    Share2,
     Globe,
-    Eye,
     CheckCircle2,
-    Youtube,
     ExternalLink,
     Copy,
-    MoreHorizontal,
     Monitor,
     Layout,
-    CheckCircle,
     Zap,
     Download,
     RefreshCw,
-    Languages
+    Languages,
+    ChevronLeft,
+    Youtube
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,8 +35,19 @@ export default function PreviewPage() {
 
     // Fetch full video data to get all localizations
     const { selectedProject } = useProject();
-    const { videos } = useVideos({ project_id: selectedProject?.id });
+    const { videos, refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id });
     const currentVideo = videos.find(v => v.video_id === quickCheckState.videoId);
+
+    // Listen for global refresh events
+    useEffect(() => {
+        const handleRefresh = async () => {
+            console.log('[PreviewPage] Refresh event received');
+            await refetchVideos();
+        };
+
+        window.addEventListener('olleey-refresh', handleRefresh);
+        return () => window.removeEventListener('olleey-refresh', handleRefresh);
+    }, [refetchVideos]);
 
     const [viewMode, setViewMode] = useState<'dubbed' | 'original'>('dubbed');
 
@@ -111,35 +116,20 @@ export default function PreviewPage() {
 
     return (
         <div className={`w-full h-full flex flex-col overflow-hidden ${bgClass} ${textClass} selection:bg-olleey-yellow selection:text-black transition-colors duration-500`}>
-            {/* Refined Command Header */}
-            <header className={`h-16 border-b ${borderClass} ${isDark ? "bg-[#0a0a0b]/80" : "bg-white/80"} backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-50 sticky top-0`}>
-                <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => router.back()}
-                        className={`w-9 h-9 ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"} rounded-xl transition-all`}
-                    >
-                        <ChevronLeft className={`w-5 h-5 ${textSecondaryClass}`} />
-                    </Button>
+            {/* Action Toolbar */}
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${borderClass} shrink-0`}>
+                <div className="flex items-center gap-3 overflow-hidden">
+                    <h1 className="text-lg font-bold tracking-tight truncate max-w-[180px] sm:max-w-md">
+                        {videoTitle || "Unnamed_Asset"}
+                    </h1>
 
-                    <div className={`h-4 w-px ${isDark ? "bg-white/10" : "bg-gray-200"} mx-1`} />
-
-                    <div className="flex items-center gap-2.5 overflow-hidden">
-                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-white/20" : "text-black/30"} shrink-0`}>Preview</span>
-                        <ChevronLeft className="w-3 h-3 rotate-180 opacity-20 shrink-0" />
-                        <h1 className="text-sm font-bold tracking-tight truncate max-w-[180px] sm:max-w-md">
-                            {videoTitle || "Unnamed_Asset"}
-                        </h1>
-
-                        {viewMode === 'original' ? (
-                            <Badge className={`${isDark ? "bg-white/10 text-white" : "bg-gray-100 text-black"} border-none text-[7px] h-4 font-black uppercase rounded-full px-2 tracking-tighter`}>Source</Badge>
-                        ) : isApproved ? (
-                            <Badge className="bg-green-500/10 text-green-500 border-none text-[7px] h-4 font-black uppercase rounded-full px-2 tracking-tighter">Live</Badge>
-                        ) : (
-                            <Badge className="bg-blue-500/10 text-blue-500 border-none text-[7px] h-4 font-black uppercase rounded-full px-2 tracking-tighter">Ready</Badge>
-                        )}
-                    </div>
+                    {viewMode === 'original' ? (
+                        <Badge className={`${isDark ? "bg-white/10 text-white" : "bg-gray-100 text-black"} border-none text-[7px] h-4 font-black uppercase rounded-full px-2 tracking-tighter`}>Source</Badge>
+                    ) : isApproved ? (
+                        <Badge className="bg-green-500/10 text-green-500 border-none text-[7px] h-4 font-black uppercase rounded-full px-2 tracking-tighter">Live</Badge>
+                    ) : (
+                        <Badge className="bg-blue-500/10 text-blue-500 border-none text-[7px] h-4 font-black uppercase rounded-full px-2 tracking-tighter">Ready</Badge>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -201,7 +191,7 @@ export default function PreviewPage() {
                         {isPublishing ? "Processing" : (isApproved ? "Update" : "Launch")}
                     </Button>
                 </div>
-            </header>
+            </div>
 
             <div className="flex-1 flex overflow-hidden">
                 {/* Main Viewport */}

@@ -5,6 +5,7 @@ import { Layers } from "lucide-react";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { getRelativeTime } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from "@/lib/api";
 
 interface ReleasedMediaProps {
     filteredVideos: any[];
@@ -22,6 +23,13 @@ export function ReleasedMedia({
     textSecondaryClass,
     onNavigate
 }: ReleasedMediaProps) {
+    // Helper to construct full URL for storage paths
+    const getFullUrl = (url: string | undefined) => {
+        if (!url) return undefined;
+        if (url.startsWith('http')) return url;
+        return `${API_BASE_URL}${url}`;
+    };
+
     const liveVideos = filteredVideos.filter(v =>
         Object.values(v.localizations || {}).some((l: any) => l.status === "live")
     );
@@ -58,7 +66,7 @@ export function ReleasedMedia({
 
                                 <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/40 border border-white/5 mb-3 group-hover:scale-[1.02] transition-transform duration-500">
                                     <img
-                                        src={video.thumbnail_url}
+                                        src={getFullUrl(video.thumbnail_url) || video.thumbnail_url}
                                         className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500"
                                         alt=""
                                     />

@@ -58,20 +58,24 @@ export function ReviewProvider({ children }: { children: React.ReactNode }) {
     });
 
     const openReview = useCallback((params: any) => {
+        // Don't navigate if status is processing - these items are not clickable
+        const processingStatuses = ['queued', 'processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending', 'uploading'];
+
+        if (processingStatuses.includes(params.status || '')) {
+            console.log('[ReviewContext] Ignoring click on processing item');
+            return;
+        }
+
         setQuickCheckState({
             isOpen: true,
             ...params,
         });
 
         // Navigate based on status state
-        const processingStatuses = ['queued', 'processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending', 'uploading'];
-
         if (params.isApproved || params.status === 'live' || params.status === 'ready') {
             router.push(`/app?page=Preview&video_id=${params.videoId}&lang=${params.languageCode || 'es'}`, { scroll: false });
-        } else if (processingStatuses.includes(params.status || '')) {
-            router.push(`/app?page=Processing&video_id=${params.videoId}&lang=${params.languageCode || 'es'}`, { scroll: false });
         } else {
-            router.push(`/app?page=Review Hub&video_id=${params.videoId}&lang=${params.languageCode || 'es'}`, { scroll: false });
+            router.push(`/workflows/review/${params.videoId}?lang=${params.languageCode || 'es'}`, { scroll: false });
         }
     }, [router]);
 

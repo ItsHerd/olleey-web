@@ -41,7 +41,7 @@ import {
     ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Job, youtubeAPI, MasterNode } from "@/lib/api";
+import { Job, youtubeAPI, MasterNode, API_BASE_URL } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useVideos } from "@/lib/useVideos";
 import { getLanguageFlag, LANGUAGE_OPTIONS } from "@/lib/languages";
@@ -88,6 +88,13 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
 
     // Sub-row styling
     const subRowBg = isDark ? "bg-white/[0.01]" : "bg-gray-50/50";
+
+    // Helper to construct full URL for storage paths
+    const getFullUrl = (url: string | undefined) => {
+        if (!url) return undefined;
+        if (url.startsWith('http')) return url;
+        return `${API_BASE_URL}${url}`;
+    };
 
     // Load channel graph for language lookup
     useEffect(() => {
@@ -257,7 +264,7 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                     <div className="flex items-center gap-6 py-4 pl-4">
                         <div className={`relative w-28 aspect-video rounded-xl overflow-hidden ${isDark ? "bg-white/5" : "bg-gray-100"} flex-shrink-0 shadow-xl border border-white/5`}>
                             {video?.thumbnail_url ? (
-                                <img src={video.thumbnail_url} alt="" className="w-full h-full object-cover grayscale-[0.3] hover:grayscale-0 transition-all duration-700" />
+                                <img src={getFullUrl(video.thumbnail_url) || video.thumbnail_url} alt="" className="w-full h-full object-cover grayscale-[0.3] hover:grayscale-0 transition-all duration-700" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                     <PlayCircle className={`h-6 w-6 text-white/20`} />
@@ -397,24 +404,31 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                                                                 {/* Spacer for the expander column width (80px) */}
                                                                 <div className="flex-shrink-0 w-[80px] relative h-full">
                                                                     <div className="absolute top-0 bottom-0 left-[2.5rem] w-px bg-white/5 group-hover:bg-olleey-yellow/20 transition-colors" />
-                                                                    <div className="absolute top-[50%] left-[2.5rem] w-10 h-px bg-white/5 group-hover:bg-olleey-yellow/20 transition-colors" />
+                                                                    <div className="absolute top-[50%] left-[2.5rem] w-8 h-px bg-white/5 group-hover:bg-olleey-yellow/20 transition-colors" />
                                                                 </div>
 
                                                                 {/* Deployment Node */}
-                                                                <div className="pl-10 py-5">
-                                                                    <div className={`flex items-center gap-4 px-5 py-3 rounded-2xl border transition-all duration-500 ${isDark ? 'bg-black/40 border-white/5 hover:border-olleey-yellow/20' : 'bg-white border-gray-100 shadow-sm'} group-hover:translate-x-1`}>
-                                                                        <div className="flex items-center gap-2 opacity-30 grayscale transition-all group-hover:grayscale-0 group-hover:opacity-100">
-                                                                            <span className="text-xl">{getLanguageFlag(sourceLang)}</span>
+                                                                <div className="pl-6 py-4">
+                                                                    <div className={`flex items-center gap-4 px-4 py-2.5 rounded-xl border transition-all duration-500 ${isDark ? 'bg-white/[0.02] border-white/5 hover:border-olleey-yellow/20' : 'bg-white border-gray-100 shadow-sm'} group-hover:translate-x-1`}>
+                                                                        <div className="flex items-center gap-2.5 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-default">
+                                                                            <span className="text-lg leading-none">{getLanguageFlag(sourceLang)}</span>
                                                                             <span className={`text-[10px] font-black uppercase tracking-widest ${textSecondaryClass}`}>{sourceLang}</span>
                                                                         </div>
 
-                                                                        <ArrowRight className={`w-4 h-4 text-white/10 group-hover:text-olleey-yellow/40 transition-colors`} />
+                                                                        <div className="flex flex-col items-center gap-0.5 px-1">
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-olleey-yellow/20" />
+                                                                            <ArrowRight className={`w-3.5 h-3.5 text-olleey-yellow/40`} />
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-olleey-yellow/20" />
+                                                                        </div>
 
-                                                                        <div className="flex items-center gap-2">
-                                                                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 shadow-lg">
-                                                                                <span className="text-xl">{getLanguageFlag(lang)}</span>
+                                                                        <div className="flex items-center gap-2.5">
+                                                                            <div className="w-7 h-7 rounded-lg bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20 shadow-lg shadow-olleey-yellow/5">
+                                                                                <span className="text-lg leading-none">{getLanguageFlag(lang)}</span>
                                                                             </div>
-                                                                            <span className={`text-[11px] font-black uppercase tracking-widest ${textClass}`}>{LANGUAGE_OPTIONS.find(l => l.code === lang)?.name || lang}</span>
+                                                                            <div className="flex flex-col">
+                                                                                <span className={`text-[10px] font-black uppercase tracking-widest ${textClass}`}>{LANGUAGE_OPTIONS.find(l => l.code === lang)?.name || lang}</span>
+                                                                                <span className="text-[8px] font-medium text-white/20 uppercase tracking-tighter">Target Channel Sync</span>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -425,20 +439,25 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
 
                                                         {/* Status Column */}
                                                         <TableCell>
-                                                            <div className="flex items-center gap-3 group/status">
-                                                                <div className={`w-2 h-2 rounded-full ${statusConfig.dotColor} ${['processing', 'waiting_approval'].includes(job.status) ? 'animate-pulse' : ''} shadow-[0_0_12px_currentColor] transition-all group-hover/status:scale-150`}></div>
+                                                            <div className="flex items-center gap-4 group/status">
+                                                                <div className="relative">
+                                                                    <div className={`w-2 h-2 rounded-full ${statusConfig.dotColor} ${['processing', 'waiting_approval'].includes(job.status) ? 'animate-pulse' : ''} shadow-[0_0_12px_currentColor]`} />
+                                                                    {['processing', 'waiting_approval'].includes(job.status) && (
+                                                                        <div className={`absolute inset-0 rounded-full ${statusConfig.dotColor} animate-ping opacity-20`} />
+                                                                    )}
+                                                                </div>
                                                                 <div className="flex flex-col">
-                                                                    <span className={`text-[11px] font-black uppercase tracking-widest ${statusConfig.className}`}>
+                                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${statusConfig.className}`}>
                                                                         {statusConfig.label}
                                                                     </span>
-                                                                    <span className="text-[9px] font-medium text-white/20 uppercase tracking-tighter">Workflow Log Index #{job.job_id.slice(0, 8)}</span>
+                                                                    <span className="text-[8px] font-mono font-medium text-white/20 uppercase tracking-tighter">IDX_{job.job_id.slice(0, 8).toUpperCase()}</span>
                                                                 </div>
                                                             </div>
                                                         </TableCell>
 
                                                         {/* Action Column */}
                                                         <TableCell>
-                                                            <div className="flex justify-end pr-8 gap-2">
+                                                            <div className="flex justify-end pr-8 gap-3">
                                                                 <Button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
@@ -447,7 +466,7 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                                                                     variant="ghost"
                                                                     size="icon"
                                                                     className={`
-                                                                        h-9 w-9 rounded-full transition-all
+                                                                        h-8 w-8 rounded-lg transition-all
                                                                         ${isDark
                                                                             ? "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white border border-white/5"
                                                                             : "bg-white text-gray-400 hover:text-gray-900 border border-gray-200"
@@ -455,7 +474,7 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                                                                     `}
                                                                     title="View Workflow Graph"
                                                                 >
-                                                                    <Layers className="w-4 h-4" />
+                                                                    <Layers className="w-3.5 h-3.5" />
                                                                 </Button>
 
                                                                 <Button
@@ -465,15 +484,15 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                                                                     }}
                                                                     variant="ghost"
                                                                     className={`
-                                                                        flex items-center gap-3 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all
+                                                                        flex items-center gap-2.5 px-5 h-8 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all
                                                                         ${isDark
-                                                                            ? "bg-white/3 text-white/40 hover:bg-olleey-yellow hover:text-black hover:scale-105 border border-white/5 hover:border-olleey-yellow/30"
+                                                                            ? "bg-olleey-yellow/5 text-olleey-yellow/60 hover:bg-olleey-yellow hover:text-black border border-olleey-yellow/10"
                                                                             : "bg-white text-gray-600 hover:text-black border border-gray-200 hover:border-gray-300 shadow-sm"
                                                                         }
                                                                         group/viewbtn
                                                                     `}
                                                                 >
-                                                                    <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover/viewbtn:scale-125" />
+                                                                    <ExternalLink className="w-3 h-3 transition-transform group-hover/viewbtn:scale-110" />
                                                                     Inspect
                                                                 </Button>
                                                             </div>

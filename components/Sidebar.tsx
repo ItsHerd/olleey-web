@@ -213,7 +213,7 @@ export default function Sidebar({
         {isExpanded ? (
           <div className="flex items-center gap-2 px-3 mt-8 mb-4">
             <div className={`h-[1px] flex-1 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`} />
-            <span className={`text-[10px] font-medium ${textSecondaryClass} uppercase tracking-wider whitespace-nowrap`}>Coming Soon</span>
+            <span className={`text-[10px] font-medium ${textSecondaryClass} uppercase tracking-wider whitespace-nowrap`}>Alpha Previews</span>
             <div className={`h-[1px] flex-1 ${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'}`} />
           </div>
         ) : (

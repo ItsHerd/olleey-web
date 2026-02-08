@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Play, Pause, AlertCircle, CheckCircle, Flag, Volume2, Maximize2, SkipBack, SkipForward, Sparkles, User, RotateCcw, Languages, Image as ImageIcon, Check, Upload, Wand2, RefreshCw, Eye, Edit3, Type, Save, ArrowLeft, Terminal, Activity, ChevronRight, Zap, Info, ShieldCheck, Monitor } from "lucide-react";
+import { X, Play, Pause, AlertCircle, CheckCircle, Flag, Volume2, Maximize2, SkipBack, SkipForward, Sparkles, User, RotateCcw, Languages, Image as ImageIcon, Check, Upload, Wand2, RefreshCw, Eye, Edit3, Type, Save, Activity, Zap, ShieldCheck } from "lucide-react";
 import { useTheme } from "@/lib/useTheme";
 import { cn } from "@/lib/utils";
 import { useReview } from "@/lib/ReviewContext";
@@ -18,7 +18,12 @@ export default function ReviewHubPage() {
     const { theme } = useTheme();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const videoIdFromUrl = searchParams.get("video_id");
+    const pathname = usePathname();
+
+    // Extract video ID from path (/workflows/review/[id]) or query params (backward compatibility)
+    const pathParts = pathname?.split('/') || [];
+    const videoIdFromPath = pathParts[3]; // /workflows/review/[id]
+    const videoIdFromUrl = videoIdFromPath || searchParams.get("video_id");
     const langFromUrl = searchParams.get("lang");
 
     const {
@@ -29,7 +34,18 @@ export default function ReviewHubPage() {
     } = useReview();
 
     const { selectedProject } = useProject();
-    const { videos, loading: videosLoading } = useVideos({ project_id: selectedProject?.id });
+    const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id });
+
+    // Listen for global refresh events
+    useEffect(() => {
+        const handleRefresh = async () => {
+            console.log('[ReviewHubPage] Refresh event received');
+            await refetchVideos();
+        };
+
+        window.addEventListener('olleey-refresh', handleRefresh);
+        return () => window.removeEventListener('olleey-refresh', handleRefresh);
+    }, [refetchVideos]);
 
     // Synchronize state with backend when video_id or lang changes in URL
     useEffect(() => {
@@ -457,7 +473,8 @@ export default function ReviewHubPage() {
     // Derived values for UI
     const progressPercent = (currentTime / duration) * 100 || 0;
 
-    if (!quickCheckState.videoId && videosLoading) {
+    // Show loading if we have a video ID from URL but data is still loading
+    if (videoIdFromUrl && (videosLoading || !quickCheckState.videoId || !quickCheckState.originalVideoUrl)) {
         return (
             <div className={`w-full h-full flex items-center justify-center ${bgClass}`}>
                 <div className="relative">
@@ -474,7 +491,8 @@ export default function ReviewHubPage() {
         );
     }
 
-    if (!quickCheckState.videoId) {
+    // Show empty state only if there's no video ID from URL at all
+    if (!videoIdFromUrl && !quickCheckState.videoId) {
         return (
             <div className={`w-full h-full flex items-center justify-center p-8 ${bgClass}`}>
                 <div className="max-w-md w-full text-center space-y-6">
@@ -498,29 +516,17 @@ export default function ReviewHubPage() {
 
     return (
         <div className={`w-full h-full flex flex-col ${bgClass} ${textClass} overflow-hidden`}>
-            {/* Header */}
-            <header className="h-20 flex items-center justify-between px-6 shrink-0 z-50">
-                <div className="flex items-center gap-6">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => router.back()}
-                        className={`w-10 h-10 ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"} rounded-full`}
-                    >
-                        <ArrowLeft className="w-5 h-5 opacity-60" />
-                    </Button>
-
-                    <div className="flex flex-col">
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-xl font-normal tracking-tight">Review Studio</h1>
-                            <Badge variant="outline" className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest ${isApproved ? "border-green-500/30 text-green-500 bg-green-500/5" : "border-olleey-yellow/30 text-olleey-yellow bg-olleey-yellow/5"}`}>
-                                {isApproved ? "Live Master" : "Quality Check"}
-                            </Badge>
-                        </div>
-                        <p className={`text-xs ${textSecondaryClass} font-medium tracking-wide opacity-60 truncate max-w-md mt-0.5`}>
-                            {videoTitle}
-                        </p>
+            {/* Action Toolbar */}
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${isDark ? 'border-white/5' : 'border-gray-200'} shrink-0`}>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <Badge variant="outline" className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest ${isApproved ? "border-green-500/30 text-green-500 bg-green-500/5" : "border-olleey-yellow/30 text-olleey-yellow bg-olleey-yellow/5"}`}>
+                            {isApproved ? "Live Master" : "Quality Check"}
+                        </Badge>
                     </div>
+                    <p className={`text-lg ${textSecondaryClass} font-bold tracking-wide opacity-90 truncate max-w-md`}>
+                        {videoTitle}
+                    </p>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -567,9 +573,9 @@ export default function ReviewHubPage() {
                         </div>
                     )}
                 </div>
-            </header>
+            </div>
 
-            <div className="flex-1 flex overflow-hidden p-6 pt-0 gap-6">
+            <div className="flex-1 flex overflow-hidden p-6 gap-6">
                 {/* Main Content Area - Video Player */}
                 <div className={`flex-1 flex flex-col relative rounded-[2.5rem] border ${borderClass} bg-[#0c0c0c] overflow-hidden shadow-2xl`}>
 

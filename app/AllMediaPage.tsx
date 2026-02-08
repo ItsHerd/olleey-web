@@ -111,6 +111,17 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   // Determine if we're in initial loading state
   const isInitialLoading = videosLoading && videos.length === 0;
 
+  // Listen for global refresh events
+  useEffect(() => {
+    const handleRefresh = async () => {
+      console.log('[AllMediaPage] Refresh event received');
+      await refetchVideos();
+    };
+
+    window.addEventListener('olleey-refresh', handleRefresh);
+    return () => window.removeEventListener('olleey-refresh', handleRefresh);
+  }, [refetchVideos]);
+
   // Auto-refetch immediately if library is empty after initial load
   useEffect(() => {
     if (!videosLoading && (!videos || videos.length === 0) && !hasAttemptedRefetch) {
@@ -176,9 +187,13 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
           );
 
           if (activeJob) {
+            // Map backend statuses to frontend display statuses
+            // "waiting_approval" and "ready" mean the video is ready for review (draft status)
+            const isDraftStatus = activeJob.status === "waiting_approval" || activeJob.status === "ready";
+
             localizations[lang] = {
-              status: activeJob.status === "waiting_approval" ? "draft" : "processing",
-              progress: activeJob.progress || 0,
+              status: isDraftStatus ? "draft" : "processing",
+              progress: activeJob.progress || (isDraftStatus ? 100 : 0),
               job_id: activeJob.job_id,
             };
           } else if (translatedLanguages.includes(lang)) {
@@ -388,10 +403,10 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
             {/* Premium Pill Tabs */}
             <div className="flex items-center gap-2 p-1 bg-white/3 rounded-full border border-white/5">
               {[
-                { id: "all", label: "Master Log" },
-                { id: "live", label: "Live Hub" },
-                { id: "draft", label: "QA Queue" },
-                { id: "processing", label: "Active Sync" }
+                { id: "all", label: "All Videos" },
+                { id: "live", label: "Published" },
+                { id: "draft", label: "Ready for Review" },
+                { id: "processing", label: "In Progress" }
               ].map(f => (
                 <button
                   key={f.id}
@@ -409,16 +424,16 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
 
           <div className="flex items-center gap-6 w-full lg:w-auto justify-between lg:justify-end">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/20">Sort Index</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/20">Sort By</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortBy)}
                 className="bg-transparent border-none text-[11px] font-black uppercase tracking-[0.1em] text-white/60 focus:ring-0 cursor-pointer hover:text-olleey-yellow transition-colors outline-none"
               >
-                <option value="date" className="bg-[#0a0a0a]">Temporal Sequence</option>
-                <option value="views" className="bg-[#0a0a0a]">Audience Impact</option>
-                <option value="title" className="bg-[#0a0a0a]">Alphanumeric</option>
-                <option value="status" className="bg-[#0a0a0a]">Runtime State</option>
+                <option value="date" className="bg-[#0a0a0a]">Date</option>
+                <option value="views" className="bg-[#0a0a0a]">Views</option>
+                <option value="title" className="bg-[#0a0a0a]">Title</option>
+                <option value="status" className="bg-[#0a0a0a]">Status</option>
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}

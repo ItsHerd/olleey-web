@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    ChevronLeft,
     Activity,
     Cpu,
     Dna,
@@ -44,7 +43,13 @@ export default function ProcessingPage() {
     const { theme } = useTheme();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const pathname = usePathname();
     const { quickCheckState } = useReview();
+
+    // Extract video ID from path (/workflows/processing/[id])
+    const pathParts = pathname?.split('/') || [];
+    const videoIdFromPath = pathParts[3]; // /workflows/processing/[id]
+    const videoIdFromUrl = videoIdFromPath || searchParams.get("video_id");
 
     const [progress, setProgress] = useState(35);
     const [activeStage, setActiveStage] = useState(1);
@@ -78,28 +83,25 @@ export default function ProcessingPage() {
     const { videoTitle, languageCode } = quickCheckState;
     const languageName = LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.name || "Spanish";
 
+    // Show loading if we have a video ID from URL but state isn't ready yet
+    if (videoIdFromUrl && !quickCheckState.videoId) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-[#0a0a0a]">
+                <LoadingPanda />
+            </div>
+        );
+    }
+
     return (
         <div className="w-full h-full flex flex-col overflow-hidden bg-[#0a0a0a] text-white selection:bg-olleey-yellow selection:text-black">
-            {/* Minimal Command Header */}
-            <header className="h-16 border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 z-50">
-                <div className="flex items-center gap-6">
-                    <button
-                        onClick={() => router.back()}
-                        className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group"
-                    >
-                        <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Abort Monitor</span>
-                    </button>
-                    <div className="h-4 w-px bg-white/10" />
-                    <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black uppercase text-olleey-yellow bg-olleey-yellow/10 px-2 py-0.5 border border-olleey-yellow/20 rounded-full">Active Processing</span>
-                            <Badge className="bg-blue-500/10 border-blue-500/20 text-blue-500 text-[8px] font-black uppercase rounded-full px-3 tracking-widest animate-pulse">Neural_Sync_Live</Badge>
-                            <h1 className="text-xs font-black uppercase tracking-tight text-white/90 truncate max-w-[300px]">
-                                {videoTitle || "Unnamed_Asset_01"}
-                            </h1>
-                        </div>
-                    </div>
+            {/* Action Toolbar */}
+            <div className="border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-6 py-3 shrink-0">
+                <div className="flex items-center gap-4">
+                    <span className="text-[10px] font-black uppercase text-olleey-yellow bg-olleey-yellow/10 px-2 py-0.5 border border-olleey-yellow/20 rounded-full">Active Processing</span>
+                    <Badge className="bg-blue-500/10 border-blue-500/20 text-blue-500 text-[8px] font-black uppercase rounded-full px-3 tracking-widest animate-pulse">Neural_Sync_Live</Badge>
+                    <h1 className="text-lg font-black uppercase tracking-tight text-white/90 truncate max-w-[300px]">
+                        {videoTitle || "Unnamed_Asset_01"}
+                    </h1>
                 </div>
 
                 <div className="flex items-center gap-6">
@@ -141,7 +143,7 @@ export default function ProcessingPage() {
                         />
                     </div>
                 </div>
-            </header>
+            </div>
 
             <div className="flex-1 flex overflow-hidden">
                 <main className="flex-1 overflow-y-auto custom-scrollbar bg-black relative p-8">

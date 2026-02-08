@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { getAnimalAvatar } from "@/lib/utils";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActivityQueue from "@/components/ActivityQueue";
 import DashboardPage from "../DashboardPage";
@@ -22,6 +22,8 @@ import ManualUploadPage from "../ManualUploadPage";
 import ReviewHubPage from "../ReviewHubPage";
 import PreviewPage from "../PreviewPage";
 import ProcessingPage from "../ProcessingPage";
+import SponsorsPage from "../SponsorsPage";
+import CommentsPage from "../CommentsPage";
 import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
@@ -47,6 +49,7 @@ function AppContent() {
     const { theme } = useTheme();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const pathname = usePathname();
     const [currentPage, setCurrentPage] = useState("Dashboard");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [onboardingComplete, setOnboardingComplete] = useState(true);
@@ -162,6 +165,23 @@ function AppContent() {
         }
     }, [searchParams]);
 
+    // Redirect old query-based URLs to new path-based URLs
+    useEffect(() => {
+        const pageParam = searchParams?.get("page");
+        const videoId = searchParams?.get("video_id");
+        const lang = searchParams?.get("lang");
+
+        if (videoId) {
+            if (pageParam === "Review Hub") {
+                const newPath = `/workflows/review/${videoId}${lang ? `?lang=${lang}` : ''}`;
+                router.replace(newPath, { scroll: false });
+            } else if (pageParam === "Processing") {
+                const newPath = `/workflows/processing/${videoId}${lang ? `?lang=${lang}` : ''}`;
+                router.replace(newPath, { scroll: false });
+            }
+        }
+    }, [searchParams, router]);
+
     const handleLogout = () => {
         authAPI.logout();
         setIsAuthenticated(false);
@@ -179,22 +199,8 @@ function AppContent() {
             case "Guardrails": return <GuardrailsPage />;
             case "Languages": return <LanguagesPage />;
             case "Notifications": return <NotificationsPage />;
-            case "Dynamic Sponsors": return (
-                <ComingSoonPage
-                    title="Dynamic Sponsors"
-                    description="Automatically swap brand segments for local sponsors in target countries."
-                    value=""
-                    features={["AI-Powered Segment Detection", "Seamless Asset Replacement", "Regional Ad-Network Integration", "Automated ROI Reporting"]}
-                />
-            );
-            case "Comment Mirroring": return (
-                <ComingSoonPage
-                    title="AI Comment Mirroring"
-                    description="Automatically translate viewer comments and your replies to maintain engagement across languages."
-                    value=""
-                    features={["Context-Aware Translation", "Sentiment Preservation", "Creator Reply Sync", "Community Health Monitoring"]}
-                />
-            );
+            case "Dynamic Sponsors": return <SponsorsPage />;
+            case "Comment Mirroring": return <CommentsPage />;
             case "Settings": return <SettingsPage />;
             case "Manual Upload": return <ManualUploadPage channelGraph={channelGraph} />;
             case "All Media": return <AllMediaPage channelGraph={channelGraph} />;
@@ -315,32 +321,45 @@ function AppContent() {
 
                                     {/* Refined Navigation Trail */}
                                     <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-gray-50 border-gray-200'} shadow-sm backdrop-blur-md`}>
-                                        {(currentPage === "Review Hub" || currentPage === "Processing") ? (
-                                            <>
-                                                <span className={`text-[9px] font-black uppercase tracking-[0.2em] font-mono ${textSecondaryClass} opacity-40 hover:opacity-100 transition-opacity cursor-default`}>
-                                                    workflows
+                                        {(() => {
+                                            // Check if we're on a workflow path
+                                            const isWorkflowPath = pathname?.startsWith('/workflows/');
+                                            const pathParts = pathname?.split('/') || [];
+                                            const workflowType = pathParts[2]; // review or processing
+                                            const videoId = pathParts[3]; // video ID
+
+                                            if (isWorkflowPath && workflowType && videoId) {
+                                                return (
+                                                    <>
+                                                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] font-mono ${textSecondaryClass} opacity-40 hover:opacity-100 transition-opacity cursor-default`}>
+                                                            workflows
+                                                        </span>
+                                                        <div className={`${isDark ? 'text-white/10' : 'text-gray-200'} mx-0.5 select-none`}>
+                                                            <span className="text-[10px] font-light">/</span>
+                                                        </div>
+                                                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] font-mono ${textSecondaryClass} opacity-40 hover:opacity-100 transition-opacity cursor-default`}>
+                                                            {workflowType}
+                                                        </span>
+                                                        <div className={`${isDark ? 'text-white/10' : 'text-gray-200'} mx-0.5 select-none`}>
+                                                            <span className="text-[10px] font-light">/</span>
+                                                        </div>
+                                                        <div className={`flex items-center gap-2 pr-1`}>
+                                                            <div className={`w-1 h-1 rounded-full bg-olleey-yellow animate-pulse shrink-0`} />
+                                                            <span className={`text-[10px] font-bold uppercase tracking-[0.1em] font-mono ${textClass} opacity-90 truncate max-w-[80px] sm:max-w-none`}>
+                                                                {videoId.slice(0, 8)}
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                );
+                                            }
+
+                                            // Fallback to currentPage for non-workflow pages
+                                            return (
+                                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] font-mono ${textClass} opacity-90`}>
+                                                    {currentPage}
                                                 </span>
-                                                <div className={`${isDark ? 'text-white/10' : 'text-gray-200'} mx-0.5 select-none`}>
-                                                    <span className="text-[10px] font-light">/</span>
-                                                </div>
-                                                <span className={`text-[9px] font-black uppercase tracking-[0.2em] font-mono ${textSecondaryClass} opacity-40 hover:opacity-100 transition-opacity cursor-default`}>
-                                                    {currentPage === "Review Hub" ? "review" : "processing"}
-                                                </span>
-                                                <div className={`${isDark ? 'text-white/10' : 'text-gray-200'} mx-0.5 select-none`}>
-                                                    <span className="text-[10px] font-light">/</span>
-                                                </div>
-                                                <div className={`flex items-center gap-2 pr-1`}>
-                                                    <div className={`w-1 h-1 rounded-full bg-olleey-yellow animate-pulse shrink-0`} />
-                                                    <span className={`text-[10px] font-bold uppercase tracking-[0.1em] font-mono ${textClass} opacity-90 truncate max-w-[80px] sm:max-w-none`}>
-                                                        {searchParams?.get("video_id")?.slice(0, 8) || "..."}
-                                                    </span>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] font-mono ${textClass} opacity-90`}>
-                                                {currentPage}
-                                            </span>
-                                        )}
+                                            );
+                                        })()}
                                     </div>
                                 </div>
 

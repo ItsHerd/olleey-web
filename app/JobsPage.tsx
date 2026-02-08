@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/lib/useTheme";
-import { jobsAPI, type Job, type JobWorkflowState } from "@/lib/api";
+import { jobsAPI, type Job, type JobWorkflowState, API_BASE_URL } from "@/lib/api";
 import { useVideos } from "@/lib/useVideos";
 import { logger } from "@/lib/logger";
 import {
@@ -76,6 +76,13 @@ export default function JobsPage() {
     const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
     const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
     const isDark = theme === "dark";
+
+    // Helper to construct full URL for storage paths
+    const getFullUrl = (url: string | undefined) => {
+        if (!url) return undefined;
+        if (url.startsWith('http')) return url;
+        return `${API_BASE_URL}${url}`;
+    };
 
     const loadJobs = async () => {
         try {
@@ -357,7 +364,7 @@ export default function JobsPage() {
                     targetLanguages={jobs.find(j => j.job_id === selectedGraphJobId)?.target_languages || []}
                     channelName={videos.find(v => v.video_id === jobs.find(j => j.job_id === selectedGraphJobId)?.source_video_id)?.channel_name}
                     videoTitle={videos.find(v => v.video_id === jobs.find(j => j.job_id === selectedGraphJobId)?.source_video_id)?.title}
-                    videoThumbnail={videos.find(v => v.video_id === jobs.find(j => j.job_id === selectedGraphJobId)?.source_video_id)?.thumbnail_url}
+                    videoThumbnail={getFullUrl(videos.find(v => v.video_id === jobs.find(j => j.job_id === selectedGraphJobId)?.source_video_id)?.thumbnail_url)}
                     onApprove={async (lang: string) => {
                         if (!selectedGraphJobId) return;
                         try {

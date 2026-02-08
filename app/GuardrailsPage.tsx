@@ -63,7 +63,7 @@ export default function GuardrailsPage() {
             />
 
             {/* Cinematic Header */}
-            <div className={`relative px-6 sm:px-10 py-16 sm:py-24 border-b ${borderClass} overflow-hidden`}>
+            <div className={`relative px-6 sm:px-10 py-10 border-b ${borderClass} overflow-hidden`}>
                 <div className="absolute inset-0 z-0">
                     <img
                         src="https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&q=80&w=2000"
@@ -85,36 +85,36 @@ export default function GuardrailsPage() {
                     className="relative z-10 max-w-7xl mx-auto"
                 >
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                                <div className="w-10 h-10 rounded-2xl bg-olleey-yellow/10 border border-olleey-yellow/20 flex items-center justify-center">
-                                    <Shield className="w-5 h-5 text-olleey-yellow" />
+                                <div className="w-6 h-6 rounded-lg bg-olleey-yellow/10 border border-olleey-yellow/20 flex items-center justify-center">
+                                    <Shield className="w-3.5 h-3.5 text-olleey-yellow" />
                                 </div>
-                                <span className="text-[10px] uppercase font-black tracking-[0.3em] text-olleey-yellow font-mono">Protocol Console</span>
+                                <span className="text-[9px] uppercase font-black tracking-[0.3em] text-olleey-yellow/60 font-mono">Protocol Console</span>
                             </div>
-                            <h1 className={`text-4xl sm:text-5xl md:text-6xl font-300 ${textClass} tracking-tight leading-tight`}>
+                            <h1 className={`text-2xl md:text-3xl font-300 ${textClass} tracking-tight leading-tight`}>
                                 System <span className="font-bold">Guardrails</span>
                             </h1>
-                            <p className={`text-lg ${textSecondaryClass} max-w-xl leading-relaxed`}>
+                            <p className={`text-sm ${textSecondaryClass} max-w-xl leading-relaxed opacity-70`}>
                                 Configure automated safety filters, quality gates, and deployment protocols to maintain brand integrity across all localized content.
                             </p>
                         </div>
 
-                        <div className={`flex items-center gap-6 ${cardClass} p-6 rounded-3xl border ${borderClass} shadow-2xl backdrop-blur-3xl`}>
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[9px] font-black uppercase tracking-widest opacity-40 font-mono">System Integrity</span>
-                                <div className="flex items-center gap-2.5">
+                        <div className={`flex items-center gap-4 ${cardClass} p-4 rounded-2xl border ${borderClass} shadow-2xl backdrop-blur-3xl`}>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[8px] font-black uppercase tracking-widest opacity-40 font-mono">System Integrity</span>
+                                <div className="flex items-center gap-2">
                                     <div className="relative">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                                        <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-40" />
+                                        <div className="w-2 h-2 rounded-full bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+                                        <div className="absolute inset-0 rounded-full bg-olleey-yellow animate-ping opacity-20" />
                                     </div>
-                                    <span className={`text-sm font-bold ${textClass} tracking-tight`}>Active Monitoring</span>
+                                    <span className={`text-[10px] font-bold ${textClass} tracking-tight uppercase`}>Active Monitoring</span>
                                 </div>
                             </div>
-                            <div className={`w-[1px] h-10 ${borderClass}`} />
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[9px] font-black uppercase tracking-widest opacity-40 font-mono">Last Sync</span>
-                                <span className={`text-sm font-bold ${textClass} font-mono tracking-tighter`}>T-0.42ms</span>
+                            <div className={`w-[1px] h-8 ${borderClass}`} />
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[8px] font-black uppercase tracking-widest opacity-40 font-mono">Last Sync</span>
+                                <span className={`text-[10px] font-bold ${textClass} font-mono tracking-tighter`}>T-0.42ms</span>
                             </div>
                         </div>
                     </div>
@@ -132,33 +132,32 @@ export default function GuardrailsPage() {
                     <motion.section variants={itemVariants} className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                                    <Clock className="w-4 h-4 text-orange-500" />
+                                <div className="w-8 h-8 rounded-xl bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20">
+                                    <Clock className="w-4 h-4 text-olleey-yellow" />
                                 </div>
-                                <h2 className={`text-xl font-bold ${textClass} tracking-tight`}>Scheduling & Automation</h2>
+                                <h2 className={`text-xl font-bold ${textClass} tracking-tight`}>Automation Controls</h2>
                             </div>
-                            <div className="h-[1px] flex-1 mx-6 bg-gradient-to-r from-white/10 to-transparent" />
+                            <div className="h-[1px] flex-1 mx-6 bg-gradient-to-r from-white/10 to-transparent opacity-20" />
                         </div>
 
                         <div className="grid gap-4">
-                            <div className={`${cardClass} border ${borderClass} rounded-[2rem] p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 group hover:border-olleey-yellow/20 transition-all duration-500`}>
-                                <div className="space-y-2">
-                                    <h3 className={`font-bold ${textClass} flex items-center gap-2`}>
+                            <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 group hover:border-olleey-yellow/20 transition-all duration-500`}>
+                                <div className="space-y-1">
+                                    <h3 className={`text-sm font-bold ${textClass} flex items-center gap-2`}>
                                         Scheduling Defaults
-                                        <div className="w-1 h-1 rounded-full bg-white/20" />
-                                        <span className="text-[9px] uppercase tracking-widest opacity-40 font-mono">Pipeline Core</span>
+                                        <span className="text-[8px] uppercase tracking-widest opacity-20 font-mono">Sync_Policy</span>
                                     </h3>
-                                    <p className={`text-sm ${textSecondaryClass} max-w-xs leading-relaxed`}>
-                                        Default behavior for synchronization of new localized workflows.
+                                    <p className={`text-xs ${textSecondaryClass} max-w-xs leading-relaxed opacity-60`}>
+                                        Asset synchronization priority for new localized workflows.
                                     </p>
                                 </div>
-                                <div className={`flex ${isDark ? 'bg-black/40 border-white/5' : 'bg-gray-100/50 border-gray-200'} p-1.5 rounded-2xl border backdrop-blur-md`}>
+                                <div className={`flex ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-100/50 border-gray-200'} p-1 rounded-xl border`}>
                                     {["Immediate", "Scheduled", "Manual"].map((v) => (
                                         <button
                                             key={v}
                                             onClick={() => setSchedulingDefault(v)}
-                                            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${schedulingDefault === v
-                                                ? "bg-olleey-yellow text-black shadow-xl shadow-yellow-500/20"
+                                            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${schedulingDefault === v
+                                                ? "bg-olleey-yellow text-black shadow-lg shadow-olleey-yellow/10"
                                                 : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`
                                                 }`}
                                         >
@@ -168,18 +167,18 @@ export default function GuardrailsPage() {
                                 </div>
                             </div>
 
-                            <div className={`${cardClass} border ${borderClass} rounded-[2rem] p-8 flex items-center justify-between gap-6 group hover:border-olleey-yellow/20 transition-all duration-500`}>
-                                <div className="space-y-2">
-                                    <h3 className={`font-bold ${textClass}`}>YouTube Auto-Publishing</h3>
-                                    <p className={`text-sm ${textSecondaryClass} max-w-xs leading-relaxed`}>
-                                        Automatically distribute localized content once quality gates are passed.
+                            <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 flex items-center justify-between gap-6 group hover:border-olleey-yellow/20 transition-all duration-500`}>
+                                <div className="space-y-1">
+                                    <h3 className={`text-sm font-bold ${textClass}`}>YouTube Auto-Publishing</h3>
+                                    <p className={`text-xs ${textSecondaryClass} max-w-xs leading-relaxed opacity-60`}>
+                                        Distribute localized content after successful quality verification.
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-4">
-                                    <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${autoPublish ? 'text-olleey-yellow' : 'opacity-20'}`}>
+                                    <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${autoPublish ? 'text-olleey-yellow' : 'opacity-20'}`}>
                                         {autoPublish ? 'Enabled' : 'Disabled'}
                                     </span>
-                                    <Switch checked={autoPublish} onCheckedChange={setAutoPublish} />
+                                    <Switch checked={autoPublish} onCheckedChange={setAutoPublish} className="data-[state=checked]:bg-olleey-yellow" />
                                 </div>
                             </div>
                         </div>
@@ -189,54 +188,53 @@ export default function GuardrailsPage() {
                     <motion.section variants={itemVariants} className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                                    <Scale className="w-4 h-4 text-blue-500" />
+                                <div className="w-8 h-8 rounded-xl bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20">
+                                    <Scale className="w-4 h-4 text-olleey-yellow" />
                                 </div>
-                                <h2 className={`text-xl font-bold ${textClass} tracking-tight`}>Quality Control Gates</h2>
+                                <h2 className={`text-xl font-bold ${textClass} tracking-tight`}>Quality Gates</h2>
                             </div>
-                            <div className="h-[1px] flex-1 mx-6 bg-gradient-to-r from-white/10 to-transparent" />
+                            <div className="h-[1px] flex-1 mx-6 bg-gradient-to-r from-white/10 to-transparent opacity-20" />
                         </div>
 
                         <div className="grid gap-4">
-                            <div className={`${cardClass} border ${borderClass} rounded-[2rem] p-8 flex items-center justify-between gap-6 group hover:border-blue-500/20 transition-all duration-500`}>
-                                <div className="space-y-2">
-                                    <h3 className={`font-bold ${textClass}`}>Universal Manual Review</h3>
-                                    <p className={`text-sm ${textSecondaryClass} max-w-xs leading-relaxed`}>
-                                        Mandate manual sign-off for every localized asset before publication.
+                            <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 flex items-center justify-between gap-6 group hover:border-olleey-yellow/20 transition-all duration-500`}>
+                                <div className="space-y-1">
+                                    <h3 className={`text-sm font-bold ${textClass}`}>Universal Manual Review</h3>
+                                    <p className={`text-xs ${textSecondaryClass} max-w-xs leading-relaxed opacity-60`}>
+                                        Mandate human verification for every localized asset.
                                     </p>
                                 </div>
-                                <Switch checked={approvalRequired} onCheckedChange={setApprovalRequired} />
+                                <Switch checked={approvalRequired} onCheckedChange={setApprovalRequired} className="data-[state=checked]:bg-olleey-yellow" />
                             </div>
 
-                            <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-8 space-y-8 group hover:border-blue-500/20 transition-all duration-500`}>
+                            <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 space-y-6 group hover:border-olleey-yellow/20 transition-all duration-500`}>
                                 <div className="flex items-center justify-between">
-                                    <div className="space-y-2">
-                                        <h3 className={`font-bold ${textClass}`}>Dynamic Quality Threshold</h3>
-                                        <p className={`text-sm ${textSecondaryClass} leading-relaxed max-w-md`}>
-                                            Automatically trigger technical review if AI confidence falls below target.
+                                    <div className="space-y-1">
+                                        <h3 className={`text-sm font-bold ${textClass}`}>AI Confidence Threshold</h3>
+                                        <p className={`text-xs ${textSecondaryClass} leading-relaxed max-w-xs opacity-60`}>
+                                            Manual review trigger if neural confidence falls below target.
                                         </p>
                                     </div>
                                     <div className="flex flex-col items-end">
-                                        <div className="flex items-baseline gap-1">
-                                            <span className={`text-3xl font-bold text-olleey-yellow font-mono`}>{qualityThreshold}</span>
-                                            <span className="text-xs font-black text-olleey-yellow/50 font-mono">%</span>
+                                        <div className="flex items-baseline gap-0.5">
+                                            <span className={`text-2xl font-bold text-olleey-yellow font-mono`}>{qualityThreshold}</span>
+                                            <span className="text-[10px] font-black text-olleey-yellow/40 font-mono">%</span>
                                         </div>
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-olleey-yellow/40 font-mono">Confidence Gate</span>
                                     </div>
                                 </div>
 
-                                <div className="relative pt-2">
+                                <div className="px-1">
                                     <input
                                         type="range"
                                         min="50"
                                         max="100"
                                         value={qualityThreshold}
                                         onChange={(e) => setQualityThreshold(parseInt(e.target.value))}
-                                        className={`w-full h-2 rounded-full appearance-none cursor-pointer accent-olleey-yellow bg-white/5 border border-white/5`}
+                                        className={`w-full h-1.5 rounded-full appearance-none cursor-pointer accent-olleey-yellow bg-white/10 border border-white/5`}
                                     />
-                                    <div className="flex justify-between mt-4">
-                                        <span className="text-[9px] font-black uppercase tracking-widest opacity-30 font-mono italic">Safe Mode (50%)</span>
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-olleey-yellow opacity-60 font-mono italic">Studio Grade (100%)</span>
+                                    <div className="flex justify-between mt-3">
+                                        <span className="text-[8px] font-black uppercase tracking-widest opacity-20 font-mono italic">Efficiency Mode</span>
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-olleey-yellow/40 font-mono italic">Studio Grade</span>
                                     </div>
                                 </div>
                             </div>
@@ -245,68 +243,59 @@ export default function GuardrailsPage() {
                 </div>
 
                 {/* Sidebar Controls */}
-                <div className="lg:col-span-4 space-y-8">
+                <div className="lg:col-span-4 space-y-4">
                     {/* Content Safety Card */}
                     <motion.div variants={itemVariants} className="relative group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-olleey-yellow/20 via-indigo-500/10 to-transparent rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-700" />
-                        <div className={`${cardClass} relative z-10 p-10 border border-white/10 rounded-[3rem] overflow-hidden`}>
-                            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 rotate-12 group-hover:rotate-0">
-                                <Shield className="w-48 h-48 text-white" />
-                            </div>
-
-                            <div className="space-y-8 relative z-20">
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                                            <Lock className="w-5 h-5 text-emerald-500" />
+                        <div className="absolute inset-0 bg-olleey-yellow/5 rounded-2xl blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-700" />
+                        <div className={`${cardClass} relative z-10 p-8 border border-white/5 rounded-2xl overflow-hidden`}>
+                            <div className="space-y-6 relative z-20">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-xl bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20">
+                                            <Lock className="w-4 h-4 text-olleey-yellow" />
                                         </div>
-                                        <span className="bg-emerald-500/10 text-emerald-500 text-[10px] px-3 py-1 rounded-full uppercase tracking-tighter font-black border border-emerald-500/20 backdrop-blur-sm">System Secure</span>
+                                        <span className="text-[8px] px-2 py-0.5 rounded-full uppercase tracking-widest font-black text-olleey-yellow/60 border border-olleey-yellow/20">Secure_Mode</span>
                                     </div>
-                                    <h3 className={`text-2xl font-bold ${textClass} tracking-tight`}>
-                                        Smart Safety <span className="text-olleey-yellow underline underline-offset-8 decoration-olleey-yellow/30">Filters</span>
+                                    <h3 className={`text-lg font-bold ${textClass} tracking-tight`}>
+                                        Safety <span className="text-olleey-yellow">Filters</span>
                                     </h3>
-                                    <p className={`text-sm ${textSecondaryClass} leading-relaxed`}>
-                                        Real-time neural scans for profanity, cultural sensitivities, and brand resonance. Our guardrails adapt to your specific channel niche automatically.
+                                    <p className={`text-xs ${textSecondaryClass} leading-relaxed opacity-60`}>
+                                        Neural semantic scans for profanity and cultural resonance. Adapts to your niche automatically.
                                     </p>
                                 </div>
 
-                                <div className="space-y-3 pt-4 border-t border-white/5">
+                                <div className="space-y-2 pt-4 border-t border-white/5">
                                     {[
-                                        "Neural Semantic Analysis",
-                                        "Cultural Sensitivity Mapping",
-                                        "Blacklist Enforcement (Hate Speech)",
-                                        "Brand Alignment Monitoring"
+                                        "Semantic Analysis",
+                                        "Cultural Sensitivity",
+                                        "Brand Alignment"
                                     ].map((feature, i) => (
                                         <div key={i} className="flex items-center gap-2">
-                                            <div className="w-4 h-4 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />
-                                            </div>
-                                            <span className={`text-[10px] uppercase font-bold tracking-widest opacity-60`}>{feature}</span>
+                                            <CheckCircle2 className="w-3 h-3 text-olleey-yellow opacity-40" />
+                                            <span className={`text-[9px] uppercase font-bold tracking-widest opacity-40`}>{feature}</span>
                                         </div>
                                     ))}
                                 </div>
 
-                                <Button className="w-full bg-white text-black hover:bg-olleey-yellow transition-colors font-black uppercase text-[10px] tracking-widest py-6 rounded-2xl shadow-xl">
-                                    Configure Sensitivity <ArrowRight className="ml-2 w-4" />
+                                <Button className="w-full h-11 bg-white text-black hover:bg-olleey-yellow transition-all font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg">
+                                    Protocol Config <ArrowRight className="ml-2 w-3.5 h-3.5" />
                                 </Button>
                             </div>
                         </div>
                     </motion.div>
 
                     {/* Danger Zone */}
-                    <motion.div variants={itemVariants} className="p-8 border border-red-500/10 bg-red-500/[0.02] rounded-[2.5rem] space-y-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center">
-                                <AlertTriangle className="w-4 h-4 text-red-500" />
-                            </div>
-                            <h3 className="text-sm font-bold text-red-500 uppercase tracking-widest font-mono">System Reset</h3>
+                    <motion.div variants={itemVariants} className={`p-8 border ${borderClass} bg-white/[0.01] rounded-2xl space-y-4`}>
+                        <div className="flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-red-500/40" />
+                            <h3 className="text-[10px] font-black text-white/40 uppercase tracking-widest font-mono">Archive Protocol</h3>
                         </div>
-                        <p className="text-xs text-red-500/50 leading-relaxed font-medium">
-                            Revert all protocol parameters to global defaults. This will immediately affect all active pipeline runs.
+                        <p className="text-[10px] text-white/20 leading-relaxed font-medium">
+                            Revert all parameters to factory defaults. This action is terminal and affects active runs.
                         </p>
-                        <Button variant="outline" className="w-full border-red-500/20 text-red-500 hover:bg-red-500/10 font-black uppercase text-[9px] tracking-[0.2em] py-5 rounded-2xl transition-all active:scale-95">
-                            Reset Guardrail Policy
-                        </Button>
+                        <button className={`w-full py-3 rounded-xl border border-white/5 text-white/20 hover:text-red-500 hover:border-red-500/20 hover:bg-red-500/5 transition-all text-[9px] font-black uppercase tracking-widest font-mono`}>
+                            Reset Policy
+                        </button>
                     </motion.div>
                 </div>
             </motion.div>
