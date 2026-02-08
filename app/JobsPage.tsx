@@ -145,18 +145,38 @@ export default function JobsPage() {
     }, [jobs, filter]);
 
     const handlePreview = (job: Job) => {
+        if (!job) {
+            toast("Job data not available", "error");
+            return;
+        }
+
         const video = videos.find(v => v.video_id === job?.source_video_id);
-        if (!job || !video) return;
+
+        // Debug logging
+        logger.info("JobsPage", "Preview attempt", {
+            jobId: job.job_id,
+            sourceVideoId: job.source_video_id,
+            videoFound: !!video,
+            totalVideos: videos.length,
+            videoIds: videos.map(v => v.video_id)
+        });
+
+        // If video not found, log info but continue with job data
+        if (!video) {
+            logger.info("JobsPage", "Video not found in videos array", {
+                sourceVideoId: job.source_video_id
+            });
+        }
 
         const langCode = job.target_languages[0] || "es";
 
         openReview({
             videoId: job.source_video_id,
             languageCode: langCode,
-            originalVideoUrl: (video as any).storage_url || (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+            originalVideoUrl: video ? ((video as any).storage_url || (video as any).video_url) : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
             dubbedVideoUrl: (job as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-            videoTitle: video.title,
-            videoDescription: video.description,
+            videoTitle: video?.title || `Video ${job.source_video_id}`,
+            videoDescription: video?.description || "",
             isApproved: job.status === "completed",
             status: job.status,
             approvedAt: job.updated_at
