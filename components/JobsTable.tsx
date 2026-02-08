@@ -382,126 +382,141 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                                     </TableRow>
 
                                     {/* Child Jobs Rows */}
-                                    <AnimatePresence>
-                                        {isExpanded && group.jobs.map((job, jobIdx) => (
-                                            (job.target_languages || []).map((lang, langIdx) => {
-                                                const sourceLang = getSourceLanguage(group.source_video_id);
-                                                const statusConfig = getStatusConfig(job.status);
-                                                const uniqueKey = `${job.job_id}-${lang}-${langIdx}`;
+                                    {isExpanded && (
+                                        <AnimatePresence>
+                                            {group.jobs.map((job, jobIdx) => (
+                                                (job.target_languages || []).map((lang, langIdx) => {
+                                                    const sourceLang = getSourceLanguage(group.source_video_id);
+                                                    const statusConfig = getStatusConfig(job.status);
+                                                    const uniqueKey = `${job.job_id}-${lang}-${langIdx}`;
 
-                                                return (
-                                                    <motion.tr
-                                                        key={uniqueKey}
-                                                        initial={{ opacity: 0, height: 0 }}
-                                                        animate={{ opacity: 1, height: "auto" }}
-                                                        exit={{ opacity: 0, height: 0 }}
-                                                        transition={{ duration: 0.3, delay: (jobIdx + langIdx) * 0.03 }}
-                                                        className={`${subRowBg} border-b border-white/[0.02] last:border-b-0`}
-                                                        style={{ display: "table-row" }}
-                                                    >
-                                                        <TableCell className="p-0 relative" colSpan={2}>
-                                                            <div className="flex items-center h-full">
-                                                                {/* Spacer for the expander column width (80px) */}
-                                                                <div className="flex-shrink-0 w-[80px] relative h-full">
-                                                                    <div className="absolute top-0 bottom-0 left-[2.5rem] w-px bg-white/5 group-hover:bg-olleey-yellow/20 transition-colors" />
-                                                                    <div className="absolute top-[50%] left-[2.5rem] w-8 h-px bg-white/5 group-hover:bg-olleey-yellow/20 transition-colors" />
-                                                                </div>
+                                                    return (
+                                                        <motion.tr
+                                                            key={uniqueKey}
+                                                            initial={{ opacity: 0, height: 0 }}
+                                                            animate={{ opacity: 1, height: "auto" }}
+                                                            exit={{ opacity: 0, height: 0 }}
+                                                            transition={{ duration: 0.3, delay: (jobIdx + langIdx) * 0.03 }}
+                                                            className={`
+                                                                ${subRowBg} border-b border-white/[0.02] last:border-b-0 cursor-pointer 
+                                                                transition-all duration-300 hover:bg-white/[0.05] group/subrow
+                                                            `}
+                                                            style={{ display: "table-row" }}
+                                                            onClick={() => {
+                                                                if (!['processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending'].includes(job.status)) {
+                                                                    onPreview(job);
+                                                                } else {
+                                                                    onViewWorkflow(job.job_id);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <TableCell className="p-0 relative" colSpan={2}>
+                                                                <div className="flex items-center h-full">
+                                                                    {/* Spacer for the expander column width (80px) */}
+                                                                    <div className="flex-shrink-0 w-[80px] relative h-full">
+                                                                        <div className="absolute top-0 bottom-0 left-[2.5rem] w-px bg-white/5 group-hover:bg-olleey-yellow/20 transition-colors" />
+                                                                        <div className="absolute top-[50%] left-[2.5rem] w-8 h-px bg-white/5 group-hover:bg-olleey-yellow/20 transition-colors" />
+                                                                    </div>
 
-                                                                {/* Deployment Node */}
-                                                                <div className="pl-6 py-4">
-                                                                    <div className={`flex items-center gap-4 px-4 py-2.5 rounded-xl border transition-all duration-500 ${isDark ? 'bg-white/[0.02] border-white/5 hover:border-olleey-yellow/20' : 'bg-white border-gray-100 shadow-sm'} group-hover:translate-x-1`}>
-                                                                        <div className="flex items-center gap-2.5 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-default">
-                                                                            <span className="text-lg leading-none">{getLanguageFlag(sourceLang)}</span>
-                                                                            <span className={`text-[10px] font-black uppercase tracking-widest ${textSecondaryClass}`}>{sourceLang}</span>
-                                                                        </div>
-
-                                                                        <div className="flex flex-col items-center gap-0.5 px-1">
-                                                                            <div className="w-1.5 h-1.5 rounded-full bg-olleey-yellow/20" />
-                                                                            <ArrowRight className={`w-3.5 h-3.5 text-olleey-yellow/40`} />
-                                                                            <div className="w-1.5 h-1.5 rounded-full bg-olleey-yellow/20" />
-                                                                        </div>
-
-                                                                        <div className="flex items-center gap-2.5">
-                                                                            <div className="w-7 h-7 rounded-lg bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20 shadow-lg shadow-olleey-yellow/5">
-                                                                                <span className="text-lg leading-none">{getLanguageFlag(lang)}</span>
+                                                                    {/* Deployment Node */}
+                                                                    <div className="pl-6 py-4">
+                                                                        <div className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl border transition-all duration-500 shadow-xl ${isDark ? 'bg-white/[0.02] border-white/5 group-hover/subrow:border-olleey-yellow/30' : 'bg-white border-gray-100'} group-hover/subrow:translate-x-1`}>
+                                                                            <div className="flex items-center gap-3 opacity-40 grayscale group-hover/subrow:grayscale-0 group-hover/subrow:opacity-100 transition-all cursor-default">
+                                                                                <span className="text-xl leading-none">{getLanguageFlag(sourceLang)}</span>
+                                                                                <span className={`text-[11px] font-black uppercase tracking-widest ${textSecondaryClass}`}>{sourceLang}</span>
                                                                             </div>
-                                                                            <div className="flex flex-col">
-                                                                                <span className={`text-[10px] font-black uppercase tracking-widest ${textClass}`}>{LANGUAGE_OPTIONS.find(l => l.code === lang)?.name || lang}</span>
-                                                                                <span className="text-[8px] font-medium text-white/20 uppercase tracking-tighter">Target Channel Sync</span>
+
+                                                                            <div className="flex flex-col items-center gap-1 px-2">
+                                                                                <div className="w-2 h-2 rounded-full bg-olleey-yellow/20 group-hover/subrow:bg-olleey-yellow/40 transition-colors" />
+                                                                                <ArrowRight className={`w-4 h-4 text-olleey-yellow/40 group-hover/subrow:text-olleey-yellow group-hover/subrow:translate-x-1 transition-all`} />
+                                                                                <div className="w-2 h-2 rounded-full bg-olleey-yellow/20 group-hover/subrow:bg-olleey-yellow/40 transition-colors" />
+                                                                            </div>
+
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="w-9 h-9 rounded-xl bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20 shadow-lg shadow-olleey-yellow/5 group-hover/subrow:scale-110 transition-transform">
+                                                                                    <span className="text-xl leading-none">{getLanguageFlag(lang)}</span>
+                                                                                </div>
+                                                                                <div className="flex flex-col">
+                                                                                    <span className={`text-[11px] font-black uppercase tracking-widest ${textClass} group-hover/subrow:text-olleey-yellow transition-colors`}>{LANGUAGE_OPTIONS.find(l => l.code === lang)?.name || lang}</span>
+                                                                                    <span className="text-[9px] font-medium text-white/20 uppercase tracking-tighter">Target Channel Sync</span>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        </TableCell>
+                                                            </TableCell>
 
-                                                        <TableCell>{/* Alignment column */}</TableCell>
+                                                            <TableCell>{/* Alignment column */}</TableCell>
 
-                                                        {/* Status Column */}
-                                                        <TableCell>
-                                                            <div className="flex items-center gap-4 group/status">
-                                                                <div className="relative">
-                                                                    <div className={`w-2 h-2 rounded-full ${statusConfig.dotColor} ${['processing', 'waiting_approval'].includes(job.status) ? 'animate-pulse' : ''} shadow-[0_0_12px_currentColor]`} />
-                                                                    {['processing', 'waiting_approval'].includes(job.status) && (
-                                                                        <div className={`absolute inset-0 rounded-full ${statusConfig.dotColor} animate-ping opacity-20`} />
-                                                                    )}
+                                                            {/* Status Column */}
+                                                            <TableCell>
+                                                                <div className="flex items-center gap-4 group/status">
+                                                                    <div className="relative">
+                                                                        <div className={`w-2 h-2 rounded-full ${statusConfig.dotColor} ${['processing', 'waiting_approval'].includes(job.status) ? 'animate-pulse' : ''} shadow-[0_0_12px_currentColor]`} />
+                                                                        {['processing', 'waiting_approval'].includes(job.status) && (
+                                                                            <div className={`absolute inset-0 rounded-full ${statusConfig.dotColor} animate-ping opacity-20`} />
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className={`text-[10px] font-black uppercase tracking-widest ${statusConfig.className}`}>
+                                                                            {statusConfig.label}
+                                                                        </span>
+                                                                        <span className="text-[8px] font-mono font-medium text-white/20 uppercase tracking-tighter">IDX_{job.job_id.slice(0, 8).toUpperCase()}</span>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="flex flex-col">
-                                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${statusConfig.className}`}>
-                                                                        {statusConfig.label}
-                                                                    </span>
-                                                                    <span className="text-[8px] font-mono font-medium text-white/20 uppercase tracking-tighter">IDX_{job.job_id.slice(0, 8).toUpperCase()}</span>
+                                                            </TableCell>
+
+                                                            {/* Action Column */}
+                                                            <TableCell>
+                                                                <div className="flex justify-end pr-8 gap-4">
+                                                                    <Button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            onViewWorkflow(job.job_id);
+                                                                        }}
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className={`
+                                                                             h-11 w-11 rounded-xl transition-all
+                                                                             ${isDark
+                                                                                ? "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white border border-white/5"
+                                                                                : "bg-white text-gray-400 hover:text-gray-900 border border-gray-200 shadow-md"
+                                                                            }
+                                                                         `}
+                                                                        title="View Workflow Graph"
+                                                                    >
+                                                                        <Layers className="w-4 h-4" />
+                                                                    </Button>
+
+                                                                    <Button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            if (!['processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending'].includes(job.status)) {
+                                                                                onPreview(job);
+                                                                            }
+                                                                        }}
+                                                                        disabled={['processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending'].includes(job.status)}
+                                                                        variant="ghost"
+                                                                        className={`
+                                                                             flex items-center gap-3 px-6 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                                                                             ${isDark
+                                                                                ? "bg-olleey-yellow/10 text-olleey-yellow/80 hover:bg-olleey-yellow hover:text-black border border-olleey-yellow/20"
+                                                                                : "bg-white text-gray-700 hover:text-black border border-gray-200 hover:border-gray-300 shadow-md"
+                                                                            }
+                                                                             group/viewbtn disabled:opacity-30 disabled:cursor-not-allowed disabled:grayscale
+                                                                         `}
+                                                                    >
+                                                                        <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover/viewbtn:scale-110" />
+                                                                        {['processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending'].includes(job.status) ? "Syncing..." : "Inspect"}
+                                                                    </Button>
                                                                 </div>
-                                                            </div>
-                                                        </TableCell>
-
-                                                        {/* Action Column */}
-                                                        <TableCell>
-                                                            <div className="flex justify-end pr-8 gap-3">
-                                                                <Button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        onViewWorkflow(job.job_id);
-                                                                    }}
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className={`
-                                                                        h-8 w-8 rounded-lg transition-all
-                                                                        ${isDark
-                                                                            ? "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white border border-white/5"
-                                                                            : "bg-white text-gray-400 hover:text-gray-900 border border-gray-200"
-                                                                        }
-                                                                    `}
-                                                                    title="View Workflow Graph"
-                                                                >
-                                                                    <Layers className="w-3.5 h-3.5" />
-                                                                </Button>
-
-                                                                <Button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        onPreview(job);
-                                                                    }}
-                                                                    variant="ghost"
-                                                                    className={`
-                                                                        flex items-center gap-2.5 px-5 h-8 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all
-                                                                        ${isDark
-                                                                            ? "bg-olleey-yellow/5 text-olleey-yellow/60 hover:bg-olleey-yellow hover:text-black border border-olleey-yellow/10"
-                                                                            : "bg-white text-gray-600 hover:text-black border border-gray-200 hover:border-gray-300 shadow-sm"
-                                                                        }
-                                                                        group/viewbtn
-                                                                    `}
-                                                                >
-                                                                    <ExternalLink className="w-3 h-3 transition-transform group-hover/viewbtn:scale-110" />
-                                                                    Inspect
-                                                                </Button>
-                                                            </div>
-                                                        </TableCell>
-                                                    </motion.tr>
-                                                );
-                                            })
-                                        ))}
-                                    </AnimatePresence>
+                                                            </TableCell>
+                                                        </motion.tr>
+                                                    );
+                                                })
+                                            ))}
+                                        </AnimatePresence>
+                                    )}
                                 </Fragment>
                             );
                         })
@@ -558,6 +573,6 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                     </div>
                 </div>
             )}
-        </div>
+        </div >
     );
 }

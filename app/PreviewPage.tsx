@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import {
     Globe,
     CheckCircle2,
-    ExternalLink,
     Copy,
     Monitor,
     Layout,
@@ -25,18 +24,29 @@ import { useTheme } from "@/lib/useTheme";
 import { cn } from "@/lib/utils";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
+import { jobsAPI, API_BASE_URL } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
+import { Save, Loader2 } from "lucide-react";
 
 export default function PreviewPage() {
     const { theme } = useTheme();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { quickCheckState, handleApprove, openReview } = useReview();
+    const { toast } = useToast();
     const [isPublishing, setIsPublishing] = useState(false);
+    const [isSavingDraft, setIsSavingDraft] = useState(false);
 
     // Fetch full video data to get all localizations
     const { selectedProject } = useProject();
-    const { videos, refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id });
-    const currentVideo = videos.find(v => v.video_id === quickCheckState.videoId);
+    const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id });
+
+    // Get video ID and language from URL parameters
+    const videoIdFromUrl = searchParams.get("video_id");
+    const langFromUrl = searchParams.get("lang") || "es";
+
+    // Find current video from the videos list
+    const currentVideo = videos.find(v => v.video_id === (quickCheckState.videoId || videoIdFromUrl));
 
     // Listen for global refresh events
     useEffect(() => {
@@ -49,17 +59,34 @@ export default function PreviewPage() {
         return () => window.removeEventListener('olleey-refresh', handleRefresh);
     }, [refetchVideos]);
 
+    // Sync state with video data when available
+    useEffect(() => {
+        if (currentVideo && videoIdFromUrl && !quickCheckState.videoId) {
+            // If we have video data but quickCheckState is empty, populate it
+            const loc = currentVideo.localizations?.[langFromUrl];
+            openReview({
+                videoId: currentVideo.video_id,
+                languageCode: langFromUrl,
+                originalVideoUrl: (currentVideo as any).storage_url || (currentVideo as any).video_url,
+                dubbedVideoUrl: loc?.video_url,
+                videoTitle: currentVideo.title,
+                videoDescription: currentVideo.description,
+                thumbnailUrl: getFullUrl(currentVideo.thumbnail_url),
+                isApproved: loc?.status === "live",
+                approvedAt: currentVideo.published_at
+            });
+        }
+    }, [currentVideo, videoIdFromUrl, langFromUrl, quickCheckState.videoId, openReview]);
+
     const [viewMode, setViewMode] = useState<'dubbed' | 'original'>('dubbed');
 
-    // Fallback if state is missing
-    const {
-        videoTitle,
-        videoDescription,
-        dubbedVideoUrl,
-        originalVideoUrl,
-        languageCode,
-        isApproved
-    } = quickCheckState;
+    // Get video info from quickCheckState or fallback to current video
+    const videoTitle = quickCheckState.videoTitle || currentVideo?.title || "Unnamed Video";
+    const videoDescription = quickCheckState.videoDescription || currentVideo?.description || "";
+    const dubbedVideoUrl = quickCheckState.dubbedVideoUrl || currentVideo?.localizations?.[langFromUrl]?.video_url || "";
+    const originalVideoUrl = quickCheckState.originalVideoUrl || (currentVideo as any)?.storage_url || (currentVideo as any)?.video_url || "";
+    const languageCode = quickCheckState.languageCode || langFromUrl;
+    const isApproved = quickCheckState.isApproved !== undefined ? quickCheckState.isApproved : (currentVideo?.localizations?.[langFromUrl]?.status === "live");
 
     const languageName = LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.name || "Spanish";
 
@@ -75,12 +102,57 @@ export default function PreviewPage() {
 
     const handlePublish = async () => {
         setIsPublishing(true);
+        const videoId = quickCheckState.videoId || videoIdFromUrl;
+        const lang = quickCheckState.languageCode || langFromUrl;
+
+        if (!videoId || !lang) {
+            toast("Missing video information", "error");
+            setIsPublishing(false);
+            return;
+        }
+
         try {
-            await handleApprove();
-        } catch (error) {
+            await jobsAPI.publishToYouTube(videoId, lang);
+            toast("Successfully published to YouTube!", "success");
+
+            // Refresh data via global event
+            window.dispatchEvent(new CustomEvent('olleey-refresh'));
+
+            // Navigate back to library
+            router.push('/app?page=All Media', { scroll: false });
+        } catch (error: any) {
             console.error("Publishing error:", error);
+            toast(error.message || "Failed to publish to YouTube", "error");
         } finally {
             setIsPublishing(false);
+        }
+    };
+
+    const handleSaveDraft = async () => {
+        setIsSavingDraft(true);
+        const videoId = quickCheckState.videoId || videoIdFromUrl;
+        const lang = quickCheckState.languageCode || langFromUrl;
+
+        if (!videoId || !lang) {
+            toast("Missing video information", "error");
+            setIsSavingDraft(false);
+            return;
+        }
+
+        try {
+            await jobsAPI.saveDraft(videoId, lang);
+            toast("Saved as draft for later publishing", "success");
+
+            // Refresh data via global event
+            window.dispatchEvent(new CustomEvent('olleey-refresh'));
+
+            // Navigate back to library
+            router.push('/app?page=All Media', { scroll: false });
+        } catch (error: any) {
+            console.error("Save draft error:", error);
+            toast(error.message || "Failed to save draft", "error");
+        } finally {
+            setIsSavingDraft(false);
         }
     };
 
@@ -99,11 +171,18 @@ export default function PreviewPage() {
             dubbedVideoUrl: loc.video_url,
             videoTitle: loc.title || currentVideo.title,
             videoDescription: loc.description || currentVideo.description,
-            thumbnailUrl: loc.thumbnail_url || currentVideo.thumbnail_url,
+            thumbnailUrl: getFullUrl(loc.thumbnail_url || currentVideo.thumbnail_url),
             isApproved: loc.status === "live",
             approvedAt: currentVideo.published_at || (currentVideo as any).created_at
         });
         setViewMode('dubbed');
+    };
+
+    // Helper to construct full URL for storage paths
+    const getFullUrl = (url: string | undefined) => {
+        if (!url) return undefined;
+        if (url.startsWith('http')) return url;
+        return `${API_BASE_URL}${url}`;
     };
 
     // Theme-aware classes matching Dashboard
@@ -113,6 +192,18 @@ export default function PreviewPage() {
     const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-dark-textSecondary";
     const borderClass = theme === "light" ? "border-gray-200" : "border-white/10";
     const isDark = theme === "dark";
+
+    // Show loading state while fetching video data
+    if (videosLoading && !currentVideo) {
+        return (
+            <div className={`w-full h-full flex items-center justify-center ${bgClass}`}>
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-12 h-12 animate-spin text-olleey-yellow" />
+                    <p className="text-sm text-white/40 uppercase tracking-widest font-black">Loading video...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`w-full h-full flex flex-col overflow-hidden ${bgClass} ${textClass} selection:bg-olleey-yellow selection:text-black transition-colors duration-500`}>
@@ -176,8 +267,25 @@ export default function PreviewPage() {
 
                     <Button
                         size="sm"
+                        onClick={handleSaveDraft}
+                        disabled={isSavingDraft || isPublishing || viewMode === 'original'}
+                        className={cn(
+                            "rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.1em] h-9 px-6 transition-all",
+                            viewMode === 'original' && "opacity-50 grayscale cursor-not-allowed"
+                        )}
+                    >
+                        {isSavingDraft ? (
+                            <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
+                        ) : (
+                            <Save className="w-3.5 h-3.5 mr-2" />
+                        )}
+                        {isSavingDraft ? "Saving..." : "Save Draft"}
+                    </Button>
+
+                    <Button
+                        size="sm"
                         onClick={handlePublish}
-                        disabled={isPublishing || viewMode === 'original'}
+                        disabled={isPublishing || isSavingDraft || viewMode === 'original'}
                         className={cn(
                             "rounded-full bg-olleey-yellow hover:bg-olleey-yellow/90 text-black text-[10px] font-black uppercase tracking-[0.1em] h-9 px-6 shadow-lg hover:shadow-olleey-yellow/10 transition-all",
                             viewMode === 'original' && "opacity-50 grayscale cursor-not-allowed"
@@ -186,9 +294,9 @@ export default function PreviewPage() {
                         {isPublishing ? (
                             <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
                         ) : (
-                            <ExternalLink className="w-3.5 h-3.5 mr-2" />
+                            <Youtube className="w-3.5 h-3.5 mr-2" />
                         )}
-                        {isPublishing ? "Processing" : (isApproved ? "Update" : "Launch")}
+                        {isPublishing ? "Publishing..." : "Launch to YouTube"}
                     </Button>
                 </div>
             </div>
@@ -372,17 +480,35 @@ export default function PreviewPage() {
                                         <p className={`text-sm leading-relaxed font-medium ${isDark ? "text-white/50" : "text-black/60"}`}>
                                             Synthesis protocol completed. This asset is ready for deployment across verified global channels.
                                         </p>
-                                        <Button
-                                            onClick={handlePublish}
-                                            disabled={isPublishing || viewMode === 'original'}
-                                            className="w-full rounded-full bg-olleey-yellow hover:bg-olleey-yellow-dark text-black text-[10px] font-black uppercase tracking-widest h-14 shadow-xl hover:shadow-olleey-yellow/20 transition-all hover:-translate-y-0.5"
-                                        >
-                                            {isPublishing ? (
-                                                <><RefreshCw className="w-4 h-4 mr-3 animate-spin" /> Processing</>
-                                            ) : (
-                                                <><ExternalLink className="w-4 h-4 mr-3" /> {isApproved ? "Redeploy Asset" : "Deploy Master"}</>
-                                            )}
-                                        </Button>
+                                        <div className="flex flex-col gap-3">
+                                            <Button
+                                                onClick={handlePublish}
+                                                disabled={isPublishing || isSavingDraft || viewMode === 'original'}
+                                                className="w-full rounded-full bg-olleey-yellow hover:bg-olleey-yellow-dark text-black text-[10px] font-black uppercase tracking-widest h-14 shadow-xl hover:shadow-olleey-yellow/20 transition-all hover:-translate-y-0.5"
+                                            >
+                                                {isPublishing ? (
+                                                    <><RefreshCw className="w-4 h-4 mr-3 animate-spin" /> Publishing...</>
+                                                ) : (
+                                                    <><Youtube className="w-4 h-4 mr-3" /> Launch to YouTube</>
+                                                )}
+                                            </Button>
+                                            <Button
+                                                onClick={handleSaveDraft}
+                                                disabled={isSavingDraft || isPublishing || viewMode === 'original'}
+                                                className={cn(
+                                                    "w-full rounded-full text-[10px] font-black uppercase tracking-widest h-12 transition-all",
+                                                    isDark
+                                                        ? "bg-white/10 hover:bg-white/20 border border-white/20 text-white"
+                                                        : "bg-gray-100 hover:bg-gray-200 border border-gray-300 text-black"
+                                                )}
+                                            >
+                                                {isSavingDraft ? (
+                                                    <><RefreshCw className="w-4 h-4 mr-3 animate-spin" /> Saving...</>
+                                                ) : (
+                                                    <><Save className="w-4 h-4 mr-3" /> Save as Draft</>
+                                                )}
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

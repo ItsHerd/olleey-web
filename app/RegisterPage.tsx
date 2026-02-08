@@ -47,6 +47,14 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
         const email = formData.get("email") as string;
         const password = formData.get("password") as string;
         const confirmPassword = formData.get("confirmPassword") as string;
+        const accessCode = formData.get("accessCode") as string;
+
+        // Invite-only validation
+        if (!accessCode || accessCode.trim() !== "olleey2026") {
+            setError("Invalid or missing invite access code. This platform is currently by invitation only.");
+            setIsLoading(false);
+            return;
+        }
 
         // Basic client-side validation
         if (!email || !email.trim()) {
@@ -117,6 +125,8 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
             <div className="relative z-10 w-full h-full">
 
                 <SignUpPage
+                    title={<span className="font-light text-foreground tracking-tighter">Join <span className="font-semibold">olleey</span></span>}
+                    description="Olleey is currently by invitation only. Please enter your invite access code to create your account."
                     heroImageSrc="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=2160&q=80"
                     testimonials={sampleTestimonials}
                     onSignUp={handleRegister}

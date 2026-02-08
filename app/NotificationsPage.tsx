@@ -116,6 +116,11 @@ export default function NotificationsPage() {
     // 2. System Heartbeat / Activities
     if (Array.isArray(activities)) {
       activities.forEach((activity, index) => {
+        // Skip malformed activities
+        if (!activity.message || activity.message === "Unknown Action") {
+          return;
+        }
+
         const type: Notification["type"] =
           activity.icon === 'alert' ? "warning" :
             activity.icon === 'check' ? "success" : "info";
@@ -123,6 +128,8 @@ export default function NotificationsPage() {
         let category: Notification["category"] = "system";
         if (['youtube', 'upload', 'channel'].includes(activity.icon)) {
           category = "channel";
+        } else if (activity.icon === 'plus' || activity.icon === 'zap') {
+          category = "job";
         }
 
         const timestamp = (activity.timestamp && activity.timestamp !== "None")
@@ -132,10 +139,10 @@ export default function NotificationsPage() {
         generatedNotifications.push({
           id: `activity-${activity.id || index}`,
           type,
-          title: activity.type ? activity.type.toUpperCase() : "HEARTBEAT",
+          title: activity.type ? activity.type.toUpperCase() : "SYSTEM EVENT",
           message: activity.message,
           timestamp,
-          read: true,
+          read: false, // Changed from true to false so notifications are visible
           category,
         });
       });
@@ -247,7 +254,7 @@ export default function NotificationsPage() {
       />
 
       {/* Narrative Header */}
-      <div className={`relative px-6 sm:px-10 py-10 border-b ${borderClass} overflow-hidden`}>
+      <div className={`relative px-6 sm:px-10 py-6 border-b ${borderClass} overflow-hidden`}>
         <div className="absolute inset-0 z-0">
           <img
             src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2000"
@@ -262,20 +269,20 @@ export default function NotificationsPage() {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="relative z-10 max-w-5xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-8"
+          className="relative z-10 max-w-5xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4"
         >
-          <div className="space-y-2">
+          <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-olleey-yellow/10 border border-olleey-yellow/20 flex items-center justify-center">
-                <Bell className="w-3 h-3 text-olleey-yellow" />
+              <div className="w-5 h-5 rounded-lg bg-olleey-yellow/10 border border-olleey-yellow/20 flex items-center justify-center">
+                <Bell className="w-2.5 h-2.5 text-olleey-yellow" />
               </div>
-              <span className="text-[9px] uppercase font-black tracking-[0.3em] text-olleey-yellow font-mono">Transmission Hub</span>
+              <span className="text-[8px] uppercase font-black tracking-[0.3em] text-olleey-yellow font-mono">Transmission Hub</span>
             </div>
-            <h1 className={`text-2xl md:text-3xl font-300 ${textClass} tracking-tight leading-tight`}>
+            <h1 className={`text-xl md:text-2xl font-300 ${textClass} tracking-tight leading-tight`}>
               Signal <span className="font-bold">Log</span>
             </h1>
-            <p className={`text-sm ${textSecondaryClass} max-w-lg leading-relaxed`}>
-              Real-time telemetry from the global neural network. Monitor asset localization and system integrity.
+            <p className={`text-[13px] ${textSecondaryClass} max-w-lg leading-relaxed`}>
+              Real-time telemetry from the global neural network.
             </p>
           </div>
 
@@ -298,7 +305,7 @@ export default function NotificationsPage() {
         {/* Navigation Sidebar */}
         <div className="lg:w-64 shrink-0 space-y-8">
           <div className="space-y-2">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30 font-mono ml-4">Filter Feed</span>
+            <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} opacity-40 font-mono ml-4`}>Filter Feed</span>
             <div className="space-y-1">
               {(["all", "unread", "job", "channel", "system"] as const).map((filterOption) => (
                 <button
@@ -330,9 +337,9 @@ export default function NotificationsPage() {
           <div className={`${cardClass} border ${borderClass} rounded-3xl p-6 space-y-4`}>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] uppercase font-black tracking-widest opacity-40">Live Sync</span>
+              <span className={`text-[10px] uppercase font-black tracking-widest ${textSecondaryClass} opacity-40`}>Live Sync</span>
             </div>
-            <p className="text-[10px] leading-relaxed opacity-60 italic font-mono uppercase tracking-tighter">
+            <p className={`text-[10px] leading-relaxed ${textSecondaryClass} opacity-60 italic font-mono uppercase tracking-tighter`}>
               Awaiting next cycle... [4.2s]
             </p>
           </div>
@@ -423,14 +430,14 @@ export default function NotificationsPage() {
                             </span>
                           </div>
 
-                          <p className={`text-sm leading-relaxed transition-opacity ${notif.read ? 'opacity-40' : 'opacity-70 group-hover:opacity-100 italic'}`}>
+                          <p className={`text-sm leading-relaxed transition-all duration-300 ${textSecondaryClass} ${notif.read ? 'opacity-40' : 'opacity-70 group-hover:opacity-100'}`}>
                             {notif.message}
                           </p>
                         </div>
 
                         <div className="shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button variant="ghost" className="w-10 h-10 rounded-xl hover:bg-white/5 p-0">
-                            <MoreVertical className="w-4 h-4 text-white/20" />
+                            <MoreVertical className={`w-4 h-4 ${textSecondaryClass}`} />
                           </Button>
                         </div>
                       </div>

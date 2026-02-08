@@ -166,7 +166,7 @@ export default function SettingsPage() {
         className="max-w-4xl mx-auto space-y-12"
       >
         {/* Cinema Header */}
-        <motion.div variants={itemVariants} className="relative group rounded-[2.5rem] overflow-hidden border border-white/5 min-h-[220px] flex items-end shadow-2xl bg-[#0c0c0c]">
+        <motion.div variants={itemVariants} className="relative group rounded-[2.5rem] overflow-hidden border border-white/5 min-h-[160px] flex items-end shadow-2xl bg-[#0c0c0c]">
           <img
             src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=2000"
             className="absolute inset-0 w-full h-full object-cover brightness-[0.25] group-hover:scale-105 transition-transform duration-[10000ms]"
@@ -174,12 +174,12 @@ export default function SettingsPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0c] via-[#0c0c0c]/80 to-transparent" />
 
-          <div className="relative z-10 p-12 w-full flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="relative z-10 p-8 w-full flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-olleey-yellow/10 backdrop-blur-3xl border border-olleey-yellow/20 text-[10px] font-black uppercase tracking-[0.3em] text-olleey-yellow mb-6 shadow-[0_0_30px_rgba(251,191,36,0.1)]">
-                <SettingsIcon className="w-4 h-4 shadow-sm" /> Workspace Protocol
+              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-olleey-yellow/10 backdrop-blur-3xl border border-olleey-yellow/20 text-[9px] font-black uppercase tracking-[0.3em] text-olleey-yellow mb-3 shadow-[0_0_30px_rgba(251,191,36,0.1)]">
+                <SettingsIcon className="w-3.5 h-3.5 shadow-sm" /> Workspace Protocol
               </div>
-              <h1 className="text-4xl md:text-6xl font-normal text-white tracking-tighter mb-3 leading-none">
+              <h1 className="text-3xl md:text-4xl font-normal text-white tracking-tighter mb-2 leading-none">
                 Environment
               </h1>
               <p className={`${textSecondaryClass} text-sm md:text-base max-w-xl font-light tracking-tight opacity-60 leading-relaxed`}>

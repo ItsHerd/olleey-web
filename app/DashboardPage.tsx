@@ -148,8 +148,19 @@ export default function DashboardPage() {
     useMemo(() => (selectedChannelId
       ? { channel_id: selectedChannelId, project_id: selectedProject?.id }
       : { project_id: selectedProject?.id }), [selectedChannelId, selectedProject?.id]),
-    { enabled: canFetchContent }
+    { enabled: true } // Always enabled - let the hook handle fetching
   );
+
+  // Force initial fetch on mount
+  useEffect(() => {
+    console.log('[DashboardPage] Component mounted, triggering initial fetch');
+    const timer = setTimeout(() => {
+      console.log('[DashboardPage] Executing forced refetch on mount');
+      refetchVideos();
+      refetchDashboard();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const handleRefresh = async () => {

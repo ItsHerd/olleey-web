@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Play, Pause, AlertCircle, CheckCircle, Flag, Volume2, Maximize2, SkipBack, SkipForward, Sparkles, User, RotateCcw, Languages, Image as ImageIcon, Check, Upload, Wand2, RefreshCw, Eye, Edit3, Type, Save, Activity, Zap, ShieldCheck } from "lucide-react";
+import { X, Play, Pause, AlertCircle, CheckCircle, Flag, Volume2, Maximize2, SkipBack, SkipForward, Sparkles, User, RotateCcw, Languages, Image as ImageIcon, Check, Upload, Wand2, RefreshCw, Eye, Edit3, Type, Save, Activity, Zap, ShieldCheck, Youtube, Settings, Baby, Shield, MessageSquare, ThumbsUp, Rss } from "lucide-react";
 import { useTheme } from "@/lib/useTheme";
 import { cn } from "@/lib/utils";
 import { useReview } from "@/lib/ReviewContext";
@@ -12,13 +12,19 @@ import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { jobsAPI, videosAPI, API_BASE_URL } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
+
+// Demo AI-generated thumbnail URL
+const DEMO_THUMBNAIL = "https://tii.imgix.net/production/articles/7643/03e02ef7-f12e-4faf-8551-37d5c5785586-UQ6LXV.jpg?auto=compress&fit=crop&auto=format";
 
 export default function ReviewHubPage() {
     const { theme } = useTheme();
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
+    const { toast } = useToast();
 
     // Extract video ID from path (/workflows/review/[id]) or query params (backward compatibility)
     const pathParts = pathname?.split('/') || [];
@@ -243,12 +249,29 @@ export default function ReviewHubPage() {
     const [isAiVerifying, setIsAiVerifying] = useState(false);
     const [verifyingItems, setVerifyingItems] = useState<Record<string, boolean>>({});
     const [selectedFocus, setSelectedFocus] = useState<"source" | "prod">("prod");
+    const [isPublishing, setIsPublishing] = useState(false);
+    const [isSavingDraft, setIsSavingDraft] = useState(false);
+    const [isPreviewMode, setIsPreviewMode] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // YouTube-style video settings
+    const [madeForKids, setMadeForKids] = useState(false);
+    const [ageRestricted, setAgeRestricted] = useState(false);
+    const [allowComments, setAllowComments] = useState(true);
+    const [allowRatings, setAllowRatings] = useState(true);
+    const [publishToFeed, setPublishToFeed] = useState(true);
 
     useEffect(() => {
         if (localizedTitle) setEditedTitle(localizedTitle);
         if (localizedDescription) setEditedDescription(localizedDescription);
     }, [localizedTitle, localizedDescription]);
+
+    // Auto-disable age restriction when made for kids is enabled
+    useEffect(() => {
+        if (madeForKids && ageRestricted) {
+            setAgeRestricted(false);
+        }
+    }, [madeForKids, ageRestricted]);
 
     const handleRedo = (key: string) => {
         setReprocessingItems(prev => ({ ...prev, [key]: true }));
@@ -262,10 +285,13 @@ export default function ReviewHubPage() {
         setThumbnailStrategy("generate");
         setIsGeneratingThumbnail(true);
         setShowThumbnailPreview(false);
+
+        // Demo: Use specific AI-generated thumbnail after 2-3 seconds
         setTimeout(() => {
             setIsGeneratingThumbnail(false);
             setShowThumbnailPreview(true);
-        }, 3500);
+            // The thumbnail URL is now set via the DEMO_THUMBNAIL constant
+        }, 2500);
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -281,12 +307,34 @@ export default function ReviewHubPage() {
 
     const handleGenerateInfo = () => {
         setIsGeneratingInfo(true);
-        setShowInfoPreview(false);
+
+        // Demo: Generate Spanish translations for Garry Tan video
         setTimeout(() => {
             setIsGeneratingInfo(false);
-            setTempTitle(`${videoTitle || "Untitled"} [${targetLanguage === "ES" ? "SPAIN" : "EN"}_LOCALIZED]`);
-            setTempDescription(`${videoDescription || "No original description."} \n\nLocalized for global distribution via Olleey AI.`);
-            setShowInfoPreview(true);
+
+            // Check if this is the Garry Tan demo video
+            const isGarryTanDemo = videoTitle?.includes("Garry Tan") || quickCheckState.videoId === "garry_tan_yc_demo";
+
+            if (isGarryTanDemo && targetLanguage === "ES") {
+                // Spanish translations for Garry Tan demo
+                setEditedTitle("Garry Tan - Presidente y CEO de Y Combinator");
+                setEditedDescription(
+                    "Garry Tan es el Presidente y CEO de Y Combinator (YC), la aceleradora de startups más exitosa del mundo.\n\n" +
+                    "En este video, Garry comparte perspectivas sobre la misión de YC de ayudar a las startups a tener éxito, " +
+                    "la importancia de construir grandes productos, y consejos para fundadores navegando el viaje del emprendimiento.\n\n" +
+                    "Este es un video de demostración que muestra las capacidades de localización de video impulsadas por IA de Olleey."
+                );
+            } else {
+                // Generic localized text for other videos
+                setEditedTitle(`${videoTitle || "Untitled"} [${targetLanguage === "ES" ? "SPAIN" : "EN"}_LOCALIZED]`);
+                setEditedDescription(`${videoDescription || "No original description."} \n\nLocalized for global distribution via Olleey AI.`);
+            }
+
+            // Switch to edit tab to show the generated content
+            setActiveTab('edit');
+
+            // Show success toast
+            toast("AI-generated content ready. Review and save when ready.", "success");
         }, 2500);
     };
 
@@ -296,52 +344,161 @@ export default function ReviewHubPage() {
         setShowInfoPreview(true);
     };
 
-    const handleApprove = async () => {
-        setIsSaving(true);
+    const saveChanges = async () => {
+        // Check if there are any changes to save
+        const titleChanged = editedTitle !== (localizedTitle || "");
+        const descriptionChanged = editedDescription !== (localizedDescription || "");
+        const thumbnailChanged = thumbnailStrategy === "upload" || thumbnailStrategy === "generate";
+
+        if (titleChanged || descriptionChanged || thumbnailChanged) {
+            // We need the job_id to save changes
+            // Try to find it from the video_id
+            const jobsResponse = await jobsAPI.listJobs();
+            const job = jobsResponse.jobs.find(j => j.source_video_id === quickCheckState.videoId);
+
+            if (job && languageCode) {
+                console.log('[ReviewHubPage] Saving changes:', {
+                    titleChanged,
+                    descriptionChanged,
+                    thumbnailChanged,
+                    thumbnailStrategy,
+                    job_id: job.job_id,
+                    language_code: languageCode
+                });
+
+                let thumbnailFile = customThumbnailFile;
+
+                // If using generated thumbnail, fetch it as a file
+                if (thumbnailStrategy === "generate" && !customThumbnailFile) {
+                    try {
+                        const response = await fetch(DEMO_THUMBNAIL);
+                        const blob = await response.blob();
+                        thumbnailFile = new File([blob], "generated-thumbnail.jpg", { type: "image/jpeg" });
+                    } catch (error) {
+                        console.error('[ReviewHubPage] Failed to fetch generated thumbnail:', error);
+                    }
+                }
+
+                await jobsAPI.updateLocalizedVideo(job.job_id, languageCode, {
+                    title: titleChanged ? editedTitle : undefined,
+                    description: descriptionChanged ? editedDescription : undefined,
+                    thumbnailFile: thumbnailChanged ? (thumbnailFile || undefined) : undefined,
+                    // YouTube settings (as metadata for now)
+                    ...(madeForKids !== undefined && { madeForKids }),
+                    ...(ageRestricted !== undefined && !madeForKids && { ageRestricted }),
+                    ...(allowComments !== undefined && { allowComments }),
+                    ...(allowRatings !== undefined && { allowRatings }),
+                    ...(publishToFeed !== undefined && { publishToFeed }),
+                } as any);
+
+                console.log('[ReviewHubPage] Changes saved successfully');
+                toast("Changes saved successfully", "success");
+
+                // Trigger refresh
+                window.dispatchEvent(new CustomEvent('olleey-refresh'));
+            } else {
+                console.warn('[ReviewHubPage] Could not find job to save changes');
+            }
+        }
+    };
+
+    const handlePublishToYouTube = async () => {
+        setIsPublishing(true);
 
         try {
-            // Check if there are any changes to save
-            const titleChanged = editedTitle !== (localizedTitle || "");
-            const descriptionChanged = editedDescription !== (localizedDescription || "");
-            const thumbnailChanged = thumbnailStrategy === "upload" && customThumbnailFile;
+            // Save any pending changes first
+            await saveChanges();
 
-            if (titleChanged || descriptionChanged || thumbnailChanged) {
-                // We need the job_id to save changes
-                // Try to find it from the video_id
-                const jobsResponse = await jobsAPI.listJobs();
-                const job = jobsResponse.jobs.find(j => j.source_video_id === quickCheckState.videoId);
+            const videoId = quickCheckState.videoId;
+            const isGarryTanDemo = videoId === "garry_tan_yc_demo" || videoTitle?.includes("Garry Tan");
 
-                if (job && languageCode) {
-                    console.log('[ReviewHubPage] Saving changes:', {
-                        titleChanged,
-                        descriptionChanged,
-                        thumbnailChanged,
-                        job_id: job.job_id,
-                        language_code: languageCode
-                    });
+            // Demo Flow for Garry Tan video
+            if (isGarryTanDemo && videoId && languageCode) {
+                console.log('[ReviewHubPage] Starting Garry Tan demo deployment flow');
 
-                    await jobsAPI.updateLocalizedVideo(job.job_id, languageCode, {
-                        title: titleChanged ? editedTitle : undefined,
-                        description: descriptionChanged ? editedDescription : undefined,
-                        thumbnailFile: thumbnailChanged ? customThumbnailFile : undefined,
-                    });
+                // Update status to processing
+                await jobsAPI.updateJobStatus(videoId, 'processing');
 
-                    console.log('[ReviewHubPage] Changes saved successfully');
+                toast("Deployment initiated! Redirecting to pipeline...", "success");
 
-                    // Trigger refresh
-                    window.dispatchEvent(new CustomEvent('olleey-refresh'));
-                } else {
-                    console.warn('[ReviewHubPage] Could not find job to save changes');
-                }
+                // Navigate to Dashboard immediately
+                router.push('/app?page=Dashboard');
+
+                // Trigger refresh to show in pipeline
+                window.dispatchEvent(new CustomEvent('olleey-refresh'));
+
+                // After 3 seconds, update to ready for review
+                setTimeout(async () => {
+                    try {
+                        if (videoId) {
+                            await jobsAPI.updateJobStatus(videoId, 'waiting_approval');
+                        }
+                        window.dispatchEvent(new CustomEvent('olleey-refresh'));
+                        toast("Video processed! Ready for review", "success");
+                    } catch (err) {
+                        console.error('[ReviewHubPage] Demo status update failed:', err);
+                    }
+                }, 3000);
+
+                return;
             }
 
-            // Navigate to Preview page
-            router.push(`/app?page=Preview&video_id=${quickCheckState.videoId}&lang=${languageCode}`, { scroll: false });
-        } catch (error) {
-            console.error('[ReviewHubPage] Failed to save changes:', error);
-            alert('Failed to save changes. Please try again.');
+            // Regular publishing flow for non-demo videos
+            if (videoId && languageCode) {
+                await jobsAPI.publishToYouTube(videoId, languageCode);
+                toast("Successfully published to YouTube!", "success");
+
+                // Refresh data
+                window.dispatchEvent(new CustomEvent('olleey-refresh'));
+
+                // Navigate back to library
+                router.push('/app?page=All Media', { scroll: false });
+            }
+        } catch (error: any) {
+            console.error('[ReviewHubPage] Publishing error:', error);
+            toast(error.message || "Failed to publish to YouTube", "error");
         } finally {
-            setIsSaving(false);
+            setIsPublishing(false);
+        }
+    };
+
+    const handleSaveDraft = async () => {
+        setIsSavingDraft(true);
+
+        try {
+            console.log('[ReviewHubPage] Saving draft...', {
+                videoId: quickCheckState.videoId,
+                languageCode
+            });
+
+            // Save any pending changes first
+            await saveChanges();
+
+            // Save as draft
+            if (quickCheckState.videoId && languageCode) {
+                await jobsAPI.saveDraft(quickCheckState.videoId, languageCode);
+                console.log('[ReviewHubPage] Draft saved successfully');
+
+                toast("Draft saved successfully!", "success");
+
+                // Refresh data
+                window.dispatchEvent(new CustomEvent('olleey-refresh'));
+
+                // Small delay to ensure toast is visible before navigation
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Navigate back to All Media page
+                console.log('[ReviewHubPage] Redirecting to All Media...');
+                router.push('/app?page=All Media');
+            } else {
+                console.error('[ReviewHubPage] Missing videoId or languageCode');
+                toast("Cannot save draft: missing video information", "error");
+            }
+        } catch (error: any) {
+            console.error('[ReviewHubPage] Save draft error:', error);
+            toast(error.message || "Failed to save draft", "error");
+        } finally {
+            setIsSavingDraft(false);
         }
     };
 
@@ -365,33 +522,67 @@ export default function ReviewHubPage() {
     };
 
     const togglePlay = () => {
-        if (originalVideoRef.current && dubbedVideoRef.current) {
-            if (isPlaying) {
-                originalVideoRef.current.pause();
-                dubbedVideoRef.current.pause();
-            } else {
-                originalVideoRef.current.play();
-                dubbedVideoRef.current.play();
+        // In preview mode, only dubbed video is shown
+        if (isPreviewMode) {
+            if (dubbedVideoRef.current) {
+                if (isPlaying) {
+                    dubbedVideoRef.current.pause();
+                } else {
+                    dubbedVideoRef.current.play().catch(err => {
+                        console.error('[ReviewHubPage] Error playing dubbed video:', err);
+                    });
+                }
+                setIsPlaying(!isPlaying);
             }
-            setIsPlaying(!isPlaying);
+        } else {
+            // In review mode, both videos should play in sync
+            if (originalVideoRef.current && dubbedVideoRef.current) {
+                if (isPlaying) {
+                    originalVideoRef.current.pause();
+                    dubbedVideoRef.current.pause();
+                } else {
+                    originalVideoRef.current.play().catch(err => console.error('Original video play error:', err));
+                    dubbedVideoRef.current.play().catch(err => console.error('Dubbed video play error:', err));
+                }
+                setIsPlaying(!isPlaying);
+            }
         }
     };
 
     const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
         const time = parseFloat(e.target.value);
-        if (originalVideoRef.current && dubbedVideoRef.current) {
-            originalVideoRef.current.currentTime = time;
-            dubbedVideoRef.current.currentTime = time;
-            setCurrentTime(time);
+        if (isPreviewMode) {
+            // In preview mode, only seek the dubbed video
+            if (dubbedVideoRef.current) {
+                dubbedVideoRef.current.currentTime = time;
+                setCurrentTime(time);
+            }
+        } else {
+            // In review mode, seek both videos
+            if (originalVideoRef.current && dubbedVideoRef.current) {
+                originalVideoRef.current.currentTime = time;
+                dubbedVideoRef.current.currentTime = time;
+                setCurrentTime(time);
+            }
         }
     };
 
     const skipTime = (seconds: number) => {
-        if (originalVideoRef.current && dubbedVideoRef.current) {
-            const newTime = Math.max(0, Math.min(duration, currentTime + seconds));
-            originalVideoRef.current.currentTime = newTime;
-            dubbedVideoRef.current.currentTime = newTime;
-            setCurrentTime(newTime);
+        const newTime = Math.max(0, Math.min(duration, currentTime + seconds));
+
+        if (isPreviewMode) {
+            // In preview mode, only skip the dubbed video
+            if (dubbedVideoRef.current) {
+                dubbedVideoRef.current.currentTime = newTime;
+                setCurrentTime(newTime);
+            }
+        } else {
+            // In review mode, skip both videos
+            if (originalVideoRef.current && dubbedVideoRef.current) {
+                originalVideoRef.current.currentTime = newTime;
+                dubbedVideoRef.current.currentTime = newTime;
+                setCurrentTime(newTime);
+            }
         }
     };
 
@@ -422,9 +613,17 @@ export default function ReviewHubPage() {
 
     const changePlaybackSpeed = (speed: number) => {
         setPlaybackSpeed(speed);
-        if (originalVideoRef.current && dubbedVideoRef.current) {
-            originalVideoRef.current.playbackRate = speed;
-            dubbedVideoRef.current.playbackRate = speed;
+        if (isPreviewMode) {
+            // In preview mode, only change dubbed video speed
+            if (dubbedVideoRef.current) {
+                dubbedVideoRef.current.playbackRate = speed;
+            }
+        } else {
+            // In review mode, change both videos
+            if (originalVideoRef.current && dubbedVideoRef.current) {
+                originalVideoRef.current.playbackRate = speed;
+                dubbedVideoRef.current.playbackRate = speed;
+            }
         }
     };
 
@@ -530,46 +729,64 @@ export default function ReviewHubPage() {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    {/* Preview Mode Toggle */}
+                    <div className={`flex items-center ${isDark ? "bg-white/[0.03]" : "bg-gray-100"} border ${isDark ? 'border-white/5' : 'border-gray-200'} rounded-full p-1`}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsPreviewMode(false)}
+                            className={cn(
+                                "h-7 px-4 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all",
+                                !isPreviewMode
+                                    ? (isDark ? "bg-white/10 text-white shadow-sm" : "bg-white text-black shadow-sm")
+                                    : (isDark ? "text-white/30 hover:text-white" : "text-black/40 hover:text-black")
+                            )}
+                        >
+                            Review
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsPreviewMode(true)}
+                            className={cn(
+                                "h-7 px-4 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all",
+                                isPreviewMode
+                                    ? (isDark ? "bg-white/10 text-white shadow-sm" : "bg-white text-black shadow-sm")
+                                    : (isDark ? "text-white/30 hover:text-white" : "text-black/40 hover:text-black")
+                            )}
+                        >
+                            <Eye className="w-3 h-3 mr-1.5" />
+                            Preview
+                        </Button>
+                    </div>
+
                     {!isApproved && (
-                        <>
-                            <Button
-                                onClick={async () => {
-                                    if (confirm("Cancel this review? The job will be cancelled and removed from the pipeline.")) {
-                                        try {
-                                            if (quickCheckState.videoId) {
-                                                await jobsAPI.cancelJob(quickCheckState.videoId);
-                                            }
-                                            // Trigger refresh
-                                            window.dispatchEvent(new CustomEvent('olleey-refresh'));
-                                            router.push('/app?page=All Media');
-                                        } catch (error) {
-                                            console.error("Failed to cancel job:", error);
-                                            alert("Failed to cancel job. Please try again.");
+                        <Button
+                            onClick={async () => {
+                                if (confirm("Cancel this review? The job will be cancelled and removed from the pipeline.")) {
+                                    try {
+                                        if (quickCheckState.videoId) {
+                                            await jobsAPI.cancelJob(quickCheckState.videoId);
                                         }
+                                        // Trigger refresh
+                                        window.dispatchEvent(new CustomEvent('olleey-refresh'));
+                                        router.push('/app?page=All Media');
+                                    } catch (error) {
+                                        console.error("Failed to cancel job:", error);
+                                        alert("Failed to cancel job. Please try again.");
                                     }
-                                }}
-                                variant="outline"
-                                className={`h-10 px-6 rounded-full bg-transparent hover:bg-red-500/10 text-red-500 border-red-500/20 hover:border-red-500/40 text-[10px] font-black uppercase tracking-[0.2em]`}
-                            >
-                                <X className="w-3.5 h-3.5 mr-2" /> Cancel Review
-                            </Button>
-                            <Button
-                                onClick={handleApprove}
-                                disabled={isSaving}
-                                className={`h-10 px-6 rounded-full bg-green-600 hover:bg-green-500 text-black text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-green-900/20 disabled:opacity-50 disabled:cursor-not-allowed`}
-                            >
-                                {isSaving ? (
-                                    <><RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" /> Saving...</>
-                                ) : (
-                                    <><CheckCircle className="w-3.5 h-3.5 mr-2" /> Verify & Preview</>
-                                )}
-                            </Button>
-                        </>
+                                }
+                            }}
+                            variant="outline"
+                            className={`h-10 px-6 rounded-full bg-transparent hover:bg-red-500/10 text-red-500 border-red-500/20 hover:border-red-500/40 text-[10px] font-black uppercase tracking-[0.2em]`}
+                        >
+                            <X className="w-3.5 h-3.5 mr-2" /> Cancel Review
+                        </Button>
                     )}
                     {isApproved && (
                         <div className="h-10 px-6 rounded-full border border-green-500/20 bg-green-500/5 flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Asset Verified</span>
+                            <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Live on YouTube</span>
                         </div>
                     )}
                 </div>
@@ -580,48 +797,54 @@ export default function ReviewHubPage() {
                 <div className={`flex-1 flex flex-col relative rounded-[2.5rem] border ${borderClass} bg-[#0c0c0c] overflow-hidden shadow-2xl`}>
 
                     {/* Video Grid */}
-                    <div className="flex-1 grid grid-cols-2 gap-px bg-white/5 relative group">
-                        {/* Source Feed */}
-                        <div
-                            onClick={() => setSelectedFocus("source")}
-                            className={cn(
-                                "relative overflow-hidden transition-all duration-500 bg-black/40 cursor-pointer rounded-tl-[2.5rem]",
-                                !originalMuted ? "opacity-100" : "opacity-60",
-                                selectedFocus === "source" ? "border-2 border-olleey-yellow z-10 shadow-[0_0_30px_rgba(234,179,8,0.2)]" : "border-transparent borderHover"
-                            )}
-                        >
-                            <div className="absolute top-6 left-6 z-20 flex items-center gap-2.5">
-                                <Badge className={cn(
-                                    "backdrop-blur-md border px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full pointer-events-none transition-colors",
-                                    selectedFocus === "source"
-                                        ? "bg-olleey-yellow text-black border-olleey-yellow"
-                                        : "bg-black/40 text-white/50 border-white/10"
-                                )}>
-                                    Original Source
-                                </Badge>
+                    <div className={cn(
+                        "flex-1 relative group",
+                        isPreviewMode ? "flex items-center justify-center bg-white/5 p-4" : "grid grid-cols-2 gap-px bg-white/5"
+                    )}>
+                        {/* Source Feed - Hidden in Preview Mode */}
+                        {!isPreviewMode && (
+                            <div
+                                onClick={() => setSelectedFocus("source")}
+                                className={cn(
+                                    "relative overflow-hidden transition-all duration-500 bg-black/40 cursor-pointer rounded-tl-[2.5rem]",
+                                    !originalMuted ? "opacity-100" : "opacity-60",
+                                    selectedFocus === "source" ? "border-2 border-olleey-yellow z-10 shadow-[0_0_30px_rgba(234,179,8,0.2)]" : "border-transparent borderHover"
+                                )}
+                            >
+                                <div className="absolute top-6 left-6 z-20 flex items-center gap-2.5">
+                                    <Badge className={cn(
+                                        "backdrop-blur-md border px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full pointer-events-none transition-colors",
+                                        selectedFocus === "source"
+                                            ? "bg-olleey-yellow text-black border-olleey-yellow"
+                                            : "bg-black/40 text-white/50 border-white/10"
+                                    )}>
+                                        Original Source
+                                    </Badge>
+                                </div>
+                                <video
+                                    ref={originalVideoRef}
+                                    src={originalVideoUrl}
+                                    className="w-full h-full object-contain"
+                                    muted={originalMuted}
+                                    onTimeUpdate={handleVideoTimeUpdate}
+                                    onLoadedMetadata={handleVideoLoadedMetadata}
+                                    onPlay={handleVideoPlay}
+                                    onPause={handleVideoPause}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleOriginalMute();
+                                        setSelectedFocus("source");
+                                    }}
+                                />
                             </div>
-                            <video
-                                ref={originalVideoRef}
-                                src={originalVideoUrl}
-                                className="w-full h-full object-contain"
-                                muted={originalMuted}
-                                onTimeUpdate={handleVideoTimeUpdate}
-                                onLoadedMetadata={handleVideoLoadedMetadata}
-                                onPlay={handleVideoPlay}
-                                onPause={handleVideoPause}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleOriginalMute();
-                                    setSelectedFocus("source");
-                                }}
-                            />
-                        </div>
+                        )}
 
                         {/* Dubbed Feed */}
                         <div
                             onClick={() => setSelectedFocus("prod")}
                             className={cn(
-                                "relative overflow-hidden transition-all duration-500 bg-black/40 cursor-pointer rounded-tr-[2.5rem]",
+                                "relative overflow-hidden transition-all duration-500 bg-black/40 cursor-pointer",
+                                isPreviewMode ? "rounded-[2rem] w-full aspect-video shadow-2xl" : "rounded-tr-[2.5rem]",
                                 !dubbedMuted ? "opacity-100" : "opacity-60",
                                 selectedFocus === "prod" ? "border-2 border-olleey-yellow z-10 shadow-[0_0_30px_rgba(234,179,8,0.2)]" : "border-transparent borderHover"
                             )}
@@ -629,11 +852,11 @@ export default function ReviewHubPage() {
                             <div className="absolute top-6 left-6 z-20 flex items-center gap-2.5 ">
                                 <Badge className={cn(
                                     "backdrop-blur-md border px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full pointer-events-none transition-colors",
-                                    selectedFocus === "prod"
+                                    selectedFocus === "prod" || isPreviewMode
                                         ? "bg-olleey-yellow text-black border-olleey-yellow"
                                         : "bg-black/40 text-white/50 border-white/10"
                                 )}>
-                                    {languageName} Output
+                                    {isPreviewMode ? "Final Output Preview" : `${languageName} Output`}
                                 </Badge>
                             </div>
                             {dubbedVideoUrl ? (
@@ -642,10 +865,18 @@ export default function ReviewHubPage() {
                                     src={dubbedVideoUrl}
                                     className="w-full h-full object-contain"
                                     muted={dubbedMuted}
+                                    playsInline
+                                    preload="metadata"
                                     onTimeUpdate={handleVideoTimeUpdate}
                                     onLoadedMetadata={handleVideoLoadedMetadata}
                                     onPlay={handleVideoPlay}
                                     onPause={handleVideoPause}
+                                    onError={(e) => {
+                                        console.error('[ReviewHubPage] Dubbed video error:', {
+                                            url: dubbedVideoUrl,
+                                            error: e
+                                        });
+                                    }}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         toggleDubbedMute();
@@ -653,11 +884,14 @@ export default function ReviewHubPage() {
                                     }}
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <div className="text-center space-y-3">
-                                        <RefreshCw className="w-8 h-8 text-white/20 animate-spin mx-auto" />
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">
-                                            Localized Output Processing
+                                <div className="w-full h-full flex items-center justify-center bg-black/20">
+                                    <div className="text-center space-y-3 p-6">
+                                        <AlertCircle className="w-12 h-12 text-white/20 mx-auto" />
+                                        <p className="text-xs font-bold text-white/60">
+                                            Localized video not ready
+                                        </p>
+                                        <p className="text-[10px] text-white/30">
+                                            The dubbed video is still processing or the URL is not available.
                                         </p>
                                     </div>
                                 </div>
@@ -754,8 +988,129 @@ export default function ReviewHubPage() {
                 {/* Sidebar */}
                 <aside className={`w-[400px] flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2`}>
 
-                    {/* Checklist Panel */}
-                    <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-6 shadow-xl`}>
+                    {/* Preview Mode: Show Metadata Prominently */}
+                    {isPreviewMode && (
+                        <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-6 shadow-xl`}>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-full bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20">
+                                    <Eye className="w-4 h-4 text-olleey-yellow" />
+                                </div>
+                                <h3 className="text-sm font-medium tracking-tight">Final Output Preview</h3>
+                            </div>
+
+                            {/* Thumbnail Preview */}
+                            <div className="aspect-video rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl group">
+                                <img
+                                    src={thumbnailStrategy === 'upload' && customThumbnail ? customThumbnail : (thumbnailStrategy === 'generate' ? DEMO_THUMBNAIL : (quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"))}
+                                    alt="Thumbnail Preview"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                            </div>
+
+                            {/* Title */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Type className="w-3.5 h-3.5 text-white/40" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Title</span>
+                                </div>
+                                <p className="text-base font-bold text-white leading-snug">
+                                    {(() => {
+                                        // Use edited title if available, otherwise show Spanish for Garry Tan demo
+                                        if (editedTitle && editedTitle !== (localizedTitle || "")) {
+                                            return editedTitle;
+                                        }
+                                        // If Garry Tan demo and Spanish, show Spanish title
+                                        if ((videoTitle?.includes("Garry Tan") || quickCheckState.videoId === "garry_tan_yc_demo") && languageCode === "es") {
+                                            return "Garry Tan - Presidente y CEO de Y Combinator";
+                                        }
+                                        return editedTitle || localizedTitle || videoTitle || "Untitled Video";
+                                    })()}
+                                </p>
+                            </div>
+
+                            {/* Description */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Edit3 className="w-3.5 h-3.5 text-white/40" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Description</span>
+                                </div>
+                                <p className="text-sm text-white/70 leading-relaxed line-clamp-6">
+                                    {(() => {
+                                        // Use edited description if available, otherwise show Spanish for Garry Tan demo
+                                        if (editedDescription && editedDescription !== (localizedDescription || "No description provided.")) {
+                                            return editedDescription;
+                                        }
+                                        // If Garry Tan demo and Spanish, show Spanish description
+                                        if ((videoTitle?.includes("Garry Tan") || quickCheckState.videoId === "garry_tan_yc_demo") && languageCode === "es") {
+                                            return "Garry Tan es el Presidente y CEO de Y Combinator (YC), la aceleradora de startups más exitosa del mundo.\n\nEn este video, Garry comparte perspectivas sobre la misión de YC de ayudar a las startups a tener éxito, la importancia de construir grandes productos, y consejos para fundadores navegando el viaje del emprendimiento.\n\nEste es un video de demostración que muestra las capacidades de localización de video impulsadas por IA de Olleey.";
+                                        }
+                                        return editedDescription || localizedDescription || videoDescription || "No description available";
+                                    })()}
+                                </p>
+                            </div>
+
+                            {/* Language Badge */}
+                            <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                                <div className="flex items-center gap-2">
+                                    <Languages className="w-4 h-4 text-olleey-yellow" />
+                                    <span className="text-xs font-bold">Target Language</span>
+                                </div>
+                                <Badge className="bg-olleey-yellow/10 text-olleey-yellow border-olleey-yellow/20">
+                                    {languageName}
+                                </Badge>
+                            </div>
+
+                            {/* Launch Actions */}
+                            {!isApproved && (
+                                <div className="space-y-3 pt-2">
+                                    <Button
+                                        onClick={handlePublishToYouTube}
+                                        disabled={isPublishing || isSavingDraft}
+                                        className="w-full h-11 rounded-full bg-olleey-yellow hover:bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-olleey-yellow/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isPublishing ? (
+                                            <><RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" /> Publishing...</>
+                                        ) : (
+                                            <><Youtube className="w-3.5 h-3.5 mr-2" /> Launch to YouTube</>
+                                        )}
+                                    </Button>
+                                    <Button
+                                        onClick={handleSaveDraft}
+                                        disabled={isPublishing || isSavingDraft}
+                                        variant="outline"
+                                        className="w-full h-11 rounded-full bg-transparent hover:bg-white/5 text-white border-white/10 hover:border-white/20 text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isSavingDraft ? (
+                                            <><RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" /> Saving...</>
+                                        ) : (
+                                            <><Save className="w-3.5 h-3.5 mr-2" /> Save Draft</>
+                                        )}
+                                    </Button>
+                                </div>
+                            )}
+
+                            {/* Update Action for Approved Videos */}
+                            {isApproved && (
+                                <div className="pt-2">
+                                    <Button
+                                        onClick={handlePublishToYouTube}
+                                        disabled={isPublishing}
+                                        className="w-full h-11 rounded-full bg-olleey-yellow hover:bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-olleey-yellow/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isPublishing ? (
+                                            <><RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" /> Updating...</>
+                                        ) : (
+                                            <><RefreshCw className="w-3.5 h-3.5 mr-2" /> Update on YouTube</>
+                                        )}
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Review Mode: Show Checklist */}
+                    {!isPreviewMode && (
+                        <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-6 shadow-xl`}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2.5">
                                 <div className="w-8 h-8 rounded-full bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20">
@@ -832,8 +1187,10 @@ export default function ReviewHubPage() {
                             ))}
                         </div>
                     </div>
+                    )}
 
-                    {/* Thumbnail Panel */}
+                    {/* Thumbnail Panel - Review Mode Only */}
+                    {!isPreviewMode && (
                     <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-6 shadow-xl`}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2.5">
@@ -871,7 +1228,7 @@ export default function ReviewHubPage() {
                             ) : (
                                 <>
                                     <img
-                                        src={thumbnailStrategy === 'upload' && customThumbnail ? customThumbnail : (thumbnailStrategy === 'generate' ? "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800" : (quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"))}
+                                        src={thumbnailStrategy === 'upload' && customThumbnail ? customThumbnail : (thumbnailStrategy === 'generate' ? DEMO_THUMBNAIL : (quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"))}
                                         alt="Thumbnail Preview"
                                         className="w-full h-full object-cover opacity-80 group-hover/thumb:opacity-100 transition-opacity"
                                     />
@@ -898,8 +1255,10 @@ export default function ReviewHubPage() {
                             </Button>
                         )}
                     </div>
+                    )}
 
-                    {/* Metadata Panel */}
+                    {/* Metadata Panel - Review Mode Only */}
+                    {!isPreviewMode && (
                     <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-6 shadow-xl`}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2.5">
@@ -964,6 +1323,104 @@ export default function ReviewHubPage() {
                             </div>
                         )}
                     </div>
+                    )}
+
+                    {/* YouTube-style Video Settings */}
+                    {!isPreviewMode && (
+                    <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-5 shadow-xl`}>
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                                <Settings className="w-4 h-4 text-purple-400" />
+                            </div>
+                            <h3 className="text-sm font-medium tracking-tight">Video Settings</h3>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Made for Kids */}
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <Baby className="w-4 h-4 text-white/40" />
+                                    <div>
+                                        <div className="text-xs font-medium text-white">Made for Kids</div>
+                                        <div className="text-[10px] text-white/40 mt-0.5">Designed for children under 13</div>
+                                    </div>
+                                </div>
+                                <Switch
+                                    checked={madeForKids}
+                                    onCheckedChange={setMadeForKids}
+                                />
+                            </div>
+
+                            {/* Age Restriction */}
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <Shield className="w-4 h-4 text-white/40" />
+                                    <div>
+                                        <div className="text-xs font-medium text-white">Age Restriction</div>
+                                        <div className="text-[10px] text-white/40 mt-0.5">Restrict to viewers 18+</div>
+                                    </div>
+                                </div>
+                                <Switch
+                                    checked={ageRestricted}
+                                    onCheckedChange={setAgeRestricted}
+                                    disabled={madeForKids}
+                                />
+                            </div>
+
+                            {/* Allow Comments */}
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <MessageSquare className="w-4 h-4 text-white/40" />
+                                    <div>
+                                        <div className="text-xs font-medium text-white">Allow Comments</div>
+                                        <div className="text-[10px] text-white/40 mt-0.5">Viewers can leave comments</div>
+                                    </div>
+                                </div>
+                                <Switch
+                                    checked={allowComments}
+                                    onCheckedChange={setAllowComments}
+                                />
+                            </div>
+
+                            {/* Allow Ratings */}
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <ThumbsUp className="w-4 h-4 text-white/40" />
+                                    <div>
+                                        <div className="text-xs font-medium text-white">Allow Ratings</div>
+                                        <div className="text-[10px] text-white/40 mt-0.5">Show like/dislike counts</div>
+                                    </div>
+                                </div>
+                                <Switch
+                                    checked={allowRatings}
+                                    onCheckedChange={setAllowRatings}
+                                />
+                            </div>
+
+                            {/* Publish to Subscriptions Feed */}
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <Rss className="w-4 h-4 text-white/40" />
+                                    <div>
+                                        <div className="text-xs font-medium text-white">Publish to Feed</div>
+                                        <div className="text-[10px] text-white/40 mt-0.5">Notify subscribers of new video</div>
+                                    </div>
+                                </div>
+                                <Switch
+                                    checked={publishToFeed}
+                                    onCheckedChange={setPublishToFeed}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Settings Info */}
+                        <div className="pt-2 px-3">
+                            <p className="text-[10px] text-white/30 leading-relaxed">
+                                These settings will be applied when the video is published to YouTube.
+                            </p>
+                        </div>
+                    </div>
+                    )}
                 </aside>
             </div>
 

@@ -67,7 +67,18 @@ export function QueueAndReview({
                 logger.error("QueueAndReview", "Failed to load jobs", err);
             }
         };
+
+        // Load jobs on mount
         loadJobs();
+
+        // Listen for refresh events to reload jobs
+        const handleRefresh = () => {
+            logger.info("QueueAndReview", "Refresh event received, reloading jobs");
+            loadJobs();
+        };
+
+        window.addEventListener('olleey-refresh', handleRefresh);
+        return () => window.removeEventListener('olleey-refresh', handleRefresh);
     }, []);
 
     const activeVideos = filteredVideos.filter(v =>
@@ -109,8 +120,11 @@ export function QueueAndReview({
                                     key={`${video.video_id}-${idx}`}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    onClick={() => onNavigate(video.video_id)}
-                                    className={`group relative bg-white/[0.03] border border-white/5 rounded-3xl p-4 transition-all duration-300 hover:bg-white/[0.06] hover:border-white/10 hover:shadow-2xl hover:shadow-black/40 cursor-pointer overflow-hidden`}
+                                    onClick={() => {
+                                        if (isProcessing) return;
+                                        onNavigate(video.video_id);
+                                    }}
+                                    className={`group relative bg-white/[0.03] border border-white/5 rounded-3xl p-4 transition-all duration-300 ${isProcessing ? 'cursor-not-allowed opacity-80' : 'hover:bg-white/[0.06] hover:border-white/10 hover:shadow-2xl hover:shadow-black/40 cursor-pointer'} overflow-hidden`}
                                 >
                                     {/* Active Processing Glow */}
                                     {isProcessing && (
@@ -214,7 +228,8 @@ export function QueueAndReview({
                                             <Button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    if (isQueued || isReview || isProcessing) {
+                                                    if (isProcessing) return;
+                                                    if (isQueued || isReview) {
                                                         onNavigate(video.video_id);
                                                         return;
                                                     }
@@ -222,12 +237,15 @@ export function QueueAndReview({
                                                     if (job) setSelectedWorkflowJobId(job.job_id);
                                                     else onNavigate(video.video_id);
                                                 }}
+                                                disabled={isProcessing}
                                                 className={`w-full md:w-32 h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${isReview
                                                     ? 'bg-olleey-yellow text-black hover:bg-white hover:text-black shadow-[0_10px_20px_rgba(251,191,36,0.2)]'
                                                     : isQueued
                                                         ? 'bg-purple-600 text-white hover:bg-purple-500 shadow-[0_10px_20px_rgba(147,51,234,0.2)]'
-                                                        : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-                                                    }`}
+                                                        : isProcessing
+                                                            ? 'bg-white/5 text-white/20'
+                                                            : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                                    } ${isProcessing ? 'cursor-not-allowed grayscale opacity-30' : ''}`}
                                             >
                                                 {isReview ? (
                                                     <>Validate <Eye className="w-3 h-3" /></>
@@ -278,6 +296,8 @@ export function QueueAndReview({
                         setSelectedWorkflowJobId(null);
                         const response = await jobsAPI.listJobs();
                         setJobs(response.jobs || []);
+                        // Dispatch refresh event to update other components
+                        window.dispatchEvent(new CustomEvent('olleey-refresh'));
                     } catch (err) {
                         logger.error("QueueAndReview", "Failed to approve job", err);
                     }

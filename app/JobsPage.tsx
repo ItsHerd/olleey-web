@@ -153,7 +153,7 @@ export default function JobsPage() {
         openReview({
             videoId: job.source_video_id,
             languageCode: langCode,
-            originalVideoUrl: (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+            originalVideoUrl: (video as any).storage_url || (video as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
             dubbedVideoUrl: (job as any).video_url || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
             videoTitle: video.title,
             videoDescription: video.description,

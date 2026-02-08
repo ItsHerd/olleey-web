@@ -50,11 +50,18 @@ export default function HeroAscii({
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const name = formData.get('name') as string;
+    const accessCode = formData.get('accessCode') as string;
 
     try {
       if (authMode === 'login') {
         await authAPI.login({ email, password });
       } else {
+        // Invite-only validation
+        if (!accessCode || accessCode.trim() !== "olleey2026") {
+          setError("ERR_AUTH_INVITE: INVALID_ACCESS_CODE");
+          setLoading(false);
+          return;
+        }
         await authAPI.register({ email, password, name });
       }
       if (onAuthenticated) onAuthenticated();
@@ -371,7 +378,7 @@ export default function HeroAscii({
                           </button>
                         </div>
                         <p className="text-[10px] text-white/30 font-mono tracking-wider uppercase mb-8">
-                          {authMode === 'login' ? 'Authentication Required' : 'Initialize Account Creation'}
+                          {authMode === 'login' ? 'Authentication Required' : 'Invite Only - Access Code Required'}
                         </p>
                       </div>
 
@@ -410,6 +417,19 @@ export default function HeroAscii({
                               className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-xs focus:outline-none focus:border-white/40 focus:bg-white/5 transition-all placeholder:text-white/10"
                             />
                           </div>
+
+                          {authMode === 'register' && (
+                            <div className="space-y-2">
+                              <label className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] ml-1">Access_Code</label>
+                              <input
+                                name="accessCode"
+                                type="text"
+                                required
+                                placeholder="INVITE CODE"
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-xs focus:outline-none focus:border-white/40 focus:bg-white/5 transition-all placeholder:text-white/10"
+                              />
+                            </div>
+                          )}
                         </div>
 
                         {error && (

@@ -71,12 +71,8 @@ export function ReviewProvider({ children }: { children: React.ReactNode }) {
             ...params,
         });
 
-        // Navigate based on status state
-        if (params.isApproved || params.status === 'live' || params.status === 'ready') {
-            router.push(`/app?page=Preview&video_id=${params.videoId}&lang=${params.languageCode || 'es'}`, { scroll: false });
-        } else {
-            router.push(`/workflows/review/${params.videoId}?lang=${params.languageCode || 'es'}`, { scroll: false });
-        }
+        // Navigate to review page for all videos (preview functionality is merged into review page)
+        router.push(`/workflows/review/${params.videoId}?lang=${params.languageCode || 'es'}`, { scroll: false });
     }, [router]);
 
     const closeReview = useCallback(() => {

@@ -1425,6 +1425,48 @@ export const jobsAPI = {
   },
 
   /**
+   * Publish job to YouTube
+   * POST /jobs/{job_id}/publish
+   */
+  publishToYouTube: async (jobId: string, languageCode: string): Promise<{ message: string; video_id?: string }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/publish`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ language_code: languageCode }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to publish to YouTube");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Save job as draft
+   * POST /jobs/{job_id}/save-draft
+   */
+  saveDraft: async (jobId: string, languageCode: string): Promise<{ message: string }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/save-draft`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ language_code: languageCode }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to save draft");
+    }
+
+    return await response.json();
+  },
+
+  /**
    * Update localized video metadata (title, description, thumbnail)
    * PATCH /jobs/{job_id}/videos/{language_code}
    */
@@ -1467,6 +1509,27 @@ export const jobsAPI = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.detail || "Failed to update localized video");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Update job status (for demo purposes)
+   * PATCH /jobs/{job_id}/status
+   */
+  updateJobStatus: async (jobId: string, status: string): Promise<{ message: string }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to update job status");
     }
 
     return await response.json();

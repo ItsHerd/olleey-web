@@ -33,7 +33,9 @@ import {
   BarChart3,
   Globe,
   PlayCircle,
-  HardDrive
+  HardDrive,
+  ChevronDown,
+  Filter
 } from "lucide-react";
 import { formatViews, getRelativeTime } from "@/lib/utils";
 import type { Video as VideoType, MasterNode, LocalizationInfo } from "@/lib/api";
@@ -45,7 +47,7 @@ import { LoadingPanda } from "@/components/ui/LoadingPanda";
 
 type ViewMode = "grid" | "list";
 type SortBy = "date" | "views" | "title" | "status";
-type FilterStatus = "all" | "live" | "draft" | "processing";
+type FilterStatus = "all" | "live" | "draft";
 
 
 
@@ -84,7 +86,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   const { selectedProject } = useProject();
   const { dashboard } = useDashboard();
   const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
-    selectedProject?.id ? { project_id: selectedProject.id } : {}
+    selectedProject?.id ? { project_id: selectedProject.id } : undefined
   );
   const { isDemoMode, updateVideoState, refreshTrigger } = useDemo();
 
@@ -125,10 +127,42 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   // Auto-refetch immediately if library is empty after initial load
   useEffect(() => {
     if (!videosLoading && (!videos || videos.length === 0) && !hasAttemptedRefetch) {
+      console.log('[AllMediaPage] Videos empty after load, triggering refetch');
       setHasAttemptedRefetch(true);
       refetchVideos();
     }
   }, [videosLoading, videos?.length, hasAttemptedRefetch, refetchVideos]);
+
+  // Force initial fetch on mount - aggressive approach
+  useEffect(() => {
+    console.log('[AllMediaPage] Component mounted, triggering immediate fetch');
+    console.log('[AllMediaPage] Current state:', {
+      videosCount: videos?.length || 0,
+      videosLoading,
+      selectedProject: selectedProject?.id
+    });
+
+    // Always trigger refetch on mount to ensure fresh data
+    const timer = setTimeout(() => {
+      console.log('[AllMediaPage] Executing forced refetch on mount');
+      refetchVideos();
+    }, 50); // Very short delay, just enough to let component initialize
+
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Also refetch when component becomes visible again
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && (!videos || videos.length === 0)) {
+        console.log('[AllMediaPage] Page became visible, refetching');
+        refetchVideos();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [videos, refetchVideos]);
 
   // Handle scrolling to highlighted video
   useEffect(() => {
@@ -214,7 +248,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
     });
   }, [videos, selectedLanguages, dashboard, refreshTrigger]);
 
-  const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): FilterStatus | "queued" | "failed" => {
+  const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): FilterStatus | "queued" | "failed" | "processing" => {
     const statuses = Object.values(localizations).map(l => l.status);
     const activeStatuses = statuses.filter(s => s !== "not-started");
 
@@ -242,24 +276,30 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
       );
     }
 
-    // 2. Status Filter
-    if (filterStatus !== "all") {
-      filtered = filtered.filter(v => {
-        const s = getOverallVideoStatus(v.localizations);
+    // 2. Status Filter - Only show videos that need review (draft) or are live
+    // Exclude processing videos from the default view
+    filtered = filtered.filter(v => {
+      const s = getOverallVideoStatus(v.localizations);
+      const hasLive = Object.values(v.localizations || {}).some((l: any) => l.status === "live");
+      const hasDraft = Object.values(v.localizations || {}).some((l: any) => l.status === "draft");
 
-        // Special case for "live" to include any video with at least one live localization
-        if (filterStatus === "live") {
-          return s === "live" || Object.values(v.localizations || {}).some((l: any) => l.status === "live");
-        }
+      // Only show videos that are live or need review (draft)
+      if (filterStatus === "all") {
+        return hasLive || hasDraft;
+      }
 
-        // Special case for "processing" to include detailed states
-        if (filterStatus === "processing") {
-          return s === "processing" || s === "queued";
-        }
+      // Special case for "live" to include any video with at least one live localization
+      if (filterStatus === "live") {
+        return hasLive;
+      }
 
-        return s === filterStatus;
-      });
-    }
+      // Special case for "draft" to include videos needing review
+      if (filterStatus === "draft") {
+        return hasDraft;
+      }
+
+      return false;
+    });
 
     // 3. Sorting
     filtered.sort((a, b) => {
@@ -294,18 +334,20 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   }, [videosWithLocalizations, searchQuery, filterStatus, sortBy, sortOrder]);
 
   const stats = useMemo(() => {
-    const total = videosWithLocalizations.length;
+    const total = videosWithLocalizations.filter(v => {
+      const hasLive = Object.values(v.localizations || {}).some((l: any) => l.status === "live");
+      const hasDraft = Object.values(v.localizations || {}).some((l: any) => l.status === "draft");
+      return hasLive || hasDraft;
+    }).length;
     const live = videosWithLocalizations.filter(v => Object.values(v.localizations || {}).some((l: any) => l.status === "live")).length;
-    const draft = videosWithLocalizations.filter(v => getOverallVideoStatus(v.localizations) === "draft").length;
-    const processing = videosWithLocalizations.filter(v => getOverallVideoStatus(v.localizations) === "processing").length;
-    return { total, live, draft, processing };
+    const draft = videosWithLocalizations.filter(v => Object.values(v.localizations || {}).some((l: any) => l.status === "draft")).length;
+    return { total, live, draft };
   }, [videosWithLocalizations]);
 
   const statsItems = [
     { label: "Archived Units", value: stats.total, icon: Video, color: "text-white/40", bg: "bg-white/3", border: "border-white/5" },
     { label: "Distributed", value: stats.live, icon: Globe, color: "text-emerald-500", bg: "bg-emerald-500/5", border: "border-emerald-500/10", pulse: true },
-    { label: "Awaiting QA", value: stats.draft, icon: Sparkles, color: "text-olleey-yellow", bg: "bg-olleey-yellow/5", border: "border-olleey-yellow/10" },
-    { label: "Sync Active", value: stats.processing, icon: Activity, color: "text-blue-500", bg: "bg-blue-500/5", border: "border-blue-500/10" }
+    { label: "Awaiting QA", value: stats.draft, icon: Sparkles, color: "text-olleey-yellow", bg: "bg-olleey-yellow/5", border: "border-olleey-yellow/10" }
   ];
 
   return (
@@ -356,9 +398,9 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
       </div>
 
       {/* Modern Filter & Stats Bar - Glassmorphic Sticky */}
-      <div className="flex flex-col gap-6 sticky top-0 z-30 bg-dark-bg/60 backdrop-blur-2xl py-6 border-b border-white/5 -mx-6 px-6">
+      <div className="flex flex-col gap-6 sticky top-0 z-30 bg-dark-bg backdrop-blur-2xl py-6 border-b border-white/5 -mx-6 px-6">
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           {statsItems.map((item, i) => (
             <motion.div
               key={i}
@@ -400,25 +442,19 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
 
             <div className="h-10 w-px bg-white/5 mx-2 hidden lg:block" />
 
-            {/* Premium Pill Tabs */}
-            <div className="flex items-center gap-2 p-1 bg-white/3 rounded-full border border-white/5">
-              {[
-                { id: "all", label: "All Videos" },
-                { id: "live", label: "Published" },
-                { id: "draft", label: "Ready for Review" },
-                { id: "processing", label: "In Progress" }
-              ].map(f => (
-                <button
-                  key={f.id}
-                  onClick={() => setFilterStatus(f.id as any)}
-                  className={`px-6 py-2.5 text-[11px] font-black uppercase tracking-[0.15em] rounded-full transition-all duration-300 ${filterStatus === f.id
-                    ? 'bg-olleey-yellow text-black shadow-lg shadow-olleey-yellow/20'
-                    : 'text-white/30 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  {f.label}
-                </button>
-              ))}
+            {/* Dropdown Filter */}
+            <div className="relative group/filter">
+              <Filter className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none z-10" />
+              <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none z-10" />
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
+                className="appearance-none pl-14 pr-14 py-4 bg-white/5 border border-white/10 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] text-white focus:ring-0 focus:border-olleey-yellow/30 transition-all outline-none cursor-pointer hover:bg-white/10 min-w-[240px]"
+              >
+                <option value="all" className="bg-[#0a0a0a] text-white">All Videos</option>
+                <option value="live" className="bg-[#0a0a0a] text-white">Published</option>
+                <option value="draft" className="bg-[#0a0a0a] text-white">Ready for Review</option>
+              </select>
             </div>
           </div>
 
@@ -469,7 +505,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
         <motion.div
           key={viewMode + filterStatus + sortBy + sortOrder + searchQuery}
           variants={containerVariants}
-          initial="hidden"
+          initial={false}
           animate="visible"
           className="w-full mt-10 relative z-10"
         >
@@ -524,6 +560,11 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                       const status = getOverallVideoStatus(video.localizations);
                       const hasLive = Object.values(video.localizations || {}).some((l: any) => l.status === "live");
 
+                      if (status === "processing") {
+                        // Items processing in production pipeline should not be clickable
+                        return;
+                      }
+
                       if (status === "draft") {
                         const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "draft") || "es";
                         const loc = video.localizations[langCode];
@@ -538,16 +579,6 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                           thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
                           isApproved: false,
                           approvedAt: (video as any).published_at
-                        });
-                      } else if (status === "processing") {
-                        const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "processing") || "es";
-                        const loc = video.localizations[langCode];
-                        openReview({
-                          videoId: loc?.job_id || video.video_id,
-                          languageCode: langCode,
-                          status: 'processing',
-                          videoTitle: video.title,
-                          isApproved: false
                         });
                       } else if (hasLive) {
                         const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "live") || "es";
@@ -568,7 +599,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                         router.push(`/app?page=Workflows&video=${video.video_id}`);
                       }
                     }}
-                    className={`relative ${cardClass} border rounded-[2.5rem] overflow-hidden cursor-pointer transition-all duration-500 hover:border-olleey-yellow/30 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] group hover:-translate-y-2 ${highlightedVideoId === video.video_id
+                    className={`relative ${cardClass} border rounded-[2.5rem] overflow-hidden transition-all duration-500 group ${status === "processing" ? 'cursor-not-allowed opacity-80' : 'cursor-pointer hover:border-olleey-yellow/30 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] hover:-translate-y-2'} ${highlightedVideoId === video.video_id
                       ? 'border-olleey-yellow shadow-[0_0_30px_rgba(251,191,36,0.2)] ring-1 ring-olleey-yellow/20 bg-olleey-yellow/[0.02]'
                       : 'border-white/5'
                       }`}
@@ -706,13 +737,18 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                         <tr
                           key={video.video_id}
                           id={`video-row-${video.video_id}`}
-                          className={`group hover:bg-white/[0.03] transition-all duration-300 cursor-pointer ${highlightedVideoId === video.video_id
+                          className={`group transition-all duration-300 ${status === "processing" ? 'cursor-not-allowed opacity-80' : 'cursor-pointer hover:bg-white/[0.03]'} ${highlightedVideoId === video.video_id
                             ? 'bg-olleey-yellow/5 border-l-2 border-olleey-yellow'
                             : ''
                             }`}
                           onClick={() => {
                             const status = getOverallVideoStatus(video.localizations);
                             const hasLive = Object.values(video.localizations || {}).some((l: any) => l.status === "live");
+
+                            if (status === "processing") {
+                              // Items processing in production pipeline should not be clickable
+                              return;
+                            }
 
                             if (status === "draft") {
                               const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "draft") || "es";
@@ -728,16 +764,6 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                                 thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
                                 isApproved: false,
                                 approvedAt: (video as any).published_at
-                              });
-                            } else if (status === "processing") {
-                              const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "processing") || "es";
-                              const loc = video.localizations[langCode];
-                              openReview({
-                                videoId: loc?.job_id || video.video_id,
-                                languageCode: langCode,
-                                status: 'processing',
-                                videoTitle: video.title,
-                                isApproved: false
                               });
                             } else if (hasLive) {
                               const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "live") || "es";

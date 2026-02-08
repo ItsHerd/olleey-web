@@ -87,17 +87,17 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
 
   return (
     <div className={`h-full flex-1 p-6 ${bgClass} overflow-y-auto custom-scrollbar`}>
-      <div className="max-w-4xl mx-auto w-full space-y-8 pb-20 pt-8">
+      <div className="max-w-4xl mx-auto w-full space-y-6 pb-20 pt-4">
 
         {/* Header Section */}
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-4">
           <div>
-            <h1 className="text-4xl font-normal text-white tracking-tighter mb-2">Account Settings</h1>
-            <p className={`${textSecondaryClass} text-sm font-light tracking-tight opacity-60`}>
+            <h1 className="text-2xl font-normal text-white tracking-tighter mb-1">Account Settings</h1>
+            <p className={`${textSecondaryClass} text-[13px] font-light tracking-tight opacity-60`}>
               Manage your personal security protocols and session data.
             </p>
           </div>
-          <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+          <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-white/40">
             SECURE_MODE_ACTIVE
           </div>
         </div>

@@ -239,6 +239,9 @@ export function ManualProcessModal({
 
             logger.info("ManualProcessModal", "Job created successfully", response);
 
+            // Dispatch refresh event to update pipeline
+            window.dispatchEvent(new CustomEvent('olleey-refresh'));
+
             // Phase 1: Success State (Green Check)
             // Wait roughly 1 sec to show "Initializing" logic (simulated by network request time + small delay if fast)
             setTimeout(() => {

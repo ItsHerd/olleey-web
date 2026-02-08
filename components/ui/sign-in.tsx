@@ -277,20 +277,27 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
           </GlassInputWrapper>
         </div>
 
+        <div className="animate-element animate-delay-700">
+          <label className="text-sm font-medium text-muted-foreground">Invite Access Code</label>
+          <GlassInputWrapper>
+            <input name="accessCode" type="text" placeholder="Enter your invite code" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
+          </GlassInputWrapper>
+        </div>
+
         <Button
           type="submit"
-          className="animate-element animate-delay-700 w-full rounded-2xl py-7 font-medium mt-2"
+          className="animate-element animate-delay-800 w-full rounded-2xl py-7 font-medium mt-2"
         >
           Create Account
         </Button>
       </form>
 
-      <div className="animate-element animate-delay-800 relative flex items-center justify-center">
+      <div className="animate-element animate-delay-900 relative flex items-center justify-center">
         <span className="w-full border-t border-border"></span>
         <span className="px-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 bg-background absolute">Or continue with</span>
       </div>
 
-      <div className="animate-element animate-delay-900">
+      <div className="animate-element animate-delay-1000">
         <Button
           variant="outline"
           onClick={onGoogleSignUp}
@@ -301,11 +308,11 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
         </Button>
       </div>
 
-      <p className="animate-element animate-delay-1000 text-center text-sm text-muted-foreground">
+      <p className="animate-element animate-delay-1100 text-center text-sm text-muted-foreground">
         Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); onSignInClick?.(); }} className="text-olleey-yellow hover:underline transition-colors">Sign In</a>
       </p>
 
-      <div className="animate-element animate-delay-1100 mt-4 flex justify-center gap-4 text-xs text-muted-foreground/60">
+      <div className="animate-element animate-delay-1200 mt-4 flex justify-center gap-4 text-xs text-muted-foreground/60">
         <a href="/privacy" className="hover:text-olleey-yellow transition-colors">Privacy Policy</a>
         <span>•</span>
         <a href="/terms" className="hover:text-olleey-yellow transition-colors">Terms of Service</a>

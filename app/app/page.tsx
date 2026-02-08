@@ -191,7 +191,7 @@ function AppContent() {
 
     const renderPage = () => {
         switch (currentPage) {
-            case "Dashboard": return <DashboardPage />;
+            case "Dashboard": return <DashboardPage key={`dashboard-${currentPage}`} />;
             case "Channels": return <ChannelsPage />;
             case "Accounts": return <AccountsPage onLogout={handleLogout} />;
             case "Usage": return <UsagePage />;
@@ -203,11 +203,11 @@ function AppContent() {
             case "Comment Mirroring": return <CommentsPage />;
             case "Settings": return <SettingsPage />;
             case "Manual Upload": return <ManualUploadPage channelGraph={channelGraph} />;
-            case "All Media": return <AllMediaPage channelGraph={channelGraph} />;
+            case "All Media": return <AllMediaPage key={`all-media-${currentPage}`} channelGraph={channelGraph} />;
             case "Review Hub": return <ReviewHubPage />;
             case "Preview": return <PreviewPage />;
             case "Processing": return <ProcessingPage />;
-            default: return <DashboardPage />;
+            default: return <DashboardPage key={`dashboard-default-${currentPage}`} />;
         }
     };
 
