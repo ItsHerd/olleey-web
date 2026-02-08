@@ -3,6 +3,8 @@
 import ProcessingPage from "@/app/ProcessingPage";
 import { use } from "react";
 
+export const runtime = 'edge';
+
 interface PageProps {
     params: Promise<{ id: string }>;
 }

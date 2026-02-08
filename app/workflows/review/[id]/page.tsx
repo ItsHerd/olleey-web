@@ -3,6 +3,8 @@
 import ReviewHubPage from "@/app/ReviewHubPage";
 import { use } from "react";
 
+export const runtime = 'edge';
+
 interface PageProps {
     params: Promise<{ id: string }>;
 }
