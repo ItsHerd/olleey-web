@@ -45,6 +45,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ManualProcessView } from "@/components/ui/manual-process-view";
 import { X } from "lucide-react";
 import { OlleeyLoader } from "@/components/ui/OlleeyLoader";
+import { getDraftsFromStorage, isDemoUser } from "@/lib/mockDemoData";
 
 type ViewMode = "grid" | "list";
 type SortBy = "date" | "views" | "title" | "status";
@@ -208,9 +209,17 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
 
   // Merge videos with their processing status / localizations
   const videosWithLocalizations = useMemo(() => {
-    if (!videos || videos.length === 0) return [];
+    // Get drafts from localStorage for demo user
+    const localStorageDrafts = getDraftsFromStorage(userId);
 
-    return videos.map(video => {
+    if (!videos || videos.length === 0) {
+      return localStorageDrafts;
+    }
+
+    // Combine videos from backend with localStorage drafts
+    const combinedVideos = [...videos, ...localStorageDrafts];
+
+    return combinedVideos.map(video => {
       const localizations: Record<string, LocalizationInfo> = {};
 
       // Map existing localizations from the video object

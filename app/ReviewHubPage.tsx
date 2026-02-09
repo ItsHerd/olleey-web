@@ -17,6 +17,7 @@ import { jobsAPI, videosAPI, API_BASE_URL } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { LocalizationStatus, JobStatus } from "@/lib/schema";
 import { logger } from "@/lib/logger";
+import { YC_CEO_DEMO_VIDEO, YC_CEO_SPANISH_TRANSLATION, isDemoUser, saveToDrafts } from "@/lib/mockDemoData";
 
 // Demo AI-generated thumbnail URL
 const DEMO_THUMBNAIL = "https://tii.imgix.net/production/articles/7643/03e02ef7-f12e-4faf-8551-37d5c5785586-UQ6LXV.jpg?auto=compress&fit=crop&auto=format";
@@ -79,6 +80,29 @@ export default function ReviewHubPage() {
                     video_url: (video as any).video_url
                 } : null
             });
+
+            // Check if this is the demo video first
+            if (videoIdFromUrl === "demo_yc_ceo_video_001" && isDemoUser(userId)) {
+                console.log('[ReviewHubPage] Demo video detected, using mock data');
+
+                const langCode = langFromUrl || "es";
+
+                openReview({
+                    videoId: videoIdFromUrl,
+                    languageCode: langCode,
+                    originalVideoUrl: YC_CEO_DEMO_VIDEO.storage_url,
+                    dubbedVideoUrl: YC_CEO_SPANISH_TRANSLATION.dubbed_video_url,
+                    videoTitle: YC_CEO_DEMO_VIDEO.title,
+                    videoDescription: YC_CEO_DEMO_VIDEO.description,
+                    thumbnailUrl: YC_CEO_DEMO_VIDEO.thumbnail_url,
+                    localizedTitle: YC_CEO_SPANISH_TRANSLATION.title,
+                    localizedDescription: YC_CEO_SPANISH_TRANSLATION.description,
+                    isApproved: false,
+                    approvedAt: YC_CEO_DEMO_VIDEO.published_at
+                });
+
+                return; // Exit early for demo video
+            }
 
             // Fetch sequence to ensure we have the most accurate backend data
             (async () => {
@@ -319,14 +343,19 @@ export default function ReviewHubPage() {
     const handleGenerateInfo = () => {
         setIsGeneratingInfo(true);
 
-        // Demo: Generate Spanish translations for Garry Tan video
+        // Demo: Generate Spanish translations
         setTimeout(() => {
             setIsGeneratingInfo(false);
 
-            // Check if this is the Garry Tan demo video
+            // Check if this is the YC CEO demo video
+            const isYcCeoDemo = quickCheckState.videoId === "demo_yc_ceo_video_001";
             const isGarryTanDemo = videoTitle?.includes("Garry Tan") || quickCheckState.videoId === "garry_tan_yc_demo";
 
-            if (isGarryTanDemo && targetLanguage === "ES") {
+            if (isYcCeoDemo && (targetLanguage === "ES" || languageCode === "es")) {
+                // Spanish translations for YC CEO demo
+                setEditedTitle(YC_CEO_SPANISH_TRANSLATION.title);
+                setEditedDescription(YC_CEO_SPANISH_TRANSLATION.description);
+            } else if (isGarryTanDemo && targetLanguage === "ES") {
                 // Spanish translations for Garry Tan demo
                 setEditedTitle("Garry Tan - Presidente y CEO de Y Combinator");
                 setEditedDescription(
@@ -345,7 +374,7 @@ export default function ReviewHubPage() {
             setActiveTab('edit');
 
             // Show success toast
-            toast("AI-generated content ready. Review and save when ready.", "success");
+            toast("✨ AI-generated Spanish translation ready!", "success");
         }, 2500);
     };
 
@@ -481,6 +510,56 @@ export default function ReviewHubPage() {
                 videoId: quickCheckState.videoId,
                 languageCode
             });
+
+            // Check if this is the demo video
+            if (quickCheckState.videoId === "demo_yc_ceo_video_001" && isDemoUser(userId)) {
+                // Save to localStorage for demo
+                const draftVideo = {
+                    video_id: `draft_${quickCheckState.videoId}_${languageCode}_${Date.now()}`,
+                    user_id: userId,
+                    title: editedTitle || YC_CEO_SPANISH_TRANSLATION.title,
+                    description: editedDescription || YC_CEO_SPANISH_TRANSLATION.description,
+                    storage_url: YC_CEO_SPANISH_TRANSLATION.dubbed_video_url,
+                    video_url: YC_CEO_SPANISH_TRANSLATION.dubbed_video_url,
+                    thumbnail_url: YC_CEO_DEMO_VIDEO.thumbnail_url,
+                    duration: 180,
+                    view_count: 0,
+                    status: 'draft',
+                    channel_id: 'demo_channel_es',
+                    channel_name: 'Spanish Dubs',
+                    language_code: languageCode,
+                    localizations: {
+                        [languageCode || 'es']: {
+                            status: 'draft',
+                            progress: 100,
+                            title: editedTitle || YC_CEO_SPANISH_TRANSLATION.title,
+                            description: editedDescription || YC_CEO_SPANISH_TRANSLATION.description,
+                            video_url: YC_CEO_SPANISH_TRANSLATION.dubbed_video_url
+                        }
+                    },
+                    metadata: {
+                        language: languageCode || 'es',
+                        source: 'demo_dubbing',
+                        original_video_id: 'demo_yc_ceo_video_001',
+                        is_demo: true
+                    }
+                };
+
+                saveToDrafts(draftVideo);
+                console.log('[ReviewHubPage] Demo draft saved to localStorage');
+
+                toast("✅ Draft saved successfully!", "success");
+
+                // Small delay to ensure toast is visible before navigation
+                await new Promise(resolve => setTimeout(resolve, 800));
+
+                // Navigate back to All Media page
+                console.log('[ReviewHubPage] Redirecting to All Media...');
+                router.push('/app?page=All Media');
+
+                setIsSavingDraft(false);
+                return;
+            }
 
             // Save any pending changes first
             await saveChanges();

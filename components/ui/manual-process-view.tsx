@@ -41,6 +41,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { logger } from "@/lib/logger";
 import { LANGUAGE_OPTIONS, getLanguageFlag } from "@/lib/languages";
 import { motion, AnimatePresence } from "framer-motion";
+import { getMockDraftVideos, simulateProcessing, isDemoUser, YC_CEO_SPANISH_TRANSLATION } from "@/lib/mockDemoData";
 
 type SourceTab = "channel" | "url" | "upload" | "drafts";
 
@@ -152,7 +153,10 @@ export function ManualProcessView({
                     setLoadingVideos(true);
                     setError(null);
                     console.log('[ManualProcessView] Loading draft videos from Supabase');
-                    
+
+                    // Get mock videos if demo user
+                    const mockVideos = getMockDraftVideos(userId);
+
                     const { data, error: queryError } = await supabase
                         .from('videos')
                         .select('*')
@@ -160,15 +164,24 @@ export function ManualProcessView({
                         .or('status.eq.draft,storage_url.not.is.null')
                         .is('deleted_at', null)
                         .order('created_at', { ascending: false });
-                    
+
                     if (queryError) throw queryError;
-                    
-                    console.log('[ManualProcessView] Loaded drafts:', { count: data?.length || 0 });
-                    setDraftVideos(data || []);
+
+                    // Combine mock videos with real data
+                    const combinedData = [...mockVideos, ...(data || [])];
+
+                    console.log('[ManualProcessView] Loaded drafts:', {
+                        count: combinedData.length,
+                        mockCount: mockVideos.length,
+                        realCount: data?.length || 0
+                    });
+                    setDraftVideos(combinedData);
                 } catch (err: any) {
                     logger.error("ManualProcessView", "Failed to load draft videos", err);
                     setError("Failed to load draft videos");
-                    setDraftVideos([]);
+                    // Still show mock videos even if query fails
+                    const mockVideos = getMockDraftVideos(userId);
+                    setDraftVideos(mockVideos);
                 } finally {
                     setLoadingVideos(false);
                 }
@@ -239,6 +252,46 @@ export function ManualProcessView({
                     return;
                 }
                 videoId = selectedVideoId;
+
+                // Check if this is the demo YC CEO video
+                if (videoId === "demo_yc_ceo_video_001" && isDemoUser(userId) && !saveAsDraft) {
+                    // Special handling for demo video
+                    console.log('[ManualProcessView] Demo video detected, starting simulation');
+
+                    if (selectedTargetChannels.length === 0) {
+                        setError("Please select at least one target language/channel");
+                        setIsSubmitting(false);
+                        return;
+                    }
+
+                    // Get target language (assume Spanish for demo)
+                    const targetLang = 'es';
+
+                    // Show processing state
+                    toast("⚙️ Processing video...", "info");
+                    setUploadProgress(30);
+
+                    // Simulate the 3-4 second processing
+                    const result = await simulateProcessing(videoId, targetLang);
+
+                    setUploadProgress(100);
+
+                    // Navigate to review page after processing
+                    setTimeout(() => {
+                        setIsSubmitting(false);
+                        setIsSuccessState(true);
+                        toast("✅ Processing complete! Ready for review", "success");
+
+                        // Navigate to review page with the result
+                        setTimeout(() => {
+                            if (typeof window !== 'undefined') {
+                                window.location.href = `/workflows/review/${videoId}?lang=${targetLang}`;
+                            }
+                        }, 1000);
+                    }, 500);
+
+                    return; // Exit early for demo flow
+                }
             } else if (activeTab === "url") {
                 videoId = extractVideoId(sourceVideoUrl.trim());
                 if (!videoId || !sourceChannelId) {
