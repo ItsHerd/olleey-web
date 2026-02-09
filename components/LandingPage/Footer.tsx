@@ -17,16 +17,14 @@ export default function Footer({ onGetStarted }: { onGetStarted?: () => void }) 
         {
             title: "PLATFORM",
             links: [
-                { label: "Workflows", href: "#workflows" },
+                { label: "Workflows", href: "#distribution" },
                 { label: "Product", href: "#product" },
-                { label: "Pricing", href: "#pricing" },
-                { label: "Global Launch", href: "#distribution" },
+                { label: "FAQ", href: "#faq" },
             ],
         },
         {
             title: "CORPORATE",
             links: [
-                { label: "About", href: "/about" },
                 { label: "Contact", href: "/contact" },
                 { label: "Privacy", href: "/privacy" },
                 { label: "Terms", href: "/terms" },

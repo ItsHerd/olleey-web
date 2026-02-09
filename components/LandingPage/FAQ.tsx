@@ -35,9 +35,21 @@ export default function FAQ() {
     ]
 
     return (
-        <section className="bg-black py-24 md:py-32 border-t border-white/10 relative overflow-hidden" id="faq">
-            {/* Background Grid */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+        <section className="bg-white dark:bg-black py-24 md:py-32 border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300" id="faq">
+            {/* Background Grid - Light Mode */}
+            <div className="absolute inset-0 z-0 opacity-5 dark:opacity-0 transition-opacity duration-300"
+                style={{
+                    backgroundImage: 'linear-gradient(black 1px, transparent 1px), linear-gradient(90deg, black 1px, transparent 1px)',
+                    backgroundSize: '40px 40px'
+                }}
+            />
+            {/* Background Grid - Dark Mode */}
+            <div className="absolute inset-0 z-0 opacity-0 dark:opacity-20 transition-opacity duration-300"
+                style={{
+                    backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
+                    backgroundSize: '40px 40px'
+                }}
+            />
 
             <div className="mx-auto max-w-5xl px-6 relative z-10">
                 <div className="grid gap-8 md:grid-cols-5 md:gap-16">
@@ -47,10 +59,10 @@ export default function FAQ() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
-                            className="inline-flex items-center gap-3 px-4 py-1 border border-white/30 backdrop-blur-sm mb-6 bg-black"
+                            className="inline-flex items-center gap-3 px-4 py-1 border border-black/30 dark:border-white/30 backdrop-blur-sm mb-6 bg-black/5 dark:bg-black transition-colors duration-300 rounded-full"
                         >
-                            <span className="w-1.5 h-1.5 bg-white animate-pulse" />
-                            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white">SYS.INFO</span>
+                            <span className="w-1.5 h-1.5 bg-black dark:bg-white animate-pulse transition-colors duration-300" />
+                            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-black dark:text-white transition-colors duration-300">SYS.INFO</span>
                         </motion.div>
 
                         <motion.h2 
@@ -58,10 +70,10 @@ export default function FAQ() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.1 }}
-                            className="text-white text-4xl md:text-5xl font-normal font-mono uppercase tracking-tight mb-4"
+                            className="text-black dark:text-white text-4xl md:text-5xl font-normal font-mono uppercase tracking-tight mb-4 transition-colors duration-300"
                         >
                             Protocol <br/>
-                            <span className="text-white/50">Details.</span>
+                            <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-cyan-600 dark:from-green-400 dark:via-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent transition-colors duration-300">Details.</span>
                         </motion.h2>
                         
                         <motion.p 
@@ -69,7 +81,7 @@ export default function FAQ() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className="text-gray-400 mt-4 text-sm font-mono leading-relaxed"
+                            className="text-neutral-600 dark:text-gray-400 mt-4 text-sm font-mono leading-relaxed transition-colors duration-300"
                         >
                             Operational specifics regarding the Olleey engine and distribution network.
                         </motion.p>
@@ -79,12 +91,12 @@ export default function FAQ() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.3 }}
-                            className="text-gray-500 mt-8 hidden md:block font-mono text-xs border-l border-white/20 pl-4 py-2"
+                            className="text-neutral-500 dark:text-gray-500 mt-8 hidden md:block font-mono text-xs border-l border-black/20 dark:border-white/20 pl-4 py-2 transition-colors duration-300"
                         >
                             Require human assistance? <br/>
                             <Link
                                 href="/contact"
-                                className="text-white hover:text-white/80 underline decoration-white/30 hover:decoration-white transition-all mt-2 inline-block">
+                                className="text-black dark:text-white hover:text-black/80 dark:hover:text-white/80 underline decoration-black/30 dark:decoration-white/30 hover:decoration-black dark:hover:decoration-white transition-all mt-2 inline-block">
                                 OPEN_TICKET &gt;
                             </Link>
                         </motion.div>
@@ -93,8 +105,8 @@ export default function FAQ() {
                     <div className="md:col-span-3">
                          <div className="relative">
                             {/* Technical corners for the FAQ container */}
-                            <div className="absolute -top-2 -left-2 w-4 h-4 border-t border-l border-white/20" />
-                            <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b border-r border-white/20" />
+                            <div className="absolute -top-2 -left-2 w-4 h-4 border-t border-l border-black/20 dark:border-white/20 transition-colors duration-300" />
+                            <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b border-r border-black/20 dark:border-white/20 transition-colors duration-300" />
 
                             <Accordion
                                 type="single"
@@ -105,15 +117,15 @@ export default function FAQ() {
                                     <AccordionItem
                                         key={item.id}
                                         value={item.id}
-                                        className="border-b border-white/10 last:border-0"
+                                        className="border-b border-black/10 dark:border-white/10 last:border-0 transition-colors duration-300"
                                     >
-                                        <AccordionTrigger className="cursor-pointer text-sm md:text-base font-mono text-white hover:text-white/80 hover:no-underline py-6 data-[state=open]:text-white">
+                                        <AccordionTrigger className="cursor-pointer text-sm md:text-base font-mono text-black dark:text-white hover:text-black/80 dark:hover:text-white/80 hover:no-underline py-6 data-[state=open]:text-black dark:data-[state=open]:text-white transition-colors duration-300">
                                             <span className="flex text-left">
-                                                <span className="mr-4 text-white/30 text-xs mt-1">0{index + 1} //</span>
+                                                <span className="mr-4 text-black/30 dark:text-white/30 text-xs mt-1 transition-colors duration-300">0{index + 1} //</span>
                                                 {item.question}
                                             </span>
                                         </AccordionTrigger>
-                                        <AccordionContent className="text-gray-400 font-mono text-xs md:text-sm leading-relaxed border-l border-white/10 pl-4 ml-8 mb-6">
+                                        <AccordionContent className="text-neutral-600 dark:text-gray-400 font-mono text-xs md:text-sm leading-relaxed border-l border-black/10 dark:border-white/10 pl-4 ml-8 mb-6 transition-colors duration-300">
                                             {item.answer}
                                         </AccordionContent>
                                     </AccordionItem>
@@ -122,11 +134,11 @@ export default function FAQ() {
                         </div>
                     </div>
 
-                    <p className="text-gray-500 mt-6 md:hidden font-mono text-xs">
+                    <p className="text-neutral-500 dark:text-gray-500 mt-6 md:hidden font-mono text-xs transition-colors duration-300">
                         Need more info?{' '}
                         <Link
                             href="/contact"
-                            className="text-white hover:underline">
+                            className="text-black dark:text-white hover:underline transition-colors duration-300">
                             Contact Support
                         </Link>
                     </p>

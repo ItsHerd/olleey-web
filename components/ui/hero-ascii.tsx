@@ -3,9 +3,11 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { X } from 'lucide-react';
+
+import { X, Sun, Moon } from 'lucide-react';
 import { useAuth } from "@/lib/AuthContext";
 import { getUserFriendlyErrorMessage } from "@/lib/errorMessages";
+import { useThemeContext } from "@/lib/ThemeContext";
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeroAsciiProps {
@@ -28,6 +30,7 @@ export default function HeroAscii({
   const [internalShowAuth, setInternalShowAuth] = useState(false);
   const [internalAuthMode, setInternalAuthMode] = useState<'login' | 'register'>('login');
   const [showDemo, setShowDemo] = useState(false);
+  const { theme, setTheme } = useThemeContext();
 
   const showAuth = externalShowAuth ?? internalShowAuth;
   const setShowAuth = externalSetShowAuth ?? setInternalShowAuth;
@@ -104,167 +107,134 @@ export default function HeroAscii({
       }();
     `;
     document.head.appendChild(embedScript);
-
-    // Add CSS to hide branding elements and crop canvas
-    const style = document.createElement('style');
-    style.textContent = `
-      [data-us-project] {
-        position: relative !important;
-        overflow: hidden !important;
-      }
-      
-      [data-us-project] canvas {
-        clip-path: inset(0 0 10% 0) !important;
-      }
-      
-      [data-us-project] * {
-        pointer-events: none !important;
-      }
-      [data-us-project] a[href*="unicorn"],
-      [data-us-project] button[title*="unicorn"],
-      [data-us-project] div[title*="Made with"],
-      [data-us-project] .unicorn-brand,
-      [data-us-project] [class*="brand"],
-      [data-us-project] [class*="credit"],
-      [data-us-project] [class*="watermark"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        position: absolute !important;
-        left: -9999px !important;
-        top: -9999px !important;
-      }
-    `;
-    document.head.appendChild(style);
-
-    // Function to aggressively hide branding
-    const hideBranding = () => {
-      const projectDiv = document.querySelector('[data-us-project]');
-      if (projectDiv) {
-        // Find and remove any elements containing branding text
-        const allElements = projectDiv.querySelectorAll('*');
-        allElements.forEach(el => {
-          const text = (el.textContent || '').toLowerCase();
-          if (text.includes('made with') || text.includes('unicorn')) {
-            el.remove(); // Completely remove the element
-          }
-        });
-      }
-    };
-
-    // Run immediately and periodically
-    hideBranding();
-    const interval = setInterval(hideBranding, 100);
-
-    // Also try after delays
-    setTimeout(hideBranding, 1000);
-    setTimeout(hideBranding, 3000);
-    setTimeout(hideBranding, 5000);
-
     return () => {
-      clearInterval(interval);
-      document.head.removeChild(embedScript);
-      document.head.removeChild(style);
+      // Cleanup mostly handled by window checks, but could remove script if strictly needed
     };
   }, []);
 
+
   return (
-    <main className="relative min-h-screen overflow-hidden bg-black">
-      {/* Vitruvian man animation - hidden on mobile */}
-      <div className="absolute inset-0 w-full h-full hidden lg:block">
-        <div
-          data-us-project="whwOGlfJ5Rz2rHaEUgHl"
-          style={{ width: '100%', height: '100%', minHeight: '100vh' }}
-        />
+    <main className="relative min-h-screen overflow-hidden bg-white dark:bg-black transition-colors duration-300">
+      {/* Video Placeholder - Desktop Right */}
+      <div className="hidden lg:flex absolute top-1/2 right-[5%] w-[45%] max-w-[700px] aspect-video -translate-y-1/2 items-center justify-center z-10">
+        <div className="w-full h-full bg-white dark:bg-black rounded-3xl border border-green-500/50 shadow-[0_0_100px_rgba(34,197,94,0.15)] flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer transition-colors duration-300" onClick={() => setShowDemo(true)}>
+            {/* Grid background effect */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#22c55e20_1px,transparent_1px),linear-gradient(to_bottom,#22c55e20_1px,transparent_1px)] bg-[size:40px_40px] opacity-20 group-hover:opacity-30 transition-opacity" />
+            
+            {/* Play Button */}
+            <div className="relative w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center border border-green-500/30 group-hover:scale-110 transition-transform duration-300">
+                <div className="absolute inset-0 bg-green-500/20 rounded-full animate-ping" style={{ animationDuration: '3s' }} />
+                <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[22px] border-l-green-400 border-b-[12px] border-b-transparent ml-2"></div>
+            </div>
+            
+            <p className="mt-6 text-green-400/80 font-mono text-xs uppercase tracking-[0.2em] group-hover:text-green-400 transition-colors">
+                Watch_Demo.mp4
+            </p>
+        </div>
       </div>
 
       {/* Mobile stars background */}
-      <div className="absolute inset-0 w-full h-full lg:hidden stars-bg"></div>
+      <div className="absolute inset-0 w-full h-full lg:hidden stars-bg opacity-0 dark:opacity-100 transition-opacity duration-300"></div>
 
-      {/* Top Header */}
-      <div className="absolute top-0 left-0 right-0 z-20 border-b border-white/20">
-        <div className="container mx-auto px-4 lg:px-8 py-3 lg:py-4 flex items-center justify-between">
-          {/* Left: Logo */}
-          <div className="flex items-center gap-2 lg:gap-4">
-            <Link href="/" className="flex items-center gap-2 lg:gap-4 group">
-              <div className="relative w-6 h-6 lg:w-8 lg:h-8 transition-transform group-hover:scale-105">
+      {/* Top Header - Seamless with Hero */}
+      <div className="absolute top-0 left-0 right-0 z-20 p-4 lg:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between">
+            {/* Left: Logo */}
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative w-8 h-8 lg:w-9 lg:h-9 transition-transform group-hover:scale-110">
                 <Image
                   src="/images/translogowhite.png"
                   alt="Olleey Logo"
                   fill
-                  className="object-contain"
+                  className="object-contain dark:filter-none invert transition-all duration-300"
                 />
               </div>
-              <div className="font-mono text-white text-xl lg:text-2xl font-bold tracking-widest group-hover:text-white/90 transition-colors">
+              <span className="font-mono text-white text-lg lg:text-xl font-bold tracking-wider group-hover:text-white/90 transition-colors">
                 olleey
-              </div>
+              </span>
             </Link>
-            <div className="h-3 lg:h-4 w-px bg-white/40"></div>
-            <span className="text-white/60 text-[8px] lg:text-[10px] font-mono">GLOBAL TRANSLATION</span>
-          </div>
 
-          {/* Center: Nav Links */}
-          <div className="hidden lg:flex items-center justify-center absolute left-1/2 -translate-x-1/2 gap-8">
-            {navLinks?.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={(e) => {
-                  if (link.label === 'HOME') {
-                    e.preventDefault();
-                    setShowAuth(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+            {/* Center: Nav Links - Subtle Pill Style */}
+            <div className="hidden lg:flex items-center gap-1 bg-black/5 dark:bg-white/[0.05] backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-full p-1 transition-colors duration-300">
+              {navLinks?.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={(e) => {
+                    if (link.label === 'HOME') {
+                      e.preventDefault();
+                      setShowAuth(false);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
+                  className="px-4 py-2 text-[11px] font-mono text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all tracking-wider uppercase rounded-full cursor-pointer"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-4">
+               {/* Theme Toggle */}
+               <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors hidden lg:flex items-center justify-center w-8 h-8"
+                  aria-label="Toggle theme"
+               >
+                  {theme === 'dark' ? 
+                    <Moon className="w-4 h-4 text-white" /> : 
+                    <Sun className="w-4 h-4 text-black" />
                   }
+               </button>
+
+              <button
+                onClick={() => {
+                  setAuthMode('login');
+                  setShowAuth(true);
                 }}
-                className="text-xs font-mono text-white/70 hover:text-white transition-colors tracking-widest uppercase relative group cursor-pointer"
+                className="hidden lg:block text-xs font-mono text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors tracking-wider"
               >
-                {link.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-px bg-white transition-all group-hover:w-full opacity-50"></span>
-              </a>
-            ))}
-          </div>
+                Log in
+              </button>
 
-          {/* Right: Actions */}
-          <div className="hidden lg:flex items-center gap-4">
-            <button
-              onClick={() => {
-                setAuthMode('login');
-                setShowAuth(true);
-              }}
-              className="text-xs font-mono text-white/80 hover:text-white tracking-wider"
-            >
-              LOG IN
-            </button>
-            <button
-              onClick={() => {
-                setAuthMode('register');
-                setShowAuth(true);
-              }}
-              className="px-6 py-2 border border-white/20 text-xs font-mono text-white hover:bg-white/10 transition-all duration-200 tracking-wider rounded-full"
-            >
-              GET STARTED
-            </button>
-          </div>
+              <button
+                onClick={() => {
+                  setAuthMode('register');
+                  setShowAuth(true);
+                }}
+                className="px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black text-xs font-mono font-bold tracking-wider rounded-full transition-all hover:bg-black/90 dark:hover:bg-white/90 hover:shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+              >
+                Get Started
+              </button>
 
-          {/* Mobile Menu Icon (Placeholder for now if needed, currently hidden on mobile in original design logic, but we can add a simple hamburger if requested later. For now keeping desktop focus as per request 'header') */}
-          <div className="lg:hidden text-white font-mono text-xs">Menu</div>
+              {/* Mobile Menu Button */}
+              <button className="lg:hidden flex flex-col gap-1.5 p-2" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                 {/* Reusing mobile menu button area for toggle on mobile for simplicity or just keep hamburger */}
+                 <div className="w-5 h-0.5 bg-black dark:bg-white rounded-full transition-colors"></div>
+                 <div className="w-4 h-0.5 bg-black/60 dark:bg-white/60 rounded-full transition-colors"></div>
+                 <div className="w-5 h-0.5 bg-black dark:bg-white rounded-full transition-colors"></div>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Corner Frame Accents */}
-      <div className="absolute top-0 left-0 w-8 h-8 lg:w-12 lg:h-12 border-t-2 border-l-2 border-white/30 z-20"></div>
-      <div className="absolute top-0 right-0 w-8 h-8 lg:w-12 lg:h-12 border-t-2 border-r-2 border-white/30 z-20"></div>
-      <div className="absolute left-0 w-8 h-8 lg:w-12 lg:h-12 border-b-2 border-l-2 border-white/30 z-20" style={{ bottom: '5vh' }}></div>
-      <div className="absolute right-0 w-8 h-8 lg:w-12 lg:h-12 border-b-2 border-r-2 border-white/30 z-20" style={{ bottom: '5vh' }}></div>
+      <div className="absolute top-0 left-0 w-8 h-8 lg:w-12 lg:h-12 border-t-2 border-l-2 border-black/30 dark:border-white/30 z-20 transition-colors duration-300"></div>
+      <div className="absolute top-0 right-0 w-8 h-8 lg:w-12 lg:h-12 border-t-2 border-r-2 border-black/30 dark:border-white/30 z-20 transition-colors duration-300"></div>
+      <div className="absolute left-0 w-8 h-8 lg:w-12 lg:h-12 border-b-2 border-l-2 border-black/30 dark:border-white/30 z-20 transition-colors duration-300" style={{ bottom: '5vh' }}></div>
+      <div className="absolute right-0 w-8 h-8 lg:w-12 lg:h-12 border-b-2 border-r-2 border-black/30 dark:border-white/30 z-20 transition-colors duration-300" style={{ bottom: '5vh' }}></div>
 
       <div className="relative z-10 flex min-h-screen items-center pt-16 lg:pt-0" style={{ marginTop: '5vh' }}>
         <div className="container mx-auto px-6 lg:px-16 lg:ml-[10%]">
           <div className="max-w-lg relative">
             {/* Top decorative line */}
             <div className="flex items-center gap-2 mb-3 opacity-60">
-              <div className="w-8 h-px bg-white"></div>
-              <span className="text-white text-[10px] font-mono tracking-wider">SYS.INIT.01</span>
-              <div className="flex-1 h-px bg-white"></div>
+              <div className="w-8 h-px bg-black dark:bg-white transition-colors duration-300"></div>
+              <span className="text-black dark:text-white text-[10px] font-mono tracking-wider transition-colors duration-300">SYS.INIT.01</span>
+              <div className="flex-1 h-px bg-black dark:bg-white transition-colors duration-300"></div>
             </div>
 
             <AnimatePresence mode="wait">
@@ -464,13 +434,32 @@ export default function HeroAscii({
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
                 >
+                  {/* Main Value Prop Badge */}
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 bg-black/5 dark:bg-white/10 border border-black/20 dark:border-white/20 rounded-full backdrop-blur-sm transition-colors duration-300"
+                  >
+                    <div className="flex -space-x-1">
+                      <span className="text-sm">🇺🇸</span>
+                      <span className="text-sm">→</span>
+                      <span className="text-sm">🇪🇸</span>
+                      <span className="text-sm">🇫🇷</span>
+                      <span className="text-sm">🇩🇪</span>
+                      <span className="text-sm">🇯🇵</span>
+                      <span className="text-sm">🇧🇷</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-black/80 dark:text-white/80 uppercase tracking-wider transition-colors duration-300">+10 Languages</span>
+                  </motion.div>
+
                   {/* Title with dithered accent */}
                   <div className="relative">
                     <div className="hidden lg:block absolute -left-3 top-0 bottom-0 w-1 dither-pattern opacity-40"></div>
-                    <h1 className="text-2xl lg:text-5xl font-bold text-white mb-3 lg:mb-4 leading-tight font-mono tracking-wider" style={{ letterSpacing: '0.1em' }}>
-                      GLOBAL REACH.
-                      <span className="block text-white mt-1 lg:mt-2 opacity-90">
-                        NATIVE FEEL.
+                    <h1 className="text-2xl lg:text-5xl font-bold text-black dark:text-white mb-3 lg:mb-4 leading-tight font-mono tracking-wider transition-colors duration-300" style={{ letterSpacing: '0.05em' }}>
+                      Your content in 10+ languages —
+                      <span className="block bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent mt-1 lg:mt-2">
+                         in your voice.
                       </span>
                     </h1>
                   </div>
@@ -478,40 +467,40 @@ export default function HeroAscii({
                   {/* Decorative dots pattern - desktop only */}
                   <div className="hidden lg:flex gap-1 mb-3 opacity-40">
                     {Array.from({ length: 40 }).map((_, i) => (
-                      <div key={i} className="w-0.5 h-0.5 bg-white rounded-full"></div>
+                      <div key={i} className="w-0.5 h-0.5 bg-black dark:bg-white rounded-full transition-colors duration-300"></div>
                     ))}
                   </div>
 
-                  {/* Description with subtle grid pattern */}
-                  <div className="relative">
-                    <p className="text-xs lg:text-base text-gray-300 mb-5 lg:mb-6 leading-relaxed font-mono opacity-80">
-                      The first end-to-end AI localization engine. Clone your voice, sync your lips, and distribute to 10+ languages instantly without lifting a finger.
+                  {/* Clear Value Proposition */}
+                  <div className="relative mb-6">
+                    <p className="text-sm lg:text-lg text-black/90 dark:text-white/90 mb-3 leading-relaxed font-mono transition-colors duration-300">
+                      Olleey translates your video, generates a natural voice match, and syncs speech timing so it feels native in every market.
                     </p>
-
-                    {/* Technical corner accent - desktop only */}
-                    <div className="hidden lg:block absolute -right-4 top-1/2 w-3 h-3 border border-white opacity-30" style={{ transform: 'translateY(-50%)' }}>
-                      <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-white" style={{ transform: 'translate(-50%, -50%)' }}></div>
-                    </div>
+                    <p className="text-xs lg:text-sm text-neutral-600 dark:text-gray-400 leading-relaxed font-mono transition-colors duration-300">
+                      Built for creators and teams expanding globally.
+                    </p>
                   </div>
+
+                  {/* Quick Stats/Trust Indicators */}
+
 
                   {/* Buttons with technical accents */}
                   <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
-                    <button
-                      onClick={() => {
-                        setAuthMode('register');
-                        setShowAuth(true);
-                      }}
-                      className="relative px-6 py-3 bg-white text-black font-mono text-xs lg:text-sm hover:bg-white/90 transition-all duration-200 group rounded-full"
-                    >
-                      START PIPELINE
-                    </button>
+
 
                     <button
                       onClick={() => setShowDemo(true)}
-                      className="relative px-6 py-3 bg-transparent border border-white text-white font-mono text-xs lg:text-sm hover:bg-white/10 transition-all duration-200 rounded-full"
+                      className="relative px-6 py-3 bg-transparent border border-black/30 dark:border-white text-black dark:text-white font-mono text-xs lg:text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-all duration-200 rounded-full"
                     >
-                      WATCH DEMO
+                      SEE IT IN ACTION
                     </button>
+                  </div>
+
+                  {/* Social Proof */}
+                  <div className="mt-6 pt-4 border-t border-black/10 dark:border-white/10 transition-colors duration-300">
+                    <p className="text-[10px] font-mono text-black/40 dark:text-white/40 uppercase tracking-wider transition-colors duration-300">
+                      Trusted by creators reaching <span className="text-black/70 dark:text-white/70">millions</span> of viewers globally
+                    </p>
                   </div>
                 </motion.div>
               )}
@@ -519,34 +508,34 @@ export default function HeroAscii({
 
             {/* Bottom technical notation - desktop only */}
             <div className="hidden lg:flex items-center gap-2 mt-6 opacity-40">
-              <span className="text-white text-[9px] font-mono">∞</span>
-              <div className="flex-1 h-px bg-white"></div>
-              <span className="text-white text-[9px] font-mono">OLLEEY_AI_ENGINE</span>
+              <span className="text-black dark:text-white text-[9px] font-mono transition-colors duration-300">∞</span>
+              <div className="flex-1 h-px bg-black dark:bg-white transition-colors duration-300"></div>
+              <span className="text-black dark:text-white text-[9px] font-mono transition-colors duration-300">OLLEEY_AI_ENGINE</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Bottom Footer */}
-      <div className="absolute left-0 right-0 z-20 border-t border-white/20 bg-black/40 backdrop-blur-sm" style={{ bottom: '5vh' }}>
+      <div className="absolute left-0 right-0 z-20 border-t border-black/20 dark:border-white/20 bg-white/40 dark:bg-black/40 backdrop-blur-sm transition-colors duration-300" style={{ bottom: '5vh' }}>
         <div className="container mx-auto px-4 lg:px-8 py-2 lg:py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3 lg:gap-6 text-[8px] lg:text-[9px] font-mono text-white/50">
+          <div className="flex items-center gap-3 lg:gap-6 text-[8px] lg:text-[9px] font-mono text-black/50 dark:text-white/50 transition-colors duration-300">
             <span className="hidden lg:inline">SYSTEM.ACTIVE</span>
             <span className="lg:hidden">SYS.ACT</span>
             <div className="hidden lg:flex gap-1">
               {[12, 8, 14, 6, 10, 16, 5, 11].map((height, i) => (
-                <div key={i} className="w-1 h-3 bg-white/30" style={{ height: `${height}px` }}></div>
+                <div key={i} className="w-1 h-3 bg-black/30 dark:bg-white/30" style={{ height: `${height}px` }}></div>
               ))}
             </div>
             <span>V1.0.0</span>
           </div>
 
-          <div className="flex items-center gap-2 lg:gap-4 text-[8px] lg:text-[9px] font-mono text-white/50">
+          <div className="flex items-center gap-2 lg:gap-4 text-[8px] lg:text-[9px] font-mono text-black/50 dark:text-white/50 transition-colors duration-300">
             <span className="hidden lg:inline">◐ RENDERING</span>
             <div className="flex gap-1">
-              <div className="w-1 h-1 bg-white/60 rounded-full animate-pulse"></div>
-              <div className="w-1 h-1 bg-white/40 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-1 h-1 bg-white/20 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              <div className="w-1 h-1 bg-black/60 dark:bg-white/60 rounded-full animate-pulse"></div>
+              <div className="w-1 h-1 bg-black/40 dark:bg-white/40 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-1 h-1 bg-black/20 dark:bg-white/20 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
             </div>
             <span className="hidden lg:inline">FRAME: ∞</span>
           </div>
@@ -604,9 +593,14 @@ export default function HeroAscii({
       <style jsx>{`
         .dither-pattern {
           background-image: 
+            repeating-linear-gradient(0deg, transparent 0px, transparent 1px, black 1px, black 2px),
+            repeating-linear-gradient(90deg, transparent 0px, transparent 1px, black 1px, black 2px);
+          background-size: 3px 3px;
+        }
+        .dark .dither-pattern {
+            background-image: 
             repeating-linear-gradient(0deg, transparent 0px, transparent 1px, white 1px, white 2px),
             repeating-linear-gradient(90deg, transparent 0px, transparent 1px, white 1px, white 2px);
-          background-size: 3px 3px;
         }
         
         .stars-bg {
@@ -628,9 +622,4 @@ export default function HeroAscii({
   );
 }
 
-// Add global type declaration for UnicornStudio
-declare global {
-  interface Window {
-    UnicornStudio: any;
-  }
-}
+

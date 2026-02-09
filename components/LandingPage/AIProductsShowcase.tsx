@@ -68,9 +68,16 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
     const displayProducts = products || defaultProducts;
 
     return (
-        <section className="py-16 md:py-24 bg-black border-t border-white/10 relative overflow-hidden">
-            {/* Background Grid - Visible Boxes */}
-            <div className="absolute inset-0 z-0 opacity-20"
+        <section className="py-16 md:py-24 bg-white dark:bg-black border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300">
+            {/* Background Grid - Light Mode */}
+            <div className="absolute inset-0 z-0 opacity-5 dark:opacity-0 transition-opacity duration-300"
+                style={{
+                    backgroundImage: 'linear-gradient(black 1px, transparent 1px), linear-gradient(90deg, black 1px, transparent 1px)',
+                    backgroundSize: '40px 40px'
+                }}
+            />
+            {/* Background Grid - Dark Mode */}
+            <div className="absolute inset-0 z-0 opacity-0 dark:opacity-20 transition-opacity duration-300"
                 style={{
                     backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
                     backgroundSize: '40px 40px'
@@ -85,19 +92,19 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
-                        className="inline-flex items-center gap-3 px-3 py-1 border border-white/30 backdrop-blur-sm mb-6 bg-black"
+                        className="inline-flex items-center gap-3 px-3 py-1 border border-black/30 dark:border-white/30 backdrop-blur-sm mb-6 bg-black/5 dark:bg-black transition-colors duration-300 rounded-full"
                     >
-                        <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white">System Capabilities</span>
+                        <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-black dark:text-white transition-colors duration-300">Protocol <span className="text-green-600 dark:text-green-400 transition-colors duration-300">Details</span></span>
                     </motion.div>
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: 0.1 }}
-                        className="text-3xl md:text-5xl lg:text-[48px] leading-[1.1] font-normal text-white font-mono uppercase tracking-tight"
+                        className="text-3xl md:text-5xl lg:text-[48px] leading-[1.1] font-normal text-black dark:text-white font-mono uppercase tracking-tight transition-colors duration-300"
                     >
                         AI is changing how <br />
-                        <span className="text-white/50">stories are told.</span>
+                        <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-cyan-600 dark:from-green-400 dark:via-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent transition-colors duration-300">stories are told.</span>
                     </motion.h2>
                 </div>
 
@@ -110,18 +117,18 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className="group flex flex-col bg-white/5 border border-white/10 p-6 relative hover:bg-white/10 transition-colors duration-200 rounded-[2rem] overflow-hidden"
+                            className="group flex flex-col bg-black/[0.02] dark:bg-white/5 border border-black/10 dark:border-white/10 p-6 relative hover:bg-black/[0.05] dark:hover:bg-white/10 transition-colors duration-300 rounded-[2rem] overflow-hidden"
                         >
                             {/* Technical Corner Markers */}
                             <div className="absolute top-0 right-0 p-1">
-                                <div className="w-1.5 h-1.5 border-t border-r border-white/40" />
+                                <div className="w-1.5 h-1.5 border-t border-r border-black/40 dark:border-white/40 transition-colors duration-300" />
                             </div>
                             <div className="absolute bottom-0 left-0 p-1">
-                                <div className="w-1.5 h-1.5 border-b border-l border-white/40" />
+                                <div className="w-1.5 h-1.5 border-b border-l border-black/40 dark:border-white/40 transition-colors duration-300" />
                             </div>
 
                             {/* Image Frame */}
-                            <div className="aspect-[4/3] w-full overflow-hidden mb-6 relative border border-white/10 group-hover:border-white/30 transition-colors rounded-3xl">
+                            <div className="aspect-[4/3] w-full overflow-hidden mb-6 relative border border-black/10 dark:border-white/10 group-hover:border-black/30 dark:group-hover:border-white/30 transition-colors duration-300 rounded-3xl">
                                 <img
                                     src={product.image}
                                     alt={product.title}
@@ -135,20 +142,20 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
 
                             {/* Content */}
                             <div className="flex-1 flex flex-col">
-                                <h3 className="text-sm font-bold text-white mb-3 font-mono uppercase tracking-wider group-hover:text-white transition-colors">
+                                <h3 className="text-sm font-bold text-black dark:text-white mb-3 font-mono uppercase tracking-wider transition-colors duration-300">
                                     {product.title}
                                 </h3>
-                                <div className="w-8 h-px bg-white/20 mb-3 group-hover:w-full transition-all duration-500" />
-                                <p className="text-xs text-gray-400 mb-6 leading-relaxed flex-1 font-mono">
+                                <div className="w-8 h-px bg-black/20 dark:bg-white/20 mb-3 group-hover:w-full transition-all duration-500" />
+                                <p className="text-xs text-neutral-600 dark:text-gray-400 mb-6 leading-relaxed flex-1 font-mono transition-colors duration-300">
                                     {product.description}
                                 </p>
 
                                 {/* Actions */}
-                                <div className="flex items-center gap-3 pt-4 mt-auto border-t border-white/10 border-dashed">
+                                <div className="flex items-center gap-3 pt-4 mt-auto border-t border-black/10 dark:border-white/10 border-dashed transition-colors duration-300">
                                     {product.primaryAction && (
                                         <button
                                             onClick={product.primaryAction.onClick}
-                                            className="text-[10px] bg-white text-black font-bold font-mono px-4 py-2 uppercase tracking-wider hover:bg-white/80 transition-colors rounded-full"
+                                            className="text-[10px] bg-black text-white hover:bg-black/80 dark:bg-white dark:text-black font-bold font-mono px-4 py-2 uppercase tracking-wider dark:hover:bg-white/80 transition-all duration-300 rounded-full"
                                         >
                                             <span className="mr-1">&gt;</span> {product.primaryAction.label}
                                         </button>
@@ -156,7 +163,7 @@ export default function AIProductsShowcase({ products }: AIProductsShowcaseProps
                                     {product.secondaryAction && (
                                         <button
                                             onClick={product.secondaryAction.onClick}
-                                            className="text-[10px] font-bold font-mono text-white/60 hover:text-white transition-colors uppercase tracking-wider px-3 py-2 border border-white/20 hover:border-white/60 rounded-full"
+                                            className="text-[10px] font-bold font-mono text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition-colors duration-300 uppercase tracking-wider px-3 py-2 border border-black/20 dark:border-white/20 hover:border-black/60 dark:hover:border-white/60 rounded-full"
                                         >
                                             {product.secondaryAction.label}
                                         </button>

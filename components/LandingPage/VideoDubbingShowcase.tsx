@@ -24,7 +24,7 @@ function VideoPlayer({ src, label, isMuted, onToggleMute, isPlaying, onTogglePla
             onClick={onActivate}
             className={cn(
                 "relative bg-black transition-all duration-300 aspect-video group overflow-hidden cursor-pointer rounded-[2rem]",
-                isActive ? "ring-2 ring-green-500 scale-[1.01] z-20 shadow-[0_0_20px_rgba(34,197,94,0.3)]" : "border border-white/10 opacity-60 hover:opacity-100"
+                isActive ? "ring-2 ring-green-500 scale-[1.01] z-20 shadow-[0_0_20px_rgba(34,197,94,0.3)]" : "border border-black/10 dark:border-white/10 opacity-60 hover:opacity-100"
             )}
         >
             {/* Technical Overlay */}
@@ -145,38 +145,29 @@ export default function VideoDubbingShowcase() {
     }, [isPlaying]);
 
     return (
-        <section className="py-24 bg-black border-t border-white/10 relative overflow-hidden">
-            {/* Background Grid */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+        <section id="product" className="py-24 bg-white dark:bg-black border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300">
+            {/* Background Grid - Light Mode */}
+
 
             <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] relative z-10">
                 <div className="text-center mb-16">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="mb-6 inline-flex border border-white/20 px-3 py-1 bg-black"
-                    >
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/60">
-                            QUAL.OUTPUT.VERIFY <span className="text-white mx-2">//</span> DUBBING_ENGINE
-                        </span>
-                    </motion.div>
+
 
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.1 }}
-                        className="text-3xl md:text-5xl font-normal text-white font-mono uppercase tracking-tight mb-4"
+                        className="text-3xl md:text-5xl font-normal text-black dark:text-white font-mono uppercase tracking-tight mb-4 transition-colors duration-300"
                     >
-                        Source vs. <span className="text-white/50">Localized.</span>
+                        Source vs. <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-cyan-600 dark:from-green-400 dark:via-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent transition-colors duration-300">Localized.</span>
                     </motion.h2>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.2 }}
-                        className="text-sm text-gray-400 font-mono max-w-2xl mx-auto"
+                        className="text-sm text-neutral-600 dark:text-gray-400 font-mono max-w-2xl mx-auto transition-colors duration-300"
                     >
                         Parallel comparison of original English source and AI-dubbed Spanish version.
                         Click either video to switch the audio track and compare the output.
@@ -214,14 +205,14 @@ export default function VideoDubbingShowcase() {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => togglePlay()}
-                            className="bg-white text-black px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white/90 transition-colors flex items-center gap-3 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                            className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black px-8 py-3 font-mono text-xs uppercase tracking-widest dark:hover:bg-white/90 transition-all duration-300 flex items-center gap-3 rounded-full shadow-lg dark:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                         >
                             {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
                             {isPlaying ? "Sync Pause" : "Sync Play Comparison"}
                         </button>
                         <button
                             onClick={handleReset}
-                            className="border border-white/20 text-white p-3 hover:bg-white/10 transition-colors rounded-full"
+                            className="border border-black/20 dark:border-white/20 text-black dark:text-white p-3 hover:bg-black/5 dark:hover:bg-white/10 transition-colors duration-300 rounded-full"
                             title="Reset Videos"
                         >
                             <RotateCcw size={14} />
@@ -230,27 +221,27 @@ export default function VideoDubbingShowcase() {
 
                     <div className="flex gap-12 font-mono text-[10px] text-white/40 uppercase tracking-widest">
                         <div className="flex items-center gap-2">
-                            <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", activeAudio === 'en' ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)]" : "bg-white/20")} />
-                            <span className={cn("transition-colors", activeAudio === 'en' ? "text-white" : "text-white/40")}>Audio EN (Active)</span>
+                            <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", activeAudio === 'en' ? "bg-green-600 dark:bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)]" : "bg-black/20 dark:bg-white/20")} />
+                            <span className={cn("transition-colors", activeAudio === 'en' ? "text-black dark:text-white" : "text-black/40 dark:text-white/40")}>Audio EN (Active)</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", activeAudio === 'es' ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)]" : "bg-white/20")} />
-                            <span className={cn("transition-colors", activeAudio === 'es' ? "text-white" : "text-white/40")}>Audio ES (Active)</span>
+                            <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", activeAudio === 'es' ? "bg-green-600 dark:bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)]" : "bg-black/20 dark:bg-white/20")} />
+                            <span className={cn("transition-colors", activeAudio === 'es' ? "text-black dark:text-white" : "text-black/40 dark:text-white/40")}>Audio ES (Active)</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Decoration */}
-                <div className="mt-20 border-t border-white/10 pt-8 flex justify-between items-center opacity-50">
-                    <div className="font-mono text-[9px] text-white/60">
+                <div className="mt-20 border-t border-black/10 dark:border-white/10 pt-8 flex justify-between items-center opacity-50 transition-colors duration-300">
+                    <div className="font-mono text-[9px] text-black/60 dark:text-white/60 transition-colors duration-300">
                         [ LOCALIZATION_METRICS ] BR_98.4% SYNC_PRECISE LATENCY_FIXED
                     </div>
                     <div className="flex gap-4">
-                        <div className="w-24 h-1 bg-white/10 overflow-hidden">
+                        <div className="w-24 h-1 bg-black/10 dark:bg-white/10 overflow-hidden transition-colors duration-300">
                             <motion.div
                                 animate={{ x: ["-100%", "100%"] }}
                                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                className="w-full h-full bg-white/40"
+                                className="w-full h-full bg-black/40 dark:bg-white/40"
                             />
                         </div>
                     </div>

@@ -1,335 +1,253 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import { ArrowUpRight, Play, Pause, Volume2, VolumeX } from "lucide-react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Volume2, Globe2, Sparkles } from "lucide-react";
 
-interface Feature {
-  id: string;
-  title: string;
-  description: string;
-  media: {
-    type: "image" | "video" | "custom_podcast";
-    src: string;
-    alt?: string;
-    poster?: string;
-  };
-  footer: {
-    text: string;
-    link?: string;
-    action?: string;
-    isBrandLogo?: boolean;
-    brand?: string;
-    icon?: string;
-  };
-}
+const languages = [
+    { code: "ES", name: "Spanish", flag: "🇪🇸", phrase: "Tu contenido, en mi idioma", position: { top: "10%", left: "15%" } },
+    { code: "FR", name: "French", flag: "🇫🇷", phrase: "Votre contenu, dans ma langue", position: { top: "25%", right: "10%" } },
+    { code: "DE", name: "German", flag: "🇩🇪", phrase: "Dein Inhalt, in meiner Sprache", position: { top: "60%", left: "8%" } },
+    { code: "JP", name: "Japanese", flag: "🇯🇵", phrase: "あなたのコンテンツを私の言語で", position: { bottom: "25%", right: "15%" } },
+    { code: "PT", name: "Portuguese", flag: "🇧🇷", phrase: "Seu conteúdo, no meu idioma", position: { bottom: "15%", left: "20%" } },
+    { code: "KR", name: "Korean", flag: "🇰🇷", phrase: "당신의 콘텐츠를 내 언어로", position: { top: "45%", right: "5%" } },
+    { code: "IT", name: "Italian", flag: "🇮🇹", phrase: "Il tuo contenuto, nella mia lingua", position: { top: "5%", right: "30%" } },
+    { code: "AR", name: "Arabic", flag: "🇸🇦", phrase: "محتواك بلغتي", position: { bottom: "35%", left: "5%" } },
+];
 
-const features: Feature[] = [
-  {
-    id: "zero-touch",
-    title: "ZERO-TOUCH INGESTION",
-    description: "Connect your YouTube channel once—Olleey handles the rest. We continuously monitor your feed and automatically spin up the localization pipeline the moment your video goes live. No buttons to press, no workflows to remember.",
-    media: {
-      type: "image",
-      src: "/showcase.png",
-      alt: "Automated monitoring dashboard",
-    },
-    footer: {
-      text: "Set it and forget it",
-      link: "Auto-Sync",
-    }
-  },
-  {
-    id: "one-to-many",
-    title: "THE ONE-TO-MANY ENGINE",
-    description: "Turn a single source video into 10+ fully localized, native-feeling versions—instantly. Our parallel processing system runs transcription, translation, voice cloning, and regenerative lip-sync all at once across every target language.",
-    media: {
-      type: "image",
-      src: "/images/photo2.png",
-      alt: "Global distribution network",
-    },
-    footer: {
-      text: "1 upload → 10+ languages",
-      action: "SEE IT IN ACTION",
-    }
-  },
-  {
-    id: "quality-gates",
-    title: "INTELLIGENT QUALITY GATES",
-    description: "Automate with guardrails. Set rules like \"Auto-publish if Confidence > 95%; otherwise send to Slack for review.\" Every output passes through configurable logic to keep quality high, branding tight, and mistakes out of your feed.",
-    media: {
-      type: "image",
-      src: "/images/photo3.png",
-      alt: "Quality control dashboard",
-    },
-    footer: {
-      text: "AI + Human oversight",
-      link: "Smart Rules",
-    }
-  },
-  {
-    id: "auto-distribution",
-    title: "NATIVE AUTO-DISTRIBUTION",
-    description: "Never download or re-upload again. Olleey pushes finished videos directly to your YouTube MLA tracks or regional channels—and to TikTok and Instagram—as Drafts or Scheduled Posts. Global publishing becomes a single automated step.",
-    media: {
-      type: "image",
-      src: "/images/photo4.png",
-      alt: "Auto distribution dashboard",
-    },
-    footer: {
-      text: "Direct platform publishing",
-      link: "Multi-Platform",
-    }
-  },
+const centerPhrases = [
+    { lang: "English", text: "Your content, in my language", flag: "🇺🇸" },
+    { lang: "Spanish", text: "Tu contenido, en mi idioma", flag: "🇪🇸" },
+    { lang: "French", text: "Votre contenu, dans ma langue", flag: "🇫🇷" },
+    { lang: "Japanese", text: "あなたのコンテンツを私の言語で", flag: "🇯🇵" },
+    { lang: "German", text: "Dein Inhalt, in meiner Sprache", flag: "🇩🇪" },
+    { lang: "Portuguese", text: "Seu conteúdo, no meu idioma", flag: "🇧🇷" },
 ];
 
 export default function CreatorsShowcase() {
-  const [activeTab, setActiveTab] = useState("zero-touch");
-  const [progress, setProgress] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
+    const [activePhrase, setActivePhrase] = useState(0);
+    const [isHovered, setIsHovered] = useState<string | null>(null);
 
-  const activeFeature = features.find(f => f.id === activeTab) || features[0];
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setActivePhrase((prev) => (prev + 1) % centerPhrases.length);
+        }, 2500);
+        return () => clearInterval(interval);
+    }, []);
 
-  return (
-
-    <section id="product" className="py-24 bg-black border-t border-white/10 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] relative z-10">
-
-        {/* Header */}
-        <div className="mb-20 text-center md:text-left">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-6 inline-flex border border-white/20 px-3 py-1"
-          >
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/60">
-              SYS.Mod.03 <span className="text-white mx-2">//</span> CREATORS
-            </span>
-          </motion.div>
-
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-3xl md:text-5xl lg:text-[56px] leading-[1.1] font-normal text-white font-mono uppercase tracking-tight"
-          >
-            Master your <br />
-            <span className="text-white/50">Global Footprint.</span>
-          </motion.h2>
-        </div>
-
-        <div className="grid lg:grid-cols-12 gap-12 lg:gap-8">
-          {/* Left Column - Navigation */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="lg:col-span-5 flex flex-col gap-px border border-white/10 bg-white/5 rounded-[2.5rem] overflow-hidden"
-          >
-            {features.map((feature, idx) => (
-              <div
-                key={feature.id}
-                className={cn(
-                  "group cursor-pointer p-8 hover:bg-white/5 transition-colors duration-200 border-b border-white/5 last:border-b-0",
-                  activeTab === feature.id ? "bg-white/10" : "opacity-60 hover:opacity-100"
-                )}
-                onClick={() => setActiveTab(feature.id)}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-mono text-white/40">0{idx + 1}</span>
-                    <h3 className={cn(
-                      "text-xs font-mono uppercase tracking-widest transition-colors",
-                      activeTab === feature.id ? "text-white" : "text-white/70 group-hover:text-white"
-                    )}>
-                      {feature.title}
-                    </h3>
-                  </div>
-                  {activeTab === feature.id && (
-                    <div className="w-1.5 h-1.5 bg-white animate-pulse rounded-full" />
-                  )}
-                </div>
-                {activeTab === feature.id && (
-                  <p className="text-xs text-gray-400 leading-relaxed font-mono mt-2 pl-7 border-l border-white/20 ml-1">
-                    {feature.description}
-                  </p>
-                )}
-              </div>
-            ))}
-          </motion.div>
-
-          {/* Right Column - Media Display */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="lg:col-span-7"
-          >
-            <div className="relative bg-black border border-white/10 w-full aspect-[4/3] group overflow-hidden rounded-[2.5rem]">
-              {/* Technical Overlay */}
-              <div className="absolute top-4 left-4 z-20 flex gap-2 text-[9px] font-mono text-white/60">
-                <span className="border border-white/20 px-1">REC</span>
-                <span className="animate-pulse text-red-500">●</span>
-              </div>
-              <div className="absolute top-0 right-0 p-2 border-b border-l border-white/20 w-8 h-8" />
-              <div className="absolute bottom-0 left-0 p-2 border-t border-r border-white/20 w-8 h-8" />
-
-              {/* Crosshairs */}
-              <div className="absolute inset-0 z-10 pointer-events-none opacity-20">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 border border-white" />
-                <div className="absolute top-1/2 left-0 right-0 h-px bg-white/20" />
-                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20" />
-              </div>
-
-              {/* Content Renderers */}
-              {activeFeature.media.type === 'video' && (
-                <div className="relative w-full h-full group">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="w-full h-full object-cover"
-                    poster={activeFeature.media.poster}
-                    src={activeFeature.media.src}
-                  />
-                  <div className="absolute top-6 left-6 z-10">
-                    <button className="w-10 h-10 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors">
-                      <VolumeX size={16} />
-                    </button>
-                  </div>
-                  {/* Overlay for specific screenshot content if needed */}
-                  <div className="absolute inset-x-0 bottom-0 p-8 text-white bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                    <p className="text-xl font-medium mb-2">This stunning mosaic of culture, ambition and hope.</p>
-                  </div>
-                </div>
-              )}
-
-              {activeFeature.media.type === 'custom_podcast' && (
-                <div className="w-full h-full flex items-center justify-center bg-white p-6 md:p-12 relative">
-                  {/* Phone Mockup Frame */}
-                  {/* Phone Mockup Frame - Technical */}
-                  <div className="relative w-[280px] md:w-[320px] aspect-[9/19.5] bg-black border border-white/30 p-2 relative z-10">
-                    <div className="absolute -inset-1 border border-white/10 opacity-50 pointer-events-none" />
-                    <div className="h-full w-full bg-zinc-900 overflow-hidden relative border border-white/10">
-                      {/* Dynamic Island */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[25px] w-[100px] bg-black flex items-center justify-center z-20 rounded-b-[16px]"></div>
-
-                      {/* Screen Content */}
-                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden flex flex-col text-black">
-                        {/* Status Bar */}
-                        <div className="flex justify-between px-6 pt-3 text-[10px] font-bold text-black z-10">
-                          <span>11:30</span>
-                          <div className="flex gap-1.5 items-center">
-                            <span>5G</span>
-                            <div className="w-5 h-2.5 bg-green-500 rounded-[2px] relative">
-                              <div className="absolute top-0.5 right-0.5 w-0.5 h-1.5 bg-black/20"></div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Podcast UI */}
-                        <div className="flex-1 flex flex-col items-center justify-center p-4">
-                          <h3 className="text-lg font-bold mb-4">OlleeyLabs</h3>
-
-                          {/* Album Art */}
-                          <div className="w-full aspect-square bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl shadow-xl mb-6 relative overflow-hidden group">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="text-center text-white">
-                                <div className="text-xs uppercase tracking-widest opacity-80 mb-1">The Secret World of</div>
-                                <div className="text-3xl font-black leading-none  tracking-tighter">SCIENCE</div>
-                                <div className="mt-2 text-[10px] opacity-70">EP. 450</div>
-                              </div>
-                              {/* Rings */}
-                              <div className="absolute w-[120%] h-[120%] border-[20px] border-white/10 rounded-full animate-pulse"></div>
-                              <div className="absolute w-[80%] h-[80%] border-[20px] border-white/10 rounded-full"></div>
-                            </div>
-                          </div>
-
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Side Podcast Text Dialog - Technical */}
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-0 w-[260px] md:w-[300px] z-10 hidden md:block">
-                    <div className="bg-black/80 backdrop-blur-md p-4 border border-white/20 font-mono">
-                      <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
-                        <h4 className="text-[10px] text-white uppercase tracking-wider">Transcription Log</h4>
-                        <span className="text-[9px] text-green-500">LIVE</span>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="flex gap-3 items-start">
-                          <span className="text-[9px] text-white/40 pt-1">00:12</span>
-                          <p className="text-[10px] text-white/80 leading-normal font-mono">
-                            <span className="text-blue-400">&gt;</span> Alright, so let's dive into today's <span className="bg-white/20 px-1 text-white">review</span> topic...
-                          </p>
-                        </div>
-                        <div className="flex gap-3 items-start">
-                          <span className="text-[9px] text-white/40 pt-1">00:15</span>
-                          <p className="text-[10px] text-white/80 leading-normal font-mono">
-                            <span className="text-blue-400">&gt;</span> Now this is one of my absolute favourite subjects.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="absolute top-6 left-6 z-10">
-                    <button className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:bg-black/90 transition-colors">
-                      <Volume2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {activeFeature.media.type === 'image' && (
-                <div className="w-full h-full relative">
-                  <Image
-                    src={activeFeature.media.src || ""}
-                    alt={activeFeature.media.alt || ""}
-                    fill
-                    className="opacity-80 object-contain p-8"
-                  />
-                  <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.2)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
-                </div>
-              )}
-
-              {/* Bottom Bar Logic - Technical */}
-              <div className="absolute bottom-0 left-0 right-0 bg-black/90 border-t border-white/20 p-4 flex items-center justify-between z-30">
-                <div className="flex items-center gap-4">
-                  <div className="font-mono text-[9px] text-white/60 uppercase tracking-widest flex items-center gap-2">
-                    {activeFeature.footer.isBrandLogo ? (
-                      <span className="text-white font-bold">{activeFeature.footer.brand}</span>
-                    ) : (
-                      <span>{activeFeature.footer.link || 'SYSTEM_DEFAULT'}</span>
-                    )}
-                    <span className="text-white/20">|</span>
-                    <span>{activeFeature.footer.text}</span>
-                  </div>
-                </div>
-
-                <button className="group flex items-center gap-2 text-[9px] font-mono uppercase text-white hover:text-white/80 transition-colors bg-white/10 px-4 py-2 rounded-full border border-white/10 hover:bg-white/20">
-                  {activeFeature.footer.action || 'INITIALIZE'}
-                  <span className="w-4 h-4 rounded-full border border-white/50 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                    <ArrowUpRight className="w-2.5 h-2.5" />
-                  </span>
-                </button>
-              </div>
+    return (
+        <section id="product" className="relative py-24 lg:py-32 bg-white dark:bg-black overflow-hidden border-t border-black/10 dark:border-white/10 transition-colors duration-300">
+            {/* Animated Background */}
+            <div className="absolute inset-0 opacity-10 dark:opacity-100 transition-opacity duration-300">
+                {/* Radial gradient pulse */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.1)_0%,transparent_50%)]" />
+                
+                {/* Orbiting rings */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-black/10 dark:border-white/5 rounded-full animate-[spin_60s_linear_infinite]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border border-black/10 dark:border-white/5 rounded-full animate-[spin_90s_linear_infinite_reverse]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-green-500/10 rounded-full animate-[spin_30s_linear_infinite]" />
             </div>
-          </motion.div>
-        </div>
-      </div>
-    </section>
-  );
+
+            <div className="max-w-6xl mx-auto px-6 md:px-12 relative z-10">
+                {/* Header */}
+                <div className="text-center mb-12">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="inline-flex items-center gap-3 px-4 py-1.5 border border-black/20 dark:border-white/20 backdrop-blur-sm mb-6 bg-black/5 dark:bg-white/5 rounded-full transition-colors duration-300"
+                    >
+                        <Globe2 size={12} className="text-green-600 dark:text-green-400 transition-colors duration-300" />
+                        <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-black/80 dark:text-white/80 transition-colors duration-300">Global Reach</span>
+                    </motion.div>
+
+                    <motion.h2
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.1 }}
+                        className="text-3xl md:text-5xl lg:text-6xl font-bold font-mono text-black dark:text-white mb-4 tracking-tight transition-colors duration-300"
+                    >
+                        One Voice.
+                        <span className="block bg-gradient-to-r from-green-600 via-emerald-600 to-cyan-600 dark:from-green-400 dark:via-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent mt-2 transition-colors duration-300">
+                            Every Language.
+                        </span>
+                    </motion.h2>
+                </div>
+
+                {/* Central Showcase */}
+                <div className="relative h-[500px] lg:h-[600px]">
+                    {/* Floating Language Cards */}
+                    {languages.map((lang, index) => (
+                        <motion.div
+                            key={lang.code}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.1 * index, duration: 0.5 }}
+                            animate={{
+                                y: [0, -10, 0],
+                            }}
+                            style={{
+                                position: "absolute",
+                                ...lang.position,
+                                animationDelay: `${index * 0.3}s`,
+                            }}
+                            className="hidden lg:block"
+                            onMouseEnter={() => setIsHovered(lang.code)}
+                            onMouseLeave={() => setIsHovered(null)}
+                        >
+                            <motion.div
+                                animate={{ y: [0, -8, 0] }}
+                                transition={{ duration: 3 + index * 0.5, repeat: Infinity, ease: "easeInOut" }}
+                                className={`
+                                    group cursor-pointer p-4 bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl border rounded-2xl
+                                    transition-all duration-300 hover:scale-110 hover:bg-black/5 dark:hover:bg-white/10 shadow-lg dark:shadow-none
+                                    ${isHovered === lang.code ? "border-green-500/50 shadow-[0_0_30px_rgba(34,197,94,0.2)]" : "border-black/10 dark:border-white/10"}
+                                `}
+                            >
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="text-2xl">{lang.flag}</span>
+                                    <div>
+                                        <div className="text-xs font-mono text-black dark:text-white font-bold transition-colors duration-300">{lang.name}</div>
+                                        <div className="text-[9px] font-mono text-black/40 dark:text-white/40 uppercase transition-colors duration-300">{lang.code}</div>
+                                    </div>
+                                    <Volume2 className="w-3 h-3 text-green-600 dark:text-green-500 opacity-0 group-hover:opacity-100 transition-all ml-auto" />
+                                </div>
+                                <AnimatePresence>
+                                    {isHovered === lang.code && (
+                                        <motion.p
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: "auto" }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="text-[10px] font-mono text-black/60 dark:text-white/60 max-w-[150px] transition-colors duration-300"
+                                        >
+                                            "{lang.phrase}"
+                                        </motion.p>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+                        </motion.div>
+                    ))}
+
+                    {/* Center Content - The WOW factor */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg">
+                        {/* Glow Effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-cyan-500/20 blur-3xl rounded-full scale-150" />
+                        
+                        {/* Main Card */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6 }}
+                            className="relative bg-white/90 dark:bg-black/80 backdrop-blur-xl border border-black/10 dark:border-white/20 rounded-3xl p-8 lg:p-10 shadow-2xl transition-colors duration-300"
+                        >
+                            {/* Corner accents */}
+                            <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-green-500/50 rounded-tl-3xl" />
+                            <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-green-500/50 rounded-tr-3xl" />
+                            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-green-500/50 rounded-bl-3xl" />
+                            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-green-500/50 rounded-br-3xl" />
+
+                            {/* Animated Phrase */}
+                            <div className="text-center">
+                                <div className="flex items-center justify-center gap-2 mb-6">
+                                    <Sparkles className="w-4 h-4 text-green-600 dark:text-green-400 transition-colors duration-300" />
+                                    <span className="text-[10px] font-mono text-green-600 dark:text-green-400 uppercase tracking-widest transition-colors duration-300">Live Translation</span>
+                                    <Sparkles className="w-4 h-4 text-green-600 dark:text-green-400 transition-colors duration-300" />
+                                </div>
+
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={activePhrase}
+                                        initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+                                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                                        exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
+                                        transition={{ duration: 0.5 }}
+                                        className="mb-6"
+                                    >
+                                        <div className="text-5xl mb-4">{centerPhrases[activePhrase].flag}</div>
+                                        <p className="text-xl lg:text-2xl font-mono text-black dark:text-white font-bold leading-relaxed transition-colors duration-300">
+                                            "{centerPhrases[activePhrase].text}"
+                                        </p>
+                                        <p className="text-xs font-mono text-black/40 dark:text-white/40 mt-3 uppercase tracking-widest transition-colors duration-300">
+                                            {centerPhrases[activePhrase].lang}
+                                        </p>
+                                    </motion.div>
+                                </AnimatePresence>
+
+                                {/* Progress dots */}
+                                <div className="flex justify-center gap-2">
+                                    {centerPhrases.map((_, index) => (
+                                        <motion.div
+                                            key={index}
+                                            className={`h-1 rounded-full transition-all duration-300 ${
+                                                index === activePhrase ? "w-6 bg-green-600 dark:bg-green-500" : "w-2 bg-black/20 dark:bg-white/20"
+                                            }`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Audio Waveform Animation */}
+                            <div className="mt-8 flex items-center justify-center gap-1">
+                                {Array.from({ length: 20 }).map((_, i) => (
+                                    <motion.div
+                                        key={i}
+                                        animate={{
+                                            height: [10, 30, 10],
+                                        }}
+                                        transition={{
+                                            duration: 0.8,
+                                            repeat: Infinity,
+                                            delay: i * 0.05,
+                                            ease: "easeInOut",
+                                        }}
+                                        className="w-1 bg-gradient-to-t from-green-600 to-emerald-600 dark:from-green-500 dark:to-emerald-400 rounded-full transition-colors duration-300"
+                                    />
+                                ))}
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    {/* Mobile Language Pills */}
+                    <div className="lg:hidden flex flex-wrap justify-center gap-2 mt-8">
+                        {languages.slice(0, 6).map((lang, index) => (
+                            <motion.div
+                                key={lang.code}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.1 * index }}
+                                className="flex items-center gap-2 px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full transition-colors duration-300"
+                            >
+                                <span>{lang.flag}</span>
+                                <span className="text-xs font-mono text-black/80 dark:text-white/80 transition-colors duration-300">{lang.name}</span>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Bottom Stats */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.4 }}
+                    className="mt-12 lg:mt-0 grid grid-cols-3 gap-4 max-w-2xl mx-auto"
+                >
+                    {[
+                        { value: "10+", label: "Languages" },
+                        { value: "1:1", label: "Voice Match" },
+                        { value: "24hr", label: "Turnaround" },
+                    ].map((stat, index) => (
+                        <div key={stat.label} className="text-center p-4 bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-xl transition-colors duration-300">
+                            <div className="text-2xl lg:text-3xl font-bold font-mono text-black dark:text-white mb-1 transition-colors duration-300">{stat.value}</div>
+                            <div className="text-[10px] font-mono text-black/50 dark:text-white/50 uppercase tracking-wider transition-colors duration-300">{stat.label}</div>
+                        </div>
+                    ))}
+                </motion.div>
+            </div>
+        </section>
+    );
 }
