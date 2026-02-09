@@ -94,9 +94,10 @@ export default function JobsPage() {
         });
         return (supabaseJobs || []).map(job => ({
             ...job,
-            job_id: job.id,
-            source_video_id: job.video_id,
-            workflow_state: {} as JobWorkflowState,
+            job_id: job.job_id || job.id,
+            source_video_id: job.source_video_id,
+            status: job.status as any, // Cast status to match expected Job status enum
+            workflow_state: (job.workflow_state || {}) as JobWorkflowState,
         })) as Job[];
     }, [supabaseJobs, userId, authLoading, selectedProject?.id]);
     

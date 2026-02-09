@@ -377,7 +377,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   return (
     <div className={`w-full h-full ${bgClass} flex flex-col pl-3 pr-6 pt-6 pb-20 overflow-y-auto custom-scrollbar`}>
       {/* Cinematic Header Section */}
-      <div className={`relative pt-12 min-h-[300px] flex items-end group overflow-hidden ${isDark ? 'bg-[#0c0c0c]' : 'bg-white'} rounded-[2.5rem] border ${isDark ? 'border-white/5' : 'border-black/5'} mb-10 mx-0 shadow-2xl transition-colors duration-500`}>
+      <div className={`relative pt-12 min-h-[300px] flex items-end group overflow-hidden ${isDark ? 'bg-[#0c0c0c] border-white/5 shadow-2xl' : 'bg-white border-black/5'} rounded-[2.5rem] border mb-10 mx-0 transition-colors duration-500`}>
         <img
           src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=2000"
           className={`absolute inset-0 w-full h-full object-cover ${isDark ? 'brightness-[0.35]' : 'brightness-[1] opacity-10'} group-hover:scale-105 transition-all duration-[5000ms] ease-out`}
@@ -443,7 +443,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                   </span>
                 </div>
               </div>
-              <div className={`p-3 rounded-2xl ${item.bg} border ${item.border} group-hover/card:scale-110 ${isDark ? 'group-hover/card:bg-white/5' : 'group-hover/card:bg-white group-hover/card:shadow-sm'} transition-all duration-500`}>
+              <div className={`p-3 rounded-2xl ${item.bg} border ${item.border} group-hover/card:scale-110 ${isDark ? 'group-hover/card:bg-white/5' : 'group-hover/card:bg-white'} transition-all duration-500`}>
                 <item.icon className={`w-5 h-5 ${item.color} ${item.pulse ? 'animate-pulse' : ''}`} />
               </div>
             </motion.div>
@@ -624,9 +624,9 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                         router.push(`/app?page=Workflows&video=${video.video_id}`);
                       }
                     }}
-                    className={`relative ${cardClass} border rounded-[2.5rem] overflow-hidden transition-all duration-500 group ${status === "processing" ? 'cursor-not-allowed opacity-80' : 'cursor-pointer hover:border-olleey-yellow/30 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] hover:-translate-y-2'} ${highlightedVideoId === video.video_id
-                      ? 'border-olleey-yellow shadow-[0_0_30px_rgba(251,191,36,0.2)] ring-1 ring-olleey-yellow/20 bg-olleey-yellow/[0.02]'
-                      : 'border-white/5'
+                    className={`relative ${cardClass} border rounded-[2.5rem] overflow-hidden transition-all duration-500 group ${status === "processing" ? 'cursor-not-allowed opacity-80' : `cursor-pointer hover:border-olleey-yellow/30 ${isDark ? 'hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)]' : ''} hover:-translate-y-2`} ${highlightedVideoId === video.video_id
+                      ? 'border-olleey-yellow ring-1 ring-olleey-yellow/20 bg-olleey-yellow/[0.02]'
+                      : borderClass
                       }`}
                   >
                     <div className={`absolute inset-0 bg-gradient-to-br ${isDark ? 'from-white/[0.03] to-transparent' : 'from-black/[0.02] to-transparent'} pointer-events-none`} />
@@ -645,19 +645,19 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                       {/* Premium Status Micro-Badges */}
                       <div className="absolute top-4 left-4 flex flex-col gap-2">
                         {hasLive && (
-                          <div className="px-3 py-1.5 bg-emerald-500/80 backdrop-blur-xl rounded-full flex items-center gap-2 shadow-2xl border border-emerald-400/20">
+                          <div className={`px-3 py-1.5 bg-emerald-500/80 backdrop-blur-xl rounded-full flex items-center gap-2 ${isDark ? 'shadow-2xl' : ''} border border-emerald-400/20`}>
                             <Radio className="w-3 h-3 text-white animate-pulse" />
                             <span className="text-[9px] font-black text-white uppercase tracking-widest">Live</span>
                           </div>
                         )}
                         {status === "draft" && (
-                          <div className="px-3 py-1.5 bg-olleey-yellow/90 backdrop-blur-xl rounded-full flex items-center gap-2 shadow-2xl border border-white/10">
+                          <div className={`px-3 py-1.5 bg-olleey-yellow/90 backdrop-blur-xl rounded-full flex items-center gap-2 ${isDark ? 'shadow-2xl' : ''} border border-white/10`}>
                             <Sparkles className="w-3 h-3 text-black" />
                             <span className="text-[9px] font-black text-black uppercase tracking-widest">Needs QA</span>
                           </div>
                         )}
                         {status === LocalizationStatus.PROCESSING && (
-                          <div className="px-3 py-1.5 bg-blue-500/80 backdrop-blur-xl rounded-full flex items-center gap-2 shadow-2xl border border-white/10">
+                          <div className={`px-3 py-1.5 bg-blue-500/80 backdrop-blur-xl rounded-full flex items-center gap-2 ${isDark ? 'shadow-2xl' : ''} border border-white/10`}>
                             <Activity className="w-3 h-3 text-white animate-spin" />
                             <span className="text-[9px] font-black text-white uppercase tracking-widest">Syncing</span>
                           </div>
@@ -739,7 +739,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
             </div>
           ) : (
             /* Premium High-Gloss List View */
-            <div className={`w-full ${isDark ? 'bg-[#0c0c0c]/40 border-white/10 shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-3xl border rounded-[2.5rem] overflow-hidden`}>
+            <div className={`w-full ${isDark ? 'bg-[#0c0c0c]/40 border-white/10 shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]' : 'bg-white border-slate-200'} backdrop-blur-3xl border rounded-[2.5rem] overflow-hidden`}>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse min-w-[1100px]">
                   <thead>
