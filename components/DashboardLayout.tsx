@@ -136,51 +136,63 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {/* Main Content Area */}
                 <div className={`flex-1 flex flex-col overflow-hidden ${bgClass} relative min-w-0`}>
                     {/* Breadcrumb Header */}
-                    <header className={`flex items-center h-16 px-6 border-b ${isDark ? 'border-white/5 bg-dark-bg/60' : 'border-gray-200 bg-white/60'} shrink-0 gap-4 backdrop-blur-xl z-20 sticky top-0`}>
+                    <header className={`flex items-center h-16 px-6 border-b ${isDark ? 'border-white/5 bg-dark-bg/60' : 'border-black bg-white/60'} shrink-0 gap-4 backdrop-blur-xl z-20 sticky top-0`}>
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`h-10 w-10 transition-all rounded-xl ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10 ring-1 ring-olleey-yellow/20' : `${textClass} hover:bg-white/5`}`}
+                            className={`h-10 w-10 transition-all rounded-xl ${isSidebarOpen ? 'text-olleey-yellow bg-olleey-yellow/10 ring-1 ring-olleey-yellow/20' : `${isDark ? 'text-white hover:bg-white/5' : 'bg-slate-100 text-black border border-black hover:bg-black hover:text-white'}`}`}
                         >
                             <PanelLeft className="h-4 w-4" />
                         </Button>
 
                         {/* Breadcrumbs */}
                         <div className="flex items-center gap-2 overflow-hidden py-1">
-                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-gray-50 border-gray-100'} transition-all hover:border-white/10 group shadow-sm`}>
+                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-slate-100 border-black'} transition-all hover:bg-black hover:text-white group shadow-sm`}>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <button
-                                            className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} hover:${textClass} transition-colors truncate max-w-[140px] outline-none font-mono`}
-                                            title={selectedProject?.name || "All Projects"}
+                                            className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? textSecondaryClass : 'text-black group-hover:text-white'} transition-colors truncate max-w-[140px] outline-none font-mono`}
+                                            title={selectedProject?.name || "All Instances"}
                                         >
-                                            <div className={`w-2 h-2 rounded-full ${selectedProject ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'bg-white/20'}`} />
-                                            <span className="truncate">{selectedProject?.name || "Standard Project"}</span>
-                                            <ChevronDown className="h-3 w-3 opacity-30 group-hover:opacity-100 transition-opacity shrink-0" />
+                                            <div className={`w-2 h-2 rounded-full ${selectedProject ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.5)]' : (isDark ? 'bg-slate-400 opacity-50' : 'bg-black group-hover:bg-white')}`} />
+                                            <span className="truncate">{selectedProject?.name || "All Instances"}</span>
+                                            <ChevronDown className={`h-3 w-3 ${isDark ? 'opacity-30 group-hover:opacity-100' : 'text-black group-hover:text-white'} transition-opacity shrink-0`} />
                                         </button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start" className={`${isDark ? 'bg-[#0f0f0f]/95 backdrop-blur-xl border-white/5' : 'bg-white border-gray-200'} w-64 p-2 rounded-2xl shadow-2xl overflow-hidden z-[100] border`}>
-                                        <DropdownMenuLabel className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-[0.25em] px-3 py-3 font-mono opacity-50`}>
+                                    <DropdownMenuContent align="start" className={`${isDark ? 'bg-[#0f0f0f]/95 backdrop-blur-xl border-white/5' : 'bg-white border-slate-200'} w-64 p-2 rounded-2xl shadow-2xl overflow-hidden z-[100] border`}>
+                                        <DropdownMenuLabel className={`text-[9px] font-black ${isDark ? textSecondaryClass : 'text-slate-500'} uppercase tracking-[0.25em] px-3 py-3 font-mono opacity-70`}>
                                             Project Directory
                                         </DropdownMenuLabel>
                                         <div className="space-y-1">
+                                            <DropdownMenuItem
+                                                onClick={() => setSelectedProject(null)}
+                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${selectedProject === null
+                                                    ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/10 text-amber-900 font-bold')
+                                                    : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-black')
+                                                    }`}
+                                            >
+                                                <div className={`w-1.5 h-1.5 rounded-full ${selectedProject === null ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.6)]' : (isDark ? 'bg-white/10' : 'bg-slate-300')}`} />
+                                                <span className={`truncate text-xs font-bold font-mono tracking-tight ${selectedProject === null ? (isDark ? 'text-olleey-yellow' : 'text-amber-900') : (isDark ? 'text-white' : 'text-slate-900')}`}>All Instances</span>
+                                                {selectedProject === null && <Check className={`ml-auto w-3.5 h-3.5 ${isDark ? 'text-olleey-yellow' : 'text-amber-700'}`} />}
+                                            </DropdownMenuItem>
+
                                             {projects.map((project) => (
                                                 <DropdownMenuItem
                                                     key={project.id}
                                                     onClick={() => setSelectedProject(project)}
                                                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${selectedProject?.id === project.id
-                                                        ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/5 text-olleey-yellow')
-                                                        : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-black')
+                                                        ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/10 text-amber-900 font-bold')
+                                                        : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900')
                                                         }`}
                                                 >
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === project.id ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`} />
-                                                    <span className="truncate text-xs font-bold font-mono tracking-tight">{project.name}</span>
-                                                    {selectedProject?.id === project.id && <Check className="ml-auto w-3.5 h-3.5 text-olleey-yellow" />}
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === project.id ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.6)]' : (isDark ? 'bg-white/10' : 'bg-slate-300')}`} />
+                                                    <span className={`truncate text-xs font-bold font-mono tracking-tight ${selectedProject?.id === project.id ? (isDark ? 'text-olleey-yellow' : 'text-amber-900') : (isDark ? 'text-white' : 'text-slate-900')}`}>{project.name}</span>
+                                                    {selectedProject?.id === project.id && <Check className={`ml-auto w-3.5 h-3.5 ${isDark ? 'text-olleey-yellow' : 'text-amber-700'}`} />}
                                                 </DropdownMenuItem>
                                             ))}
                                         </div>
-                                        <DropdownMenuSeparator className={`my-2 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                        <DropdownMenuSeparator className={`my-2 ${isDark ? 'bg-white/5' : 'bg-slate-100'}`} />
                                         <DropdownMenuItem
                                             onClick={() => setIsCreateProjectModalOpen(true)}
                                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer ${isDark ? 'text-olleey-yellow hover:bg-olleey-yellow/10' : 'text-olleey-yellow hover:bg-olleey-yellow/5'} font-black transition-all group/new`}
@@ -192,12 +204,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                 </DropdownMenu>
                             </div>
 
-                            <div className={`${isDark ? 'text-white/10' : 'text-gray-200'} mx-0.5`}>
+                            <div className={`${isDark ? 'text-white/10' : 'text-slate-200'} mx-0.5`}>
                                 <ChevronRight className="w-3 h-3" />
                             </div>
 
                             {/* Navigation Trail */}
-                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-gray-50 border-gray-200'} shadow-sm backdrop-blur-md`}>
+                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-slate-100 border-black'} shadow-sm backdrop-blur-md`}>
                                 {(() => {
                                     const isWorkflowPath = pathname?.startsWith('/workflows/');
                                     const pathParts = pathname?.split('/') || [];
@@ -210,13 +222,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                                 <span className={`text-[9px] font-black uppercase tracking-[0.2em] font-mono ${textSecondaryClass} opacity-40 hover:opacity-100 transition-opacity cursor-default`}>
                                                     workflows
                                                 </span>
-                                                <div className={`${isDark ? 'text-white/10' : 'text-gray-200'} mx-0.5 select-none`}>
+                                                <div className={`${isDark ? 'text-white/10' : 'text-slate-200'} mx-0.5 select-none`}>
                                                     <span className="text-[10px] font-light">/</span>
                                                 </div>
                                                 <span className={`text-[9px] font-black uppercase tracking-[0.2em] font-mono ${textSecondaryClass} opacity-40 hover:opacity-100 transition-opacity cursor-default`}>
                                                     {workflowType}
                                                 </span>
-                                                <div className={`${isDark ? 'text-white/10' : 'text-gray-200'} mx-0.5 select-none`}>
+                                                <div className={`${isDark ? 'text-white/10' : 'text-slate-200'} mx-0.5 select-none`}>
                                                     <span className="text-[10px] font-light">/</span>
                                                 </div>
                                                 <div className={`flex items-center gap-2 pr-1`}>
@@ -245,9 +257,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                             <Button
                                 variant="ghost"
                                 onClick={() => router.push('/app?page=Channels')}
-                                className={`h-10 px-4 gap-2 rounded-xl group ${isDark ? 'bg-white/5 text-white' : 'bg-gray-100 text-gray-900'}`}
+                                className={`h-10 px-4 gap-2 rounded-xl group ${isDark ? 'bg-white/5 text-white' : 'bg-slate-100 text-black border border-black hover:bg-black hover:text-white transition-all'}`}
                             >
-                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                <div className={`w-2 h-2 rounded-full ${isDark ? 'bg-green-500' : 'bg-black group-hover:bg-white'} animate-pulse`} />
                                 <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest transition-colors opacity-70 group-hover:opacity-100 ">Connect Account</span>
                             </Button>
 
@@ -264,7 +276,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                         variant="ghost"
                                         size="icon"
                                         onClick={ctrl.onClick}
-                                        className={`h-10 w-10 rounded-xl transition-all ${textSecondaryClass} hover:${textClass} hover:bg-white/5`}
+                                        className={`h-10 w-10 rounded-xl transition-all ${isDark ? `${textSecondaryClass} hover:${textClass} hover:bg-white/5` : 'bg-slate-100 text-black border border-black hover:bg-black hover:text-white'}`}
                                         title={ctrl.title}
                                     >
                                         <ctrl.icon className={`h-4 w-4 ${ctrl.icon === RefreshCw ? 'hover:rotate-180 transition-transform duration-500' : ''}`} />
@@ -276,13 +288,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className={`h-10 w-10 rounded-xl transition-all ${textSecondaryClass} hover:${textClass} hover:bg-white/5`}
+                                            className={`h-10 w-10 rounded-xl transition-all ${isDark ? `${textSecondaryClass} hover:${textClass} hover:bg-white/5` : 'bg-slate-100 text-black border border-black hover:bg-black hover:text-white'}`}
                                             title="Environment"
                                         >
                                             <User className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className={`${isDark ? 'bg-[#0f0f0f]/95 backdrop-blur-xl border-white/5' : 'bg-white border-gray-200'} w-64 p-2 rounded-2xl shadow-2xl overflow-hidden z-[100] border`}>
+                                    <DropdownMenuContent align="end" className={`${isDark ? 'bg-[#0f0f0f]/95 backdrop-blur-xl border-white/5' : 'bg-white/95 backdrop-blur-xl border-slate-200'} w-64 p-2 rounded-2xl shadow-2xl overflow-hidden z-[100] border`}>
                                         <DropdownMenuLabel className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-[0.25em] px-3 py-3 font-mono opacity-50`}>
                                             User Context
                                         </DropdownMenuLabel>
@@ -299,13 +311,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => router.push('/app?page=Usage')}
-                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${isDark ? 'text-white/80 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${isDark ? 'text-white/80 hover:bg-white/5 hover:text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:border-slate-100'}`}
                                             >
                                                 <Zap className="w-4 h-4 text-olleey-yellow" />
                                                 <span className="text-xs font-bold">Resource Usage</span>
                                             </DropdownMenuItem>
                                         </div>
-                                        <DropdownMenuSeparator className={`my-2 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+                                        <DropdownMenuSeparator className={`my-2 ${isDark ? 'bg-white/5' : 'bg-slate-100'}`} />
                                         <DropdownMenuItem
                                             onClick={handleLogout}
                                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-red-400 hover:bg-red-500/10 transition-all group/out`}

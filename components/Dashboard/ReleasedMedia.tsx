@@ -13,7 +13,7 @@ interface ReleasedMediaProps {
     textSecondaryClass: string;
     cardClass: string;
     borderClass: string;
-    getOverallVideoStatus: (localizations: any) => string;
+    getOverallVideoStatus: (localizations: any, videoId?: string) => string;
     onNavigate: (videoId: string) => void;
 }
 

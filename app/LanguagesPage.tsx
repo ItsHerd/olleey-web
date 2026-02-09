@@ -12,7 +12,10 @@ export default function QueuedJobsPage() {
   const router = useRouter();
   const { theme } = useTheme();
   const { dashboard, loading: dashboardLoading } = useDashboard();
-  const { videos } = useVideos();
+  
+  // Get userId directly from localStorage
+  const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') || undefined : undefined;
+  const { videos } = useVideos({ user_id: userId });
   const { selectedProject } = useProject();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");

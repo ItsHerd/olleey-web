@@ -2,10 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
-import { authAPI, type LoginCredentials } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 import { SignInPage, type Testimonial } from "@/components/ui/sign-in";
 import { getUserFriendlyErrorMessage, isNetworkError } from "@/lib/errorMessages";
-import { useGoogleSignIn } from "@/lib/useGoogleSignIn";
 import { useTheme } from "@/lib/useTheme";
 import { useRouter } from "next/navigation";
 
@@ -13,18 +12,14 @@ interface LoginPageProps {
   onLoginSuccess: () => void;
 }
 
-const sampleTestimonials: Testimonial[] = [
-
-];
+const sampleTestimonials: Testimonial[] = [];
 
 import Link from "next/link";
-
-// Get Google Client ID from environment variable
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const { theme } = useTheme();
   const router = useRouter();
+  const { signIn, signInWithGoogle } = useAuth();
 
   const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
   const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
@@ -55,87 +50,39 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     }
 
     try {
-      const credentials: LoginCredentials = { email: email.trim(), password };
-      await authAPI.login(credentials);
+      await signIn(email.trim(), password);
+      console.log('[Login] ✅ Sign in successful');
       onLoginSuccess();
-    } catch (err) {
+    } catch (err: any) {
+      console.error('[Login] Sign in error:', err);
       const friendlyMessage = getUserFriendlyErrorMessage(err);
-      setError(friendlyMessage);
-
-      // Only show alert for network errors (since they might need user attention)
-      if (isNetworkError(err)) {
-        alert(friendlyMessage);
-      }
+      setError(err.message || friendlyMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle Google Sign-In response
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    setError(null);
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
-
+    setError(null);
+    
     try {
-      // Send the Google ID token to your backend
-      // Backend handles both login and registration automatically
-      await authAPI.googleAuth(credentialResponse.credential);
-      onLoginSuccess();
-    } catch (err) {
-      const friendlyMessage = getUserFriendlyErrorMessage(err);
-      setError(friendlyMessage);
-      console.error("Google sign-in error:", err);
-    } finally {
+      await signInWithGoogle();
+      // Redirect happens automatically via Supabase
+    } catch (err: any) {
+      console.error('[Login] Google sign in error:', err);
+      setError(err.message || "Google sign-in failed. Please try again.");
       setIsLoading(false);
-    }
-  };
-
-  const handleGoogleError = () => {
-    setError("Google sign-in failed. Please try again.");
-    setIsLoading(false);
-  };
-
-  // Initialize Google Sign-In
-  const { renderButton, showOneTap } = useGoogleSignIn({
-    clientId: GOOGLE_CLIENT_ID,
-    onSuccess: handleGoogleSuccess,
-    onError: handleGoogleError,
-    context: 'signin',
-    uxMode: 'redirect', // This provides the full-screen experience
-  });
-
-  // Render Google Sign-In button when component mounts
-  useEffect(() => {
-    if (googleButtonRef.current && GOOGLE_CLIENT_ID) {
-      renderButton(googleButtonRef.current, {
-        theme: 'outline',
-        size: 'large',
-        text: 'continue_with',
-        shape: 'rectangular',
-        width: 400,
-        logo_alignment: 'center'
-      });
-    }
-  }, [renderButton]);
-
-  const handleGoogleSignIn = () => {
-    if (GOOGLE_CLIENT_ID) {
-      // Trigger full-screen redirect to Google
-      const authUrl = authAPI.getGoogleAuthUrl(GOOGLE_CLIENT_ID);
-      window.location.href = authUrl;
-    } else {
-      setError("Google Sign-In is not configured.");
     }
   };
 
   const handleResetPassword = () => {
-    // TODO: Implement password reset
+    // TODO: Implement password reset with Supabase
     console.log("Reset password clicked");
     alert("Password reset will be implemented soon");
   };
 
   const handleCreateAccount = () => {
-    // Navigate to registration page
     router.push("/register");
   };
 

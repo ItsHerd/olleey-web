@@ -7,7 +7,7 @@ import { tokenStorage } from './api';
 interface ProjectContextType {
     projects: Project[];
     selectedProject: Project | null;
-    setSelectedProject: (project: Project) => void;
+    setSelectedProject: (project: Project | null) => void;
     isLoading: boolean;
     error: string | null;
     refreshProjects: () => Promise<void>;
@@ -22,11 +22,15 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const setSelectedProject = useCallback((project: Project) => {
+    const setSelectedProject = useCallback((project: Project | null) => {
         setSelectedProjectState(project);
         // Optionally persist to localStorage if needed, or query param
         if (typeof window !== 'undefined') {
-            localStorage.setItem('selected_project_id', project.id);
+            if (project) {
+                localStorage.setItem('selected_project_id', project.id);
+            } else {
+                localStorage.setItem('selected_project_id', 'all');
+            }
         }
     }, []);
 
@@ -50,11 +54,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
                 if (found) {
                     setSelectedProjectState(found);
+                } else if (storedId === 'all') {
+                    setSelectedProjectState(null);
                 } else {
-                    // Default to first project
-                    setSelectedProjectState(data[0]);
+                    // Default to "All Projects" (null) instead of first project
+                    setSelectedProjectState(null);
                     if (typeof window !== 'undefined') {
-                        localStorage.setItem('selected_project_id', data[0].id);
+                        localStorage.setItem('selected_project_id', 'all');
                     }
                 }
             } else {

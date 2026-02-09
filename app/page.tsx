@@ -2,20 +2,21 @@
 
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { tokenStorage } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 import LandingPage from "@/components/LandingPage/LandingPage";
 
 function LandingPageWrapper() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading } = useAuth();
   const authTrigger = searchParams.get('auth');
 
   useEffect(() => {
     // Redirect to /app if already authenticated
-    if (tokenStorage.isAuthenticated()) {
+    if (!loading && user) {
       router.push("/app");
     }
-  }, [router]);
+  }, [user, loading, router]);
 
   const handleNavigation = () => {
     router.push("/app");

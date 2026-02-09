@@ -371,12 +371,17 @@ export function QuickCheckModal({
                             </div>
 
                             {/* Play Overlay */}
-                            <button
-                                onClick={togglePlay}
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-olleey-yellow/30 hover:bg-olleey-yellow/40 backdrop-blur-xl rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 border-2 border-olleey-yellow/50 scale-90 group-hover:scale-100 shadow-[0_0_50px_rgba(251,191,36,0.3)] z-30"
-                            >
-                                {isPlaying ? <Pause className="w-10 h-10 text-olleey-yellow fill-current" /> : <Play className="w-10 h-10 text-olleey-yellow fill-current ml-2" />}
-                            </button>
+                            <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        togglePlay();
+                                    }}
+                                    className="w-24 h-24 bg-olleey-yellow/30 hover:bg-olleey-yellow/40 backdrop-blur-xl rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 border-2 border-olleey-yellow/50 scale-90 group-hover:scale-100 shadow-[0_0_50px_rgba(251,191,36,0.3)] pointer-events-auto"
+                                >
+                                    {isPlaying ? <Pause className="w-10 h-10 text-olleey-yellow fill-current" /> : <Play className="w-10 h-10 text-olleey-yellow fill-current ml-2" />}
+                                </button>
+                            </div>
                         </div>
 
                         {/* Player Controls Panel */}

@@ -14,7 +14,9 @@ import {
     RefreshCw,
     Languages,
     ChevronLeft,
-    Youtube
+    Youtube,
+    Play,
+    Pause
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,10 +38,15 @@ export default function PreviewPage() {
     const { toast } = useToast();
     const [isPublishing, setIsPublishing] = useState(false);
     const [isSavingDraft, setIsSavingDraft] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const videoRef = React.useRef<HTMLVideoElement>(null);
 
     // Fetch full video data to get all localizations
     const { selectedProject } = useProject();
-    const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id });
+    
+    // Get userId directly from localStorage
+    const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') || undefined : undefined;
+    const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id, user_id: userId });
 
     // Get video ID and language from URL parameters
     const videoIdFromUrl = searchParams.get("video_id");
@@ -160,6 +167,18 @@ export default function PreviewPage() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
+
+    const togglePlay = () => {
+        if (videoRef.current) {
+            if (isPlaying) {
+                videoRef.current.pause();
+            } else {
+                videoRef.current.play();
+            }
+            setIsPlaying(!isPlaying);
+        }
+    };
+
 
     const handleSwitchToDub = (code: string, loc: any) => {
         if (!currentVideo) return;
@@ -311,14 +330,39 @@ export default function PreviewPage() {
 
                     <div className="max-w-6xl mx-auto space-y-12 relative z-10">
                         {/* Video Player Section */}
-                        <section className={`relative aspect-video ${isDark ? "bg-black" : "bg-white"} border ${borderClass} group overflow-hidden rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)]`}>
+                        <section
+                            className={`relative aspect-video ${isDark ? "bg-black" : "bg-white"} border ${borderClass} group overflow-hidden rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] cursor-pointer`}
+                            onClick={togglePlay}
+                        >
                             <video
+                                ref={videoRef}
                                 key={viewMode === 'original' ? originalVideoUrl : dubbedVideoUrl}
                                 src={viewMode === 'original' ? originalVideoUrl : (dubbedVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4")}
-                                controls
-                                className="w-full h-full"
+                                className="w-full h-full object-contain"
                                 poster={quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200"}
+                                onPlay={() => setIsPlaying(true)}
+                                onPause={() => setIsPlaying(false)}
                             />
+
+                            {/* Center Play Button Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: isPlaying ? 0 : 1, scale: 1 }}
+                                    whileHover={{ scale: 1.1, opacity: 1 }}
+                                    className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 flex items-center justify-center shadow-2xl transition-all duration-300 pointer-events-auto"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        togglePlay();
+                                    }}
+                                >
+                                    {isPlaying ? (
+                                        <Pause className="w-8 h-8 text-white fill-current" />
+                                    ) : (
+                                        <Play className="w-8 h-8 text-white fill-current pl-1" />
+                                    )}
+                                </motion.div>
+                            </div>
 
                             {/* Cinematic Overlay UI */}
                             <div className="absolute top-8 right-8 flex items-center gap-2 z-10 pointer-events-none">

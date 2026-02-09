@@ -28,7 +28,7 @@ import { dashboardAPI, type ActivityItem } from "@/lib/api";
 import { useProject } from "@/lib/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
-import { LoadingPanda } from "@/components/ui/LoadingPanda";
+import { OlleeyLoader } from "@/components/ui/OlleeyLoader";
 
 interface Notification {
   id: string;
@@ -349,7 +349,7 @@ export default function NotificationsPage() {
         <div className="flex-1">
           {isInitialLoading ? (
             <div className="w-full flex flex-col items-center justify-center py-24 space-y-8">
-              <LoadingPanda size={180} />
+              <OlleeyLoader size={100} />
               <div className="text-center space-y-2">
                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-olleey-yellow animate-pulse">Syncing Neural Signals...</p>
                 <div className="flex items-center justify-center gap-2 opacity-20">

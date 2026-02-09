@@ -4,9 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { X } from 'lucide-react';
-import { authAPI } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 import { getUserFriendlyErrorMessage } from "@/lib/errorMessages";
-import { useGoogleSignIn } from "@/lib/useGoogleSignIn";
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeroAsciiProps {
@@ -37,9 +36,7 @@ export default function HeroAscii({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const googleButtonRef = useRef<HTMLDivElement>(null);
-
-  const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+  const { signIn, signUp, signInWithGoogle } = useAuth();
 
   const handleAuth = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -54,7 +51,9 @@ export default function HeroAscii({
 
     try {
       if (authMode === 'login') {
-        await authAPI.login({ email, password });
+        console.log('[HeroAscii] Signing in with Supabase:', email);
+        await signIn(email, password);
+        console.log('[HeroAscii] ✅ Sign in successful');
       } else {
         // Invite-only validation
         if (!accessCode || accessCode.trim() !== "olleey2026") {
@@ -62,57 +61,31 @@ export default function HeroAscii({
           setLoading(false);
           return;
         }
-        await authAPI.register({ email, password, name });
+        console.log('[HeroAscii] Signing up with Supabase:', email);
+        await signUp(email, password, name);
+        console.log('[HeroAscii] ✅ Sign up successful');
       }
       if (onAuthenticated) onAuthenticated();
-    } catch (err) {
-      setError(getUserFriendlyErrorMessage(err));
+    } catch (err: any) {
+      console.error('[HeroAscii] Auth error:', err);
+      setError(err.message || getUserFriendlyErrorMessage(err));
       setLoading(false);
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleSignIn = async () => {
     setError(null);
     setLoading(true);
     try {
-      await authAPI.googleAuth(credentialResponse.credential);
-      if (onAuthenticated) {
-        onAuthenticated();
-      }
-    } catch (err) {
-      setError(getUserFriendlyErrorMessage(err));
-      console.error("Google sign-in error:", err);
+      console.log('[HeroAscii] Starting Google sign in');
+      await signInWithGoogle();
+      // Redirect happens automatically via Supabase
+    } catch (err: any) {
+      console.error('[HeroAscii] Google sign in error:', err);
+      setError(err.message || "Google sign-in failed. Please try again.");
       setLoading(false);
     }
   };
-
-  const handleGoogleSignIn = () => {
-    if (GOOGLE_CLIENT_ID) {
-      const authUrl = authAPI.getGoogleAuthUrl(GOOGLE_CLIENT_ID);
-      window.location.href = authUrl;
-    } else {
-      setError("ERR_OAUTH_CFG: GOOGLE_CLIENT_ID_NOT_SET");
-    }
-  };
-
-  const { renderButton } = useGoogleSignIn({
-    clientId: GOOGLE_CLIENT_ID,
-    onSuccess: handleGoogleSuccess,
-    onError: () => setError("Google sign-in failed. Please try again."),
-  });
-
-  useEffect(() => {
-    if (showAuth && googleButtonRef.current && GOOGLE_CLIENT_ID) {
-      renderButton(googleButtonRef.current, {
-        theme: 'outline',
-        size: 'large',
-        text: 'continue_with',
-        shape: 'rectangular',
-        width: googleButtonRef.current.offsetWidth || 300,
-        logo_alignment: 'center'
-      });
-    }
-  }, [showAuth, renderButton, GOOGLE_CLIENT_ID]);
 
   useEffect(() => {
     const embedScript = document.createElement('script');

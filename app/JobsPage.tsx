@@ -3,8 +3,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/lib/useTheme";
-import { jobsAPI, type Job, type JobWorkflowState, API_BASE_URL } from "@/lib/api";
+import { jobsAPI, type Job, type JobWorkflowState } from "@/lib/api";
 import { useVideos } from "@/lib/useVideos";
+import { useSupabaseJobs } from "@/lib/useSupabase";
+import { useAuth } from "@/lib/AuthContext";
 import { logger } from "@/lib/logger";
 import {
     Loader2,
@@ -59,15 +61,56 @@ const itemVariants = {
 export default function JobsPage() {
     const router = useRouter();
     const { selectedProject } = useProject();
-    const { videos } = useVideos();
-    const [jobs, setJobs] = useState<Job[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const { user, loading: authLoading } = useAuth();
+    const userId = user?.id;
+    
+    // Fetch videos and jobs from Supabase
+    const { videos } = useVideos({ user_id: userId }, { enabled: !!userId && !authLoading });
+    const { 
+        jobs: supabaseJobs, 
+        loading: jobsLoading, 
+        error: jobsError, 
+        refetch: refetchJobs 
+    } = useSupabaseJobs(
+        userId,
+        { project_id: selectedProject?.id },
+        { enabled: !!userId && !authLoading }
+    );
+    
     const [selectedGraphJobId, setSelectedGraphJobId] = useState<string | null>(null);
     const [filter, setFilter] = useState<JobFilter>("all");
     const { theme } = useTheme();
     const { toast } = useToast();
     const { openReview } = useReview();
+    
+    // Convert Supabase jobs to legacy Job format
+    const jobs = useMemo(() => {
+        console.log('[JobsPage] Supabase jobs received:', {
+            count: supabaseJobs?.length || 0,
+            jobs: supabaseJobs,
+            userId,
+            authLoading,
+            selectedProject: selectedProject?.id
+        });
+        return (supabaseJobs || []).map(job => ({
+            ...job,
+            job_id: job.id,
+            source_video_id: job.video_id,
+            workflow_state: {} as JobWorkflowState,
+        })) as Job[];
+    }, [supabaseJobs, userId, authLoading, selectedProject?.id]);
+    
+    const loading = jobsLoading;
+    const error = jobsError;
+    
+    console.log('[JobsPage] State:', { 
+        jobsCount: jobs.length, 
+        loading, 
+        error,
+        userId,
+        authLoading,
+        selectedProject: selectedProject?.id
+    });
 
     // Theme tokens
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
@@ -81,35 +124,15 @@ export default function JobsPage() {
     const getFullUrl = (url: string | undefined) => {
         if (!url) return undefined;
         if (url.startsWith('http')) return url;
-        return `${API_BASE_URL}${url}`;
+        return url; // Already complete from Supabase
     };
 
-    const loadJobs = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await jobsAPI.listJobs(selectedProject?.id);
-            const sortedJobs = (response.jobs || []).sort((a: Job, b: Job) => {
-                if (a.source_video_id !== b.source_video_id) {
-                    return a.source_video_id.localeCompare(b.source_video_id);
-                }
-                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            });
-            setJobs(sortedJobs);
-        } catch (err: any) {
-            logger.error("JobsPage", "Failed to load jobs", err);
-            setError(err.message || "Failed to load jobs");
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    // Handle refresh events
     useEffect(() => {
-        loadJobs();
-        const handleRefresh = () => loadJobs();
+        const handleRefresh = () => refetchJobs();
         window.addEventListener('olleey-refresh', handleRefresh);
         return () => window.removeEventListener('olleey-refresh', handleRefresh);
-    }, [selectedProject?.id]);
+    }, [refetchJobs]);
 
     const stats = useMemo(() => {
         const now = new Date();
@@ -246,7 +269,7 @@ export default function JobsPage() {
                                 <span className="text-xl font-normal text-emerald-400">OPTIMIZED</span>
                             </div>
                             <Button
-                                onClick={loadJobs}
+                                onClick={refetchJobs}
                                 className="w-14 h-14 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center text-white p-0 group"
                             >
                                 <RefreshCw className={`w-5 h-5 group-active:rotate-180 transition-transform duration-500`} />
@@ -263,7 +286,7 @@ export default function JobsPage() {
                             <p className="text-sm font-bold text-red-400 uppercase tracking-widest">System Incident Reported</p>
                             <p className="text-sm text-red-300 mt-1 opacity-80">{error}</p>
                             <Button
-                                onClick={loadJobs}
+                                onClick={refetchJobs}
                                 variant="outline"
                                 size="sm"
                                 className="mt-4 border-red-500/30 text-red-400 hover:bg-red-500/20 rounded-full"
@@ -390,7 +413,7 @@ export default function JobsPage() {
                         try {
                             await jobsAPI.approveJob(selectedGraphJobId);
                             toast("Workflow approved successfully!", "success");
-                            loadJobs();
+                            refetchJobs();
                             setSelectedGraphJobId(null);
                         } catch (err: any) {
                             logger.error("JobsPage", "Failed to approve job", err);
@@ -409,7 +432,7 @@ export default function JobsPage() {
                     }}
                     onRetry={() => {
                         if (!selectedGraphJobId) return;
-                        loadJobs();
+                        refetchJobs();
                         toast("Retrying production pipeline...", "info");
                     }}
                     onPreview={() => {

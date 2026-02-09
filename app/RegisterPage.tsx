@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
-import { authAPI, type RegisterData } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 import { getUserFriendlyErrorMessage, isNetworkError } from "@/lib/errorMessages";
 import { SignUpPage, type Testimonial } from "@/components/ui/sign-in";
 import { useTheme } from "@/lib/useTheme";
@@ -31,6 +31,7 @@ const sampleTestimonials: Testimonial[] = [
 export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
     const { theme } = useTheme();
     const router = useRouter();
+    const { signUp, signInWithGoogle } = useAuth();
 
     const bgClass = theme === "light" ? "bg-light-bg" : "bg-dark-bg";
     const textClass = theme === "light" ? "text-light-text" : "text-dark-text";
@@ -82,33 +83,29 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
         }
 
         try {
-            const registerData: RegisterData = {
-                email: email.trim(),
-                password,
-                name: name?.trim() || undefined,
-            };
-            await authAPI.register(registerData);
+            await signUp(email.trim(), password, name?.trim());
+            console.log('[Register] ✅ Registration successful');
             onRegisterSuccess();
-        } catch (err) {
+        } catch (err: any) {
+            console.error('[Register] Registration error:', err);
             const friendlyMessage = getUserFriendlyErrorMessage(err);
-            setError(friendlyMessage);
-
-            // Only show alert for network errors
-            if (isNetworkError(err)) {
-                alert(friendlyMessage);
-            }
+            setError(err.message || friendlyMessage);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleGoogleSignUp = () => {
-        const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-        if (GOOGLE_CLIENT_ID) {
-            const authUrl = authAPI.getGoogleAuthUrl(GOOGLE_CLIENT_ID);
-            window.location.href = authUrl;
-        } else {
-            setError("Google Sign-In is not configured.");
+    const handleGoogleSignUp = async () => {
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            await signInWithGoogle();
+            // Redirect happens automatically via Supabase
+        } catch (err: any) {
+            console.error('[Register] Google sign up error:', err);
+            setError(err.message || "Google sign-up failed. Please try again.");
+            setIsLoading(false);
         }
     };
 

@@ -23,7 +23,7 @@ import {
     Play,
     Eye
 } from "lucide-react";
-import { LoadingPanda } from "@/components/ui/LoadingPanda";
+import { OlleeyLoader } from "@/components/ui/OlleeyLoader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useReview } from "@/lib/ReviewContext";
@@ -87,7 +87,7 @@ export default function ProcessingPage() {
     if (videoIdFromUrl && !quickCheckState.videoId) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-[#0a0a0a]">
-                <LoadingPanda />
+                <OlleeyLoader size={80} />
             </div>
         );
     }
@@ -173,7 +173,7 @@ export default function ProcessingPage() {
                                         ) : isPaused ? (
                                             <Pause className="w-16 h-16 text-olleey-yellow" />
                                         ) : (
-                                            <LoadingPanda size={160} />
+                                            <OlleeyLoader size={100} />
                                         )}
                                         <div className={cn(
                                             "absolute inset-0 blur-2xl rounded-full",

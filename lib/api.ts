@@ -1,4 +1,6 @@
 // API Configuration
+import { LocalizationStatus, JobStatus, VideoType, VideoStatus, ChannelStatus as ChannelStatusEnum } from "./schema";
+
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // Simple logger for terminal visibility
@@ -66,7 +68,7 @@ export interface YouTubeConnection {
 }
 
 export interface ChannelStatus {
-  status: "active" | "expired" | "restricted" | "disconnected";
+  status: ChannelStatusEnum;
   last_checked: string;
   token_expires_at: string | null;
   permissions: string[];
@@ -88,7 +90,7 @@ export interface LanguageChannel {
   language_name: string;
   created_at: string;
   status: {
-    status: "active" | "expired" | "restricted" | "disconnected";
+    status: ChannelStatusEnum;
     permissions: string[];
   };
   statistics?: ChannelStatistics;
@@ -131,7 +133,7 @@ export interface ChannelGraphResponse {
 export interface ProcessingJob {
   job_id: string;
   source_video_id: string;
-  status: string;
+  status: JobStatus;
   progress: number;
   target_languages: string[];
   created_at: string;
@@ -149,16 +151,29 @@ export interface DashboardData {
   created_at: string;
   youtube_connections: YouTubeConnection[];
   has_youtube_connection: boolean;
+  connections_count: number;
   total_jobs: number;
   active_jobs: number;
   completed_jobs: number;
   recent_jobs: ProcessingJob[];
   language_channels: LanguageChannel[];
   total_language_channels: number;
+  projects: Array<{
+    id: string;
+    name: string;
+    created_at: string;
+  }>;
+  total_projects: number;
+  recent_activity: any[];
   weekly_stats?: {
     videos_completed: number;
     languages_added: number;
     growth_percentage: number;
+  };
+  credits?: {
+    used: number;
+    limit: number;
+    reset_date: string;
   };
   credits_summary?: {
     total_credits: number;
@@ -484,7 +499,7 @@ export const dashboardAPI = {
 
 // Video Types
 export interface LocalizationInfo {
-  status: "queued" | "not-started" | "processing" | "draft" | "live" | "failed";
+  status: LocalizationStatus;
   progress: number;
   video_url?: string;
   job_id?: string;
@@ -507,8 +522,8 @@ export interface Video {
   view_count?: number;
   global_views?: number;
   like_count?: number;
-  status?: string;
-  video_type?: "original" | "translated";
+  status?: VideoStatus;
+  video_type?: VideoType;
   source_video_id?: string | null;
   language_code?: string;
   translated_languages?: string[];

@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { jobsAPI, videosAPI, API_BASE_URL } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
+import { LocalizationStatus, JobStatus } from "@/lib/schema";
+import { logger } from "@/lib/logger";
 
 // Demo AI-generated thumbnail URL
 const DEMO_THUMBNAIL = "https://tii.imgix.net/production/articles/7643/03e02ef7-f12e-4faf-8551-37d5c5785586-UQ6LXV.jpg?auto=compress&fit=crop&auto=format";
@@ -40,7 +42,10 @@ export default function ReviewHubPage() {
     } = useReview();
 
     const { selectedProject } = useProject();
-    const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id });
+
+    // Get userId directly from localStorage
+    const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') || undefined : undefined;
+    const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id, user_id: userId });
 
     // Listen for global refresh events
     useEffect(() => {
@@ -186,7 +191,7 @@ export default function ReviewHubPage() {
                             thumbnailUrl: getFullUrl(targetVideo.thumbnail_url), // Use SOURCE thumbnail
                             localizedTitle: localizedTitle, // Add localized metadata
                             localizedDescription: localizedDescription,
-                            isApproved: localizedVideo?.status === "published" || loc?.status === "live",
+                            isApproved: localizedVideo?.status === LocalizationStatus.LIVE || loc?.status === LocalizationStatus.LIVE,
                             approvedAt: targetVideo.published_at || (targetVideo as any).created_at
                         });
                     }
@@ -253,6 +258,12 @@ export default function ReviewHubPage() {
     const [isSavingDraft, setIsSavingDraft] = useState(false);
     const [isPreviewMode, setIsPreviewMode] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Individual loading states for progressive loading
+    const [originalVideoLoading, setOriginalVideoLoading] = useState(true);
+    const [dubbedVideoLoading, setDubbedVideoLoading] = useState(true);
+    const [thumbnailLoading, setThumbnailLoading] = useState(true);
+    const [metadataLoading, setMetadataLoading] = useState(true);
 
     // YouTube-style video settings
     const [madeForKids, setMadeForKids] = useState(false);
@@ -417,7 +428,7 @@ export default function ReviewHubPage() {
                 console.log('[ReviewHubPage] Starting Garry Tan demo deployment flow');
 
                 // Update status to processing
-                await jobsAPI.updateJobStatus(videoId, 'processing');
+                await jobsAPI.updateJobStatus(videoId, JobStatus.PROCESSING);
 
                 toast("Deployment initiated! Redirecting to pipeline...", "success");
 
@@ -431,7 +442,7 @@ export default function ReviewHubPage() {
                 setTimeout(async () => {
                     try {
                         if (videoId) {
-                            await jobsAPI.updateJobStatus(videoId, 'waiting_approval');
+                            await jobsAPI.updateJobStatus(videoId, JobStatus.WAITING_APPROVAL);
                         }
                         window.dispatchEvent(new CustomEvent('olleey-refresh'));
                         toast("Video processed! Ready for review", "success");
@@ -535,14 +546,17 @@ export default function ReviewHubPage() {
                 setIsPlaying(!isPlaying);
             }
         } else {
-            // In review mode, both videos should play in sync
-            if (originalVideoRef.current && dubbedVideoRef.current) {
+            // In review mode, play whatever is available (both if possible, otherwise just one)
+            const hasOriginal = !!originalVideoRef.current;
+            const hasDubbed = !!dubbedVideoRef.current;
+
+            if (hasOriginal || hasDubbed) {
                 if (isPlaying) {
-                    originalVideoRef.current.pause();
-                    dubbedVideoRef.current.pause();
+                    if (hasOriginal) originalVideoRef.current?.pause();
+                    if (hasDubbed) dubbedVideoRef.current?.pause();
                 } else {
-                    originalVideoRef.current.play().catch(err => console.error('Original video play error:', err));
-                    dubbedVideoRef.current.play().catch(err => console.error('Dubbed video play error:', err));
+                    if (hasOriginal) originalVideoRef.current?.play().catch(err => console.error('Original video play error:', err));
+                    if (hasDubbed) dubbedVideoRef.current?.play().catch(err => console.error('Dubbed video play error:', err));
                 }
                 setIsPlaying(!isPlaying);
             }
@@ -558,10 +572,14 @@ export default function ReviewHubPage() {
                 setCurrentTime(time);
             }
         } else {
-            // In review mode, seek both videos
-            if (originalVideoRef.current && dubbedVideoRef.current) {
-                originalVideoRef.current.currentTime = time;
-                dubbedVideoRef.current.currentTime = time;
+            // In review mode, seek whatever is available
+            const hasOriginal = !!originalVideoRef.current;
+            const hasDubbed = !!dubbedVideoRef.current;
+
+            if (hasOriginal) originalVideoRef.current!.currentTime = time;
+            if (hasDubbed) dubbedVideoRef.current!.currentTime = time;
+
+            if (hasOriginal || hasDubbed) {
                 setCurrentTime(time);
             }
         }
@@ -577,10 +595,14 @@ export default function ReviewHubPage() {
                 setCurrentTime(newTime);
             }
         } else {
-            // In review mode, skip both videos
-            if (originalVideoRef.current && dubbedVideoRef.current) {
-                originalVideoRef.current.currentTime = newTime;
-                dubbedVideoRef.current.currentTime = newTime;
+            // In review mode, skip whatever is available
+            const hasOriginal = !!originalVideoRef.current;
+            const hasDubbed = !!dubbedVideoRef.current;
+
+            if (hasOriginal) originalVideoRef.current!.currentTime = newTime;
+            if (hasDubbed) dubbedVideoRef.current!.currentTime = newTime;
+
+            if (hasOriginal || hasDubbed) {
                 setCurrentTime(newTime);
             }
         }
@@ -650,6 +672,38 @@ export default function ReviewHubPage() {
     const handleVideoPlay = () => setIsPlaying(true);
     const handleVideoPause = () => setIsPlaying(false);
 
+    // Video loading handlers
+    const handleOriginalVideoCanPlay = () => {
+        console.log('[ReviewHubPage] Original video can play');
+        setOriginalVideoLoading(false);
+    };
+
+    const handleDubbedVideoCanPlay = () => {
+        console.log('[ReviewHubPage] Dubbed video can play');
+        setDubbedVideoLoading(false);
+    };
+
+    const handleOriginalVideoWaiting = () => {
+        setOriginalVideoLoading(true);
+    };
+
+    const handleDubbedVideoWaiting = () => {
+        setDubbedVideoLoading(true);
+    };
+
+    // Reset loading states when URLs change
+    useEffect(() => {
+        if (originalVideoUrl) {
+            setOriginalVideoLoading(true);
+        }
+    }, [originalVideoUrl]);
+
+    useEffect(() => {
+        if (dubbedVideoUrl) {
+            setDubbedVideoLoading(true);
+        }
+    }, [dubbedVideoUrl]);
+
     useEffect(() => {
         if (isApproved) {
             setChecklist({
@@ -672,23 +726,17 @@ export default function ReviewHubPage() {
     // Derived values for UI
     const progressPercent = (currentTime / duration) * 100 || 0;
 
-    // Show loading if we have a video ID from URL but data is still loading
-    if (videoIdFromUrl && (videosLoading || !quickCheckState.videoId || !quickCheckState.originalVideoUrl)) {
-        return (
-            <div className={`w-full h-full flex items-center justify-center ${bgClass}`}>
-                <div className="relative">
-                    <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                        className="w-16 h-16 border-2 border-olleey-yellow/20 border-t-olleey-yellow rounded-full"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Activity className="w-6 h-6 text-olleey-yellow animate-pulse" />
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // Set metadata loading based on video data availability
+    useEffect(() => {
+        if (quickCheckState.videoId && quickCheckState.originalVideoUrl) {
+            setMetadataLoading(false);
+        } else {
+            setMetadataLoading(true);
+        }
+    }, [quickCheckState.videoId, quickCheckState.originalVideoUrl]);
+
+    // Show minimal loading only if there's no video ID from URL at all
+    // (Remove full-page blocking loader to allow progressive component loading)
 
     // Show empty state only if there's no video ID from URL at all
     if (!videoIdFromUrl && !quickCheckState.videoId) {
@@ -830,12 +878,27 @@ export default function ReviewHubPage() {
                                     onLoadedMetadata={handleVideoLoadedMetadata}
                                     onPlay={handleVideoPlay}
                                     onPause={handleVideoPause}
+                                    onCanPlay={handleOriginalVideoCanPlay}
+                                    onWaiting={handleOriginalVideoWaiting}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         toggleOriginalMute();
                                         setSelectedFocus("source");
                                     }}
                                 />
+                                {/* Loading overlay for original video */}
+                                {originalVideoLoading && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-10">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <motion.div
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                                                className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full"
+                                            />
+                                            <span className="text-xs font-medium text-white/60">Loading video...</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -860,29 +923,47 @@ export default function ReviewHubPage() {
                                 </Badge>
                             </div>
                             {dubbedVideoUrl ? (
-                                <video
-                                    ref={dubbedVideoRef}
-                                    src={dubbedVideoUrl}
-                                    className="w-full h-full object-contain"
-                                    muted={dubbedMuted}
-                                    playsInline
-                                    preload="metadata"
-                                    onTimeUpdate={handleVideoTimeUpdate}
-                                    onLoadedMetadata={handleVideoLoadedMetadata}
-                                    onPlay={handleVideoPlay}
-                                    onPause={handleVideoPause}
-                                    onError={(e) => {
-                                        console.error('[ReviewHubPage] Dubbed video error:', {
-                                            url: dubbedVideoUrl,
-                                            error: e
-                                        });
-                                    }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleDubbedMute();
-                                        setSelectedFocus("prod");
-                                    }}
-                                />
+                                <>
+                                    <video
+                                        ref={dubbedVideoRef}
+                                        src={dubbedVideoUrl}
+                                        className="w-full h-full object-contain"
+                                        muted={dubbedMuted}
+                                        playsInline
+                                        preload="metadata"
+                                        onTimeUpdate={handleVideoTimeUpdate}
+                                        onLoadedMetadata={handleVideoLoadedMetadata}
+                                        onPlay={handleVideoPlay}
+                                        onPause={handleVideoPause}
+                                        onCanPlay={handleDubbedVideoCanPlay}
+                                        onWaiting={handleDubbedVideoWaiting}
+                                        onError={(e) => {
+                                            console.error('[ReviewHubPage] Dubbed video error:', {
+                                                url: dubbedVideoUrl,
+                                                error: e
+                                            });
+                                            setDubbedVideoLoading(false);
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleDubbedMute();
+                                            setSelectedFocus("prod");
+                                        }}
+                                    />
+                                    {/* Loading overlay for dubbed video */}
+                                    {dubbedVideoLoading && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-10">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <motion.div
+                                                    animate={{ rotate: 360 }}
+                                                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                                                    className="w-10 h-10 border-2 border-olleey-yellow/20 border-t-olleey-yellow rounded-full"
+                                                />
+                                                <span className="text-xs font-medium text-white/60">Loading dubbed video...</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center bg-black/20">
                                     <div className="text-center space-y-3 p-6">
@@ -899,24 +980,26 @@ export default function ReviewHubPage() {
                         </div>
 
                         {/* Center Play Button Overlay */}
-                        <AnimatePresence>
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: isPlaying ? 0 : 1, scale: 1 }}
-                                whileHover={{ scale: 1.1, opacity: 1 }}
-                                onClick={(e) => {
-                                    e.stopPropagation(); // Prevent ensuring focus logic triggers if we just want to play/pause
-                                    togglePlay();
-                                }}
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 flex items-center justify-center z-30 shadow-2xl transition-all duration-300 hover:bg-white/20 hover:scale-105"
-                            >
-                                {isPlaying ? (
-                                    <Pause className="w-8 h-8 text-white fill-current" />
-                                ) : (
-                                    <Play className="w-8 h-8 text-white fill-current pl-1" />
-                                )}
-                            </motion.button>
-                        </AnimatePresence>
+                        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+                            <AnimatePresence>
+                                <motion.button
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: isPlaying ? 0 : 1, scale: 1 }}
+                                    whileHover={{ scale: 1.1, opacity: 1 }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        togglePlay();
+                                    }}
+                                    className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 flex items-center justify-center shadow-2xl transition-all duration-300 hover:bg-white/20 hover:scale-105 pointer-events-auto"
+                                >
+                                    {isPlaying ? (
+                                        <Pause className="w-8 h-8 text-white fill-current" />
+                                    ) : (
+                                        <Play className="w-8 h-8 text-white fill-current pl-1" />
+                                    )}
+                                </motion.button>
+                            </AnimatePresence>
+                        </div>
                     </div>
 
                     {/* Controls Bar */}
@@ -999,12 +1082,23 @@ export default function ReviewHubPage() {
                             </div>
 
                             {/* Thumbnail Preview */}
-                            <div className="aspect-video rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl group">
+                            <div className="aspect-video rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl group relative">
                                 <img
                                     src={thumbnailStrategy === 'upload' && customThumbnail ? customThumbnail : (thumbnailStrategy === 'generate' ? DEMO_THUMBNAIL : (quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"))}
                                     alt="Thumbnail Preview"
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    onLoad={() => setThumbnailLoading(false)}
+                                    onError={() => setThumbnailLoading(false)}
                                 />
+                                {thumbnailLoading && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                                        <motion.div
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                                            className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full"
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Title */}
@@ -1013,19 +1107,26 @@ export default function ReviewHubPage() {
                                     <Type className="w-3.5 h-3.5 text-white/40" />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Title</span>
                                 </div>
-                                <p className="text-base font-bold text-white leading-snug">
-                                    {(() => {
-                                        // Use edited title if available, otherwise show Spanish for Garry Tan demo
-                                        if (editedTitle && editedTitle !== (localizedTitle || "")) {
-                                            return editedTitle;
-                                        }
-                                        // If Garry Tan demo and Spanish, show Spanish title
-                                        if ((videoTitle?.includes("Garry Tan") || quickCheckState.videoId === "garry_tan_yc_demo") && languageCode === "es") {
-                                            return "Garry Tan - Presidente y CEO de Y Combinator";
-                                        }
-                                        return editedTitle || localizedTitle || videoTitle || "Untitled Video";
-                                    })()}
-                                </p>
+                                {metadataLoading ? (
+                                    <div className="space-y-2">
+                                        <div className="h-5 bg-white/10 rounded animate-pulse w-3/4"></div>
+                                        <div className="h-5 bg-white/10 rounded animate-pulse w-1/2"></div>
+                                    </div>
+                                ) : (
+                                    <p className="text-base font-bold text-white leading-snug">
+                                        {(() => {
+                                            // Use edited title if available, otherwise show Spanish for Garry Tan demo
+                                            if (editedTitle && editedTitle !== (localizedTitle || "")) {
+                                                return editedTitle;
+                                            }
+                                            // If Garry Tan demo and Spanish, show Spanish title
+                                            if ((videoTitle?.includes("Garry Tan") || quickCheckState.videoId === "garry_tan_yc_demo") && languageCode === "es") {
+                                                return "Garry Tan - Presidente y CEO de Y Combinator";
+                                            }
+                                            return editedTitle || localizedTitle || videoTitle || "Untitled Video";
+                                        })()}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Description */}
@@ -1034,19 +1135,28 @@ export default function ReviewHubPage() {
                                     <Edit3 className="w-3.5 h-3.5 text-white/40" />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Description</span>
                                 </div>
-                                <p className="text-sm text-white/70 leading-relaxed line-clamp-6">
-                                    {(() => {
-                                        // Use edited description if available, otherwise show Spanish for Garry Tan demo
-                                        if (editedDescription && editedDescription !== (localizedDescription || "No description provided.")) {
-                                            return editedDescription;
-                                        }
-                                        // If Garry Tan demo and Spanish, show Spanish description
-                                        if ((videoTitle?.includes("Garry Tan") || quickCheckState.videoId === "garry_tan_yc_demo") && languageCode === "es") {
-                                            return "Garry Tan es el Presidente y CEO de Y Combinator (YC), la aceleradora de startups más exitosa del mundo.\n\nEn este video, Garry comparte perspectivas sobre la misión de YC de ayudar a las startups a tener éxito, la importancia de construir grandes productos, y consejos para fundadores navegando el viaje del emprendimiento.\n\nEste es un video de demostración que muestra las capacidades de localización de video impulsadas por IA de Olleey.";
-                                        }
-                                        return editedDescription || localizedDescription || videoDescription || "No description available";
-                                    })()}
-                                </p>
+                                {metadataLoading ? (
+                                    <div className="space-y-2">
+                                        <div className="h-4 bg-white/10 rounded animate-pulse w-full"></div>
+                                        <div className="h-4 bg-white/10 rounded animate-pulse w-5/6"></div>
+                                        <div className="h-4 bg-white/10 rounded animate-pulse w-4/5"></div>
+                                        <div className="h-4 bg-white/10 rounded animate-pulse w-3/4"></div>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-white/70 leading-relaxed line-clamp-6">
+                                        {(() => {
+                                            // Use edited description if available, otherwise show Spanish for Garry Tan demo
+                                            if (editedDescription && editedDescription !== (localizedDescription || "No description provided.")) {
+                                                return editedDescription;
+                                            }
+                                            // If Garry Tan demo and Spanish, show Spanish description
+                                            if ((videoTitle?.includes("Garry Tan") || quickCheckState.videoId === "garry_tan_yc_demo") && languageCode === "es") {
+                                                return "Garry Tan es el Presidente y CEO de Y Combinator (YC), la aceleradora de startups más exitosa del mundo.\n\nEn este video, Garry comparte perspectivas sobre la misión de YC de ayudar a las startups a tener éxito, la importancia de construir grandes productos, y consejos para fundadores navegando el viaje del emprendimiento.\n\nEste es un video de demostración que muestra las capacidades de localización de video impulsadas por IA de Olleey.";
+                                            }
+                                            return editedDescription || localizedDescription || videoDescription || "No description available";
+                                        })()}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Language Badge */}
@@ -1111,315 +1221,339 @@ export default function ReviewHubPage() {
                     {/* Review Mode: Show Checklist */}
                     {!isPreviewMode && (
                         <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-6 shadow-xl`}>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-full bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20">
-                                    <ShieldCheck className="w-4 h-4 text-olleey-yellow" />
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-full bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20">
+                                        <ShieldCheck className="w-4 h-4 text-olleey-yellow" />
+                                    </div>
+                                    <h3 className="text-sm font-medium tracking-tight">Quality Assurance</h3>
                                 </div>
-                                <h3 className="text-sm font-medium tracking-tight">Quality Assurance</h3>
+
+                                {!isApproved && (
+                                    <Button
+                                        size="sm"
+                                        onClick={handleAiVerify}
+                                        disabled={isAiVerifying}
+                                        className="h-7 px-3 text-[9px] font-black uppercase tracking-widest rounded-full bg-white/5 hover:bg-white/10 border border-white/10"
+                                    >
+                                        {isAiVerifying ? <RefreshCw className="w-3 h-3 animate-spin mr-1.5" /> : <Zap className="w-3 h-3 fill-current mr-1.5" />}
+                                        AI Check
+                                    </Button>
+                                )}
                             </div>
 
-                            {!isApproved && (
-                                <Button
-                                    size="sm"
-                                    onClick={handleAiVerify}
-                                    disabled={isAiVerifying}
-                                    className="h-7 px-3 text-[9px] font-black uppercase tracking-widest rounded-full bg-white/5 hover:bg-white/10 border border-white/10"
-                                >
-                                    {isAiVerifying ? <RefreshCw className="w-3 h-3 animate-spin mr-1.5" /> : <Zap className="w-3 h-3 fill-current mr-1.5" />}
-                                    AI Check
-                                </Button>
-                            )}
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-3">
-                            {Object.entries(checklist).map(([key, value]) => (
-                                <div
-                                    key={key}
-                                    className={cn(
-                                        "w-full flex items-center justify-between p-3 pl-4 rounded-2xl border transition-all duration-300 group",
-                                        value
-                                            ? "bg-green-500/10 border-green-500/20"
-                                            : (reprocessingItems[key] ? "bg-olleey-yellow/5 border-olleey-yellow/20" : "bg-white/[0.03] border-white/5")
-                                    )}
-                                >
-                                    <button
-                                        disabled={isApproved || reprocessingItems[key]}
-                                        onClick={() => setChecklist(prev => ({ ...prev, [key]: !value }))}
-                                        className="flex items-center gap-3 flex-1 text-left"
-                                    >
-                                        <div className={cn(
-                                            "w-2 h-2 rounded-full transition-all shrink-0",
-                                            value ? "bg-green-500" : (reprocessingItems[key] || verifyingItems[key] ? "bg-olleey-yellow animate-pulse" : "bg-white/20")
-                                        )} />
-                                        <span className={cn(
-                                            "text-xs font-semibold tracking-wide capitalize",
-                                            value ? "text-white" : "text-white/60 group-hover:text-white"
-                                        )}>
-                                            {key.replace(/([A-Z])/g, ' $1')}
-                                        </span>
-                                    </button>
-
-                                    <div className="flex items-center gap-2">
-                                        {reprocessingItems[key] ? (
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-olleey-yellow animate-pulse mr-2">Fixing...</span>
-                                        ) : value ? (
-                                            <div className="w-8 h-8 flex items-center justify-center">
-                                                <Check className="w-4 h-4 text-green-500" />
-                                            </div>
-                                        ) : (
-                                            !isApproved && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleRedo(key);
-                                                    }}
-                                                    className="h-8 px-4 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white text-white/40 rounded-full border border-white/5 hover:border-white/10 transition-all"
-                                                >
-                                                    Redo
-                                                </Button>
-                                            )
+                            <div className="grid grid-cols-1 gap-3">
+                                {Object.entries(checklist).map(([key, value]) => (
+                                    <div
+                                        key={key}
+                                        className={cn(
+                                            "w-full flex items-center justify-between p-3 pl-4 rounded-2xl border transition-all duration-300 group",
+                                            value
+                                                ? "bg-green-500/10 border-green-500/20"
+                                                : (reprocessingItems[key] ? "bg-olleey-yellow/5 border-olleey-yellow/20" : "bg-white/[0.03] border-white/5")
                                         )}
+                                    >
+                                        <button
+                                            disabled={isApproved || reprocessingItems[key]}
+                                            onClick={() => setChecklist(prev => ({ ...prev, [key]: !value }))}
+                                            className="flex items-center gap-3 flex-1 text-left"
+                                        >
+                                            <div className={cn(
+                                                "w-2 h-2 rounded-full transition-all shrink-0",
+                                                value ? "bg-green-500" : (reprocessingItems[key] || verifyingItems[key] ? "bg-olleey-yellow animate-pulse" : "bg-white/20")
+                                            )} />
+                                            <span className={cn(
+                                                "text-xs font-semibold tracking-wide capitalize",
+                                                value ? "text-white" : "text-white/60 group-hover:text-white"
+                                            )}>
+                                                {key.replace(/([A-Z])/g, ' $1')}
+                                            </span>
+                                        </button>
+
+                                        <div className="flex items-center gap-2">
+                                            {reprocessingItems[key] ? (
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-olleey-yellow animate-pulse mr-2">Fixing...</span>
+                                            ) : value ? (
+                                                <div className="w-8 h-8 flex items-center justify-center">
+                                                    <Check className="w-4 h-4 text-green-500" />
+                                                </div>
+                                            ) : (
+                                                !isApproved && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRedo(key);
+                                                        }}
+                                                        className="h-8 px-4 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white text-white/40 rounded-full border border-white/5 hover:border-white/10 transition-all"
+                                                    >
+                                                        Redo
+                                                    </Button>
+                                                )
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
                     )}
 
                     {/* Thumbnail Panel - Review Mode Only */}
                     {!isPreviewMode && (
-                    <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-6 shadow-xl`}>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                                    <ImageIcon className="w-4 h-4 text-purple-400" />
-                                </div>
-                                <h3 className="text-sm font-medium tracking-tight">Thumbnail</h3>
-                            </div>
-                            <div className="flex bg-white/5 rounded-full p-0.5 border border-white/5">
-                                {(['original', 'generate', 'upload'] as const).map((strategy) => (
-                                    <button
-                                        key={strategy}
-                                        onClick={() => {
-                                            setThumbnailStrategy(strategy);
-                                            if (strategy === 'upload') fileInputRef.current?.click();
-                                            if (strategy === 'generate') handleGenerateThumbnail();
-                                        }}
-                                        className={cn(
-                                            "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
-                                            thumbnailStrategy === strategy ? "bg-white text-black" : "text-white/40 hover:text-white"
-                                        )}
-                                    >
-                                        {strategy}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="relative group/thumb aspect-video bg-black/20 rounded-xl border border-white/10 overflow-hidden">
-                            {isGeneratingThumbnail ? (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 backdrop-blur-sm z-20">
-                                    <RefreshCw className="w-6 h-6 text-olleey-yellow animate-spin" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-olleey-yellow animate-pulse">Synthesizing...</span>
-                                </div>
-                            ) : (
-                                <>
-                                    <img
-                                        src={thumbnailStrategy === 'upload' && customThumbnail ? customThumbnail : (thumbnailStrategy === 'generate' ? DEMO_THUMBNAIL : (quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"))}
-                                        alt="Thumbnail Preview"
-                                        className="w-full h-full object-cover opacity-80 group-hover/thumb:opacity-100 transition-opacity"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                                        <Badge className="w-fit rounded-full bg-white text-black text-[8px] font-black uppercase border-none">Active: {thumbnailStrategy}</Badge>
+                        <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-6 shadow-xl`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                                        <ImageIcon className="w-4 h-4 text-purple-400" />
                                     </div>
-                                </>
-                            )}
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                accept="image/*"
-                                onChange={handleFileUpload}
-                            />
-                        </div>
+                                    <h3 className="text-sm font-medium tracking-tight">Thumbnail</h3>
+                                </div>
+                                <div className="flex bg-white/5 rounded-full p-0.5 border border-white/5">
+                                    {(['original', 'generate', 'upload'] as const).map((strategy) => (
+                                        <button
+                                            key={strategy}
+                                            onClick={() => {
+                                                setThumbnailStrategy(strategy);
+                                                if (strategy === 'upload') fileInputRef.current?.click();
+                                                if (strategy === 'generate') handleGenerateThumbnail();
+                                            }}
+                                            className={cn(
+                                                "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
+                                                thumbnailStrategy === strategy ? "bg-white text-black" : "text-white/40 hover:text-white"
+                                            )}
+                                        >
+                                            {strategy}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
 
-                        {thumbnailStrategy === 'generate' && !isGeneratingThumbnail && (
-                            <Button
-                                onClick={handleGenerateThumbnail}
-                                className="w-full rounded-full bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[9px] font-black uppercase tracking-widest h-9"
-                            >
-                                <Wand2 className="w-3.5 h-3.5 mr-2" /> Re-Generate
-                            </Button>
-                        )}
-                    </div>
+                            <div className="relative group/thumb aspect-video bg-black/20 rounded-xl border border-white/10 overflow-hidden">
+                                {isGeneratingThumbnail ? (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 backdrop-blur-sm z-20">
+                                        <RefreshCw className="w-6 h-6 text-olleey-yellow animate-spin" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-olleey-yellow animate-pulse">Synthesizing...</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <img
+                                            src={thumbnailStrategy === 'upload' && customThumbnail ? customThumbnail : (thumbnailStrategy === 'generate' ? DEMO_THUMBNAIL : (quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"))}
+                                            alt="Thumbnail Preview"
+                                            className="w-full h-full object-cover opacity-80 group-hover/thumb:opacity-100 transition-opacity"
+                                            onLoad={() => setThumbnailLoading(false)}
+                                            onError={() => setThumbnailLoading(false)}
+                                        />
+                                        {thumbnailLoading && (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-10">
+                                                <motion.div
+                                                    animate={{ rotate: 360 }}
+                                                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                                                    className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full"
+                                                />
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                                            <Badge className="w-fit rounded-full bg-white text-black text-[8px] font-black uppercase border-none">Active: {thumbnailStrategy}</Badge>
+                                        </div>
+                                    </>
+                                )}
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                />
+                            </div>
+
+                            {thumbnailStrategy === 'generate' && !isGeneratingThumbnail && (
+                                <Button
+                                    onClick={handleGenerateThumbnail}
+                                    className="w-full rounded-full bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[9px] font-black uppercase tracking-widest h-9"
+                                >
+                                    <Wand2 className="w-3.5 h-3.5 mr-2" /> Re-Generate
+                                </Button>
+                            )}
+                        </div>
                     )}
 
                     {/* Metadata Panel - Review Mode Only */}
                     {!isPreviewMode && (
-                    <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-6 shadow-xl`}>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                                    <Type className="w-4 h-4 text-blue-400" />
+                        <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-6 shadow-xl`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                                        <Type className="w-4 h-4 text-blue-400" />
+                                    </div>
+                                    <h3 className="text-sm font-medium tracking-tight">Localized Metadata</h3>
                                 </div>
-                                <h3 className="text-sm font-medium tracking-tight">Localized Metadata</h3>
+                                <div className="flex bg-white/5 rounded-full p-0.5 border border-white/5">
+                                    <button
+                                        onClick={() => setActiveTab('edit')}
+                                        className={cn("px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all", activeTab === 'edit' ? "bg-white text-black" : "text-white/40 hover:text-white")}
+                                    >
+                                        Manual
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('ai')}
+                                        className={cn("px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all", activeTab === 'ai' ? "bg-white text-black" : "text-white/40 hover:text-white")}
+                                    >
+                                        AI Assist
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex bg-white/5 rounded-full p-0.5 border border-white/5">
-                                <button
-                                    onClick={() => setActiveTab('edit')}
-                                    className={cn("px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all", activeTab === 'edit' ? "bg-white text-black" : "text-white/40 hover:text-white")}
-                                >
-                                    Manual
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('ai')}
-                                    className={cn("px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all", activeTab === 'ai' ? "bg-white text-black" : "text-white/40 hover:text-white")}
-                                >
-                                    AI Assist
-                                </button>
-                            </div>
-                        </div>
 
-                        {activeTab === 'edit' ? (
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 pl-1">Title</label>
-                                    <input
-                                        type="text"
-                                        value={editedTitle}
-                                        onChange={(e) => setEditedTitle(e.target.value)}
-                                        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium focus:border-olleey-yellow/50 focus:bg-black/40 outline-none transition-all placeholder:text-white/20"
-                                    />
+                            {activeTab === 'edit' ? (
+                                metadataLoading ? (
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 pl-1">Title</label>
+                                            <div className="h-11 bg-white/10 rounded-xl animate-pulse"></div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 pl-1">Description</label>
+                                            <div className="h-32 bg-white/10 rounded-xl animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 pl-1">Title</label>
+                                            <input
+                                                type="text"
+                                                value={editedTitle}
+                                                onChange={(e) => setEditedTitle(e.target.value)}
+                                                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium focus:border-olleey-yellow/50 focus:bg-black/40 outline-none transition-all placeholder:text-white/20"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 pl-1">Description</label>
+                                            <textarea
+                                                value={editedDescription}
+                                                onChange={(e) => setEditedDescription(e.target.value)}
+                                                className="w-full h-32 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium focus:border-olleey-yellow/50 focus:bg-black/40 outline-none transition-all resize-none leading-relaxed placeholder:text-white/20"
+                                            />
+                                        </div>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex flex-col gap-4 text-center">
+                                    <div className="p-3 bg-olleey-yellow/10 rounded-full w-12 h-12 flex items-center justify-center mx-auto border border-olleey-yellow/20">
+                                        <Sparkles className="w-5 h-5 text-olleey-yellow" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h4 className="text-sm font-medium text-white">AI Optimization</h4>
+                                        <p className="text-xs text-white/40">Generate SEO-optimized titles and descriptions for this locale.</p>
+                                    </div>
+                                    <Button
+                                        onClick={handleGenerateInfo}
+                                        disabled={isGeneratingInfo}
+                                        className="w-full rounded-full bg-white hover:bg-white/90 text-black font-bold h-10 mt-2"
+                                    >
+                                        {isGeneratingInfo ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                                        Generate
+                                    </Button>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 pl-1">Description</label>
-                                    <textarea
-                                        value={editedDescription}
-                                        onChange={(e) => setEditedDescription(e.target.value)}
-                                        className="w-full h-32 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium focus:border-olleey-yellow/50 focus:bg-black/40 outline-none transition-all resize-none leading-relaxed placeholder:text-white/20"
-                                    />
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex flex-col gap-4 text-center">
-                                <div className="p-3 bg-olleey-yellow/10 rounded-full w-12 h-12 flex items-center justify-center mx-auto border border-olleey-yellow/20">
-                                    <Sparkles className="w-5 h-5 text-olleey-yellow" />
-                                </div>
-                                <div className="space-y-1">
-                                    <h4 className="text-sm font-medium text-white">AI Optimization</h4>
-                                    <p className="text-xs text-white/40">Generate SEO-optimized titles and descriptions for this locale.</p>
-                                </div>
-                                <Button
-                                    onClick={handleGenerateInfo}
-                                    disabled={isGeneratingInfo}
-                                    className="w-full rounded-full bg-white hover:bg-white/90 text-black font-bold h-10 mt-2"
-                                >
-                                    {isGeneratingInfo ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
-                                    Generate
-                                </Button>
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
                     )}
 
                     {/* YouTube-style Video Settings */}
                     {!isPreviewMode && (
-                    <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-5 shadow-xl`}>
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                                <Settings className="w-4 h-4 text-purple-400" />
+                        <div className={`rounded-[2rem] border ${borderClass} bg-white/5 p-6 space-y-5 shadow-xl`}>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                                    <Settings className="w-4 h-4 text-purple-400" />
+                                </div>
+                                <h3 className="text-sm font-medium tracking-tight">Video Settings</h3>
                             </div>
-                            <h3 className="text-sm font-medium tracking-tight">Video Settings</h3>
+
+                            <div className="space-y-4">
+                                {/* Made for Kids */}
+                                <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <Baby className="w-4 h-4 text-white/40" />
+                                        <div>
+                                            <div className="text-xs font-medium text-white">Made for Kids</div>
+                                            <div className="text-[10px] text-white/40 mt-0.5">Designed for children under 13</div>
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={madeForKids}
+                                        onCheckedChange={setMadeForKids}
+                                    />
+                                </div>
+
+                                {/* Age Restriction */}
+                                <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <Shield className="w-4 h-4 text-white/40" />
+                                        <div>
+                                            <div className="text-xs font-medium text-white">Age Restriction</div>
+                                            <div className="text-[10px] text-white/40 mt-0.5">Restrict to viewers 18+</div>
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={ageRestricted}
+                                        onCheckedChange={setAgeRestricted}
+                                        disabled={madeForKids}
+                                    />
+                                </div>
+
+                                {/* Allow Comments */}
+                                <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <MessageSquare className="w-4 h-4 text-white/40" />
+                                        <div>
+                                            <div className="text-xs font-medium text-white">Allow Comments</div>
+                                            <div className="text-[10px] text-white/40 mt-0.5">Viewers can leave comments</div>
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={allowComments}
+                                        onCheckedChange={setAllowComments}
+                                    />
+                                </div>
+
+                                {/* Allow Ratings */}
+                                <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <ThumbsUp className="w-4 h-4 text-white/40" />
+                                        <div>
+                                            <div className="text-xs font-medium text-white">Allow Ratings</div>
+                                            <div className="text-[10px] text-white/40 mt-0.5">Show like/dislike counts</div>
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={allowRatings}
+                                        onCheckedChange={setAllowRatings}
+                                    />
+                                </div>
+
+                                {/* Publish to Subscriptions Feed */}
+                                <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <Rss className="w-4 h-4 text-white/40" />
+                                        <div>
+                                            <div className="text-xs font-medium text-white">Publish to Feed</div>
+                                            <div className="text-[10px] text-white/40 mt-0.5">Notify subscribers of new video</div>
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={publishToFeed}
+                                        onCheckedChange={setPublishToFeed}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Settings Info */}
+                            <div className="pt-2 px-3">
+                                <p className="text-[10px] text-white/30 leading-relaxed">
+                                    These settings will be applied when the video is published to YouTube.
+                                </p>
+                            </div>
                         </div>
-
-                        <div className="space-y-4">
-                            {/* Made for Kids */}
-                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <Baby className="w-4 h-4 text-white/40" />
-                                    <div>
-                                        <div className="text-xs font-medium text-white">Made for Kids</div>
-                                        <div className="text-[10px] text-white/40 mt-0.5">Designed for children under 13</div>
-                                    </div>
-                                </div>
-                                <Switch
-                                    checked={madeForKids}
-                                    onCheckedChange={setMadeForKids}
-                                />
-                            </div>
-
-                            {/* Age Restriction */}
-                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <Shield className="w-4 h-4 text-white/40" />
-                                    <div>
-                                        <div className="text-xs font-medium text-white">Age Restriction</div>
-                                        <div className="text-[10px] text-white/40 mt-0.5">Restrict to viewers 18+</div>
-                                    </div>
-                                </div>
-                                <Switch
-                                    checked={ageRestricted}
-                                    onCheckedChange={setAgeRestricted}
-                                    disabled={madeForKids}
-                                />
-                            </div>
-
-                            {/* Allow Comments */}
-                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <MessageSquare className="w-4 h-4 text-white/40" />
-                                    <div>
-                                        <div className="text-xs font-medium text-white">Allow Comments</div>
-                                        <div className="text-[10px] text-white/40 mt-0.5">Viewers can leave comments</div>
-                                    </div>
-                                </div>
-                                <Switch
-                                    checked={allowComments}
-                                    onCheckedChange={setAllowComments}
-                                />
-                            </div>
-
-                            {/* Allow Ratings */}
-                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <ThumbsUp className="w-4 h-4 text-white/40" />
-                                    <div>
-                                        <div className="text-xs font-medium text-white">Allow Ratings</div>
-                                        <div className="text-[10px] text-white/40 mt-0.5">Show like/dislike counts</div>
-                                    </div>
-                                </div>
-                                <Switch
-                                    checked={allowRatings}
-                                    onCheckedChange={setAllowRatings}
-                                />
-                            </div>
-
-                            {/* Publish to Subscriptions Feed */}
-                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <Rss className="w-4 h-4 text-white/40" />
-                                    <div>
-                                        <div className="text-xs font-medium text-white">Publish to Feed</div>
-                                        <div className="text-[10px] text-white/40 mt-0.5">Notify subscribers of new video</div>
-                                    </div>
-                                </div>
-                                <Switch
-                                    checked={publishToFeed}
-                                    onCheckedChange={setPublishToFeed}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Settings Info */}
-                        <div className="pt-2 px-3">
-                            <p className="text-[10px] text-white/30 leading-relaxed">
-                                These settings will be applied when the video is published to YouTube.
-                            </p>
-                        </div>
-                    </div>
                     )}
                 </aside>
             </div>

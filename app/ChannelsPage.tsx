@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { youtubeAPI, channelsAPI, type MasterNode } from "@/lib/api";
+import { youtubeAPI, channelsAPI, type MasterNode, type LanguageChannel } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
+import { useProject } from "@/lib/ProjectContext";
+import { useAuth } from "@/lib/AuthContext";
+import { useSupabaseChannels } from "@/lib/useSupabase";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import {
   Loader2,
@@ -33,7 +36,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { getInitialsAvatar } from "@/lib/utils";
-import { LoadingPanda } from "@/components/ui/LoadingPanda";
+import { OlleeyLoader } from "@/components/ui/OlleeyLoader";
 
 type ConnectionStatus = "active" | "expired" | "restricted" | "disconnected";
 
@@ -94,43 +97,56 @@ const itemVariants = {
 };
 
 export default function ChannelsPage() {
-  const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [reconnectingId, setReconnectingId] = useState<string | null>(null);
   const [channelFilter, setChannelFilter] = useState<"all" | "primary" | "unassigned">("all");
-  const [graphStats, setGraphStats] = useState({
-    total_connections: 0,
-    active_connections: 0,
-    expired_connections: 0,
-  });
   const { theme } = useTheme();
+  const { selectedProject } = useProject();
+  const { user, loading: authLoading } = useAuth();
+  const userId = user?.id;
+  
+  // Fetch channels from Supabase ONLY
+  const { 
+    channels: allChannels, 
+    loading: channelsLoading, 
+    error: channelsError,
+    refetch: refetchChannels 
+  } = useSupabaseChannels(
+    userId,
+    { project_id: selectedProject?.id },
+    { enabled: !!userId && !authLoading }
+  );
+  
+  const isLoading = channelsLoading;
   const isDark = theme === "dark";
 
   const bgClass = isDark ? "bg-[#080808]" : "bg-light-bg";
   const textClass = isDark ? "text-white" : "text-light-text";
   const textSecondaryClass = isDark ? "text-white/40" : "text-light-textSecondary";
   const borderClass = isDark ? "border-white/5" : "border-light-border";
-
-  useEffect(() => {
-    loadChannelGraph();
-  }, []);
-
-  const loadChannelGraph = async () => {
-    try {
-      setIsLoading(true);
-      const graph = await youtubeAPI.getChannelGraph();
-      setChannelGraph(graph.master_nodes || []);
-      setGraphStats({
-        total_connections: graph.total_connections,
-        active_connections: graph.active_connections,
-        expired_connections: graph.expired_connections,
-      });
-    } catch (error) {
-      logger.error("Channels", "Failed to load channel graph", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
+  // Calculate stats from Supabase channels
+  const graphStats = useMemo(() => {
+    const total = allChannels?.length || 0;
+    const active = allChannels?.filter(ch => !ch.is_paused && !ch.deleted_at)?.length || 0;
+    const paused = allChannels?.filter(ch => ch.is_paused)?.length || 0;
+    
+    return {
+      total_connections: total,
+      active_connections: active,
+      expired_connections: paused,
+    };
+  }, [allChannels]);
+  
+  // Add console logging for debugging
+  console.log('[ChannelsPage] State:', {
+    channelsCount: allChannels?.length || 0,
+    loading: isLoading,
+    error: channelsError,
+    userId,
+    authLoading,
+    selectedProject: selectedProject?.id,
+    stats: graphStats
+  });
 
   const handleReconnect = async (connectionId: string, channelName: string) => {
     try {
@@ -159,7 +175,7 @@ export default function ChannelsPage() {
   const handleSetPrimary = async (connectionId: string, channelName: string) => {
     try {
       await youtubeAPI.setPrimaryConnection(connectionId);
-      await loadChannelGraph();
+      await refetchChannels(); // Refetch from Supabase
     } catch (error) {
       logger.error("Channels", `Failed to set ${channelName} as primary`, error);
     }
@@ -169,7 +185,7 @@ export default function ChannelsPage() {
     if (!confirm(`Are you sure you want to remove ${channelName}? This action cannot be undone.`)) return;
     try {
       await youtubeAPI.disconnectChannel(connectionId);
-      await loadChannelGraph();
+      await refetchChannels(); // Refetch from Supabase
     } catch (error) {
       logger.error("Channels", `Failed to remove ${channelName}`, error);
     }
@@ -178,58 +194,65 @@ export default function ChannelsPage() {
   const handleUpdateLanguage = async (connectionId: string, languageCode: string) => {
     try {
       await youtubeAPI.updateConnection(connectionId, { language_code: languageCode });
-      await loadChannelGraph();
+      await refetchChannels(); // Refetch from Supabase
     } catch (error) {
       logger.error("Channels", "Failed to update language", error);
     }
   };
 
   const tableData = useMemo(() => {
+    console.log('[ChannelsPage] Building table data from Supabase:', {
+      supabaseChannels: allChannels?.length || 0
+    });
+    
     const flat: any[] = [];
-    channelGraph.forEach(master => {
+    
+    // Build table data directly from Supabase channels
+    allChannels?.forEach(channel => {
+      const isMaster = channel.is_master || false;
+      
       flat.push({
-        id: master.connection_id,
-        type: "master",
-        name: master.channel_name,
-        avatar: master.channel_avatar_url,
-        status: master.status.status,
-        language_code: master.language_code,
-        language_name: master.language_name,
-        is_primary: master.is_primary,
-        is_paused: master.is_paused,
-        videos: master.total_videos,
-        translations: master.total_translations,
-        languagesCount: master.language_channels.length,
-      });
-
-      master.language_channels.forEach(lang => {
-        flat.push({
-          id: lang.id,
-          type: "satellite",
-          name: lang.channel_name,
-          avatar: lang.channel_avatar_url,
-          status: lang.status.status,
-          language_code: lang.language_code,
-          language_name: lang.language_name,
-          is_paused: lang.is_paused,
-          videos: lang.videos_count,
-          masterName: master.channel_name,
-          masterId: master.connection_id
-        });
+        id: channel.id || channel.channel_id,
+        type: isMaster ? "master" : "satellite",
+        name: channel.channel_name,
+        avatar: channel.thumbnail_url,
+        status: "active", // Default status from Supabase
+        language_code: channel.language_code,
+        language_name: channel.language_name,
+        is_paused: channel.is_paused || false,
+        is_primary: isMaster, // Master channels are primary
+        videos: channel.video_count || 0,
+        isOrphan: !isMaster && !channel.master_channel_id,
+        masterName: channel.master_channel_id,
+        languagesCount: 0, // Could calculate from satellite channels if needed
+        subscriber_count: channel.subscriber_count || 0,
       });
     });
 
-    return flat.filter(item => {
+    const filtered = flat.filter(item => {
       if (channelFilter === "primary") return item.is_primary;
-      if (channelFilter === "unassigned") return item.type === "master" && item.languagesCount === 0;
+      if (channelFilter === "unassigned") {
+        if (item.isOrphan) return true;
+        return item.type === "master" && item.languagesCount === 0;
+      }
       return true;
     });
-  }, [channelGraph, channelFilter]);
+    
+    console.log('[ChannelsPage] Table data built:', {
+      totalItems: flat.length,
+      filteredItems: filtered.length,
+      filter: channelFilter,
+      masters: flat.filter(i => i.type === "master").length,
+      satellites: flat.filter(i => i.type === "satellite").length
+    });
+    
+    return filtered;
+  }, [allChannels, channelFilter]);
 
   if (isLoading) {
     return (
       <div className={`flex flex-col items-center justify-center flex-1 ${bgClass} p-8`}>
-        <LoadingPanda size={200} className="mb-8" />
+        <OlleeyLoader size={100} className="mb-8" />
         <div className="text-center space-y-3">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-olleey-yellow animate-pulse">Syncing Global Grid...</p>
           <div className="flex items-center justify-center gap-1.5 pt-2">
@@ -390,7 +413,9 @@ export default function ChannelsPage() {
                               {!isMaster && (
                                 <div className="flex items-center gap-2">
                                   <div className="w-1 h-1 rounded-full bg-white/10" />
-                                  <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Linked to {item.masterName}</p>
+                                  <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">
+                                    {item.isOrphan ? "Unassigned Satellite" : `Linked to ${item.masterName}`}
+                                  </p>
                                 </div>
                               )}
                               {isMaster && item.is_primary && (

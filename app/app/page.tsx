@@ -28,6 +28,7 @@ import { tokenStorage, authAPI, dashboardAPI, youtubeAPI, type MasterNode } from
 import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
 import { useProject } from "@/lib/ProjectContext";
+import { useAuth } from "@/lib/AuthContext";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -50,16 +51,17 @@ function AppContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
+    const { user, loading: authLoading, signOut } = useAuth();
     const [currentPage, setCurrentPage] = useState("Dashboard");
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [onboardingComplete, setOnboardingComplete] = useState(true);
-    const [isLoading, setIsLoading] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
-    const [userEmail, setUserEmail] = useState<string>();
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+    
+    const isAuthenticated = !!user;
+    const userEmail = user?.email;
 
     useEffect(() => {
         const savedState = localStorage.getItem("sidebarOpen");
@@ -74,7 +76,10 @@ function AppContent() {
 
     const { projects, selectedProject, setSelectedProject } = useProject();
     const { dashboard } = useDashboard({ projectId: selectedProject?.id, enabled: isAuthenticated });
-    const { videos } = useVideos({ project_id: selectedProject?.id }, { enabled: isAuthenticated });
+    
+    // Get userId from auth context
+    const userId = user?.id;
+    const { videos } = useVideos({ project_id: selectedProject?.id, user_id: userId }, { enabled: isAuthenticated && !!userId });
 
     const projectAvatars = useMemo(() => {
         const map: Record<string, string> = {};
@@ -120,43 +125,18 @@ function AppContent() {
     }, [searchQuery, videos, dashboard?.recent_jobs]);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const urlHash = window.location.hash;
-                const urlParams = new URLSearchParams(urlHash.replace(/^#/, '?'));
-                const idToken = urlParams.get('id_token');
-                if (idToken) {
-                    try {
-                        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-                        await authAPI.googleAuth(idToken);
-                    } catch (err) {
-                        console.error("Google auth redirect failed:", err);
-                    }
+        const loadChannelGraph = async () => {
+            if (isAuthenticated) {
+                try {
+                    const graph = await youtubeAPI.getChannelGraph();
+                    setChannelGraph(graph.master_nodes || []);
+                } catch (error) {
+                    console.error("Failed to load channel graph:", error);
                 }
-                if (tokenStorage.isAuthenticated()) {
-                    try {
-                        const me = await authAPI.getMe();
-                        setIsAuthenticated(true);
-                        setUserEmail(me.email || undefined);
-                        const graph = await youtubeAPI.getChannelGraph();
-                        setChannelGraph(graph.master_nodes || []);
-                    } catch (error) {
-                        console.error("Auth verification failed:", error);
-                        tokenStorage.clearTokens();
-                        setIsAuthenticated(false);
-                    }
-                } else {
-                    setIsAuthenticated(false);
-                }
-            } catch (error) {
-                console.error("Auth check failed:", error);
-                setIsAuthenticated(false);
-            } finally {
-                setIsLoading(false);
             }
         };
-        checkAuth();
-    }, []);
+        loadChannelGraph();
+    }, [isAuthenticated]);
 
     useEffect(() => {
         const pageParam = searchParams?.get("page");
@@ -182,11 +162,9 @@ function AppContent() {
         }
     }, [searchParams, router]);
 
-    const handleLogout = () => {
-        authAPI.logout();
-        setIsAuthenticated(false);
-        setCurrentPage("Dashboard");
-        setIsSidebarOpen(false);
+    const handleLogout = async () => {
+        await signOut();
+        router.push('/?auth=login');
     };
 
     const renderPage = () => {
@@ -211,7 +189,14 @@ function AppContent() {
         }
     };
 
-    if (isLoading) {
+    // Redirect to login if not authenticated (in useEffect to avoid setState during render)
+    useEffect(() => {
+        if (!authLoading && !isAuthenticated) {
+            router.push('/?auth=login');
+        }
+    }, [authLoading, isAuthenticated, router]);
+
+    if (authLoading) {
         return (
             <div className="h-screen bg-dark-bg flex items-center justify-center">
                 <div className="text-center">
@@ -226,8 +211,13 @@ function AppContent() {
     }
 
     if (!isAuthenticated) {
-        if (typeof window !== 'undefined') window.location.href = '/?auth=login';
-        return null;
+        return (
+            <div className="h-screen bg-dark-bg flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-gray-400">Redirecting to login...</p>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -279,7 +269,7 @@ function AppContent() {
                                                     title={selectedProject?.name || "All Projects"}
                                                 >
                                                     <div className={`w-2 h-2 rounded-full ${selectedProject ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'bg-white/20'}`} />
-                                                    <span className="truncate">{selectedProject?.name || "Standard Project"}</span>
+                                                    <span className="truncate">{selectedProject?.name || "All Projects"}</span>
                                                     <ChevronDown className="h-3 w-3 opacity-30 group-hover:opacity-100 transition-opacity shrink-0" />
                                                 </button>
                                             </DropdownMenuTrigger>
@@ -288,6 +278,19 @@ function AppContent() {
                                                     Project Directory
                                                 </DropdownMenuLabel>
                                                 <div className="space-y-1">
+                                                    {/* All Projects Option */}
+                                                    <DropdownMenuItem
+                                                        onClick={() => setSelectedProject(null)}
+                                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${!selectedProject
+                                                            ? (isDark ? 'bg-olleey-yellow/10 text-olleey-yellow' : 'bg-olleey-yellow/5 text-olleey-yellow')
+                                                            : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-black')
+                                                            }`}
+                                                    >
+                                                        <div className={`w-1.5 h-1.5 rounded-full ${!selectedProject ? 'bg-olleey-yellow shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-white/10'}`} />
+                                                        <span className="truncate text-xs font-bold font-mono tracking-tight">All Projects</span>
+                                                        {!selectedProject && <Check className="ml-auto w-3.5 h-3.5 text-olleey-yellow" />}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator className={`my-2 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
                                                     {projects.map((project) => (
                                                         <DropdownMenuItem
                                                             key={project.id}

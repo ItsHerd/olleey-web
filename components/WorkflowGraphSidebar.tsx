@@ -65,10 +65,10 @@ export function WorkflowGraphSidebar({
     }, [isOpen, onClose]);
 
     // Theme classes
-    const panelBg = theme === "light" ? "bg-white" : "bg-[#111]";
-    const textPrimary = theme === "light" ? "text-gray-900" : "text-white";
-    const textSecondary = theme === "light" ? "text-gray-500" : "text-gray-400";
-    const border = theme === "light" ? "border-gray-200" : "border-gray-800";
+    const panelBg = theme === "light" ? "bg-white/80 backdrop-blur-2xl" : "bg-[#111]/90 backdrop-blur-2xl";
+    const textPrimary = theme === "light" ? "text-slate-900" : "text-white";
+    const textSecondary = theme === "light" ? "text-slate-500" : "text-gray-400";
+    const border = theme === "light" ? "border-slate-200" : "border-gray-800";
 
     // Helper to determine node status color
     const getNodeStatusColor = (status: string) => {
@@ -163,7 +163,7 @@ export function WorkflowGraphSidebar({
         Object.values(workflowState.thumbnails).every(t => t.status === 'completed') ? 'completed' : 'pending';
 
     return (
-        <div className={`absolute top-0 right-0 h-full w-[450px] ${panelBg} shadow-xl z-[50] border-l ${border} flex flex-col transition-transform duration-300 ease-out transform ${isOpen ? "translate-x-0" : "translate-x-full"}`} ref={sidebarRef}>
+        <div className={`absolute top-0 right-0 h-full w-[450px] ${panelBg} shadow-2xl z-[50] border-l ${border} flex flex-col transition-transform duration-300 ease-out transform ${isOpen ? "translate-x-0" : "translate-x-full"}`} ref={sidebarRef}>
 
             {/* Header */}
             <div className={`p-6 border-b ${border}`}>
@@ -282,7 +282,7 @@ export function WorkflowGraphSidebar({
             </div>
 
             {/* Actions Footer */}
-            <div className={`p-4 border-t ${border} bg-gray-50/50 dark:bg-[#151515]`}>
+            <div className={`p-4 border-t ${border} ${theme === 'light' ? 'bg-slate-50/80' : 'bg-[#151515]/80'} backdrop-blur-md`}>
                 <div className="flex gap-3">
                     <Button
                         variant="outline"

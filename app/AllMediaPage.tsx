@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
 import { useDashboard } from "@/lib/useDashboard";
+import { useAuth } from "@/lib/AuthContext";
 import { useTheme } from "@/lib/useTheme";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { Button } from "@/components/ui/button";
@@ -39,11 +40,11 @@ import {
 } from "lucide-react";
 import { formatViews, getRelativeTime } from "@/lib/utils";
 import type { Video as VideoType, MasterNode, LocalizationInfo } from "@/lib/api";
+import { LocalizationStatus, JobStatus, VideoStatus } from "@/lib/schema";
 import { motion, AnimatePresence } from "framer-motion";
 import { ManualProcessView } from "@/components/ui/manual-process-view";
 import { X } from "lucide-react";
-import { API_BASE_URL } from "@/lib/api";
-import { LoadingPanda } from "@/components/ui/LoadingPanda";
+import { OlleeyLoader } from "@/components/ui/OlleeyLoader";
 
 type ViewMode = "grid" | "list";
 type SortBy = "date" | "views" | "title" | "status";
@@ -85,18 +86,38 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   const { theme } = useTheme();
   const { selectedProject } = useProject();
   const { dashboard } = useDashboard();
+  const { user, loading: authLoading } = useAuth();
+
+  // Get userId from auth context
+  const userId = user?.id;
+
   const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
-    selectedProject?.id ? { project_id: selectedProject.id } : undefined
+    useMemo(() => {
+      // Build query params - only user_id and optionally project_id
+      const params: any = { user_id: userId };
+
+      // Only add project filter if a SPECIFIC project is selected
+      // If selectedProject is null/undefined (All Projects mode), don't filter by project
+      if (selectedProject?.id) {
+        params.project_id = selectedProject.id;
+      }
+
+      // NO channel filtering on All Media page
+
+      return params;
+    }, [selectedProject?.id, userId]),
+    { enabled: !!userId && !authLoading }
   );
   const { isDemoMode, updateVideoState, refreshTrigger } = useDemo();
 
   // Helper to construct full URL for storage paths
+  // Supabase videos should have complete URLs already
   const getFullUrl = (url: string | undefined) => {
     if (!url) return undefined;
+    // Already a complete URL (http/https or supabase storage)
     if (url.startsWith('http')) return url;
-    const fullUrl = `${API_BASE_URL}${url}`;
-    console.log('[AllMediaPage] Thumbnail URL:', { original: url, full: fullUrl });
-    return fullUrl;
+    // Fallback for any relative paths (shouldn't happen with Supabase)
+    return url;
   };
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -185,79 +206,73 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
   const isDark = theme === "dark";
 
-  // Process videos with localizations
+  // Merge videos with their processing status / localizations
   const videosWithLocalizations = useMemo(() => {
     if (!videos || videos.length === 0) return [];
 
     return videos.map(video => {
       const localizations: Record<string, LocalizationInfo> = {};
 
-      if (Array.isArray(video.localizations) && video.localizations.length > 0) {
-        video.localizations.forEach((loc: any) => {
-          if (loc.language_code) {
-            localizations[loc.language_code] = {
-              status: loc.status as any,
-              progress: loc.status === 'live' ? 100 : loc.status === 'draft' ? 100 : 50,
-              job_id: loc.video_id,
-            };
-          }
-        });
-
-        selectedLanguages.forEach(lang => {
-          if (!localizations[lang]) {
-            localizations[lang] = {
-              status: "not-started",
-              progress: 0,
-            };
-          }
-        });
-      } else {
-        const translatedLanguages = video.translated_languages || [];
-        selectedLanguages.forEach(lang => {
-          const activeJob = (dashboard?.recent_jobs || []).find(j =>
-            j.source_video_id === video.video_id &&
-            j.target_languages.includes(lang) &&
-            j.status !== "completed" && j.status !== "failed"
-          );
-
-          if (activeJob) {
-            // Map backend statuses to frontend display statuses
-            // "waiting_approval" and "ready" mean the video is ready for review (draft status)
-            const isDraftStatus = activeJob.status === "waiting_approval" || activeJob.status === "ready";
-
-            localizations[lang] = {
-              status: isDraftStatus ? "draft" : "processing",
-              progress: activeJob.progress || (isDraftStatus ? 100 : 0),
-              job_id: activeJob.job_id,
-            };
-          } else if (translatedLanguages.includes(lang)) {
-            localizations[lang] = {
-              status: "live",
-              progress: 100,
-            };
-          } else {
-            localizations[lang] = {
-              status: "not-started",
-              progress: 0,
-            };
-          }
+      // Map existing localizations from the video object
+      if (video.localizations) {
+        Object.entries(video.localizations).forEach(([lang, loc]) => {
+          localizations[lang] = {
+            status: loc.status as LocalizationStatus,
+            progress: loc.status === LocalizationStatus.LIVE ? 100 : loc.status === LocalizationStatus.DRAFT ? 100 : 50,
+            job_id: loc.job_id,
+            video_url: (loc as any).video_url || (loc as any).storage_url,
+          };
         });
       }
+
+      // Overlay active jobs from dashboard for real-time state
+      const recentJobs = dashboard?.recent_jobs || [];
+      const translatedLanguages = video.translated_languages || [];
+
+      (selectedLanguages || ['es', 'de', 'fr', 'pt', 'ja']).forEach(lang => {
+        const activeJob = recentJobs.find(j =>
+          j.source_video_id === video.video_id &&
+          j.target_languages.includes(lang) &&
+          j.status !== JobStatus.COMPLETED && j.status !== JobStatus.FAILED
+        );
+
+        if (activeJob) {
+          const isDraftStatus = activeJob.status === JobStatus.WAITING_APPROVAL || activeJob.status === JobStatus.READY;
+          localizations[lang] = {
+            status: isDraftStatus ? LocalizationStatus.DRAFT : LocalizationStatus.PROCESSING,
+            progress: activeJob.progress || (isDraftStatus ? 100 : 0),
+            job_id: activeJob.job_id,
+            video_url: (activeJob as any).video_url || (activeJob as any).storage_url,
+          };
+        } else if (translatedLanguages.includes(lang)) {
+          if (!localizations[lang]) {
+            localizations[lang] = {
+              status: LocalizationStatus.LIVE,
+              progress: 100,
+            };
+          }
+        } else if (!localizations[lang]) {
+          localizations[lang] = {
+            status: LocalizationStatus.NOT_STARTED,
+            progress: 0,
+          };
+        }
+      });
 
       return { ...video, localizations };
     });
   }, [videos, selectedLanguages, dashboard, refreshTrigger]);
 
-  const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): FilterStatus | "queued" | "failed" | "processing" => {
+  const getOverallVideoStatus = (localizations: Record<string, LocalizationInfo>): FilterStatus | LocalizationStatus.QUEUED | LocalizationStatus.FAILED | LocalizationStatus.PROCESSING => {
     const statuses = Object.values(localizations).map(l => l.status);
-    const activeStatuses = statuses.filter(s => s !== "not-started");
+    const activeStatuses = statuses.filter(s => s !== LocalizationStatus.NOT_STARTED);
 
     if (activeStatuses.length === 0) return "all";
-    if (activeStatuses.some(s => s === "failed")) return "failed";
-    if (activeStatuses.some(s => s === "processing")) return "processing";
-    if (activeStatuses.some(s => s === "queued")) return "queued";
-    if (activeStatuses.some(s => s === "draft")) return "draft";
-    if (activeStatuses.every(s => s === "live")) return "live";
+    if (activeStatuses.some(s => s === LocalizationStatus.FAILED)) return LocalizationStatus.FAILED;
+    if (activeStatuses.some(s => s === LocalizationStatus.PROCESSING)) return LocalizationStatus.PROCESSING;
+    if (activeStatuses.some(s => s === LocalizationStatus.QUEUED)) return LocalizationStatus.QUEUED;
+    if (activeStatuses.some(s => s === LocalizationStatus.DRAFT)) return "draft";
+    if (activeStatuses.every(s => s === LocalizationStatus.LIVE)) return "live";
     return "all";
   };
 
@@ -267,7 +282,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
 
     let filtered = [...videosWithLocalizations];
 
-    // 1. Search Filter
+    // 1. Search Filter (keep for UX)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(v =>
@@ -276,24 +291,24 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
       );
     }
 
-    // 2. Status Filter - Only show videos that need review (draft) or are live
-    // Exclude processing videos from the default view
+    // 2. Status Filter - Show videos based on user selection
+    // Include: live, draft, not-started (exclude: processing, queued, failed)
     filtered = filtered.filter(v => {
       const s = getOverallVideoStatus(v.localizations);
-      const hasLive = Object.values(v.localizations || {}).some((l: any) => l.status === "live");
-      const hasDraft = Object.values(v.localizations || {}).some((l: any) => l.status === "draft");
+      const hasLive = Object.values(v.localizations || {}).some((l: any) => l.status === LocalizationStatus.LIVE);
+      const hasDraft = Object.values(v.localizations || {}).some((l: any) => l.status === LocalizationStatus.DRAFT);
+      const hasNotStarted = Object.values(v.localizations || {}).some((l: any) => l.status === LocalizationStatus.NOT_STARTED);
 
-      // Only show videos that are live or need review (draft)
+      // Filter by dropdown selection
       if (filterStatus === "all") {
-        return hasLive || hasDraft;
+        // Show live, draft, or not-started videos
+        return hasLive || hasDraft || hasNotStarted;
       }
 
-      // Special case for "live" to include any video with at least one live localization
       if (filterStatus === "live") {
         return hasLive;
       }
 
-      // Special case for "draft" to include videos needing review
       if (filterStatus === "draft") {
         return hasDraft;
       }
@@ -315,10 +330,17 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
           comparison = (a.title || "").localeCompare(b.title || "");
           break;
         case "status":
-          const statusOrder: Record<string, number> = { live: 0, draft: 1, processing: 2, queued: 3, failed: 4, all: 5 };
+          const statusOrder: Record<string, number> = {
+            [LocalizationStatus.LIVE]: 0,
+            [LocalizationStatus.DRAFT]: 1,
+            [LocalizationStatus.PROCESSING]: 2,
+            [LocalizationStatus.QUEUED]: 3,
+            [LocalizationStatus.FAILED]: 4,
+            "all": 5
+          };
           const aStatus = getOverallVideoStatus(a.localizations);
           const bStatus = getOverallVideoStatus(b.localizations);
-          comparison = (statusOrder[aStatus] || 99) - (statusOrder[bStatus] || 99);
+          comparison = (statusOrder[aStatus as string] || 99) - (statusOrder[bStatus as string] || 99);
           break;
       }
       return sortOrder === "asc" ? comparison : -comparison;
@@ -334,18 +356,20 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   }, [videosWithLocalizations, searchQuery, filterStatus, sortBy, sortOrder]);
 
   const stats = useMemo(() => {
+    // Total: videos that are live, draft, or not-started
     const total = videosWithLocalizations.filter(v => {
-      const hasLive = Object.values(v.localizations || {}).some((l: any) => l.status === "live");
-      const hasDraft = Object.values(v.localizations || {}).some((l: any) => l.status === "draft");
-      return hasLive || hasDraft;
+      const hasLive = Object.values(v.localizations || {}).some((l: any) => l.status === LocalizationStatus.LIVE);
+      const hasDraft = Object.values(v.localizations || {}).some((l: any) => l.status === LocalizationStatus.DRAFT);
+      const hasNotStarted = Object.values(v.localizations || {}).some((l: any) => l.status === LocalizationStatus.NOT_STARTED);
+      return hasLive || hasDraft || hasNotStarted;
     }).length;
-    const live = videosWithLocalizations.filter(v => Object.values(v.localizations || {}).some((l: any) => l.status === "live")).length;
-    const draft = videosWithLocalizations.filter(v => Object.values(v.localizations || {}).some((l: any) => l.status === "draft")).length;
+    const live = videosWithLocalizations.filter(v => Object.values(v.localizations || {}).some((l: any) => l.status === LocalizationStatus.LIVE)).length;
+    const draft = videosWithLocalizations.filter(v => Object.values(v.localizations || {}).some((l: any) => l.status === LocalizationStatus.DRAFT)).length;
     return { total, live, draft };
   }, [videosWithLocalizations]);
 
   const statsItems = [
-    { label: "Archived Units", value: stats.total, icon: Video, color: "text-white/40", bg: "bg-white/3", border: "border-white/5" },
+    { label: "Archived Units", value: stats.total, icon: Video, color: isDark ? "text-white/40" : "text-slate-400", bg: isDark ? "bg-white/3" : "bg-slate-50", border: isDark ? "border-white/5" : "border-slate-200" },
     { label: "Distributed", value: stats.live, icon: Globe, color: "text-emerald-500", bg: "bg-emerald-500/5", border: "border-emerald-500/10", pulse: true },
     { label: "Awaiting QA", value: stats.draft, icon: Sparkles, color: "text-olleey-yellow", bg: "bg-olleey-yellow/5", border: "border-olleey-yellow/10" }
   ];
@@ -397,8 +421,8 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
         </div>
       </div>
 
-      {/* Modern Filter & Stats Bar - Glassmorphic Sticky */}
-      <div className="flex flex-col gap-6 sticky top-0 z-30 bg-dark-bg backdrop-blur-2xl py-6 border-b border-white/5 -mx-6 px-6">
+      {/* Modern Filter & Stats Bar - Glassmorphic */}
+      <div className={`flex flex-col gap-6 py-10 border-b ${isDark ? 'border-white/5 bg-transparent' : 'border-slate-200 bg-transparent'} mb-10`}>
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           {statsItems.map((item, i) => (
@@ -407,19 +431,19 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className={`${cardClass} border ${item.border} ${item.bg} rounded-[1.5rem] p-5 flex items-center justify-between group/card relative overflow-hidden transition-all hover:bg-white/5`}
+              className={`${cardClass} border ${item.border} ${item.bg} rounded-[1.5rem] p-5 flex items-center justify-between group/card relative overflow-hidden transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-slate-100 hover:border-slate-300'}`}
             >
               <div className="flex flex-col">
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/20 group-hover:text-white/40 transition-colors">
+                <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white/20 group-hover:text-white/40' : 'text-slate-400 group-hover:text-slate-600'} transition-colors`}>
                   {item.label}
                 </span>
                 <div className="flex items-baseline gap-1.5 mt-1">
-                  <span className={`text-3xl font-normal tracking-tighter ${item.color.includes('white') ? 'text-white' : item.color}`}>
+                  <span className={`text-3xl font-normal tracking-tighter ${item.color.includes('white') ? (isDark ? 'text-white' : 'text-slate-900') : (item.color.includes('slate') ? (isDark ? 'text-white' : 'text-slate-900') : item.color)}`}>
                     {item.value}
                   </span>
                 </div>
               </div>
-              <div className={`p-3 rounded-2xl ${item.bg} border ${item.border} group-hover/card:scale-110 group-hover/card:bg-white/5 transition-all duration-500`}>
+              <div className={`p-3 rounded-2xl ${item.bg} border ${item.border} group-hover/card:scale-110 ${isDark ? 'group-hover/card:bg-white/5' : 'group-hover/card:bg-white group-hover/card:shadow-sm'} transition-all duration-500`}>
                 <item.icon className={`w-5 h-5 ${item.color} ${item.pulse ? 'animate-pulse' : ''}`} />
               </div>
             </motion.div>
@@ -430,68 +454,68 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
           <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
             {/* Command-style Search */}
             <div className="relative min-w-[340px] group">
-              <Search className={`absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-olleey-yellow transition-colors`} />
+              <Search className={`absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-white/20' : 'text-slate-400'} group-focus-within:text-olleey-yellow transition-colors`} />
               <input
                 type="text"
                 placeholder="Search repository by title, connection or ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-14 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-[13px] text-white focus:ring-0 focus:border-olleey-yellow/30 transition-all outline-none placeholder:text-white/10 font-light tracking-tight"
+                className={`w-full pl-14 pr-6 py-4 ${isDark ? 'bg-white/5 border-white/10 text-white placeholder:text-white/10' : 'bg-slate-100 border-slate-200 text-slate-900 placeholder:text-slate-400'} border rounded-2xl text-[13px] focus:ring-0 focus:border-olleey-yellow/30 transition-all outline-none font-light tracking-tight`}
               />
             </div>
 
-            <div className="h-10 w-px bg-white/5 mx-2 hidden lg:block" />
+            <div className={`h-10 w-px ${isDark ? 'bg-white/5' : 'bg-slate-200'} mx-2 hidden lg:block`} />
 
             {/* Dropdown Filter */}
             <div className="relative group/filter">
-              <Filter className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none z-10" />
-              <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none z-10" />
+              <Filter className={`absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-white/20' : 'text-slate-400'} pointer-events-none z-10`} />
+              <ChevronDown className={`absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-white/20' : 'text-slate-400'} pointer-events-none z-10`} />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
-                className="appearance-none pl-14 pr-14 py-4 bg-white/5 border border-white/10 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] text-white focus:ring-0 focus:border-olleey-yellow/30 transition-all outline-none cursor-pointer hover:bg-white/10 min-w-[240px]"
+                className={`appearance-none pl-14 pr-14 py-4 ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-slate-100 border-slate-200 text-slate-900 hover:bg-slate-200'} border rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] focus:ring-0 focus:border-olleey-yellow/30 transition-all outline-none cursor-pointer min-w-[240px]`}
               >
-                <option value="all" className="bg-[#0a0a0a] text-white">All Videos</option>
-                <option value="live" className="bg-[#0a0a0a] text-white">Published</option>
-                <option value="draft" className="bg-[#0a0a0a] text-white">Ready for Review</option>
+                <option value="all" className={`${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-white text-slate-900'}`}>All Videos</option>
+                <option value="live" className={`${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-white text-slate-900'}`}>Published</option>
+                <option value="draft" className={`${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-white text-slate-900'}`}>Ready for Review</option>
               </select>
             </div>
           </div>
 
           <div className="flex items-center gap-6 w-full lg:w-auto justify-between lg:justify-end">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/20">Sort By</span>
+              <span className={`text-[10px] font-black uppercase tracking-[0.25em] ${isDark ? 'text-white/20' : 'text-slate-400'}`}>Sort By</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortBy)}
-                className="bg-transparent border-none text-[11px] font-black uppercase tracking-[0.1em] text-white/60 focus:ring-0 cursor-pointer hover:text-olleey-yellow transition-colors outline-none"
+                className={`bg-transparent border-none text-[11px] font-black uppercase tracking-[0.1em] ${isDark ? 'text-white/60' : 'text-slate-600'} focus:ring-0 cursor-pointer hover:text-olleey-yellow transition-colors outline-none`}
               >
-                <option value="date" className="bg-[#0a0a0a]">Date</option>
-                <option value="views" className="bg-[#0a0a0a]">Views</option>
-                <option value="title" className="bg-[#0a0a0a]">Title</option>
-                <option value="status" className="bg-[#0a0a0a]">Status</option>
+                <option value="date" className={`${isDark ? 'bg-[#0a0a0a]' : 'bg-white'}`}>Date</option>
+                <option value="views" className={`${isDark ? 'bg-[#0a0a0a]' : 'bg-white'}`}>Views</option>
+                <option value="title" className={`${isDark ? 'bg-[#0a0a0a]' : 'bg-white'}`}>Title</option>
+                <option value="status" className={`${isDark ? 'bg-[#0a0a0a]' : 'bg-white'}`}>Status</option>
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/3 border border-white/5 text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                className={`w-9 h-9 flex items-center justify-center rounded-full border transition-all ${isDark ? 'bg-white/3 border-white/5 text-white/40 hover:text-white hover:bg-white/5' : 'bg-slate-100 border-slate-200 text-slate-400 hover:text-slate-900 hover:bg-slate-200'}`}
               >
                 {sortOrder === "asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
               </button>
             </div>
 
-            <div className="h-8 w-px bg-white/5" />
+            <div className={`h-8 w-px ${isDark ? 'bg-white/5' : 'bg-slate-200'}`} />
 
             {/* View Scopes */}
-            <div className="flex items-center gap-1.5 p-1.5 bg-black/20 rounded-2xl border border-white/5">
+            <div className={`flex items-center gap-1.5 p-1.5 ${isDark ? 'bg-black/20 border-white/5' : 'bg-slate-100 border-slate-200'} rounded-2xl border`}>
               <button
                 onClick={() => setViewMode("grid")}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${viewMode === "grid" ? 'bg-white/10 text-olleey-yellow shadow-inner' : 'text-white/20 hover:text-white'}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${viewMode === "grid" ? (isDark ? 'bg-white/10' : 'bg-white shadow-sm') + ' text-olleey-yellow shadow-inner' : (isDark ? 'text-white/20 hover:text-white' : 'text-slate-400 hover:text-slate-900')}`}
               >
                 <Grid3x3 className="w-4.5 h-4.5" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${viewMode === "list" ? 'bg-white/10 text-olleey-yellow shadow-inner' : 'text-white/20 hover:text-white'}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${viewMode === "list" ? (isDark ? 'bg-white/10' : 'bg-white shadow-sm') + ' text-olleey-yellow shadow-inner' : (isDark ? 'text-white/20 hover:text-white' : 'text-slate-400 hover:text-slate-900')}`}
               >
                 <List className="w-4.5 h-4.5" />
               </button>
@@ -511,7 +535,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
         >
           {isInitialLoading ? (
             <div className="w-full min-h-[400px] flex flex-col items-center justify-center py-20">
-              <LoadingPanda size={200} className="mb-8" />
+              <OlleeyLoader size={100} className="mb-8" />
               <div className="space-y-2 text-center">
                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-olleey-yellow animate-pulse">Syncing Asset Metadata...</p>
                 <p className="text-[9px] font-medium text-white/20 uppercase tracking-[0.2em]">Olleey_Library_Node_01</p>
@@ -558,22 +582,23 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                     variants={itemVariants}
                     onClick={() => {
                       const status = getOverallVideoStatus(video.localizations);
-                      const hasLive = Object.values(video.localizations || {}).some((l: any) => l.status === "live");
+                      const hasLive = Object.values(video.localizations || {}).some((l: any) => l.status === LocalizationStatus.LIVE);
 
-                      if (status === "processing") {
-                        // Items processing in production pipeline should not be clickable
+                      if (status === LocalizationStatus.PROCESSING) {
+                        // Navigate to Workflows page to see real-time progress
+                        router.push(`/app?page=Workflows&video=${video.video_id}`);
                         return;
                       }
 
                       if (status === "draft") {
-                        const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "draft") || "es";
+                        const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === LocalizationStatus.DRAFT) || "es";
                         const loc = video.localizations[langCode];
                         const fakeText = getFakeLocalizedText(langCode);
                         openReview({
                           videoId: loc?.job_id || video.video_id,
                           languageCode: langCode,
-                          originalVideoUrl: getFullUrl((video as any).storage_url || (video as any).video_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                          dubbedVideoUrl: getFullUrl((loc as any).video_url || (loc as any).storage_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                          originalVideoUrl: getFullUrl((video as any).storage_url || (video as any).video_url),
+                          dubbedVideoUrl: getFullUrl((loc as any).video_url || (loc as any).storage_url),
                           videoTitle: loc?.title || video.title || fakeText.title,
                           videoDescription: loc?.description || video.description || fakeText.description,
                           thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
@@ -581,14 +606,14 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                           approvedAt: (video as any).published_at
                         });
                       } else if (hasLive) {
-                        const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "live") || "es";
+                        const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === LocalizationStatus.LIVE) || "es";
                         const loc = video.localizations[langCode];
                         const fakeText = getFakeLocalizedText(langCode);
                         openReview({
                           videoId: loc?.job_id || video.video_id,
                           languageCode: langCode,
-                          originalVideoUrl: getFullUrl((video as any).storage_url || (video as any).video_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                          dubbedVideoUrl: getFullUrl((loc as any).video_url || (loc as any).storage_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                          originalVideoUrl: getFullUrl((video as any).storage_url || (video as any).video_url),
+                          dubbedVideoUrl: getFullUrl((loc as any).video_url || (loc as any).storage_url),
                           videoTitle: loc?.title || video.title,
                           videoDescription: loc?.description || video.description || fakeText.description,
                           thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
@@ -631,7 +656,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                             <span className="text-[9px] font-black text-black uppercase tracking-widest">Needs QA</span>
                           </div>
                         )}
-                        {status === "processing" && (
+                        {status === LocalizationStatus.PROCESSING && (
                           <div className="px-3 py-1.5 bg-blue-500/80 backdrop-blur-xl rounded-full flex items-center gap-2 shadow-2xl border border-white/10">
                             <Activity className="w-3 h-3 text-white animate-spin" />
                             <span className="text-[9px] font-black text-white uppercase tracking-widest">Syncing</span>
@@ -692,8 +717,8 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                                 className="w-7 h-7 rounded-lg border border-white/5 bg-white/3 flex items-center justify-center relative hover:bg-white/10 transition-colors"
                               >
                                 <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
-                                <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full border-2 border-[#0c0c0c] ${video.localizations?.[lang]?.status === 'live' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                                  video.localizations?.[lang]?.status === 'draft' ? 'bg-olleey-yellow' :
+                                <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full border-2 border-[#0c0c0c] ${video.localizations?.[lang]?.status === LocalizationStatus.LIVE ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                                  video.localizations?.[lang]?.status === LocalizationStatus.DRAFT ? 'bg-olleey-yellow' :
                                     'bg-blue-500 animate-pulse'
                                   }`} />
                               </div>

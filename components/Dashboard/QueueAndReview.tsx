@@ -24,6 +24,7 @@ import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { getRelativeTime } from "@/lib/utils";
 import { WorkflowModal } from "@/components/WorkflowModal";
 import { jobsAPI, type Job, API_BASE_URL } from "@/lib/api";
+import { LocalizationStatus, JobStatus } from "@/lib/schema";
 import { logger } from "@/lib/logger";
 import { motion } from "framer-motion";
 
@@ -35,8 +36,9 @@ interface QueueAndReviewProps {
     textSecondaryClass: string;
     cardClass: string;
     borderClass: string;
-    getOverallVideoStatus: (localizations: any) => string;
+    getOverallVideoStatus: (localizations: any, videoId?: string) => string;
     onNavigate: (videoId: string) => void;
+    jobs?: Job[];
 }
 
 export function QueueAndReview({
@@ -46,10 +48,18 @@ export function QueueAndReview({
     textClass,
     textSecondaryClass,
     getOverallVideoStatus,
-    onNavigate
+    onNavigate,
+    jobs: initialJobs
 }: QueueAndReviewProps) {
     const [selectedWorkflowJobId, setSelectedWorkflowJobId] = useState<string | null>(null);
-    const [jobs, setJobs] = useState<Job[]>([]);
+    const [jobs, setJobs] = useState<Job[]>(initialJobs || []);
+
+    // Sync jobs state if initialJobs prop changes
+    useEffect(() => {
+        if (initialJobs) {
+            setJobs(initialJobs);
+        }
+    }, [initialJobs]);
 
     // Helper to construct full URL for storage paths
     const getFullUrl = (url: string | undefined) => {
@@ -68,8 +78,10 @@ export function QueueAndReview({
             }
         };
 
-        // Load jobs on mount
-        loadJobs();
+        // Only load fresh jobs if they weren't provided as a prop
+        if (!initialJobs) {
+            loadJobs();
+        }
 
         // Listen for refresh events to reload jobs
         const handleRefresh = () => {
@@ -82,31 +94,31 @@ export function QueueAndReview({
     }, []);
 
     const activeVideos = filteredVideos.filter(v =>
-        ["queued", "draft", "processing"].includes(getOverallVideoStatus(v.localizations || {}))
+        [LocalizationStatus.QUEUED, LocalizationStatus.DRAFT, LocalizationStatus.PROCESSING, LocalizationStatus.NOT_STARTED].includes(getOverallVideoStatus(v.localizations || {}, v.video_id) as LocalizationStatus)
     );
 
     return (
         <>
             <div className="space-y-3 p-4">
                 {videosLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 bg-white/[0.02] rounded-[2rem] border border-white/5 border-dashed">
+                    <div className={`flex flex-col items-center justify-center py-20 ${isDark ? 'bg-white/[0.02]' : 'bg-gray-50'} rounded-[2rem] border ${isDark ? 'border-white/5' : 'border-gray-200'} border-dashed`}>
                         <RefreshCw className="h-8 w-8 animate-spin text-olleey-yellow mb-4 opacity-50" />
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 italic">Synchronizing Neural Grid...</p>
+                        <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white/30' : 'text-gray-500'} italic`}>Synchronizing Neural Grid...</p>
                     </div>
                 ) : activeVideos.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 bg-white/[0.01] rounded-[2rem] border border-white/5 border-dashed">
-                        <LayoutGrid className="h-8 w-8 text-white/10 mb-4" />
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Pipeline Idle</p>
+                    <div className={`flex flex-col items-center justify-center py-20 ${isDark ? 'bg-white/[0.01]' : 'bg-gray-50'} rounded-[2rem] border ${isDark ? 'border-white/5' : 'border-gray-200'} border-dashed`}>
+                        <LayoutGrid className={`h-8 w-8 ${isDark ? 'text-white/10' : 'text-gray-300'} mb-4`} />
+                        <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white/20' : 'text-gray-400'}`}>Pipeline Idle</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
                         {activeVideos.map((video, idx) => {
-                            const status = getOverallVideoStatus(video.localizations || {});
-                            const isQueued = status === "queued";
-                            const isReview = status === "draft";
-                            const isProcessing = status === "processing";
+                            const status = getOverallVideoStatus(video.localizations || {}, video.video_id) as LocalizationStatus;
+                            const isQueued = status === LocalizationStatus.QUEUED;
+                            const isReview = status === LocalizationStatus.DRAFT;
+                            const isProcessing = status === LocalizationStatus.PROCESSING;
                             const activeLangs = Object.keys(video.localizations || {})
-                                .filter(l => ["queued", "draft", "processing"].includes(video.localizations?.[l]?.status || ''));
+                                .filter(l => [LocalizationStatus.QUEUED, LocalizationStatus.DRAFT, LocalizationStatus.PROCESSING].includes(video.localizations?.[l]?.status as LocalizationStatus));
 
                             const formatDuration = (seconds: number) => {
                                 const mins = Math.floor(seconds / 60);
@@ -124,7 +136,7 @@ export function QueueAndReview({
                                         if (isProcessing) return;
                                         onNavigate(video.video_id);
                                     }}
-                                    className={`group relative bg-white/[0.03] border border-white/5 rounded-3xl p-4 transition-all duration-300 ${isProcessing ? 'cursor-not-allowed opacity-80' : 'hover:bg-white/[0.06] hover:border-white/10 hover:shadow-2xl hover:shadow-black/40 cursor-pointer'} overflow-hidden`}
+                                    className={`group relative ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-gray-50 border-gray-200'} border rounded-3xl p-4 transition-all duration-300 ${isProcessing ? 'cursor-not-allowed opacity-80' : isDark ? 'hover:bg-white/[0.06] hover:border-white/10 cursor-pointer' : 'hover:bg-gray-100 hover:border-gray-300 cursor-pointer'} overflow-hidden`}
                                 >
                                     {/* Active Processing Glow */}
                                     {isProcessing && (
@@ -133,7 +145,7 @@ export function QueueAndReview({
 
                                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
                                         {/* Thumbnail with Status Overlay */}
-                                        <div className="relative w-full md:w-32 aspect-video rounded-2xl overflow-hidden bg-black/40 shrink-0 border border-white/10 shadow-lg group-hover:scale-[1.02] transition-transform duration-500">
+                                        <div className={`relative w-full md:w-32 aspect-video rounded-2xl overflow-hidden ${isDark ? 'bg-black/40' : 'bg-gray-200'} shrink-0 border ${isDark ? 'border-white/10' : 'border-gray-300'} group-hover:scale-[1.02] transition-transform duration-500`}>
                                             {video.thumbnail_url ? (
                                                 <img
                                                     src={getFullUrl(video.thumbnail_url) || video.thumbnail_url}
@@ -156,8 +168,8 @@ export function QueueAndReview({
                                             )}
 
                                             {video.duration && (
-                                                <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/80 backdrop-blur-md rounded-lg border border-white/10">
-                                                    <span className="text-[9px] font-black text-white/80 tracking-widest leading-none">
+                                                <div className={`absolute bottom-2 right-2 px-2 py-0.5 ${isDark ? 'bg-black/80' : 'bg-gray-900'} backdrop-blur-md rounded-lg border ${isDark ? 'border-white/10' : 'border-gray-700'}`}>
+                                                    <span className={`text-[9px] font-black ${isDark ? 'text-white/80' : 'text-white'} tracking-widest leading-none`}>
                                                         {formatDuration(video.duration)}
                                                     </span>
                                                 </div>
@@ -168,13 +180,13 @@ export function QueueAndReview({
                                         <div className="flex-1 min-w-0 space-y-2">
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[8px] font-black text-olleey-yellow uppercase tracking-[0.2em] opacity-40 italic">Module::{isProcessing ? 'Processing' : isReview ? 'Validation' : 'Staging'}</span>
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${isProcessing ? 'bg-olleey-yellow animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.5)]' : isReview ? 'bg-emerald-400' : 'bg-purple-400'}`} />
+                                                    <span className="text-[8px] font-black text-olleey-yellow uppercase tracking-[0.2em] opacity-40 italic">Module::{isProcessing ? 'Processing' : isReview ? 'Validation' : status === LocalizationStatus.NOT_STARTED ? 'Awaiting' : 'Staging'}</span>
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${isProcessing ? 'bg-olleey-yellow animate-pulse' : isReview ? 'bg-emerald-400' : status === LocalizationStatus.NOT_STARTED ? 'bg-zinc-500' : 'bg-purple-400'}`} />
                                                 </div>
-                                                <h4 className="text-sm font-bold text-white tracking-tight truncate leading-none group-hover:text-olleey-yellow transition-colors">
+                                                <h4 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'} tracking-tight truncate leading-none group-hover:text-olleey-yellow transition-colors`}>
                                                     {video.title}
                                                 </h4>
-                                                <div className="flex items-center gap-2 text-[10px] font-medium text-white/30 italic">
+                                                <div className={`flex items-center gap-2 text-[10px] font-medium ${isDark ? 'text-white/30' : 'text-gray-500'} italic`}>
                                                     <span>{video.channel_name || 'Neural Node'}</span>
                                                     <span className="opacity-20">•</span>
                                                     <span>{getRelativeTime(video.published_at)}</span>
@@ -184,12 +196,12 @@ export function QueueAndReview({
                                             {/* Status & Languages */}
                                             <div className="flex flex-wrap items-center gap-3">
                                                 {isProcessing ? (
-                                                    <div className="flex items-center gap-3 bg-white/5 rounded-xl px-3 py-1.5 border border-white/5">
+                                                    <div className={`flex items-center gap-3 ${isDark ? 'bg-white/5' : 'bg-gray-100'} rounded-xl px-3 py-1.5 border ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
                                                         <div className="flex flex-col gap-1">
                                                             <span className="text-[8px] font-black text-olleey-yellow/60 uppercase tracking-widest leading-none">Resource Load</span>
                                                             <div className="flex items-center gap-2">
-                                                                <div className="w-24 h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                                                                    <div className="h-full bg-olleey-yellow w-[68%] rounded-full shadow-[0_0_8px_rgba(251,191,36,0.3)] animate-[shimmer_2s_infinite]" />
+                                                                <div className={`w-24 h-1 ${isDark ? 'bg-white/5' : 'bg-gray-200'} rounded-full overflow-hidden border ${isDark ? 'border-white/5' : 'border-gray-300'}`}>
+                                                                    <div className="h-full bg-olleey-yellow w-[68%] rounded-full animate-[shimmer_2s_infinite]" />
                                                                 </div>
                                                                 <span className="text-[9px] font-black text-olleey-yellow leading-none">68%</span>
                                                             </div>
@@ -200,8 +212,8 @@ export function QueueAndReview({
                                                         ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-400'
                                                         : 'bg-purple-500/5 border-purple-500/10 text-purple-400'
                                                         }`}>
-                                                        {isReview ? <FileCheck className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                                                        <span className="text-[10px] font-black uppercase tracking-widest italic">{isReview ? 'Review Protocol' : 'Staged for Ingestion'}</span>
+                                                        {isReview ? <FileCheck className="w-3 h-3" /> : status === LocalizationStatus.NOT_STARTED ? <LayoutGrid className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                                                        <span className="text-[10px] font-black uppercase tracking-widest italic">{isReview ? 'Review Protocol' : status === LocalizationStatus.NOT_STARTED ? 'Awaiting Protocol' : 'Staged for Ingestion'}</span>
                                                     </div>
                                                 )}
 
@@ -213,9 +225,9 @@ export function QueueAndReview({
                                                             style={{ zIndex: 10 - idx }}
                                                         >
                                                             <span className="text-[10px]">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
-                                                            <div className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full border border-[#0c0c0c] ${video.localizations?.[lang].status === 'queued' ? 'bg-purple-500' :
-                                                                video.localizations?.[lang].status === 'draft' ? 'bg-emerald-400' :
-                                                                    'bg-olleey-yellow animate-pulse shadow-[0_0_5px_rgba(251,191,36,0.5)]'
+                                                            <div className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full border border-[#0c0c0c] ${video.localizations?.[lang].status === LocalizationStatus.QUEUED ? 'bg-purple-500' :
+                                                                video.localizations?.[lang].status === LocalizationStatus.DRAFT ? 'bg-emerald-400' :
+                                                                    'bg-olleey-yellow animate-pulse'
                                                                 }`} />
                                                         </div>
                                                     ))}
@@ -239,12 +251,12 @@ export function QueueAndReview({
                                                 }}
                                                 disabled={isProcessing}
                                                 className={`w-full md:w-32 h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${isReview
-                                                    ? 'bg-olleey-yellow text-black hover:bg-white hover:text-black shadow-[0_10px_20px_rgba(251,191,36,0.2)]'
+                                                    ? 'bg-olleey-yellow text-black hover:bg-white hover:text-black'
                                                     : isQueued
-                                                        ? 'bg-purple-600 text-white hover:bg-purple-500 shadow-[0_10px_20px_rgba(147,51,234,0.2)]'
+                                                        ? 'bg-purple-600 text-white hover:bg-purple-500'
                                                         : isProcessing
-                                                            ? 'bg-white/5 text-white/20'
-                                                            : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                                            ? `${isDark ? 'bg-white/5 text-white/20' : 'bg-gray-100 text-gray-400'}`
+                                                            : `${isDark ? 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white' : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-900'}`
                                                     } ${isProcessing ? 'cursor-not-allowed grayscale opacity-30' : ''}`}
                                             >
                                                 {isReview ? (
@@ -268,7 +280,7 @@ export function QueueAndReview({
                 isOpen={!!selectedWorkflowJobId}
                 onClose={() => setSelectedWorkflowJobId(null)}
                 jobId={selectedWorkflowJobId || ""}
-                jobStatus={jobs.find(j => j.job_id === selectedWorkflowJobId)?.status || 'pending'}
+                jobStatus={(jobs.find(j => j.job_id === selectedWorkflowJobId)?.status as JobStatus) || JobStatus.PENDING}
                 workflowState={jobs.find(j => j.job_id === selectedWorkflowJobId)?.workflow_state || {
                     metadata_extraction: { status: "completed" },
                     translations: {},
