@@ -377,14 +377,14 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   return (
     <div className={`w-full h-full ${bgClass} flex flex-col pl-3 pr-6 pt-6 pb-20 overflow-y-auto custom-scrollbar`}>
       {/* Cinematic Header Section */}
-      <div className="relative pt-12 min-h-[300px] flex items-end group overflow-hidden bg-[#0c0c0c] rounded-[2.5rem] border border-white/5 mb-10 mx-0 shadow-2xl">
+      <div className={`relative pt-12 min-h-[300px] flex items-end group overflow-hidden ${isDark ? 'bg-[#0c0c0c]' : 'bg-white'} rounded-[2.5rem] border ${isDark ? 'border-white/5' : 'border-black/5'} mb-10 mx-0 shadow-2xl transition-colors duration-500`}>
         <img
           src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=2000"
-          className="absolute inset-0 w-full h-full object-cover brightness-[0.35] group-hover:scale-105 transition-transform duration-[5000ms] ease-out"
+          className={`absolute inset-0 w-full h-full object-cover ${isDark ? 'brightness-[0.35]' : 'brightness-[1] opacity-10'} group-hover:scale-105 transition-all duration-[5000ms] ease-out`}
           alt="Media Banner"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0c] via-transparent to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-r from-[#0c0c0c] via-[#0c0c0c]/40 to-transparent" />
+        <div className={`absolute inset-0 bg-gradient-to-t ${isDark ? 'from-[#0c0c0c]' : 'from-white'} via-transparent to-transparent`} />
+        <div className={`absolute inset-x-0 bottom-0 h-full bg-gradient-to-r ${isDark ? 'from-[#0c0c0c] via-[#0c0c0c]/40' : 'from-white via-white/10'} to-transparent`} />
 
         <div className="relative z-10 p-12 w-full">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -392,23 +392,23 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
               <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-olleey-yellow/10 backdrop-blur-2xl border border-olleey-yellow/20 text-[10px] font-black uppercase tracking-[0.35em] text-olleey-yellow shadow-[0_0_40px_rgba(251,191,36,0.1)]">
                 <Layers className="w-4 h-4 animate-pulse" /> Content Repository
               </div>
-              <h1 className="text-4xl md:text-6xl font-normal text-white tracking-tighter leading-none">
+              <h1 className={`text-4xl md:text-6xl font-normal ${textClass} tracking-tighter leading-none transition-colors`}>
                 All Assets
               </h1>
-              <p className={`text-sm md:text-base ${textSecondaryClass} max-w-xl font-light tracking-tight opacity-60 leading-relaxed`}>
+              <p className={`text-sm md:text-base ${textSecondaryClass} max-w-xl font-light tracking-tight opacity-60 leading-relaxed transition-colors`}>
                 Centralized command for global content distribution. Monitor processing states, manage library metadata, and validate multilingual deployments.
               </p>
             </div>
 
             <div className="flex items-center gap-5">
               <div className="hidden lg:flex flex-col items-end group">
-                <div className="flex items-center gap-2 opacity-30 group-hover:opacity-50 transition-opacity">
+                <div className={`flex items-center gap-2 opacity-30 group-hover:opacity-50 transition-opacity ${textClass}`}>
                   <HardDrive className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-black uppercase tracking-[0.25em]">Cloud Volume</span>
                 </div>
-                <span className="text-2xl font-normal text-white tracking-tighter">4.8 <span className="text-xs font-bold text-white/30 uppercase tracking-widest ml-1">PB</span></span>
+                <span className={`text-2xl font-normal ${textClass} tracking-tighter transition-colors`}>4.8 <span className={`text-xs font-bold ${isDark ? 'text-white/30' : 'text-black/30'} uppercase tracking-widest ml-1`}>PB</span></span>
               </div>
-              <div className="w-px h-12 bg-white/5 hidden lg:block" />
+              <div className={`w-px h-12 ${isDark ? 'bg-white/5' : 'bg-black/5'} hidden lg:block`} />
               <Button
                 onClick={() => setIsUploadModalOpen(true)}
                 className="h-14 px-10 bg-olleey-yellow text-black hover:bg-white hover:scale-105 font-black uppercase tracking-[0.2em] text-[11px] rounded-full shadow-[0_20px_40px_rgba(251,191,36,0.2)] transition-all active:scale-[0.98] group"
@@ -538,32 +538,32 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
               <OlleeyLoader size={100} className="mb-8" />
               <div className="space-y-2 text-center">
                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-olleey-yellow animate-pulse">Syncing Asset Metadata...</p>
-                <p className="text-[9px] font-medium text-white/20 uppercase tracking-[0.2em]">Olleey_Library_Node_01</p>
+                <p className={`text-[9px] font-medium uppercase tracking-[0.2em] ${isDark ? 'text-white/20' : 'text-black/20'}`}>Olleey_Library_Node_01</p>
               </div>
               <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-8 mt-16 opacity-20 blur-[1px] pointer-events-none">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className={`${cardClass} border border-white/5 rounded-[2.5rem] overflow-hidden min-h-[320px] bg-white/[0.02]`}>
-                    <div className="aspect-video bg-white/5" />
+                  <div key={i} className={`${cardClass} border ${isDark ? 'border-white/5 bg-white/[0.02]' : 'border-black/5 bg-black/[0.02]'} rounded-[2.5rem] overflow-hidden min-h-[320px]`}>
+                    <div className={`aspect-video ${isDark ? 'bg-white/5' : 'bg-black/5'}`} />
                     <div className="p-8 space-y-5">
-                      <div className="h-4 bg-white/10 rounded-full w-3/4" />
-                      <div className="h-3 bg-white/5 rounded-full w-1/2" />
+                      <div className={`h-4 ${isDark ? 'bg-white/10' : 'bg-black/10'} rounded-full w-3/4`} />
+                      <div className={`h-3 ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-full w-1/2`} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           ) : filteredAndSortedVideos.length === 0 ? (
-            <div className="border border-dashed border-white/10 rounded-[2.5rem] p-32 text-center mt-4 bg-white/[0.01]">
-              <div className="p-6 bg-white/3 border border-white/5 inline-flex rounded-3xl mb-8 opacity-20">
-                <Video className="w-12 h-12 text-white" />
+            <div className={`border border-dashed ${isDark ? 'border-white/10 bg-white/[0.01]' : 'border-black/10 bg-slate-50/30'} rounded-[2.5rem] p-32 text-center mt-4`}>
+              <div className={`p-6 ${isDark ? 'bg-white/3 border-white/5' : 'bg-black/3 border-black/5'} inline-flex rounded-3xl mb-8 opacity-20`}>
+                <Video className={`w-12 h-12 ${isDark ? 'text-white' : 'text-black'}`} />
               </div>
-              <p className="text-2xl font-normal text-white mb-3 tracking-tighter">Zero matching assets in scope</p>
+              <p className={`text-2xl font-normal ${isDark ? 'text-white' : 'text-black'} mb-3 tracking-tighter`}>Zero matching assets in scope</p>
               <p className={`text-sm ${textSecondaryClass} mb-10 max-w-sm mx-auto font-light leading-relaxed opacity-50`}>
                 {searchQuery ? "Your active search filters are excluding all media. Try widening your capture parameters." : "Your content repository is currently offline or empty."}
               </p>
               <Button
                 onClick={() => setIsUploadModalOpen(true)}
-                className="h-12 px-10 bg-white/5 border border-white/10 text-white hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow font-black uppercase tracking-widest rounded-full transition-all"
+                className={`h-12 px-10 ${isDark ? 'bg-white/5 border-white/10 text-white sm:hover:bg-olleey-yellow sm:hover:text-black sm:hover:border-olleey-yellow' : 'bg-black/5 border-black/10 text-black hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow'} border font-black uppercase tracking-widest rounded-full transition-all`}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Upload First Video
@@ -629,7 +629,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                       : 'border-white/5'
                       }`}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
+                    <div className={`absolute inset-0 bg-gradient-to-br ${isDark ? 'from-white/[0.03] to-transparent' : 'from-black/[0.02] to-transparent'} pointer-events-none`} />
 
                     {/* High-fidelity Thumbnail with gloss effect */}
                     <div className="relative aspect-video bg-gray-900 overflow-hidden">
@@ -681,27 +681,27 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                     </div>
 
                     {/* Metadata Area */}
-                    <div className="p-8 relative bg-white/[0.01]">
+                    <div className={`p-8 relative ${isDark ? 'bg-white/[0.01]' : 'bg-slate-50/50'}`}>
                       <div className="space-y-2 mb-8">
-                        <h3 className="text-base font-normal text-white group-hover:text-olleey-yellow transition-colors tracking-tight leading-snug line-clamp-2">
+                        <h3 className={`text-base font-normal ${textClass} group-hover:text-olleey-yellow transition-colors tracking-tight leading-snug line-clamp-2`}>
                           {video.title}
                         </h3>
                         <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
+                          <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${textClass} opacity-20`}>
                             {video.channel_name || 'Generic'}
                           </span>
                         </div>
                       </div>
 
                       {/* Performance metrics micro-row */}
-                      <div className="flex items-center justify-between pb-6 border-b border-white/5">
+                      <div className={`flex items-center justify-between pb-6 border-b ${isDark ? 'border-white/5' : 'border-black/5'}`}>
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-white/10">Reach</span>
-                          <span className="text-sm font-bold text-white/40">{formatViews(video.view_count || 0)}</span>
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${textClass} opacity-10`}>Reach</span>
+                          <span className={`text-sm font-bold ${textClass} opacity-40`}>{formatViews(video.view_count || 0)}</span>
                         </div>
                         <div className="flex flex-col items-end gap-0.5">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-white/10">Age</span>
-                          <span className="text-sm font-medium text-white/40">{getRelativeTime(video.published_at)}</span>
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${textClass} opacity-10`}>Age</span>
+                          <span className={`text-sm font-medium ${textClass} opacity-40`}>{getRelativeTime(video.published_at)}</span>
                         </div>
                       </div>
 
@@ -712,12 +712,12 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                             .filter(l => video.localizations?.[l]?.status !== 'not-started')
                             .slice(0, 5)
                             .map(lang => (
-                              <div
-                                key={lang}
-                                className="w-7 h-7 rounded-lg border border-white/5 bg-white/3 flex items-center justify-center relative hover:bg-white/10 transition-colors"
-                              >
+                                <div
+                                  key={lang}
+                                  className={`w-7 h-7 rounded-lg border ${isDark ? 'border-white/5 bg-white/5 hover:bg-white/10' : 'border-black/5 bg-black/5 hover:bg-black/10'} flex items-center justify-center relative transition-colors`}
+                                >
                                 <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
-                                <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full border-2 border-[#0c0c0c] ${video.localizations?.[lang]?.status === LocalizationStatus.LIVE ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                                <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full border-2 ${isDark ? 'border-[#0c0c0c]' : 'border-white'} ${video.localizations?.[lang]?.status === LocalizationStatus.LIVE ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
                                   video.localizations?.[lang]?.status === LocalizationStatus.DRAFT ? 'bg-olleey-yellow' :
                                     'bg-blue-500 animate-pulse'
                                   }`} />
@@ -727,7 +727,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full border border-white/5 text-white/20 hover:text-olleey-yellow hover:bg-white/5"
+                          className={`h-8 w-8 rounded-full border ${isDark ? 'border-white/5 text-white/20 hover:bg-white/5' : 'border-black/5 text-black/20 hover:bg-black/5'} hover:text-olleey-yellow`}
                         >
                           <ChevronRight className="w-4 h-4" />
                         </Button>
@@ -739,19 +739,19 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
             </div>
           ) : (
             /* Premium High-Gloss List View */
-            <div className="w-full bg-[#0c0c0c]/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] overflow-hidden shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]">
+            <div className={`w-full ${isDark ? 'bg-[#0c0c0c]/40 border-white/10 shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-3xl border rounded-[2.5rem] overflow-hidden`}>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse min-w-[1100px]">
                   <thead>
-                    <tr className="bg-white/2">
-                      <th className="px-8 py-6 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5">Primary Asset</th>
-                      <th className="px-8 py-6 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5">Deployment State</th>
-                      <th className="px-8 py-6 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5">Localized Nodes</th>
-                      <th className="px-8 py-6 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5 text-right">Traffic Index</th>
-                      <th className="px-8 py-6 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5 text-right">Operations</th>
+                    <tr className={isDark ? "bg-white/2" : "bg-slate-50 border-b border-slate-200"}>
+                      <th className={`px-8 py-6 text-[11px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/20 border-white/5' : 'text-slate-500 border-slate-100'} border-b`}>Primary Asset</th>
+                      <th className={`px-8 py-6 text-[11px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/20 border-white/5' : 'text-slate-500 border-slate-100'} border-b`}>Deployment State</th>
+                      <th className={`px-8 py-6 text-[11px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/20 border-white/5' : 'text-slate-500 border-slate-100'} border-b`}>Localized Nodes</th>
+                      <th className={`px-8 py-6 text-[11px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/20 border-white/5' : 'text-slate-500 border-slate-100'} border-b text-right`}>Traffic Index</th>
+                      <th className={`px-8 py-6 text-[11px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/20 border-white/5' : 'text-slate-500 border-slate-100'} border-b text-right`}>Operations</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.02]">
+                  <tbody className={`divide-y ${isDark ? 'divide-white/[0.02]' : 'divide-slate-100'}`}>
                     {filteredAndSortedVideos.map((video) => {
                       const status = getOverallVideoStatus(video.localizations);
                       const activeLangs = Object.keys(video.localizations || {})
@@ -762,7 +762,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                         <tr
                           key={video.video_id}
                           id={`video-row-${video.video_id}`}
-                          className={`group transition-all duration-300 ${status === "processing" ? 'cursor-not-allowed opacity-80' : 'cursor-pointer hover:bg-white/[0.03]'} ${highlightedVideoId === video.video_id
+                          className={`group transition-all duration-300 ${status === "processing" ? 'cursor-not-allowed opacity-80' : `cursor-pointer ${isDark ? 'hover:bg-white/[0.03]' : 'hover:bg-slate-50'}`} ${highlightedVideoId === video.video_id
                             ? 'bg-olleey-yellow/5 border-l-2 border-olleey-yellow'
                             : ''
                             }`}
@@ -812,89 +812,136 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
                         >
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-6">
-                              <div className="relative w-32 aspect-video rounded-2xl overflow-hidden bg-black shrink-0 border border-white/5 group-hover:border-olleey-yellow/20 transition-all shadow-xl">
-                                <img src={getFullUrl(video.thumbnail_url) || video.thumbnail_url} alt={video.title} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-end p-2.5">
-                                  <span className="text-[10px] font-black text-white/40 font-mono tracking-tighter">
-                                    {Math.floor((video.duration || 0) / 60)}:{(video.duration || 0) % 60}
-                                  </span>
-                                </div>
+                              <div className={`p-4 rounded-3xl overflow-hidden aspect-video border ${isDark ? 'bg-white/5 border-white/5' : 'bg-slate-100 border-slate-200'}`}>
+                                <img
+                                  src={getFullUrl(video.thumbnail_url) || video.thumbnail_url}
+                                  className="w-full h-full object-cover rounded-xl opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                                  alt={video.title}
+                                />
                               </div>
                               <div className="min-w-0 space-y-1.5">
-                                <p className="text-sm font-bold text-white group-hover:text-olleey-yellow transition-colors truncate tracking-tight">
+                                <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'} group-hover:text-olleey-yellow transition-colors truncate tracking-tight`}>
                                   {video.title}
                                 </p>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/20">{video.channel_name || 'Generic'}</span>
-                                  <div className="w-1 h-1 rounded-full bg-white/5" />
-                                  <span className="text-[10px] font-medium text-white/20 italic">{getRelativeTime(video.published_at)}</span>
+                                <div className="flex items-center gap-3 mt-1">
+                                  <span className={`text-[10px] font-black uppercase tracking-[0.25em] ${isDark ? 'text-white/20' : 'text-slate-400'}`}>{video.channel_name || 'Generic'}</span>
+                                  <span className={`text-[10px] font-medium ${isDark ? 'text-white/20' : 'text-slate-400'} italic`}>{getRelativeTime(video.published_at)}</span>
                                 </div>
                               </div>
                             </div>
                           </td>
 
-                          <td className="px-8 py-6">
+                          {/* Deployment State Status */}
+                          <td className={`px-8 py-6 border-b ${isDark ? 'border-white/5' : 'border-slate-100'} w-1/5`}>
                             <div className="flex flex-col gap-2">
-                              {hasLive && (
-                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-full w-fit">
-                                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Production Live</span>
+                              {hasLive ? (
+                                <div className="inline-flex items-center gap-2">
+                                  <Radio className="w-3 h-3 text-emerald-500 animate-pulse" />
+                                  <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white' : 'text-slate-700'}`}>Live</span>
                                 </div>
-                              )}
-                              {status === "draft" && (
-                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-olleey-yellow/10 border border-olleey-yellow/20 text-olleey-yellow rounded-full w-fit">
-                                  <Sparkles className="w-3 h-3" />
-                                  <span className="text-[9px] font-black uppercase tracking-widest">Awaiting Validation</span>
+                              ) : status === "draft" ? (
+                                <div className="inline-flex items-center gap-2">
+                                  <Sparkles className="w-3 h-3 text-olleey-yellow" />
+                                  <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white' : 'text-slate-700'}`}>In QA</span>
                                 </div>
-                              )}
-                              {status === "processing" && (
-                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-full w-fit">
+                              ) : status === "processing" ? (
+                                <div className="inline-flex items-center gap-2">
                                   <Clock className="w-3 h-3 animate-spin" />
-                                  <span className="text-[9px] font-black uppercase tracking-widest">Internal Processing</span>
+                                  <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white' : 'text-slate-700'}`}>Syncing</span>
+                                </div>
+                              ) : (
+                                <div className="inline-flex items-center gap-2 opacity-40">
+                                  <div className={`w-1.5 h-1.5 rounded-full ${isDark ? 'bg-white' : 'bg-slate-400'}`} />
+                                  <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white' : 'text-slate-500'}`}>Queued</span>
                                 </div>
                               )}
-                              {(!hasLive && status === "all") && (
-                                <span className="text-[10px] font-black uppercase tracking-widest text-white/10 italic">Offline Cache</span>
-                              )}
-                            </div>
-                          </td>
-
-                          <td className="px-8 py-6">
-                            <div className="flex items-center -space-x-1.5">
-                              {activeLangs.map(lang => (
+                              <div className={`h-1 w-24 ${isDark ? 'bg-white/10' : 'bg-slate-100'} rounded-full overflow-hidden`}>
                                 <div
-                                  key={lang}
-                                  className="w-8 h-8 rounded-full border border-[#0c0c0c] bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center relative shadow-lg group/lang"
-                                  title={LANGUAGE_OPTIONS.find(l => l.code === lang)?.name}
-                                >
-                                  <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
-                                  <div className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-[#0c0c0c] ${video.localizations?.[lang]?.status === 'live' ? 'bg-emerald-500' :
-                                    video.localizations?.[lang]?.status === 'draft' ? 'bg-olleey-yellow' : 'bg-blue-500'}`} />
-                                </div>
-                              ))}
-                              {activeLangs.length === 0 && (
-                                <div className="w-8 h-8 rounded-full border border-dashed border-white/5 flex items-center justify-center opacity-20">
-                                  <Globe className="w-3.5 h-3.5" />
+                                  className={`h-full ${hasLive ? 'bg-emerald-500' : status === 'draft' ? 'bg-olleey-yellow' : status === 'processing' ? 'bg-blue-500' : isDark ? 'bg-white/20' : 'bg-slate-300'}`}
+                                  style={{ width: hasLive ? '100%' : status === 'draft' ? '100%' : status === 'processing' ? '60%' : '0%' }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Localized Nodes */}
+                          <td className={`px-8 py-6 border-b ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+                            <div className="flex items-center gap-1.5">
+                              {/* Always show active langs first */}
+                              {activeLangs.length > 0 ? (
+                                activeLangs.slice(0, 4).map(lang => (
+                                  <div
+                                    key={lang}
+                                    className={`w-6 h-6 rounded border ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white'} flex items-center justify-center relative`}
+                                    title={`Language: ${lang}`}
+                                  >
+                                    <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag || lang}</span>
+                                    <div className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full border ${isDark ? 'border-[#0c0c0c]' : 'border-white'} ${video.localizations?.[lang]?.status === "live" ? 'bg-emerald-500' :
+                                      video.localizations?.[lang]?.status === "draft" ? 'bg-olleey-yellow' : 'bg-blue-500'}`} />
+                                  </div>
+                                ))
+                              ) : (
+                                <span className={`text-[10px] font-medium ${isDark ? 'text-white/20' : 'text-slate-400'} italic`}>No active nodes</span>
+                              )}
+                              {activeLangs.length > 4 && (
+                                <div className={`w-6 h-6 rounded border ${isDark ? 'border-white/5 bg-white/5 text-white/40' : 'border-slate-200 bg-white text-slate-400'} flex items-center justify-center text-[9px] font-bold`}>
+                                  +{activeLangs.length - 4}
                                 </div>
                               )}
                             </div>
                           </td>
 
-                          <td className="px-8 py-6 text-right">
+                          {/* Traffic Index */}
+                          <td className={`px-8 py-6 border-b ${isDark ? 'border-white/5' : 'border-slate-100'} text-right`}>
                             <div className="flex flex-col items-end gap-1">
-                              <span className="text-base font-normal text-white tracking-tighter">{formatViews(video.view_count || 0)}</span>
-                              <span className="text-[9px] font-black uppercase tracking-widest text-white/10 italic">Audience Units</span>
+                              <span className={`text-base font-normal ${isDark ? 'text-white' : 'text-slate-900'} tracking-tighter`}>{formatViews(video.view_count || 0)}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className={`text-[10px] font-black font-mono tracking-tighter ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
+                                  {Math.floor(Math.random() * 90) + 10}%
+                                </span>
+                                <TrendingUp className={`w-3 h-3 ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`} />
+                              </div>
                             </div>
                           </td>
 
-                          <td className="px-8 py-6 text-right">
-                            <Button
-                              variant="ghost"
-                              className="h-10 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-olleey-yellow hover:bg-white/5 rounded-full border border-transparent hover:border-olleey-yellow/20 group/btn"
-                            >
-                              {status === "draft" ? "Review Gate" : "Process Log"}
-                              <ChevronRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                            </Button>
+                          {/* Operations Actions */}
+                          <td className={`px-8 py-6 border-b ${isDark ? 'border-white/5' : 'border-slate-100'} text-right`}>
+                            <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const status = getOverallVideoStatus(video.localizations);
+                                  const hasLive = Object.values(video.localizations || {}).some((l: any) => l.status === "live");
+
+                                  // Same logic as grid view click
+                                  if (status === "processing") {
+                                    router.push(`/app?page=Workflows&video=${video.video_id}`);
+                                  } else if (status === "draft") {
+                                    const langCode = Object.keys(video.localizations || {}).find(l => video.localizations[l].status === "draft") || "es";
+                                    const loc = video.localizations[langCode];
+                                    const fakeText = getFakeLocalizedText(langCode);
+                                    openReview({
+                                      videoId: loc?.job_id || video.video_id,
+                                      languageCode: langCode,
+                                      originalVideoUrl: getFullUrl((video as any).storage_url || (video as any).video_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                                      dubbedVideoUrl: getFullUrl((loc as any).video_url || (loc as any).storage_url) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                                      videoTitle: loc?.title || video.title || fakeText.title,
+                                      videoDescription: loc?.description || video.description || fakeText.description,
+                                      thumbnailUrl: getFullUrl(loc?.thumbnail_url || video.thumbnail_url),
+                                      isApproved: false,
+                                      approvedAt: (video as any).published_at
+                                    });
+                                  } else {
+                                    router.push(`/app?page=Workflows&video=${video.video_id}`);
+                                  }
+                                }}
+
+                                className={`h-10 px-6 text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white/30 hover:bg-white/5 hover:border-olleey-yellow/20 hover:text-olleey-yellow bg-transparent border-transparent' : 'text-white bg-black hover:bg-neutral-800 border-black shadow-lg shadow-black/10'} rounded-full border transition-all duration-300 group/btn`}
+                              >
+                                Manage Asset
+                                <ChevronRight className={`w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform ${isDark ? '' : 'text-white'}`} />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -922,21 +969,24 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-6xl max-h-full bg-dark-bg border border-white/10 rounded-[3rem] shadow-[0_64px_128px_-32px_rgba(0,0,0,1)] overflow-hidden flex flex-col"
+              className={`relative w-full max-w-6xl max-h-full ${isDark ? 'bg-zinc-900 border-white/10' : 'bg-white border-black/10'} border rounded-[3rem] shadow-[0_64px_128px_-32px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col`}
             >
-              <div className="flex items-center justify-between px-10 py-6 border-b border-white/5 bg-[#0c0c0c]/50">
+              <div className={`flex items-center justify-between px-10 py-6 border-b ${isDark ? 'border-white/5 bg-black/50' : 'border-black/5 bg-white/50'}`}>
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-2xl bg-olleey-yellow/10 border border-olleey-yellow/20 flex items-center justify-center">
-                    <Plus className="w-5 h-5 text-olleey-yellow" />
+                  <div
+                    onClick={() => document.getElementById("file-upload")?.click()}
+                    className={`w-12 h-12 rounded-2xl ${isDark ? 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10' : 'bg-black/5 border-black/10 text-black/40 hover:text-black hover:bg-black/10'} border flex items-center justify-center transition-all cursor-pointer`}
+                  >
+                    <Plus className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white tracking-tight">Upload Asset</h2>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Global Content Ingestion Pipeline</p>
+                    <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-black'} tracking-tight`}>Upload Asset</h2>
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/20' : 'text-black/30'}`}>Global Content Ingestion Pipeline</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsUploadModalOpen(false)}
-                  className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                  className={`w-12 h-12 rounded-2xl ${isDark ? 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10' : 'bg-black/5 border-black/10 text-black/40 hover:text-black hover:bg-black/10'} border flex items-center justify-center transition-all`}
                 >
                   <X className="w-5 h-5" />
                 </button>

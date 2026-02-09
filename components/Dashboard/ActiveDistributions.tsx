@@ -66,7 +66,7 @@ export function ActiveDistributions({
                     variant="ghost"
                     size="sm"
                     onClick={() => router.push('/app?page=All Media')}
-                    className={`h-9 px-4 text-[10px] text-white/60 font-black uppercase tracking-[0.2em] hover:text-emerald-400 hover:bg-white/5 transition-all rounded-full group`}
+                    className={`h-9 px-4 text-[10px] ${isDark ? 'text-white/60' : 'text-gray-500'} font-black uppercase tracking-[0.2em] hover:text-emerald-400 ${isDark ? 'hover:bg-white/5' : 'hover:bg-emerald-50'} transition-all rounded-full group`}
                 >
                     Explore All <ChevronRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -77,8 +77,8 @@ export function ActiveDistributions({
                 <div className="flex-1 overflow-hidden">
                     {!videosLoading && releasedVideos.length === 0 ? (
                         <div className="flex flex-col h-full items-center justify-center opacity-25 p-12">
-                            <div className="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center mb-6">
-                                <Target className="w-8 h-8 opacity-20" />
+                            <div className={`w-16 h-16 rounded-3xl ${isDark ? 'bg-white/5' : 'bg-gray-100'} flex items-center justify-center mb-6`}>
+                                <Target className={`w-8 h-8 opacity-20 ${isDark ? 'text-white' : 'text-black'}`} />
                             </div>
                             <p className={`text-xs ${textSecondaryClass} text-center font-black uppercase tracking-[0.2em] opacity-40`}>Grid optimized for live media</p>
                         </div>
@@ -96,6 +96,7 @@ export function ActiveDistributions({
                                 borderClass="border-none"
                                 getOverallVideoStatus={getOverallVideoStatus}
                                 onNavigate={onNavigate}
+                                isDark={isDark}
                             />
                         </div>
                     )}

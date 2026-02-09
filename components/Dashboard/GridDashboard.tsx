@@ -116,18 +116,34 @@ export function GridDashboard({
 
             {/* Dashboard Layout Optimization */}
             <style jsx global>{`
-                .custom-scrollbar::-webkit-scrollbar {
+                /* Dark Mode Scrollbar */
+                .dark .custom-scrollbar::-webkit-scrollbar {
                     width: 4px;
                 }
-                .custom-scrollbar::-webkit-scrollbar-track {
+                .dark .custom-scrollbar::-webkit-scrollbar-track {
                     background: transparent;
                 }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
+                .dark .custom-scrollbar::-webkit-scrollbar-thumb {
                     background: rgba(255, 255, 255, 0.05);
                     border-radius: 20px;
                 }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                     background: rgba(255, 255, 255, 0.1);
+                }
+
+                /* Light Mode Scrollbar */
+                .light .custom-scrollbar::-webkit-scrollbar {
+                    width: 4px;
+                }
+                .light .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .light .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(0, 0, 0, 0.1);
+                    border-radius: 20px;
+                }
+                .light .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(0, 0, 0, 0.2);
                 }
             `}</style>
         </motion.div>

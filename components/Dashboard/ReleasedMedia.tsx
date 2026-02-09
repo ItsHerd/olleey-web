@@ -15,13 +15,15 @@ interface ReleasedMediaProps {
     borderClass: string;
     getOverallVideoStatus: (localizations: any, videoId?: string) => string;
     onNavigate: (videoId: string) => void;
+    isDark?: boolean;
 }
 
 export function ReleasedMedia({
     filteredVideos,
     textClass,
     textSecondaryClass,
-    onNavigate
+    onNavigate,
+    isDark = true
 }: ReleasedMediaProps) {
     // Helper to construct full URL for storage paths
     const getFullUrl = (url: string | undefined) => {
@@ -37,9 +39,9 @@ export function ReleasedMedia({
     return (
         <div className="p-4">
             {liveVideos.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-white/[0.01] rounded-[2rem] border border-white/5 border-dashed">
-                    <Layers className="h-8 w-8 text-white/10 mb-4" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Archive Offline</p>
+                <div className={`flex flex-col items-center justify-center py-20 ${isDark ? 'bg-white/[0.01]' : 'bg-slate-50'} rounded-[2rem] border ${isDark ? 'border-white/5' : 'border-gray-200'} border-dashed`}>
+                    <Layers className={`h-8 w-8 ${isDark ? 'text-white/10' : 'text-gray-300'} mb-4`} />
+                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white/20' : 'text-gray-400'}`}>Archive Offline</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -54,7 +56,7 @@ export function ReleasedMedia({
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.05 }}
                                 onClick={() => onNavigate(video.video_id)}
-                                className="group relative bg-white/[0.03] border border-white/5 rounded-3xl p-3 cursor-pointer hover:bg-white/[0.06] hover:border-white/10 hover:shadow-2xl hover:shadow-black/40 transition-all duration-300 overflow-hidden"
+                                className={`group relative ${isDark ? 'bg-white/[0.03] border-white/5 hover:bg-white/[0.06] hover:border-white/10' : 'bg-gray-50 border-gray-200 hover:bg-gray-100/80 hover:border-gray-300'} border rounded-3xl p-3 cursor-pointer hover:shadow-2xl hover:shadow-black/10 transition-all duration-300 overflow-hidden`}
                             >
                                 {/* Active Broadcast Indication */}
                                 <div className="absolute top-0 right-0 p-4 z-20">
@@ -75,8 +77,8 @@ export function ReleasedMedia({
 
                                 <div className="space-y-3">
                                     <div className="space-y-1">
-                                        <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] italic">Module::Distribution</span>
-                                        <h4 className={`text-[11px] font-bold text-white truncate leading-none group-hover:text-olleey-yellow transition-colors`}>
+                                        <span className={`text-[8px] font-black ${isDark ? 'text-white/20' : 'text-gray-400'} uppercase tracking-[0.2em] italic`}>Module::Distribution</span>
+                                        <h4 className={`text-[11px] font-bold ${isDark ? 'text-white' : 'text-gray-900'} truncate leading-none group-hover:text-olleey-yellow transition-colors`}>
                                             {video.title}
                                         </h4>
                                     </div>
@@ -86,19 +88,19 @@ export function ReleasedMedia({
                                             {liveLangs.slice(0, 3).map((lang, lIdx) => (
                                                 <div
                                                     key={lang}
-                                                    className="w-5 h-5 rounded-full bg-white/5 border border-[#0c0c0c] flex items-center justify-center shadow-sm relative group/flag hover:z-10 hover:scale-110 transition-transform"
+                                                    className={`w-5 h-5 rounded-full ${isDark ? 'bg-white/5 border-[#0c0c0c]' : 'bg-white border-gray-200'} border flex items-center justify-center shadow-sm relative group/flag hover:z-10 hover:scale-110 transition-transform`}
                                                     style={{ zIndex: 10 - lIdx }}
                                                 >
                                                     <span className="text-[10px]">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
                                                 </div>
                                             ))}
                                             {liveLangs.length > 3 && (
-                                                <div className="w-5 h-5 rounded-full bg-white/5 border border-[#0c0c0c] flex items-center justify-center z-0">
-                                                    <span className="text-[7px] font-black text-white/40">+{liveLangs.length - 3}</span>
+                                                <div className={`w-5 h-5 rounded-full ${isDark ? 'bg-white/5 border-[#0c0c0c]' : 'bg-gray-100 border-gray-200'} border flex items-center justify-center z-0`}>
+                                                    <span className={`text-[7px] font-black ${isDark ? 'text-white/40' : 'text-gray-500'}`}>+{liveLangs.length - 3}</span>
                                                 </div>
                                             )}
                                         </div>
-                                        <span className="text-[8px] font-black text-white/20 uppercase tracking-widest italic">
+                                        <span className={`text-[8px] font-black ${isDark ? 'text-white/20' : 'text-gray-400'} uppercase tracking-widest italic`}>
                                             {getRelativeTime(video.published_at)}
                                         </span>
                                     </div>

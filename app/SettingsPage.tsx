@@ -182,7 +182,7 @@ export default function SettingsPage() {
               <h1 className="text-3xl md:text-4xl font-normal text-white tracking-tighter mb-2 leading-none">
                 Environment
               </h1>
-              <p className={`${textSecondaryClass} text-sm md:text-base max-w-xl font-light tracking-tight opacity-60 leading-relaxed`}>
+              <p className={`text-white/60 text-sm md:text-base max-w-xl font-light tracking-tight opacity-60 leading-relaxed`}>
                 Configure your high-fidelity production environment, neural notification mapping, and experimental deployment protocols.
               </p>
             </div>
@@ -222,7 +222,7 @@ export default function SettingsPage() {
         )}
 
         {/* Navigation Tabs */}
-        <motion.div variants={itemVariants} className="flex gap-2 p-1.5 bg-white/[0.02] border border-white/5 rounded-2xl w-fit backdrop-blur-xl">
+        <motion.div variants={itemVariants} className={`flex gap-2 p-1.5 ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-white border-gray-200 shadow-sm'} border rounded-2xl w-fit backdrop-blur-xl`}>
           {[
             { id: 'settings', label: 'General Registry', icon: SettingsIcon },
             { id: 'experimental', label: 'Deep Lab', icon: FlaskConical }
@@ -230,9 +230,9 @@ export default function SettingsPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-3 px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 relative group ${activeTab === tab.id ? 'bg-olleey-yellow text-black shadow-lg shadow-olleey-yellow/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+              className={`flex items-center gap-3 px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 relative group ${activeTab === tab.id ? 'bg-olleey-yellow text-black shadow-lg shadow-olleey-yellow/20' : isDark ? 'text-white/40 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`}
             >
-              <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-black' : 'text-white/20 group-hover:text-white/60'}`} />
+              <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-black' : isDark ? 'text-white/20 group-hover:text-white/60' : 'text-gray-400 group-hover:text-gray-600'}`} />
               {tab.label}
               {activeTab === tab.id && (
                 <motion.div layoutId="tab-glow" className="absolute inset-0 bg-white/10 rounded-xl pointer-events-none" />
@@ -252,26 +252,26 @@ export default function SettingsPage() {
                 className="space-y-10"
               >
                 {/* Appearance */}
-                <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-10 lg:p-14 shadow-2xl relative overflow-hidden bg-white/[0.01] backdrop-blur-3xl group`}>
+                <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-10 lg:p-14 shadow-2xl relative overflow-hidden ${isDark ? 'bg-white/[0.01]' : ''} backdrop-blur-3xl group`}>
                   <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none transition-transform group-hover:scale-110">
                     <Sparkles className="w-40 h-40" />
                   </div>
 
                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-normal text-white tracking-tighter">Surface Interface</h3>
-                      <p className="text-sm font-light text-white/40 tracking-tight max-w-sm">Calibrate the visual aesthetics of your command workstation.</p>
+                      <h3 className={`text-2xl font-normal ${textClass} tracking-tighter`}>Surface Interface</h3>
+                      <p className={`text-sm font-light ${textSecondaryClass} tracking-tight max-w-sm`}>Calibrate the visual aesthetics of your command workstation.</p>
                     </div>
                     <div className="flex gap-4 p-2 bg-white/5 border border-white/5 rounded-[2rem] shadow-inner">
                       <button
-                        onClick={() => setTheme("light")}
-                        className={`flex items-center gap-3 px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${theme === "light" ? 'bg-white text-black shadow-2xl scale-105' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        onClick={() => setThemeContext("light")}
+                        className={`flex items-center gap-3 px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${theme === "light" ? 'bg-white text-black shadow-2xl scale-105 ring-1 ring-black/5' : isDark ? 'text-white/40 hover:text-white hover:bg-white/5' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}
                       >
                         <Sun className="w-4 h-4" /> Light Mode
                       </button>
                       <button
-                        onClick={() => setTheme("dark")}
-                        className={`flex items-center gap-3 px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${theme === "dark" ? 'bg-olleey-yellow text-black shadow-[0_0_30px_rgba(251,191,36,0.5)] scale-105' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        onClick={() => setThemeContext("dark")}
+                        className={`flex items-center gap-3 px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${theme === "dark" ? 'bg-olleey-yellow text-black shadow-[0_0_30px_rgba(251,191,36,0.5)] scale-105' : isDark ? 'text-white/40 hover:text-white hover:bg-white/5' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}
                       >
                         <Moon className="w-4 h-4" /> Dark Mode
                       </button>
@@ -280,45 +280,45 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Timezone */}
-                <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-10 lg:p-14 shadow-2xl relative overflow-hidden bg-white/[0.01] backdrop-blur-3xl group`}>
+                <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-10 lg:p-14 shadow-2xl relative overflow-hidden ${isDark ? 'bg-white/[0.01]' : ''} backdrop-blur-3xl group`}>
                   <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none transition-transform group-hover:scale-110">
                     <Clock className="w-40 h-40" />
                   </div>
 
                   <div className="relative z-10 space-y-8">
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-normal text-white tracking-tighter">Temporal Index</h3>
-                      <p className="text-sm font-light text-white/40 tracking-tight">Set your local temporal reference for distribution orchestration.</p>
+                      <h3 className={`text-2xl font-normal ${textClass} tracking-tighter`}>Temporal Index</h3>
+                      <p className={`text-sm font-light ${textSecondaryClass} tracking-tight`}>Set your local temporal reference for distribution orchestration.</p>
                     </div>
                     <div className="relative">
                       <select
                         value={timezone}
                         onChange={(e) => setTimezone(e.target.value)}
-                        className="w-full h-20 bg-white/[0.03] border border-white/5 text-white/80 rounded-3xl px-10 text-[15px] font-medium focus:border-olleey-yellow outline-none transition-all appearance-none cursor-pointer hover:bg-white/5 shadow-2xl"
+                        className={`w-full h-20 ${isDark ? 'bg-white/[0.03] border-white/5 text-white/80 hover:bg-white/5' : 'bg-gray-50 border-gray-200 text-gray-900 hover:bg-gray-100'} border rounded-3xl px-10 text-[15px] font-medium focus:border-olleey-yellow outline-none transition-all appearance-none cursor-pointer shadow-2xl`}
                       >
-                        <option value="America/Los_Angeles" className="bg-[#0a0a0a]">Pacific Time (PT) • GMT-8</option>
-                        <option value="America/Denver" className="bg-[#0a0a0a]">Mountain Time (MT) • GMT-7</option>
-                        <option value="America/Chicago" className="bg-[#0a0a0a]">Central Time (CT) • GMT-6</option>
-                        <option value="America/New_York" className="bg-[#0a0a0a]">Eastern Time (ET) • GMT-5</option>
-                        <option value="Europe/London" className="bg-[#0a0a0a]">London (GMT) • GMT+0</option>
-                        <option value="Europe/Paris" className="bg-[#0a0a0a]">Paris (CET) • GMT+1</option>
-                        <option value="Asia/Tokyo" className="bg-[#0a0a0a]">Tokyo (JST) • GMT+9</option>
+                        <option value="America/Los_Angeles" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Pacific Time (PT) • GMT-8</option>
+                        <option value="America/Denver" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Mountain Time (MT) • GMT-7</option>
+                        <option value="America/Chicago" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Central Time (CT) • GMT-6</option>
+                        <option value="America/New_York" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Eastern Time (ET) • GMT-5</option>
+                        <option value="Europe/London" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>London (GMT) • GMT+0</option>
+                        <option value="Europe/Paris" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Paris (CET) • GMT+1</option>
+                        <option value="Asia/Tokyo" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Tokyo (JST) • GMT+9</option>
                       </select>
-                      <ChevronRight className="absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 text-white/20 pointer-events-none rotate-90" />
+                      <ChevronRight className={`absolute right-8 top-1/2 -translate-y-1/2 w-6 h-6 ${isDark ? 'text-white/20' : 'text-gray-400'} pointer-events-none rotate-90`} />
                     </div>
                   </div>
                 </div>
 
                 {/* Notifications */}
-                <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-10 lg:p-14 shadow-2xl relative overflow-hidden bg-white/[0.01] backdrop-blur-3xl group`}>
+                <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-10 lg:p-14 shadow-2xl relative overflow-hidden ${isDark ? 'bg-white/[0.01]' : ''} backdrop-blur-3xl group`}>
                   <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none transition-transform group-hover:scale-110">
                     <Bell className="w-40 h-40" />
                   </div>
 
                   <div className="relative z-10 space-y-12">
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-normal text-white tracking-tighter">Neural Alerts</h3>
-                      <p className="text-sm font-light text-white/40 tracking-tight">Map signal notifications to your primary communication hubs.</p>
+                      <h3 className={`text-2xl font-normal ${textClass} tracking-tighter`}>Neural Alerts</h3>
+                      <p className={`text-sm font-light ${textSecondaryClass} tracking-tight`}>Map signal notifications to your primary communication hubs.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -332,18 +332,18 @@ export default function SettingsPage() {
                           onClick={() => setNotifications(prev => ({ ...prev, [item.id]: !prev[item.id as keyof NotificationSettings] }))}
                           className={`group/notify flex flex-col p-8 rounded-[2rem] border transition-all duration-500 cursor-pointer overflow-hidden ${notifications[item.id as keyof NotificationSettings]
                             ? 'border-olleey-yellow/30 bg-olleey-yellow/[0.05] shadow-[0_20px_40px_-10px_rgba(251,191,36,0.1)]'
-                            : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10'}`}
+                            : isDark ? 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10' : 'border-gray-200 bg-gray-50 hover:bg-white hover:border-gray-300'}`}
                         >
                           <div className="flex items-center justify-between mb-8">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${notifications[item.id as keyof NotificationSettings] ? 'bg-olleey-yellow text-black scale-110' : 'bg-white/5 opacity-40 group-hover/notify:opacity-100 group-hover/notify:bg-white/10'}`}>
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${notifications[item.id as keyof NotificationSettings] ? 'bg-olleey-yellow text-black scale-110' : isDark ? 'bg-white/5 opacity-40 group-hover/notify:opacity-100 group-hover/notify:bg-white/10' : 'bg-gray-100 text-gray-400 group-hover/notify:bg-gray-200 group-hover/notify:text-gray-600'}`}>
                               <item.icon className="w-6 h-6" />
                             </div>
-                            <div className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${notifications[item.id as keyof NotificationSettings] ? 'border-olleey-yellow bg-olleey-yellow' : 'border-white/10'}`}>
+                            <div className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${notifications[item.id as keyof NotificationSettings] ? 'border-olleey-yellow bg-olleey-yellow' : isDark ? 'border-white/10' : 'border-gray-200'}`}>
                               {notifications[item.id as keyof NotificationSettings] && <CheckCircle2 className="w-4 h-4 text-black stroke-[3px]" />}
                             </div>
                           </div>
-                          <span className={`text-[15px] font-bold tracking-tight leading-none mb-2 ${notifications[item.id as keyof NotificationSettings] ? 'text-white' : 'text-white/40 group-hover/notify:text-white/70'}`}>{item.title}</span>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-white/20">{item.desc}</span>
+                          <span className={`text-[15px] font-bold tracking-tight leading-none mb-2 ${notifications[item.id as keyof NotificationSettings] ? (isDark ? 'text-white' : 'text-black') : (isDark ? 'text-white/40 group-hover/notify:text-white/70' : 'text-gray-400 group-hover/notify:text-gray-900')}`}>{item.title}</span>
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/20' : 'text-gray-400'}`}>{item.desc}</span>
                         </div>
                       ))}
                     </div>
@@ -360,7 +360,7 @@ export default function SettingsPage() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-10"
               >
-                <div className={`${cardClass} border border-indigo-500/20 rounded-[2.5rem] p-10 lg:p-14 shadow-2xl relative overflow-hidden bg-indigo-500/[0.02] backdrop-blur-3xl group`}>
+                <div className={`${isDark ? 'bg-indigo-500/[0.02]' : 'bg-indigo-50/30'} border border-indigo-500/20 rounded-[2.5rem] p-10 lg:p-14 shadow-2xl relative overflow-hidden backdrop-blur-3xl group`}>
                   <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none transition-transform group-hover:scale-110">
                     <FlaskConical className="w-48 h-48 text-indigo-400" />
                   </div>
@@ -389,22 +389,22 @@ export default function SettingsPage() {
                           onClick={() => setExperimentalFeatures(prev => ({ ...prev, [feature.id]: !prev[feature.id as keyof typeof experimentalFeatures] }))}
                           className={`group/lab flex items-start gap-6 p-8 rounded-[2.5rem] border transition-all duration-500 cursor-pointer ${experimentalFeatures[feature.id as keyof typeof experimentalFeatures]
                             ? 'border-indigo-500/30 bg-indigo-500/[0.05] shadow-[0_20px_40px_-10px_rgba(99,102,241,0.1)]'
-                            : 'border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/10'}`}
+                            : isDark ? 'border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/10' : 'border-gray-200 bg-gray-50 hover:bg-white hover:border-gray-300'}`}
                         >
-                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all ${experimentalFeatures[feature.id as keyof typeof experimentalFeatures] ? 'bg-indigo-500 text-white scale-110 shadow-[0_0_20px_rgba(99,102,241,0.5)]' : 'bg-white/5 opacity-40 group-hover/lab:opacity-100 group-hover/lab:bg-white/10'}`}>
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all ${experimentalFeatures[feature.id as keyof typeof experimentalFeatures] ? 'bg-indigo-500 text-white scale-110 shadow-[0_0_20px_rgba(99,102,241,0.5)]' : isDark ? 'bg-white/5 opacity-40 group-hover/lab:opacity-100 group-hover/lab:bg-white/10' : 'bg-gray-100 text-gray-400 group-hover/lab:text-gray-600 group-hover/lab:bg-gray-200'}`}>
                             <feature.icon className="w-6 h-6" />
                           </div>
                           <div className="flex-1 space-y-1">
                             <div className="flex items-center justify-between">
-                              <span className={`text-[15px] font-bold tracking-tight ${experimentalFeatures[feature.id as keyof typeof experimentalFeatures] ? 'text-white' : 'text-white/40 group-hover/lab:text-white/70'}`}>{feature.title}</span>
-                              <div className={`w-10 h-6 rounded-full relative transition-all duration-500 overflow-hidden ${experimentalFeatures[feature.id as keyof typeof experimentalFeatures] ? 'bg-indigo-500 shadow-inner' : 'bg-white/5 border border-white/5'}`}>
+                              <span className={`text-[15px] font-bold tracking-tight ${experimentalFeatures[feature.id as keyof typeof experimentalFeatures] ? (isDark ? 'text-white' : 'text-black') : (isDark ? 'text-white/40 group-hover/lab:text-white/70' : 'text-gray-400 group-hover/lab:text-gray-900')}`}>{feature.title}</span>
+                              <div className={`w-10 h-6 rounded-full relative transition-all duration-500 overflow-hidden ${experimentalFeatures[feature.id as keyof typeof experimentalFeatures] ? 'bg-indigo-500 shadow-inner' : isDark ? 'bg-white/5 border border-white/5' : 'bg-gray-200 border border-gray-300'}`}>
                                 <motion.div
                                   animate={{ x: experimentalFeatures[feature.id as keyof typeof experimentalFeatures] ? 18 : 2 }}
                                   className="absolute top-1 left-0 w-4 h-4 rounded-full bg-white shadow-lg"
                                 />
                               </div>
                             </div>
-                            <p className="text-[11px] font-medium text-white/20 leading-relaxed">{feature.desc}</p>
+                            <p className={`text-[11px] font-medium ${isDark ? 'text-white/20' : 'text-gray-400'} leading-relaxed`}>{feature.desc}</p>
                           </div>
                         </div>
                       ))}

@@ -245,17 +245,17 @@ export default function HeroAscii({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="max-w-sm p-8 bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
+                  className="max-w-sm p-8 bg-zinc-50/90 dark:bg-zinc-900/90 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl transition-colors duration-300"
                 >
                   {loading ? (
                     <div className="flex flex-col items-center justify-center py-12 space-y-8 min-h-[400px]">
                       {/* Technical Spinner */}
                       <div className="relative w-24 h-24">
-                        <div className="absolute inset-0 border-t-2 border-white rounded-full animate-spin" style={{ animationDuration: '1s' }}></div>
-                        <div className="absolute inset-3 border-r-2 border-white/50 rounded-full animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
-                        <div className="absolute inset-8 border-b-2 border-white/30 rounded-full animate-spin" style={{ animationDuration: '1.5s' }}></div>
+                        <div className="absolute inset-0 border-t-2 border-black dark:border-white rounded-full animate-spin" style={{ animationDuration: '1s' }}></div>
+                        <div className="absolute inset-3 border-r-2 border-black/50 dark:border-white/50 rounded-full animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
+                        <div className="absolute inset-8 border-b-2 border-black/30 dark:border-white/30 rounded-full animate-spin" style={{ animationDuration: '1.5s' }}></div>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full animate-pulse shadow-[0_0_10px_white]"></div>
+                          <div className="w-2 h-2 bg-black dark:bg-white rounded-full animate-pulse shadow-[0_0_10px_rgba(0,0,0,0.5)] dark:shadow-[0_0_10px_white]"></div>
                         </div>
                       </div>
 
@@ -264,36 +264,36 @@ export default function HeroAscii({
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ duration: 0.5 }}
-                          className="text-xs font-mono text-white tracking-[0.3em] font-bold"
+                          className="text-xs font-mono text-black dark:text-white tracking-[0.3em] font-bold"
                         >
                           AUTHENTICATING
                         </motion.div>
                         <div className="flex flex-col items-center gap-1">
-                          <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">
+                          <span className="text-[9px] font-mono text-black/40 dark:text-white/40 uppercase tracking-widest">
                             Establishing secure uplink
                           </span>
-                          <span className="text-[9px] font-mono text-white/30 uppercase tracking-widest animate-pulse">
+                          <span className="text-[9px] font-mono text-black/30 dark:text-white/30 uppercase tracking-widest animate-pulse">
                             Verifying credentials...
                           </span>
                         </div>
                       </div>
 
                       {/* Fake terminal log */}
-                      <div className="w-full max-w-[200px] border-t border-white/10 pt-4 mt-4">
+                      <div className="w-full max-w-[200px] border-t border-black/10 dark:border-white/10 pt-4 mt-4">
                         <div className="flex flex-col gap-1 opacity-50">
-                          <div className="flex justify-between text-[8px] font-mono text-white/40">
+                          <div className="flex justify-between text-[8px] font-mono text-black/40 dark:text-white/40">
                             <span>&gt; HANDSHAKE_INIT</span>
-                            <span className="text-green-500">OK</span>
+                            <span className="text-green-600 dark:text-green-500">OK</span>
                           </div>
-                          <div className="flex justify-between text-[8px] font-mono text-white/40">
+                          <div className="flex justify-between text-[8px] font-mono text-black/40 dark:text-white/40">
                             <span>&gt; KEY_EXCHANGE</span>
-                            <span className="text-green-500">OK</span>
+                            <span className="text-green-600 dark:text-green-500">OK</span>
                           </div>
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.8 }}
-                            className="flex justify-between text-[8px] font-mono text-white/40"
+                            className="flex justify-between text-[8px] font-mono text-black/40 dark:text-white/40"
                           >
                             <span>&gt; DECRYPTING_TOKEN</span>
                             <span className="animate-pulse">...</span>
@@ -308,19 +308,19 @@ export default function HeroAscii({
                           <button
                             type="button"
                             onClick={() => setAuthMode('login')}
-                            className={`font-mono text-xs tracking-[0.2em] transition-colors py-1 ${authMode === 'login' ? 'text-white border-b-2 border-white' : 'text-white/40 hover:text-white/60'}`}
+                            className={`font-mono text-xs tracking-[0.2em] transition-colors py-1 ${authMode === 'login' ? 'text-black dark:text-white border-b-2 border-black dark:border-white' : 'text-black/40 dark:text-white/40 hover:text-black/60 dark:hover:text-white/60'}`}
                           >
                             LOGIN
                           </button>
                           <button
                             type="button"
                             onClick={() => setAuthMode('register')}
-                            className={`font-mono text-xs tracking-[0.2em] transition-colors py-1 ${authMode === 'register' ? 'text-white border-b-2 border-white' : 'text-white/40 hover:text-white/60'}`}
+                            className={`font-mono text-xs tracking-[0.2em] transition-colors py-1 ${authMode === 'register' ? 'text-black dark:text-white border-b-2 border-black dark:border-white' : 'text-black/40 dark:text-white/40 hover:text-black/60 dark:hover:text-white/60'}`}
                           >
                             REGISTER
                           </button>
                         </div>
-                        <p className="text-[10px] text-white/30 font-mono tracking-wider uppercase mb-8">
+                        <p className="text-[10px] text-black/30 dark:text-white/30 font-mono tracking-wider uppercase mb-8">
                           {authMode === 'login' ? 'Authentication Required' : 'Invite Only - Access Code Required'}
                         </p>
                       </div>
@@ -329,47 +329,47 @@ export default function HeroAscii({
                         <div className="space-y-4">
                           {authMode === 'register' && (
                             <div className="space-y-2">
-                              <label className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] ml-1">Identity_Token</label>
+                              <label className="text-[9px] font-mono text-black/40 dark:text-white/40 uppercase tracking-[0.2em] ml-1">Identity_Token</label>
                               <input
                                 name="name"
                                 type="text"
                                 placeholder="FULL NAME"
-                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-xs focus:outline-none focus:border-white/40 focus:bg-white/5 transition-all placeholder:text-white/10"
+                                className="w-full bg-black/[0.03] dark:bg-white/[0.03] border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-black dark:text-white font-mono text-xs focus:outline-none focus:border-black/40 dark:focus:border-white/40 focus:bg-black/5 dark:focus:bg-white/5 transition-all placeholder:text-black/20 dark:placeholder:text-white/10"
                               />
                             </div>
                           )}
 
                           <div className="space-y-2">
-                            <label className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] ml-1">Access_Node</label>
+                            <label className="text-[9px] font-mono text-black/40 dark:text-white/40 uppercase tracking-[0.2em] ml-1">Access_Node</label>
                             <input
                               name="email"
                               type="email"
                               required
                               placeholder="EMAIL ADDRESS"
-                              className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-xs focus:outline-none focus:border-white/40 focus:bg-white/5 transition-all placeholder:text-white/10"
+                              className="w-full bg-black/[0.03] dark:bg-white/[0.03] border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-black dark:text-white font-mono text-xs focus:outline-none focus:border-black/40 dark:focus:border-white/40 focus:bg-black/5 dark:focus:bg-white/5 transition-all placeholder:text-black/20 dark:placeholder:text-white/10"
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] ml-1">Security_Key</label>
+                            <label className="text-[9px] font-mono text-black/40 dark:text-white/40 uppercase tracking-[0.2em] ml-1">Security_Key</label>
                             <input
                               name="password"
                               type="password"
                               required
                               placeholder="PASSWORD"
-                              className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-xs focus:outline-none focus:border-white/40 focus:bg-white/5 transition-all placeholder:text-white/10"
+                              className="w-full bg-black/[0.03] dark:bg-white/[0.03] border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-black dark:text-white font-mono text-xs focus:outline-none focus:border-black/40 dark:focus:border-white/40 focus:bg-black/5 dark:focus:bg-white/5 transition-all placeholder:text-black/20 dark:placeholder:text-white/10"
                             />
                           </div>
 
                           {authMode === 'register' && (
                             <div className="space-y-2">
-                              <label className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] ml-1">Access_Code</label>
+                              <label className="text-[9px] font-mono text-black/40 dark:text-white/40 uppercase tracking-[0.2em] ml-1">Access_Code</label>
                               <input
                                 name="accessCode"
                                 type="text"
                                 required
                                 placeholder="INVITE CODE"
-                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-xs focus:outline-none focus:border-white/40 focus:bg-white/5 transition-all placeholder:text-white/10"
+                                className="w-full bg-black/[0.03] dark:bg-white/[0.03] border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-black dark:text-white font-mono text-xs focus:outline-none focus:border-black/40 dark:focus:border-white/40 focus:bg-black/5 dark:focus:bg-white/5 transition-all placeholder:text-black/20 dark:placeholder:text-white/10"
                               />
                             </div>
                           )}
@@ -379,7 +379,7 @@ export default function HeroAscii({
                           <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="text-red-400 font-mono text-[9px] uppercase tracking-wider border border-red-500/20 p-3 bg-red-500/5 rounded-lg"
+                            className="text-red-500 font-mono text-[9px] uppercase tracking-wider border border-red-500/20 p-3 bg-red-500/5 rounded-lg"
                           >
                             {error}
                           </motion.div>
@@ -389,21 +389,21 @@ export default function HeroAscii({
                           <button
                             type="submit"
                             disabled={loading}
-                            className="relative w-full px-6 py-3.5 bg-white text-black font-mono text-xs uppercase tracking-widest hover:bg-white/90 transition-all duration-200 disabled:opacity-50 rounded-xl font-bold"
+                            className="relative w-full px-6 py-3.5 bg-black dark:bg-white text-white dark:text-black font-mono text-xs uppercase tracking-widest hover:opacity-90 transition-all duration-200 disabled:opacity-50 rounded-xl font-bold"
                           >
                             {loading ? "INITIALIZING..." : authMode === 'login' ? "Login" : "Create Account"}
                           </button>
 
                           <div className="flex items-center gap-3 px-2">
-                            <div className="flex-1 h-px bg-white/5"></div>
-                            <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em]">OR_OAUTH</span>
-                            <div className="flex-1 h-px bg-white/5"></div>
+                            <div className="flex-1 h-px bg-black/5 dark:bg-white/5"></div>
+                            <span className="text-[8px] font-mono text-black/20 dark:text-white/20 uppercase tracking-[0.3em]">OR_OAUTH</span>
+                            <div className="flex-1 h-px bg-black/5 dark:bg-white/5"></div>
                           </div>
 
                           <button
                             type="button"
                             onClick={handleGoogleSignIn}
-                            className="w-full border border-white/10 bg-white/5 py-3.5 px-4 flex items-center justify-center gap-3 hover:bg-white/10 transition-all group text-white rounded-xl"
+                            className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 py-3.5 px-4 flex items-center justify-center gap-3 hover:bg-black/10 dark:hover:bg-white/10 transition-all group text-black dark:text-white rounded-xl"
                           >
                             <svg className="w-4 h-4" viewBox="0 0 24 24">
                               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -417,7 +417,7 @@ export default function HeroAscii({
                           <button
                             type="button"
                             onClick={() => setShowAuth(false)}
-                            className="text-[9px] font-mono text-white/30 hover:text-white uppercase tracking-widest pt-2 transition-colors"
+                            className="text-[9px] font-mono text-black/30 dark:text-white/30 hover:text-black dark:hover:text-white uppercase tracking-widest pt-2 transition-colors"
                           >
                             [ Abort Sequence ]
                           </button>

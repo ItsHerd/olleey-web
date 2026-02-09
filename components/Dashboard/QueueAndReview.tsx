@@ -221,7 +221,7 @@ export function QueueAndReview({
                                                     {activeLangs.map((lang, idx) => (
                                                         <div
                                                             key={lang}
-                                                            className="relative w-6 h-6 rounded-full border border-[#0c0c0c] bg-white/5 flex items-center justify-center group/flag transition-transform hover:z-20 hover:scale-110"
+                                                            className={`relative w-6 h-6 rounded-full border ${isDark ? 'border-white/10 bg-white/5' : 'border-black/10 bg-black/5'} flex items-center justify-center group/flag transition-transform hover:z-20 hover:scale-110`}
                                                             style={{ zIndex: 10 - idx }}
                                                         >
                                                             <span className="text-[10px]">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>

@@ -95,7 +95,7 @@ export default function GuardrailsPage() {
                             <h1 className={`text-2xl md:text-3xl font-300 ${textClass} tracking-tight leading-tight`}>
                                 System <span className="font-bold">Guardrails</span>
                             </h1>
-                            <p className={`text-sm ${textSecondaryClass} max-w-xl leading-relaxed opacity-70`}>
+                            <p className={`text-sm ${textSecondaryClass} max-w-xl leading-relaxed ${isDark ? 'opacity-70' : ''}`}>
                                 Configure automated safety filters, quality gates, and deployment protocols to maintain brand integrity across all localized content.
                             </p>
                         </div>
@@ -147,7 +147,7 @@ export default function GuardrailsPage() {
                                         Scheduling Defaults
                                         <span className="text-[8px] uppercase tracking-widest opacity-20 font-mono">Sync_Policy</span>
                                     </h3>
-                                    <p className={`text-xs ${textSecondaryClass} max-w-xs leading-relaxed opacity-60`}>
+                                    <p className={`text-xs ${textSecondaryClass} max-w-xs leading-relaxed ${isDark ? 'opacity-60' : ''}`}>
                                         Asset synchronization priority for new localized workflows.
                                     </p>
                                 </div>
@@ -158,7 +158,7 @@ export default function GuardrailsPage() {
                                             onClick={() => setSchedulingDefault(v)}
                                             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${schedulingDefault === v
                                                 ? "bg-olleey-yellow text-black shadow-lg shadow-olleey-yellow/10"
-                                                : `${textSecondaryClass} hover:${textClass} hover:bg-white/5`
+                                                : `${textSecondaryClass} hover:${textClass} ${isDark ? 'hover:bg-white/5' : 'hover:bg-gray-100'}`
                                                 }`}
                                         >
                                             {v}
@@ -170,7 +170,7 @@ export default function GuardrailsPage() {
                             <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 flex items-center justify-between gap-6 group hover:border-olleey-yellow/20 transition-all duration-500`}>
                                 <div className="space-y-1">
                                     <h3 className={`text-sm font-bold ${textClass}`}>YouTube Auto-Publishing</h3>
-                                    <p className={`text-xs ${textSecondaryClass} max-w-xs leading-relaxed opacity-60`}>
+                                    <p className={`text-xs ${textSecondaryClass} max-w-xs leading-relaxed ${isDark ? 'opacity-60' : ''}`}>
                                         Distribute localized content after successful quality verification.
                                     </p>
                                 </div>
@@ -200,7 +200,7 @@ export default function GuardrailsPage() {
                             <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 flex items-center justify-between gap-6 group hover:border-olleey-yellow/20 transition-all duration-500`}>
                                 <div className="space-y-1">
                                     <h3 className={`text-sm font-bold ${textClass}`}>Universal Manual Review</h3>
-                                    <p className={`text-xs ${textSecondaryClass} max-w-xs leading-relaxed opacity-60`}>
+                                    <p className={`text-xs ${textSecondaryClass} max-w-xs leading-relaxed ${isDark ? 'opacity-60' : ''}`}>
                                         Mandate human verification for every localized asset.
                                     </p>
                                 </div>
@@ -211,7 +211,7 @@ export default function GuardrailsPage() {
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
                                         <h3 className={`text-sm font-bold ${textClass}`}>AI Confidence Threshold</h3>
-                                        <p className={`text-xs ${textSecondaryClass} leading-relaxed max-w-xs opacity-60`}>
+                                        <p className={`text-xs ${textSecondaryClass} leading-relaxed max-w-xs ${isDark ? 'opacity-60' : ''}`}>
                                             Manual review trigger if neural confidence falls below target.
                                         </p>
                                     </div>
@@ -230,11 +230,11 @@ export default function GuardrailsPage() {
                                         max="100"
                                         value={qualityThreshold}
                                         onChange={(e) => setQualityThreshold(parseInt(e.target.value))}
-                                        className={`w-full h-1.5 rounded-full appearance-none cursor-pointer accent-olleey-yellow bg-white/10 border border-white/5`}
+                                        className={`w-full h-1.5 rounded-full appearance-none cursor-pointer accent-olleey-yellow ${isDark ? 'bg-white/10 border-white/5' : 'bg-gray-200 border-gray-300'} border`}
                                     />
                                     <div className="flex justify-between mt-3">
-                                        <span className="text-[8px] font-black uppercase tracking-widest opacity-20 font-mono italic">Efficiency Mode</span>
-                                        <span className="text-[8px] font-black uppercase tracking-widest text-olleey-yellow/40 font-mono italic">Studio Grade</span>
+                                        <span className={`text-[8px] font-black uppercase tracking-widest ${isDark ? 'opacity-20' : 'text-gray-400'} font-mono italic`}>Efficiency Mode</span>
+                                        <span className={`text-[8px] font-black uppercase tracking-widest ${isDark ? 'text-olleey-yellow/40' : 'text-olleey-yellow/80'} font-mono italic`}>Studio Grade</span>
                                     </div>
                                 </div>
                             </div>
@@ -247,7 +247,7 @@ export default function GuardrailsPage() {
                     {/* Content Safety Card */}
                     <motion.div variants={itemVariants} className="relative group">
                         <div className="absolute inset-0 bg-olleey-yellow/5 rounded-2xl blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-700" />
-                        <div className={`${cardClass} relative z-10 p-8 border border-white/5 rounded-2xl overflow-hidden`}>
+                        <div className={`${cardClass} relative z-10 p-8 border ${borderClass} rounded-2xl overflow-hidden`}>
                             <div className="space-y-6 relative z-20">
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2">
@@ -259,12 +259,12 @@ export default function GuardrailsPage() {
                                     <h3 className={`text-lg font-bold ${textClass} tracking-tight`}>
                                         Safety <span className="text-olleey-yellow">Filters</span>
                                     </h3>
-                                    <p className={`text-xs ${textSecondaryClass} leading-relaxed opacity-60`}>
+                                    <p className={`text-xs ${textSecondaryClass} leading-relaxed ${isDark ? 'opacity-60' : ''}`}>
                                         Neural semantic scans for profanity and cultural resonance. Adapts to your niche automatically.
                                     </p>
                                 </div>
 
-                                <div className="space-y-2 pt-4 border-t border-white/5">
+                                <div className={`space-y-2 pt-4 border-t ${borderClass}`}>
                                     {[
                                         "Semantic Analysis",
                                         "Cultural Sensitivity",
@@ -272,7 +272,7 @@ export default function GuardrailsPage() {
                                     ].map((feature, i) => (
                                         <div key={i} className="flex items-center gap-2">
                                             <CheckCircle2 className="w-3 h-3 text-olleey-yellow opacity-40" />
-                                            <span className={`text-[9px] uppercase font-bold tracking-widest opacity-40`}>{feature}</span>
+                                            <span className={`text-[9px] uppercase font-bold tracking-widest ${isDark ? 'opacity-40' : 'text-gray-500'}`}>{feature}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -285,15 +285,15 @@ export default function GuardrailsPage() {
                     </motion.div>
 
                     {/* Danger Zone */}
-                    <motion.div variants={itemVariants} className={`p-8 border ${borderClass} bg-white/[0.01] rounded-2xl space-y-4`}>
+                    <motion.div variants={itemVariants} className={`p-8 border ${borderClass} ${isDark ? 'bg-white/[0.01]' : 'bg-red-50/50'} rounded-2xl space-y-4`}>
                         <div className="flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4 text-red-500/40" />
-                            <h3 className="text-[10px] font-black text-white/40 uppercase tracking-widest font-mono">Archive Protocol</h3>
+                            <h3 className={`text-[10px] font-black ${isDark ? 'text-white/40' : 'text-red-900/40'} uppercase tracking-widest font-mono`}>Archive Protocol</h3>
                         </div>
-                        <p className="text-[10px] text-white/20 leading-relaxed font-medium">
+                        <p className={`text-[10px] ${isDark ? 'text-white/20' : 'text-red-900/40'} leading-relaxed font-medium`}>
                             Revert all parameters to factory defaults. This action is terminal and affects active runs.
                         </p>
-                        <button className={`w-full py-3 rounded-xl border border-white/5 text-white/20 hover:text-red-500 hover:border-red-500/20 hover:bg-red-500/5 transition-all text-[9px] font-black uppercase tracking-widest font-mono`}>
+                        <button className={`w-full py-3 rounded-xl border ${borderClass} ${isDark ? 'text-white/20 hover:text-red-500 hover:border-red-500/20 hover:bg-red-500/5' : 'text-red-900/40 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200'} transition-all text-[9px] font-black uppercase tracking-widest font-mono`}>
                             Reset Policy
                         </button>
                     </motion.div>
