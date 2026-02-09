@@ -108,7 +108,7 @@ export function useSupabaseVideos(
             count: videosWithLocalizations.length,
             sample: videosWithLocalizations[0] ? {
               title: videosWithLocalizations[0].title,
-              localizations: Object.keys(videosWithLocalizations[0].localizations || {})
+              localizations: Object.keys((videosWithLocalizations[0] as any).localizations || {})
             } : null
           });
           

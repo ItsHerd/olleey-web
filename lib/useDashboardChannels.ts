@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { API_BASE_URL, authenticatedFetch, LanguageChannel } from "./api";
 import { useSupabaseChannels } from "./useSupabase";
+import { ChannelStatus } from "./schema";
 
 export function useDashboardChannels(params: { projectId?: string; enabled?: boolean; user_id?: string } = {}) {
   const { projectId, enabled = true, user_id } = params;
@@ -26,12 +27,12 @@ export function useDashboardChannels(params: { projectId?: string; enabled?: boo
         language_name: sc.language_name,
         created_at: sc.created_at,
         status: {
-          status: "active",
+          status: ChannelStatus.ACTIVE,
           permissions: ["read"]
         },
         videos_count: sc.video_count,
         last_upload: null,
-        is_paused: sc.is_paused || false
+        is_paused: (sc as any).is_paused || false
       }));
       
       setChannels(mapped);

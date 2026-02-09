@@ -2,21 +2,17 @@ import React, { useState } from "react";
 import { ParentVideoRow } from "./ParentVideoRow";
 import { SatelliteRow } from "./SatelliteRow";
 import { useTheme } from "@/lib/useTheme";
-import { Video } from "@/lib/api"; // Basic video type
+import { Video, LocalizationInfo as APILocalizationInfo } from "@/lib/api";
+import { LocalizationStatus } from "@/lib/schema";
 import { CheckSquare, UploadCloud, X } from "lucide-react";
 
-// Types
-type LocalizationStatus = "live" | "draft" | "processing" | "not-started" | "failed";
-
-interface LocalizationInfo {
-    status: LocalizationStatus;
-    progress: number;
-    url?: string;
-    views?: number;
-    video_id?: string;
+// Extend the API LocalizationInfo to include UI-specific fields
+interface LocalizationInfo extends APILocalizationInfo {
     confidence?: number;
-    title?: string;
     originalTitle?: string;
+    video_id?: string;
+    views?: number;
+    url?: string;
 }
 
 interface VideoWithLocalizations extends Video {
@@ -126,7 +122,7 @@ export function SmartVideoTable({
 
                                         // If localization object exists, use it. If not, create a dummy one for "Not Started"
                                         const effectiveLoc: LocalizationInfo = localization || {
-                                            status: "not-started",
+                                            status: LocalizationStatus.NOT_STARTED,
                                             progress: 0,
                                             originalTitle: video.title
                                         };

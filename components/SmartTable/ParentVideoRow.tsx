@@ -2,14 +2,13 @@ import React from "react";
 import { ChevronDown, ChevronRight, Clock, Video } from "lucide-react";
 import { useTheme } from "@/lib/useTheme";
 import { StatusChip } from "@/components/ui/StatusChip";
+import { LocalizationInfo as APILocalizationInfo } from "@/lib/api";
+import { LocalizationStatus } from "@/lib/schema";
 
-// Duplicate types for now (should be shared)
-type LocalizationStatus = "live" | "draft" | "processing" | "not-started" | "failed";
-
-interface LocalizationInfo {
-    status: LocalizationStatus;
-    url?: string;
+// Extend the API LocalizationInfo to include UI-specific fields
+interface LocalizationInfo extends APILocalizationInfo {
     views?: number;
+    url?: string;
     video_id?: string;
     confidence?: number;
 }
@@ -63,15 +62,15 @@ export function ParentVideoRow({
 
     const getAggregatedStatus = () => {
         const localizations = Object.values(video.localizations || {});
-        const activeLocalizations = localizations.filter(l => l.status !== "not-started");
+        const activeLocalizations = localizations.filter(l => l.status !== LocalizationStatus.NOT_STARTED);
 
         if (activeLocalizations.length === 0) {
             return { label: "Ready to Dub", color: "text-gray-400", bg: "bg-gray-500/10", border: "border-gray-500/20" };
         }
 
-        const pendingCount = activeLocalizations.filter(l => l.status === "draft").length;
-        const processingCount = activeLocalizations.filter(l => l.status === "processing").length;
-        const failedCount = activeLocalizations.filter(l => l.status === "failed").length;
+        const pendingCount = activeLocalizations.filter(l => l.status === LocalizationStatus.DRAFT).length;
+        const processingCount = activeLocalizations.filter(l => l.status === LocalizationStatus.PROCESSING).length;
+        const failedCount = activeLocalizations.filter(l => l.status === LocalizationStatus.FAILED).length;
 
         if (failedCount > 0) {
             return { label: `${failedCount} Failed`, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20" };
@@ -128,7 +127,7 @@ export function ParentVideoRow({
             <div className="flex items-center gap-1.5 min-w-[120px]">
                 {Object.entries(video.localizations || {}).map(([langCode, loc]) => {
                     const lang = languageOptions.find(l => l.code === langCode);
-                    if (!lang || loc.status === "not-started") return null;
+                    if (!lang || loc.status === LocalizationStatus.NOT_STARTED) return null;
 
                     return (
                         <div key={langCode} className="relative group/flag">
@@ -136,19 +135,19 @@ export function ParentVideoRow({
                                 {lang.flag}
                             </span>
                             {/* Status Dot */}
-                            {loc.status === "draft" && (
+                            {loc.status === LocalizationStatus.DRAFT && (
                                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full ring-1 ring-black" />
                             )}
-                            {loc.status === "failed" && (
+                            {loc.status === LocalizationStatus.FAILED && (
                                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full ring-1 ring-black" />
                             )}
-                            {loc.status === "processing" && (
+                            {loc.status === LocalizationStatus.PROCESSING && (
                                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full ring-1 ring-black" />
                             )}
                         </div>
                     );
                 })}
-                {Object.values(video.localizations || {}).filter(l => l.status !== "not-started").length === 0 && (
+                {Object.values(video.localizations || {}).filter(l => l.status !== LocalizationStatus.NOT_STARTED).length === 0 && (
                     <span className={`text-xs ${textSecondaryClass} italic`}>No active languages</span>
                 )}
             </div>

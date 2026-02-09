@@ -3,19 +3,17 @@ import { Play, RotateCw, AlertCircle, Loader2, CheckCircle, UploadCloud } from "
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/lib/useTheme";
 import { StatusChip } from "@/components/ui/StatusChip";
+import { LocalizationInfo as APILocalizationInfo } from "@/lib/api";
+import { LocalizationStatus } from "@/lib/schema";
 
-// Duplicate types for now to avoid circular deps or large refactors, 
-// can be moved to a types file later.
-type LocalizationStatus = "live" | "draft" | "processing" | "not-started" | "failed";
-
-interface LocalizationInfo {
-    status: LocalizationStatus;
-    url?: string;
+// Extend the API LocalizationInfo to include UI-specific fields
+interface LocalizationInfo extends APILocalizationInfo {
     views?: number;
+    url?: string;
     video_id?: string;
-    confidence?: number; // New field from requirements, might be missing in API currently
-    title?: string; // Current title
-    originalTitle?: string; // For ghost text
+    confidence?: number;
+    title?: string;
+    originalTitle?: string;
 }
 
 interface SatelliteRowProps {
@@ -75,7 +73,7 @@ export function SatelliteRow({
 
     // Simulate progress for "processing" status
     useEffect(() => {
-        if (localization.status === "processing") {
+        if (localization.status === LocalizationStatus.PROCESSING) {
             const interval = setInterval(() => {
                 setProcessingStage(prev => (prev + 1) % PROCESSING_STAGES.length);
                 setProgress(prev => Math.min(prev + (100 / PROCESSING_STAGES.length), 95));
@@ -101,7 +99,7 @@ export function SatelliteRow({
             className={`grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center px-4 py-3 pl-12 border-b ${borderClass} bg-black/20 transition-colors group relative ${localization.status === "processing" ? "cursor-pointer hover:bg-amber-500/5 border-amber-500/10" : bgHoverClass
                 }`}
             onClick={() => {
-                if (localization.status === "processing" && onViewDetails) {
+                if (localization.status === LocalizationStatus.PROCESSING && onViewDetails) {
                     // Use a dummy job ID for simulation if none exists
                     onViewDetails(localization.video_id || `job-${languageCode}`, localization.title || "Untitled Video", languageName);
                 }
@@ -143,7 +141,7 @@ export function SatelliteRow({
 
             {/* Status */}
             <div className="min-w-[150px]">
-                {localization.status === "processing" ? (
+                {localization.status === LocalizationStatus.PROCESSING ? (
                     <div className="flex flex-col gap-1.5 w-full max-w-[180px]">
                         <div className="flex items-center justify-between text-xs">
                             <span className="flex items-center gap-1.5 font-medium text-olleey-yellow">
@@ -165,10 +163,10 @@ export function SatelliteRow({
                     <StatusChip
                         status={localization.status}
                         size="sm"
-                        label={localization.status === "live" ? "Published" : undefined}
+                        label={localization.status === LocalizationStatus.LIVE ? "Published" : undefined}
                     />
                 )}
-                {(localization.status === "draft" || localization.status === "failed") && localization.confidence !== undefined && (
+                {(localization.status === LocalizationStatus.DRAFT || localization.status === LocalizationStatus.FAILED) && localization.confidence !== undefined && (
                     <span className={`text-[10px] ${(localization.confidence || 100) < 70 ? "text-amber-500" : textSecondaryClass} block mt-1`}>
                         AI Confidence: {localization.confidence}%
                     </span>
@@ -179,20 +177,20 @@ export function SatelliteRow({
             <div className="flex items-center gap-2">
                 <button
                     onClick={() => onPreview(languageCode, localization.video_id)}
-                    disabled={isProcessingAction || localization.status === "not-started" || localization.status === "processing"}
+                    disabled={isProcessingAction || localization.status === LocalizationStatus.NOT_STARTED || localization.status === LocalizationStatus.PROCESSING}
                     className={`p-2 rounded-lg border ${borderClass} ${textSecondaryClass} hover:${textClass} hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                     title="Quick Preview"
                 >
                     <Play className="w-4 h-4" />
                 </button>
 
-                {localization.status !== "live" && (
+                {localization.status !== LocalizationStatus.LIVE && (
                     <button
                         onClick={() => onPublish(languageCode, localization.video_id)}
-                        disabled={isProcessingAction || localization.status === "processing" || localization.status === "not-started"}
+                        disabled={isProcessingAction || localization.status === LocalizationStatus.PROCESSING || localization.status === LocalizationStatus.NOT_STARTED}
                         className={`
                         flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all
-                        ${localization.status === "not-started"
+                        ${localization.status === LocalizationStatus.NOT_STARTED
                                 ? "bg-gray-800 text-gray-500 cursor-not-allowed"
                                 : "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500 hover:text-white hover:border-transparent hover:shadow-[0_0_15px_rgba(99,102,241,0.5)]"
                             }

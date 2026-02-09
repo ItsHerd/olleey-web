@@ -675,7 +675,7 @@ export function ManualProcessView({
                                                                 <p className={`text-[15px] font-bold ${selectedVideoId === video.video_id ? 'text-olleey-yellow' : isDark ? 'text-white/80' : 'text-gray-700'} ${isDark ? 'group-hover/item:text-white' : 'group-hover/item:text-gray-900'} transition-colors line-clamp-2 leading-tight tracking-tight`}>{video.title}</p>
                                                                 <div className="flex items-center gap-4 mt-3">
                                                                     <span className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>
-                                                                        {new Date(video.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                                        {new Date(video.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                                     </span>
                                                                     <div className={`w-1 h-1 rounded-full ${inputBorderClass}`} />
                                                                     <span className="text-[10px] font-black uppercase tracking-widest text-purple-400/60">STORAGE VAULT</span>
