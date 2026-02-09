@@ -3,6 +3,8 @@
  * Used for frontend-only demo when backend is not available
  */
 
+import { VideoStatus } from "./schema";
+
 export const DEMO_USER_ID = "096c8549-ce41-4b94-b7f7-25e39eb7578b";
 
 export const YC_CEO_DEMO_VIDEO = {
@@ -15,7 +17,7 @@ export const YC_CEO_DEMO_VIDEO = {
   thumbnail_url: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200",
   duration: 180,
   view_count: 0,
-  status: "draft",
+  status: VideoStatus.DRAFT,
   channel_id: "demo_channel_en",
   channel_name: "English Master",
   published_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),

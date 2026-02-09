@@ -225,11 +225,12 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
       // Map existing localizations from the video object
       if (video.localizations) {
         Object.entries(video.localizations).forEach(([lang, loc]) => {
+          const locTyped = loc as any; // Cast to any since localizations structure varies
           localizations[lang] = {
-            status: loc.status as LocalizationStatus,
-            progress: loc.status === LocalizationStatus.LIVE ? 100 : loc.status === LocalizationStatus.DRAFT ? 100 : 50,
-            job_id: loc.job_id,
-            video_url: (loc as any).video_url || (loc as any).storage_url,
+            status: locTyped.status as LocalizationStatus,
+            progress: locTyped.status === LocalizationStatus.LIVE ? 100 : locTyped.status === LocalizationStatus.DRAFT ? 100 : 50,
+            job_id: locTyped.job_id,
+            video_url: locTyped.video_url || locTyped.storage_url,
           };
         });
       }
