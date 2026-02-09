@@ -209,20 +209,20 @@ export default function JobsPage() {
     if (loading && jobs.length === 0) {
         return (
             <div className={`w-full h-full ${bgClass} p-8`}>
-                <div className="h-40 w-full bg-white/[0.03] rounded-[2.5rem] mb-12 animate-pulse flex flex-col justify-center p-12">
-                    <div className="h-10 w-48 bg-white/10 rounded-full mb-4" />
-                    <div className="h-4 w-96 bg-white/5 rounded-full" />
+                <div className={`h-40 w-full ${isDark ? 'bg-white/[0.03]' : 'bg-black/[0.03]'} rounded-[2.5rem] mb-12 animate-pulse flex flex-col justify-center p-12`}>
+                    <div className={`h-10 w-48 ${isDark ? 'bg-white/10' : 'bg-black/10'} rounded-full mb-4`} />
+                    <div className={`h-4 w-96 ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-full`} />
                 </div>
                 <div className="space-y-4">
                     {[...Array(8)].map((_, i) => (
-                        <div key={i} className="flex items-center gap-6 p-6 border border-white/[0.03] bg-white/[0.01] rounded-[2.5rem] animate-pulse">
-                            <div className="w-24 h-14 bg-white/5 rounded-xl shrink-0" />
+                        <div key={i} className={`flex items-center gap-6 p-6 border ${isDark ? 'border-white/[0.03] bg-white/[0.01]' : 'border-black/[0.03] bg-black/[0.01]'} rounded-[2.5rem] animate-pulse`}>
+                            <div className={`w-24 h-14 ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-xl shrink-0`} />
                             <div className="flex-1 space-y-3">
-                                <div className="h-4 bg-white/10 rounded-full w-1/3" />
-                                <div className="h-3 bg-white/5 rounded-full w-1/4" />
+                                <div className={`h-4 ${isDark ? 'bg-white/10' : 'bg-black/10'} rounded-full w-1/3`} />
+                                <div className={`h-3 ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-full w-1/4`} />
                             </div>
-                            <div className="w-32 h-8 bg-white/10 rounded-full" />
-                            <div className="w-40 h-8 bg-white/5 rounded-full" />
+                            <div className={`w-32 h-8 ${isDark ? 'bg-white/10' : 'bg-black/10'} rounded-full`} />
+                            <div className={`w-40 h-8 ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-full`} />
                         </div>
                     ))}
                 </div>
@@ -241,22 +241,22 @@ export default function JobsPage() {
                 {/* Cinema-grade Header */}
                 <motion.div
                     variants={itemVariants}
-                    className="relative group rounded-[2.5rem] overflow-hidden border border-white/5 min-h-[320px] flex items-end shadow-2xl"
+                    className={`relative group rounded-[2.5rem] overflow-hidden border ${borderClass} min-h-[320px] flex items-end shadow-2xl ${isDark ? 'bg-[#0a0a0a]' : 'bg-gray-100'}`}
                 >
                     <img
                         src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=2000"
-                        className="absolute inset-0 w-full h-full object-cover brightness-[0.4] group-hover:scale-110 transition-transform duration-[8000ms] blur-[2px] group-hover:blur-0"
+                        className={`absolute inset-0 w-full h-full object-cover ${isDark ? 'brightness-[0.4]' : 'brightness-[0.8] opacity-20'} group-hover:scale-110 transition-transform duration-[8000ms] blur-[2px] group-hover:blur-0`}
                         alt=""
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-r from-[#0a0a0a] via-transparent to-transparent" />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${isDark ? 'from-[#0a0a0a] via-[#0a0a0a]/40' : 'from-gray-100 via-gray-100/40'} to-transparent`} />
+                    <div className={`absolute inset-x-0 bottom-0 h-full bg-gradient-to-r ${isDark ? 'from-[#0a0a0a]' : 'from-gray-100'} via-transparent to-transparent`} />
 
                     <div className="relative z-10 p-12 w-full flex flex-col md:flex-row md:items-end justify-between gap-8">
                         <div>
                             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-olleey-yellow/10 backdrop-blur-3xl border border-olleey-yellow/20 text-[10px] font-black uppercase tracking-[0.3em] text-olleey-yellow mb-6 shadow-[0_0_30px_rgba(251,191,36,0.1)]">
                                 <Zap className="w-3.5 h-3.5 shadow-sm" /> Production Core
                             </div>
-                            <h1 className="text-4xl md:text-6xl font-normal text-white tracking-tighter mb-3 leading-none">
+                            <h1 className={`text-4xl md:text-6xl font-normal ${textClass} tracking-tighter mb-3 leading-none`}>
                                 Workflows
                             </h1>
                             <p className={`text-sm md:text-base ${textSecondaryClass} max-w-2xl font-light tracking-tight opacity-60 leading-relaxed`}>
@@ -265,12 +265,12 @@ export default function JobsPage() {
                         </div>
                         <div className="flex items-center gap-6">
                             <div className="hidden xl:flex flex-col items-end opacity-40 hover:opacity-100 transition-opacity">
-                                <span className="text-[10px] font-black uppercase tracking-widest">Network Status</span>
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white' : 'text-slate-500'}`}>Network Status</span>
                                 <span className="text-xl font-normal text-emerald-400">OPTIMIZED</span>
                             </div>
                             <Button
                                 onClick={refetchJobs}
-                                className="w-14 h-14 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center text-white p-0 group"
+                                className={`w-14 h-14 rounded-full ${isDark ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'} border transition-all flex items-center justify-center p-0 group`}
                             >
                                 <RefreshCw className={`w-5 h-5 group-active:rotate-180 transition-transform duration-500`} />
                             </Button>
@@ -300,11 +300,11 @@ export default function JobsPage() {
                 {/* Glassmorphic Production Monitor */}
                 <motion.div
                     variants={itemVariants}
-                    className={`${cardClass} border border-white/5 rounded-[2.5rem] p-1 shadow-2xl shadow-black/40 overflow-hidden relative group bg-white/[0.01]`}
+                    className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-1 shadow-2xl shadow-black/40 overflow-hidden relative group ${isDark ? 'bg-white/[0.01]' : 'bg-slate-50/50'}`}
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-olleey-yellow/5 via-transparent to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                    <div className="relative flex flex-col md:flex-row items-stretch divide-y md:divide-y-0 md:divide-x divide-white/[0.05]">
-                        <div className="flex-1 px-10 py-8 flex flex-col justify-center hover:bg-white/[0.02] transition-colors group/stat">
+                    <div className={`relative flex flex-col md:flex-row items-stretch divide-y md:divide-y-0 md:divide-x ${isDark ? 'divide-white/[0.05]' : 'divide-slate-200'}`}>
+                        <div className={`flex-1 px-10 py-8 flex flex-col justify-center ${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-white'} transition-colors group/stat`}>
                             <div className="flex items-center gap-2.5 mb-3">
                                 <BarChart3 className="w-3.5 h-3.5 text-indigo-400 opacity-60 group-hover/stat:opacity-100 transition-opacity" />
                                 <span className={`text-[11px] font-black uppercase tracking-[0.25em] ${textSecondaryClass} opacity-40`}>Cycle Throughput</span>
@@ -315,7 +315,7 @@ export default function JobsPage() {
                             </div>
                         </div>
 
-                        <div className="flex-1 px-10 py-8 flex flex-col justify-center bg-white/[0.03] hover:bg-white/[0.05] transition-colors group/stat">
+                        <div className={`flex-1 px-10 py-8 flex flex-col justify-center ${isDark ? 'bg-white/[0.03] hover:bg-white/[0.05]' : 'bg-white hover:bg-slate-50'} transition-colors group/stat`}>
                             <div className="flex items-center gap-2.5 mb-3">
                                 <Activity className="w-3.5 h-3.5 text-orange-500 animate-pulse" />
                                 <span className={`text-[11px] font-black uppercase tracking-[0.25em] text-orange-500/60`}>Live Pipelines</span>
@@ -326,7 +326,7 @@ export default function JobsPage() {
                             </div>
                         </div>
 
-                        <div className="flex-1 px-10 py-8 flex flex-col justify-center hover:bg-white/[0.02] transition-colors group/stat">
+                        <div className={`flex-1 px-10 py-8 flex flex-col justify-center ${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-white'} transition-colors group/stat`}>
                             <div className="flex items-center gap-2.5 mb-3">
                                 <Globe className="w-3.5 h-3.5 text-emerald-500 opacity-60 group-hover/stat:opacity-100 transition-opacity" />
                                 <span className={`text-[11px] font-black uppercase tracking-[0.25em] text-emerald-500/60`}>System Readiness</span>
@@ -337,7 +337,7 @@ export default function JobsPage() {
                             </div>
                         </div>
 
-                        <div className="flex-1 px-10 py-8 flex flex-col justify-center hover:bg-white/[0.02] transition-colors group/stat">
+                        <div className={`flex-1 px-10 py-8 flex flex-col justify-center ${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-white'} transition-colors group/stat`}>
                             <div className="flex items-center gap-2.5 mb-3">
                                 <AlertCircle className="w-3.5 h-3.5 text-red-500 opacity-60 group-hover/stat:opacity-100 transition-opacity" />
                                 <span className={`text-[11px] font-black uppercase tracking-[0.25em] text-red-500/60`}>Failed Intercepts</span>
@@ -352,8 +352,8 @@ export default function JobsPage() {
 
                 {/* Filter Controls & Table Area */}
                 <motion.div variants={itemVariants} className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-6">
-                        <div className="flex items-center gap-2 p-1 bg-white/3 border border-white/5 rounded-full overflow-x-auto custom-scrollbar no-scrollbar">
+                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-6 border-b ${borderClass} pb-6`}>
+                        <div className={`flex items-center gap-2 p-1 ${isDark ? 'bg-white/3 border-white/5' : 'bg-slate-100 border-slate-200'} border rounded-full overflow-x-auto custom-scrollbar no-scrollbar`}>
                             {[
                                 { id: "all", label: "Master Log" },
                                 { id: "processing", label: "Active Pipelines" },
@@ -366,7 +366,7 @@ export default function JobsPage() {
                                     onClick={() => setFilter(tab.id as JobFilter)}
                                     className={`px-6 py-2.5 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-300 relative whitespace-nowrap ${filter === tab.id
                                         ? "bg-olleey-yellow text-black shadow-lg shadow-olleey-yellow/20"
-                                        : "text-white/30 hover:text-white hover:bg-white/5"
+                                        : `${isDark ? 'text-white/30 hover:text-white hover:bg-white/5' : 'text-slate-400 hover:text-slate-900 hover:bg-white'}`
                                         }`}
                                 >
                                     {tab.label}
@@ -374,14 +374,14 @@ export default function JobsPage() {
                             ))}
                         </div>
 
-                        <div className="flex items-center gap-4 text-white/20">
+                        <div className={`flex items-center gap-4 ${isDark ? 'text-white/20' : 'text-slate-400'}`}>
                             <BarChart3 className="w-4 h-4" />
                             <span className="text-[11px] font-black uppercase tracking-widest">Global Ops Feed</span>
                         </div>
                     </div>
 
                     {/* Jobs Table Container */}
-                    <div className="flex-1 min-h-[600px] border border-white/5 rounded-[2.5rem] overflow-hidden bg-white/[0.01] shadow-2xl">
+                    <div className={`flex-1 min-h-[600px] border ${borderClass} rounded-[2.5rem] overflow-hidden ${isDark ? 'bg-white/[0.01]' : 'bg-white'} shadow-2xl`}>
                         <JobsTable
                             jobs={filteredJobs}
                             projectId={selectedProject?.id}

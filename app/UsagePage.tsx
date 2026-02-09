@@ -53,14 +53,15 @@ export default function UsagePage() {
     const textClass = theme === "light" ? "text-light-text" : "text-white";
     const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-white/40";
     const borderClass = theme === "light" ? "border-light-border" : "border-white/5";
+    const isDark = theme === "dark";
 
     if (loading) {
         return (
             <div className={`flex flex-col items-center justify-center flex-1 ${bgClass} p-8 animate-pulse`}>
-                <div className="w-20 h-20 rounded-[2.5rem] bg-white/5 border border-white/10 flex items-center justify-center mb-8">
+                <div className={`w-20 h-20 rounded-[2.5rem] ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'} border flex items-center justify-center mb-8`}>
                     <BarChart3 className="w-10 h-10 text-olleey-yellow stroke-[1.5px]" />
                 </div>
-                <p className="text-xs font-black uppercase tracking-[0.4em] text-white/30">Aggregating Consumption...</p>
+                <p className={`text-xs font-black uppercase tracking-[0.4em] ${isDark ? 'text-white/30' : 'text-black/30'}`}>Aggregating Consumption...</p>
             </div>
         );
     }
@@ -74,20 +75,20 @@ export default function UsagePage() {
                 className="max-w-6xl mx-auto space-y-16"
             >
                 {/* Cinema Header */}
-                <motion.div variants={itemVariants} className="relative group rounded-[2.5rem] overflow-hidden border border-white/5 min-h-[240px] flex items-end shadow-2xl bg-[#0c0c0c]">
+                <motion.div variants={itemVariants} className={`relative group rounded-[2.5rem] overflow-hidden border ${borderClass} min-h-[240px] flex items-end shadow-2xl ${isDark ? 'bg-[#0c0c0c]' : 'bg-gray-100'}`}>
                     <img
                         src="https://images.unsplash.com/photo-1551288049-bbbda536339a?auto=format&fit=crop&q=80&w=2000"
-                        className="absolute inset-0 w-full h-full object-cover brightness-[0.25] group-hover:scale-105 transition-transform duration-[10000ms]"
+                        className={`absolute inset-0 w-full h-full object-cover ${isDark ? 'brightness-[0.25]' : 'brightness-[0.8] opacity-20'} group-hover:scale-105 transition-transform duration-[10000ms]`}
                         alt=""
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0c] via-[#0c0c0c]/80 to-transparent" />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${isDark ? 'from-[#0c0c0c] via-[#0c0c0c]/80' : 'from-gray-100 via-gray-100/80'} to-transparent`} />
 
                     <div className="relative z-10 p-12 w-full flex flex-col md:flex-row md:items-end justify-between gap-8">
                         <div>
                             <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-olleey-yellow/10 backdrop-blur-3xl border border-olleey-yellow/20 text-[10px] font-black uppercase tracking-[0.3em] text-olleey-yellow mb-6 shadow-[0_0_30px_rgba(251,191,36,0.1)]">
                                 <CreditCard className="w-4 h-4 shadow-sm" /> Billing & Logistics
                             </div>
-                            <h1 className="text-4xl md:text-6xl font-normal text-white tracking-tighter mb-3 leading-none">
+                            <h1 className={`text-4xl md:text-6xl font-normal ${textClass} tracking-tighter mb-3 leading-none`}>
                                 Usage Hub
                             </h1>
                             <p className={`${textSecondaryClass} text-sm md:text-base max-w-2xl font-light tracking-tight opacity-60 leading-relaxed`}>
@@ -110,7 +111,7 @@ export default function UsagePage() {
                             type: "Free Tier",
                             desc: "Core neural access for startups",
                             benefit: "Standard priority",
-                            color: "text-white/40",
+                            color: isDark ? "text-white/40" : "text-slate-500",
                             active: true
                         },
                         {
@@ -131,7 +132,7 @@ export default function UsagePage() {
                             type: "Enterprise",
                             desc: "Unlimited multi-channel deployment",
                             benefit: "Instant processing",
-                            color: "text-indigo-400",
+                            color: isDark ? "text-indigo-400" : "text-indigo-600",
                         }
                     ].map((tier, idx) => (
                         <motion.div
@@ -145,37 +146,37 @@ export default function UsagePage() {
                                 </div>
                             )}
                             <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none group-hover:scale-110 group-hover:opacity-[0.05] transition-all">
-                                <Rocket className="w-32 h-32" />
+                                <Rocket className={`w-32 h-32 ${isDark ? 'text-white' : 'text-black'}`} />
                             </div>
 
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-12">
                                     <span className={`text-[10px] font-black ${textSecondaryClass} uppercase tracking-[0.3em]`}>Tier Status</span>
-                                    <span className={`px-4 py-1.5 rounded-full bg-white/5 ${tier.color} text-[9px] font-black uppercase tracking-widest border border-white/10 backdrop-blur-md shadow-inner`}>
+                                    <span className={`px-4 py-1.5 rounded-full ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'} ${tier.color} text-[9px] font-black uppercase tracking-widest border backdrop-blur-md shadow-inner`}>
                                         {tier.type}
                                     </span>
                                 </div>
                                 <div className="flex flex-col gap-1 mb-6">
-                                    <h3 className="text-xl font-bold text-white/50 group-hover:text-white transition-colors">{tier.name}</h3>
+                                    <h3 className={`text-xl font-bold ${isDark ? 'text-white/50 group-hover:text-white' : 'text-slate-400 group-hover:text-slate-900'} transition-colors`}>{tier.name}</h3>
                                     <div className="flex items-baseline gap-2">
-                                        <span className={`text-6xl font-light tracking-tighter ${tier.color.includes('white') ? 'text-white' : tier.color}`}>
+                                        <span className={`text-6xl font-light tracking-tighter ${tier.color.includes('white') ? textClass : tier.color}`}>
                                             {tier.price.includes('PAYG') ? '' : '$'}{tier.price}
                                         </span>
                                         {tier.id !== 'pro' && <span className={`text-xl ${textSecondaryClass} font-light tracking-tight opacity-40`}>/mo</span>}
                                     </div>
                                 </div>
                                 <p className={`text-[13px] ${textSecondaryClass} font-medium tracking-tight leading-relaxed opacity-60 mb-2`}>{tier.desc}</p>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-olleey-yellow/40">{tier.benefit}</p>
+                                <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-olleey-yellow/40' : 'text-olleey-yellow/80'}`}>{tier.benefit}</p>
                             </div>
 
                             <div className={`mt-12 pt-10 border-t ${borderClass}`}>
                                 <Button
                                     variant={tier.active ? "ghost" : "default"}
                                     className={`w-full h-14 rounded-2xl transition-all duration-500 font-black uppercase tracking-[0.2em] text-[10px] ${tier.active
-                                        ? 'text-white/20 hover:text-olleey-yellow hover:bg-white/5'
+                                        ? (isDark ? 'text-white/20 hover:text-olleey-yellow hover:bg-white/5' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100')
                                         : tier.id === 'pro'
                                             ? 'bg-olleey-yellow text-black hover:bg-white shadow-[0_15px_30px_rgba(251,191,36,0.2)]'
-                                            : 'border border-white/5 hover:border-white/20 bg-transparent text-white/60'
+                                            : (isDark ? 'border border-white/5 hover:border-white/20 bg-transparent text-white/60' : 'border border-slate-200 hover:border-slate-400 bg-transparent text-slate-500')
                                         }`}
                                 >
                                     {tier.active ? "Current Deployment" : `Authorize ${tier.id.toUpperCase()}`}
@@ -188,10 +189,10 @@ export default function UsagePage() {
                 {/* Production Insights & Consumption Stats */}
                 <motion.div
                     variants={itemVariants}
-                    className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-12 lg:p-16 relative overflow-hidden bg-white/[0.01] shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]`}
+                    className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-12 lg:p-16 relative overflow-hidden ${isDark ? 'bg-white/[0.01]' : 'bg-slate-50/50'} shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]`}
                 >
                     <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none group-hover:opacity-10 transition-opacity">
-                        <TrendingUp className="w-64 h-64" />
+                        <TrendingUp className={`w-64 h-64 ${isDark ? 'text-white' : 'text-black'}`} />
                     </div>
 
                     <div className="relative z-10">
@@ -226,8 +227,8 @@ export default function UsagePage() {
                                 <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${textSecondaryClass} opacity-40 group-hover:opacity-100 transition-opacity`}>Global Expansion</span>
                                 <div className="flex items-center gap-4">
                                     <span className={`text-5xl font-light tracking-tighter ${textClass}`}>{dashboard?.weekly_stats?.languages_added || 0}</span>
-                                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 shadow-lg">
-                                        <Globe className="w-6 h-6 text-white/40" />
+                                    <div className={`w-12 h-12 rounded-2xl ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'} flex items-center justify-center border shadow-lg`}>
+                                        <Globe className={`w-6 h-6 ${isDark ? 'text-white/40' : 'text-black/40'}`} />
                                     </div>
                                 </div>
                                 <p className={`text-[10px] ${textSecondaryClass} uppercase font-black tracking-widest opacity-20`}>Localized Nodes</p>
@@ -237,8 +238,8 @@ export default function UsagePage() {
                                 <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${textSecondaryClass} opacity-40 group-hover:opacity-100 transition-opacity`}>Volume Output</span>
                                 <div className="flex items-center gap-4">
                                     <span className={`text-5xl font-light tracking-tighter ${textClass}`}>{dashboard?.weekly_stats?.videos_completed || 0}</span>
-                                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 shadow-lg">
-                                        <Layers className="w-6 h-6 text-white/40" />
+                                    <div className={`w-12 h-12 rounded-2xl ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'} flex items-center justify-center border shadow-lg`}>
+                                        <Layers className={`w-6 h-6 ${isDark ? 'text-white/40' : 'text-black/40'}`} />
                                     </div>
                                 </div>
                                 <p className={`text-[10px] ${textSecondaryClass} uppercase font-black tracking-widest opacity-20`}>Released Masters</p>

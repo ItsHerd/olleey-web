@@ -85,6 +85,8 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
     const borderClass = isDark ? "border-dark-border" : "border-gray-200";
     const hoverClass = isDark ? "hover:bg-white/[0.03]" : "hover:bg-gray-50";
     const headerBgClass = isDark ? "bg-white/[0.02]" : "bg-gray-50/50";
+    const iconContainerClass = isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200";
+    const iconColorClass = isDark ? "text-white/40" : "text-gray-400";
 
     // Sub-row styling
     const subRowBg = isDark ? "bg-white/[0.01]" : "bg-gray-50/50";
@@ -241,7 +243,7 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                         }}
                         className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-300 ${expandedVideos.has(row.original.source_video_id)
                             ? 'bg-olleey-yellow text-black'
-                            : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
+                            : `${isDark ? 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10' : 'bg-gray-100 text-gray-400 hover:text-gray-900 hover:bg-gray-200'}`
                             }`}
                     >
                         {expandedVideos.has(row.original.source_video_id) ? (
@@ -262,12 +264,12 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                 const video = videos.find(v => v.video_id === group.source_video_id);
                 return (
                     <div className="flex items-center gap-6 py-4 pl-4">
-                        <div className={`relative w-28 aspect-video rounded-xl overflow-hidden ${isDark ? "bg-white/5" : "bg-gray-100"} flex-shrink-0 shadow-xl border border-white/5`}>
+                        <div className={`relative w-28 aspect-video rounded-xl overflow-hidden ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} flex-shrink-0 shadow-xl border`}>
                             {video?.thumbnail_url ? (
                                 <img src={getFullUrl(video.thumbnail_url) || video.thumbnail_url} alt="" className="w-full h-full object-cover grayscale-[0.3] hover:grayscale-0 transition-all duration-700" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <PlayCircle className={`h-6 w-6 text-white/20`} />
+                                    <PlayCircle className={`h-6 w-6 ${iconColorClass}`} />
                                 </div>
                             )}
                             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent p-2 flex items-end justify-end">
@@ -279,8 +281,8 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                                 {video?.title || "Unknown Asset"}
                             </span>
                             <div className="flex items-center gap-3">
-                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] text-white/20 flex items-center gap-2`}>
-                                    <Globe className="w-3.5 h-3.5" />
+                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${textSecondaryClass} flex items-center gap-2`}>
+                                    <Globe className={`w-3.5 h-3.5 ${iconColorClass}`} />
                                     {video?.channel_name || "PROD SOURCE"}
                                 </span>
                             </div>
@@ -300,7 +302,7 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                         </div>
                     ))}
                     {row.original.all_target_languages.length > 7 && (
-                        <span className={`text-[9px] font-black px-2 py-1.5 rounded-lg border border-white/5 bg-white/5 text-white/30 uppercase tracking-widest`}>
+                        <span className={`text-[9px] font-black px-2 py-1.5 rounded-lg border border-white/5 bg-white/5 ${isDark ? 'text-white/30' : 'text-gray-400'} uppercase tracking-widest`}>
                             +{row.original.all_target_languages.length - 7} MORE
                         </span>
                     )}
@@ -315,14 +317,14 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
         {
             accessorKey: "latest_created_at",
             header: ({ column }) => (
-                <div className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-                    <span className="text-[11px] font-black uppercase tracking-widest">Temporal Index</span>
-                    <ArrowUpDown className="h-3 w-3 opacity-30" />
+                <div className={`flex items-center gap-2 cursor-pointer ${hoverClass} transition-colors`} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+                    <span className={`text-[11px] font-black uppercase tracking-widest ${textHeadClass}`}>Temporal Index</span>
+                    <ArrowUpDown className={`h-3 w-3 ${iconColorClass}`} />
                 </div>
             ),
             cell: ({ row }) => (
-                <div className={`flex items-center gap-3 text-sm text-white/40 font-light`}>
-                    <Clock className="w-4 h-4 opacity-30" />
+                <div className={`flex items-center gap-3 text-sm ${textSecondaryClass} font-light`}>
+                    <Clock className={`w-4 h-4 ${iconColorClass}`} />
                     {formatDate(row.original.latest_created_at)}
                 </div>
             ),
@@ -348,9 +350,9 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
             <Table className="min-w-[1000px] border-collapse">
                 <TableHeader>
                     {table.getHeaderGroups().map(headerGroup => (
-                        <TableRow key={headerGroup.id} className={`hover:bg-transparent border-b border-white/5`}>
+                        <TableRow key={headerGroup.id} className={`hover:bg-transparent border-b ${borderClass}`}>
                             {headerGroup.headers.map(header => (
-                                <TableHead key={header.id} className={`h-14 px-8 py-5 text-[10px] font-black uppercase tracking-[0.25em] text-white/20`}>
+                                <TableHead key={header.id} className={`h-14 px-8 py-5 text-[10px] font-black uppercase tracking-[0.25em] ${textHeadClass}`}>
                                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                                 </TableHead>
                             ))}
@@ -369,8 +371,8 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                                     <TableRow
                                         key={row.id}
                                         className={`
-                                            group transition-all duration-500 border-b border-white/[0.03] cursor-pointer
-                                            ${isExpanded ? 'bg-white/[0.03]' : 'hover:bg-white/[0.02]'}
+                                            group transition-all duration-500 border-b ${borderClass} cursor-pointer
+                                            ${isExpanded ? (isDark ? 'bg-white/[0.03]' : 'bg-gray-50') : (isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-gray-50')}
                                         `}
                                         onClick={() => toggleExpand(group.source_video_id)}
                                     >
@@ -398,8 +400,8 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                                                             exit={{ opacity: 0, height: 0 }}
                                                             transition={{ duration: 0.3, delay: (jobIdx + langIdx) * 0.03 }}
                                                             className={`
-                                                                ${subRowBg} border-b border-white/[0.02] last:border-b-0 cursor-pointer 
-                                                                transition-all duration-300 hover:bg-white/[0.05] group/subrow
+                                                                ${subRowBg} border-b ${borderClass} last:border-b-0 cursor-pointer 
+                                                                transition-all duration-300 ${isDark ? 'hover:bg-white/[0.05]' : 'hover:bg-gray-100'} group/subrow
                                                             `}
                                                             style={{ display: "table-row" }}
                                                             onClick={() => {
@@ -420,7 +422,7 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
 
                                                                     {/* Deployment Node */}
                                                                     <div className="pl-6 py-4">
-                                                                        <div className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl border transition-all duration-500 shadow-xl ${isDark ? 'bg-white/[0.02] border-white/5 group-hover/subrow:border-olleey-yellow/30' : 'bg-white border-gray-100'} group-hover/subrow:translate-x-1`}>
+                                                                        <div className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl border transition-all duration-500 shadow-xl ${isDark ? 'bg-white/[0.02] border-white/5 group-hover/subrow:border-olleey-yellow/30' : 'bg-white border-gray-100 group-hover/subrow:border-olleey-yellow/30'} group-hover/subrow:translate-x-1`}>
                                                                             <div className="flex items-center gap-3 opacity-40 grayscale group-hover/subrow:grayscale-0 group-hover/subrow:opacity-100 transition-all cursor-default">
                                                                                 <span className="text-xl leading-none">{getLanguageFlag(sourceLang)}</span>
                                                                                 <span className={`text-[11px] font-black uppercase tracking-widest ${textSecondaryClass}`}>{sourceLang}</span>
@@ -433,12 +435,12 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                                                                             </div>
 
                                                                             <div className="flex items-center gap-3">
-                                                                                <div className="w-9 h-9 rounded-xl bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20 shadow-lg shadow-olleey-yellow/5 group-hover/subrow:scale-110 transition-transform">
+                                                                                <div className={`w-9 h-9 rounded-xl ${isDark ? 'bg-olleey-yellow/10 border-olleey-yellow/20' : 'bg-olleey-yellow/10 border-olleey-yellow/30'} flex items-center justify-center border shadow-lg shadow-olleey-yellow/5 group-hover/subrow:scale-110 transition-transform`}>
                                                                                     <span className="text-xl leading-none">{getLanguageFlag(lang)}</span>
                                                                                 </div>
                                                                                 <div className="flex flex-col">
                                                                                     <span className={`text-[11px] font-black uppercase tracking-widest ${textClass} group-hover/subrow:text-olleey-yellow transition-colors`}>{LANGUAGE_OPTIONS.find(l => l.code === lang)?.name || lang}</span>
-                                                                                    <span className="text-[9px] font-medium text-white/20 uppercase tracking-tighter">Target Channel Sync</span>
+                                                                                    <span className={`text-[9px] font-medium ${textSecondaryClass} uppercase tracking-tighter`}>Target Channel Sync</span>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -461,7 +463,7 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                                                                         <span className={`text-[10px] font-black uppercase tracking-widest ${statusConfig.className}`}>
                                                                             {statusConfig.label}
                                                                         </span>
-                                                                        <span className="text-[8px] font-mono font-medium text-white/20 uppercase tracking-tighter">IDX_{job.job_id.slice(0, 8).toUpperCase()}</span>
+                                                                        <span className={`text-[8px] font-mono font-medium ${textSecondaryClass} uppercase tracking-tighter opacity-70`}>IDX_{job.job_id.slice(0, 8).toUpperCase()}</span>
                                                                     </div>
                                                                 </div>
                                                             </TableCell>
@@ -524,17 +526,17 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
                         <TableRow>
                             <TableCell colSpan={columns.length} className="h-96 text-center">
                                 <div className="flex flex-col items-center justify-center gap-6 opacity-30">
-                                    <div className={`w-20 h-20 rounded-full ${isDark ? 'bg-white/5' : 'bg-gray-100'} flex items-center justify-center border border-white/10`}>
+                                    <div className={`w-20 h-20 rounded-full ${iconContainerClass} flex items-center justify-center border ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                                         <Layers className={`w-10 h-10 ${textSecondaryClass}`} />
                                     </div>
                                     <div className="space-y-2">
-                                        <p className={`text-xl font-normal text-white tracking-tighter`}>Production Archives Empty</p>
+                                        <p className={`text-xl font-normal ${textClass} tracking-tighter`}>Production Archives Empty</p>
                                         <p className={`text-sm ${textSecondaryClass} font-light tracking-tight max-w-xs mx-auto`}>Zero active or completed workflows detected in the current project namespace.</p>
                                     </div>
                                     <Button
                                         variant="outline"
                                         size="lg"
-                                        className={`mt-4 rounded-full border-white/10 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow font-black uppercase tracking-widest text-[11px] h-12 px-8`}
+                                        className={`mt-4 rounded-full ${isDark ? 'border-white/10 hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow' : 'border-gray-300 hover:bg-black hover:text-white'} font-black uppercase tracking-widest text-[11px] h-12 px-8`}
                                         onClick={() => router.push('/app?page=Manual+Upload')}
                                     >
                                         Initiate Deployment
@@ -548,25 +550,25 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTa
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className={`flex items-center justify-between px-10 py-6 border-t border-white/5 bg-white/[0.01]`}>
-                    <div className={`text-[10px] font-black uppercase tracking-[0.2em] text-white/20`}>
+                <div className={`flex items-center justify-between px-10 py-6 border-t ${borderClass} ${isDark ? 'bg-white/[0.01]' : 'bg-gray-50/50'}`}>
+                    <div className={`text-[10px] font-black uppercase tracking-[0.2em] ${textHeadClass}`}>
                         Indexing {pagination.pageIndex * pagination.pageSize + 1}-{Math.min((pagination.pageIndex + 1) * pagination.pageSize, videoGroups.length)} / {videoGroups.length} Registry Units
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => table.previousPage()}
                             disabled={!table.getCanPreviousPage()}
-                            className={`w-10 h-10 flex items-center justify-center rounded-xl bg-white/3 border border-white/5 text-white/40 hover:text-white hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-all`}
+                            className={`w-10 h-10 flex items-center justify-center rounded-xl ${isDark ? 'bg-white/3 border-white/5 text-white/40 hover:text-white hover:bg-white/5' : 'bg-white border-gray-200 text-gray-400 hover:text-gray-900 hover:bg-gray-50'} border disabled:opacity-20 disabled:cursor-not-allowed transition-all`}
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
-                        <span className={`text-[11px] font-black uppercase tracking-[0.2em] text-white mx-2`}>
-                            Node {currentPage} <span className="text-white/20">/</span> {totalPages}
+                        <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${textClass} mx-2`}>
+                            Node {currentPage} <span className={`${textSecondaryClass}`}>/</span> {totalPages}
                         </span>
                         <button
                             onClick={() => table.nextPage()}
                             disabled={!table.getCanNextPage()}
-                            className={`w-10 h-10 flex items-center justify-center rounded-xl bg-white/3 border border-white/5 text-white/40 hover:text-white hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-all`}
+                            className={`w-10 h-10 flex items-center justify-center rounded-xl ${isDark ? 'bg-white/3 border-white/5 text-white/40 hover:text-white hover:bg-white/5' : 'bg-white border-gray-200 text-gray-400 hover:text-gray-900 hover:bg-gray-50'} border disabled:opacity-20 disabled:cursor-not-allowed transition-all`}
                         >
                             <ChevronRight className="w-5 h-5" />
                         </button>

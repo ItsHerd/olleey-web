@@ -366,13 +366,13 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="relative z-10">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-8">
+                    <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-indigo-400' : 'text-indigo-600'} mb-8`}>
                       <FlaskConical className="w-3.5 h-3.5" /> High-Density Lab
                     </div>
 
                     <div className="max-w-xl space-y-2 mb-12">
-                      <h3 className="text-3xl font-normal text-white tracking-tighter">Deep Research Protocol</h3>
-                      <p className="text-sm font-light text-white/40 tracking-tight leading-relaxed">
+                      <h3 className={`text-3xl font-normal ${textClass} tracking-tighter`}>Deep Research Protocol</h3>
+                      <p className={`text-sm font-light ${textSecondaryClass} tracking-tight leading-relaxed`}>
                         Authorize experimental alpha-grade neural nodes. These protocols are unstable and may experience stochastic resonance. Proceed with calibrated caution.
                       </p>
                     </div>

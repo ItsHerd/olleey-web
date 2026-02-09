@@ -20,6 +20,7 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
   const borderClass = theme === "light" ? "border-light-border" : "border-white/5";
   const textClass = theme === "light" ? "text-light-text" : "text-white";
   const textSecondaryClass = theme === "light" ? "text-light-textSecondary" : "text-white/40";
+  const isDark = theme === "dark";
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -92,12 +93,12 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
         {/* Header Section */}
         <div className="flex items-end justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-normal text-white tracking-tighter mb-1">Account Settings</h1>
+            <h1 className={`text-2xl font-normal ${textClass} tracking-tighter mb-1`}>Account Settings</h1>
             <p className={`${textSecondaryClass} text-[13px] font-light tracking-tight opacity-60`}>
               Manage your personal security protocols and session data.
             </p>
           </div>
-          <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-white/40">
+          <div className={`px-3 py-1 rounded-full ${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-black/5 border-black/10 text-black/40'} border text-[9px] font-black uppercase tracking-[0.2em]`}>
             SECURE_MODE_ACTIVE
           </div>
         </div>
@@ -117,18 +118,18 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
 
             <div className="flex-1 space-y-6 w-full">
               <div>
-                <h3 className="text-xl font-medium text-white mb-1">{userName}</h3>
-                <p className="text-sm text-white/40 font-mono">{userEmail}</p>
+                <h3 className={`text-xl font-medium ${textClass} mb-1`}>{userName}</h3>
+                <p className={`text-sm ${textSecondaryClass} font-mono`}>{userEmail}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-white/30 block mb-2">User ID</label>
-                  <div className="font-mono text-xs text-white/70 truncate">USR_{Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+                <div className={`${isDark ? 'bg-white/5 border-white/5' : 'bg-black/5 border-black/5'} border rounded-2xl p-4`}>
+                  <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/30' : 'text-black/30'} block mb-2`}>User ID</label>
+                  <div className={`font-mono text-xs ${isDark ? 'text-white/70' : 'text-black/70'} truncate`}>USR_{Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
                 </div>
-                <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-white/30 block mb-2">Role</label>
-                  <div className="font-mono text-xs text-white/70">ADMINISTRATOR</div>
+                <div className={`${isDark ? 'bg-white/5 border-white/5' : 'bg-black/5 border-black/5'} border rounded-2xl p-4`}>
+                  <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/30' : 'text-black/30'} block mb-2`}>Role</label>
+                  <div className={`font-mono text-xs ${isDark ? 'text-white/70' : 'text-black/70'}`}>ADMINISTRATOR</div>
                 </div>
               </div>
             </div>
@@ -139,10 +140,10 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
           {/* Security Settings */}
           <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden shadow-xl`}>
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
-                <CreditCard className="w-5 h-5 text-white/60" />
+              <div className={`w-10 h-10 rounded-xl ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'} flex items-center justify-center border`}>
+                <CreditCard className={`w-5 h-5 ${isDark ? 'text-white/60' : 'text-black/60'}`} />
               </div>
-              <h3 className="text-lg font-medium text-white">Security Credentials</h3>
+              <h3 className={`text-lg font-medium ${textClass}`}>Security Credentials</h3>
             </div>
 
             <form onSubmit={handleChangePassword} className="space-y-5">
@@ -159,51 +160,51 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">Current Key</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/30' : 'text-black/30'} ml-2`}>Current Key</label>
                   <div className="relative group/input">
                     <input
                       type={showCurrentPassword ? "text" : "password"}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10 font-mono"
+                      className={`w-full ${isDark ? 'bg-black/40 border-white/10 text-white placeholder:text-white/10 focus:border-white/30' : 'bg-white border-black/10 text-black placeholder:text-black/20 focus:border-black/30'} border rounded-xl px-5 py-4 text-sm focus:outline-none transition-all font-mono`}
                       placeholder="Enter current password"
                       disabled={isChangingPassword}
                     />
-                    <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors">
+                    <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className={`absolute right-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-white/20 hover:text-white' : 'text-black/20 hover:text-black'} transition-colors`}>
                       {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">New Key</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/30' : 'text-black/30'} ml-2`}>New Key</label>
                   <div className="relative group/input">
                     <input
                       type={showNewPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10 font-mono"
+                      className={`w-full ${isDark ? 'bg-black/40 border-white/10 text-white placeholder:text-white/10 focus:border-white/30' : 'bg-white border-black/10 text-black placeholder:text-black/20 focus:border-black/30'} border rounded-xl px-5 py-4 text-sm focus:outline-none transition-all font-mono`}
                       placeholder="Min. 8 characters"
                       disabled={isChangingPassword}
                     />
-                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors">
+                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className={`absolute right-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-white/20 hover:text-white' : 'text-black/20 hover:text-black'} transition-colors`}>
                       {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">Verify Key</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white/30' : 'text-black/30'} ml-2`}>Verify Key</label>
                   <div className="relative group/input">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10 font-mono"
+                      className={`w-full ${isDark ? 'bg-black/40 border-white/10 text-white placeholder:text-white/10 focus:border-white/30' : 'bg-white border-black/10 text-black placeholder:text-black/20 focus:border-black/30'} border rounded-xl px-5 py-4 text-sm focus:outline-none transition-all font-mono`}
                       placeholder="Confirm new password"
                       disabled={isChangingPassword}
                     />
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors">
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className={`absolute right-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-white/20 hover:text-white' : 'text-black/20 hover:text-black'} transition-colors`}>
                       {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
@@ -213,7 +214,7 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
               <button
                 type="submit"
                 disabled={isChangingPassword}
-                className="w-full py-4 mt-2 bg-white text-black rounded-xl text-xs font-black uppercase tracking-[0.2em] hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 relative overflow-hidden group"
+                className={`w-full py-4 mt-2 ${isDark ? 'bg-white text-black hover:bg-white/90' : 'bg-black text-white hover:bg-neutral-800'} rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 relative overflow-hidden group`}
               >
                 {isChangingPassword ? (
                   <>
@@ -237,7 +238,7 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
                 <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
                   <LogOut className="w-5 h-5 text-red-500" />
                 </div>
-                <h3 className="text-lg font-medium text-white">Session Control</h3>
+                <h3 className={`text-lg font-medium ${textClass}`}>Session Control</h3>
               </div>
 
               <p className={`${textSecondaryClass} text-sm leading-relaxed mb-8 opacity-70`}>
@@ -250,7 +251,7 @@ export default function AccountsPage({ onLogout }: AccountsPageProps) {
                 <Zap className="w-4 h-4" />
                 <span className="text-xs font-black uppercase tracking-widest">Active Session</span>
               </div>
-              <div className="font-mono text-xs text-white/40">started: {new Date().toLocaleTimeString()}</div>
+              <div className={`font-mono text-xs ${isDark ? 'text-white/40' : 'text-black/40'}`}>started: {new Date().toLocaleTimeString()}</div>
             </div>
 
             <button
