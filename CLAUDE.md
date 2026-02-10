@@ -27,33 +27,212 @@ Olleey is an automated global release engine for creators. When a creator upload
 - **Linked Channels**: Distribute localized versions to dedicated regional channels.
 - **Future Automation**: Workflows can be saved to automatically process future uploads based on approved settings.
 
+## Architecture Overview
+
+### Backend vs Frontend Separation
+
+Olleey uses a **two-service architecture**:
+
+```
+┌─────────────────────────────────────┐
+│     olleey-web (Next.js 15)         │
+│     Port: 3000                      │
+│                                     │
+│  - React UI components              │
+│  - User authentication (JWT)        │
+│  - Dashboard & review interfaces    │
+│  - Real-time job status updates     │
+│  - Calls olleey-backend APIs        │
+└──────────────┬──────────────────────┘
+               │ HTTP REST
+               │ WebSocket
+               ↓
+┌─────────────────────────────────────┐
+│   olleey-backend (FastAPI/Python)   │
+│   Port: 8000                        │
+│                                     │
+│  - Video processing (FFmpeg)        │
+│  - Job queue & workers              │
+│  - Third-party API integrations:    │
+│    • ElevenLabs (dubbing)           │
+│    • SyncLabs (lip sync)            │
+│    • YouTube Data API               │
+│  - Database operations (Supabase)   │
+│  - S3 storage management            │
+│  - OAuth token management           │
+└─────────────────────────────────────┘
+```
+
+**Why Keep Separate?**
+- ✅ Video processing is CPU/memory intensive (better suited for Python backend)
+- ✅ API keys security (never exposed to frontend)
+- ✅ Long-running jobs (10-30 minutes) need persistent workers
+- ✅ Job queue requires background workers (Celery/RQ)
+- ✅ Python ecosystem has better video processing libraries
+- ✅ Independent scaling (scale workers separately from web servers)
+- ✅ Clear separation of concerns
+
+**Frontend Responsibilities (olleey-web):**
+- Display UI and handle user interactions
+- Manage client-side state and authentication
+- Make API calls to backend
+- Display real-time updates via WebSocket or polling
+- Handle routing and navigation
+
+**Backend Responsibilities (olleey-backend):**
+- Process videos (download, transcode, assemble)
+- Manage job queue and workers
+- Integrate with third-party APIs (ElevenLabs, SyncLabs, YouTube)
+- Perform database CRUD operations
+- Store and retrieve files from S3/Supabase Storage
+- Handle OAuth flows and token refresh
+
 ## Build & Test Commands
 
+### Frontend (olleey-web)
 - **Install Dependencies**: `npm install`
 - **Build**: `npm run build`
 - **Development**: `npm run dev`
 - **Lint**: `npm run lint`
 - **Type Check**: `npm run type-check`
 
+### Backend (olleey-backend)
+- **Install Dependencies**: `pip install -r requirements.txt`
+- **Development**: `python dev_server.py` or `./start_dev.sh`
+- **Run Tests**: `pytest`
+- **Migrations**: `alembic upgrade head` (if using Alembic)
+
 ## Coding Standards
 
 ### General Rules
-- Use TypeScript for all components and utilities.
+- Use TypeScript for all frontend components and utilities.
+- Use Python with type hints for all backend code.
 - Follow Next.js 15 App Router best practices.
 - Maintain clean, modular component structures.
-- Use explicit type definitions instead of `any`.
+- Use explicit type definitions instead of `any` (TypeScript) or implicit types (Python).
 
-### Frontend Patterns
+### Frontend Patterns (olleey-web)
 - **Components**: Functional components with hooks.
 - **UI**: Use `shadcn@latest` for all UI components.
 - **Styling**: Tailwind CSS for all layout and design elements.
 - **State**: React context or server components where appropriate.
+- **API Calls**: Use custom hooks (e.g., `useVideos`, `useJobs`) for data fetching.
+- **Type Safety**: Define interfaces for all API responses and props.
 
-## 🚧 Remaining Work ---- Priority guidance (MVP → UX → Quality → Scale → Collaboration)
+### Backend Patterns (olleey-backend)
+- **Routing**: Use FastAPI routers for organized endpoint grouping.
+- **Services**: Separate business logic into service modules (`services/`).
+- **Schemas**: Use Pydantic models for request/response validation.
+- **Database**: Use async operations with Supabase client.
+- **Error Handling**: Return consistent error responses with proper HTTP status codes.
+- **Type Hints**: Use Python 3.10+ type hints for all functions.
+- **Logging**: Use structured logging with context (user_id, job_id, etc.).
+
+## 🚧 Remaining Work
 
 ### Backend Infrastructure
 
-#### 1. Transcription Service
+#### 🎯 Pipeline Architecture Decision
+
+**IMPORTANT: ElevenLabs offers a comprehensive Dubbing API that can simplify the pipeline significantly.**
+
+**Option A: ElevenLabs All-in-One Dubbing API** ⭐ RECOMMENDED
+- **What it includes**: Transcription, translation, dubbed audio generation, and timing alignment - all in one API call
+- **Key features**:
+  - Automatic speaker detection and voice cloning
+  - Support for 29+ languages
+  - Preserves original speaker's voice characteristics
+  - Maintains emotional tone and inflection
+  - Automatic audio synchronization with video timing
+  - Returns transcript, translation, and dubbed audio
+- **Pros**: 
+  - Simpler integration (one provider instead of 3-4)
+  - Lower cost (bundled pricing, ~$5-10 per video minute)
+  - Better audio-text timing synchronization
+  - Faster implementation (single API endpoint)
+  - Automatic speaker detection and voice matching
+  - Less code to maintain
+- **Cons**: 
+  - Less flexibility (locked into ElevenLabs for all steps)
+  - Cannot mix/match best-in-class providers per stage
+  - Dependent on single provider's uptime
+- **Use when**: Building MVP, want faster time-to-market, or prioritize simplicity
+
+**Option B: Modular Pipeline (Separate Services)**
+- **What it includes**: Choose best provider for each stage (Whisper for transcription, DeepL for translation, ElevenLabs for TTS, etc.)
+- **Pros**: 
+  - Flexibility to use best-in-class service per stage
+  - Can swap providers without full refactor
+  - Better for specific use cases (e.g., specialized translation domains)
+- **Cons**: 
+  - More complex integration
+  - More code to maintain
+  - Higher costs (paying multiple providers)
+  - Manual timing synchronization between stages
+- **Use when**: Need best quality per stage, have specific provider requirements, or want maximum flexibility
+
+**Recommended Approach**: Start with **Option A (ElevenLabs Dubbing API)** for MVP, then optionally add Option B as an advanced/premium feature.
+
+---
+
+#### 1. ElevenLabs Dubbing API Integration (Recommended Path)
+**Goal**: Complete transcription → translation → dubbing pipeline in one API
+
+- [ ] **ElevenLabs Dubbing API Setup**
+  - [ ] Review ElevenLabs Dubbing API documentation
+  - [ ] Obtain API key with dubbing access (requires specific plan)
+  - [ ] Test dubbing API with sample video
+  - [ ] Understand pricing model (per minute of video)
+  - [ ] Document API rate limits and quotas
+  
+- [ ] **Video Upload & Job Creation**
+  - [ ] Implement video upload to ElevenLabs (or provide URL)
+  - [ ] Submit dubbing job with parameters:
+    - Source language (auto-detect or specify)
+    - Target languages (array)
+    - Voice settings (clone source voice or use preset)
+    - Number of speakers (auto-detect or specify)
+  - [ ] Store ElevenLabs job ID in database
+  
+- [ ] **Job Monitoring**
+  - [ ] Implement polling for job status (pending → dubbing → dubbed)
+  - [ ] Set up webhook receiver for completion notifications
+  - [ ] Handle job errors and retries
+  - [ ] Track processing time per video
+  
+- [ ] **Result Processing**
+  - [ ] Download dubbed audio files for each language
+  - [ ] Extract transcript and translation from response
+  - [ ] Store results in database:
+    - `transcripts` table (source transcript)
+    - `translations` table (per target language)
+    - `dubbed_audio` table (audio URLs)
+  - [ ] Generate preview URLs for review
+  
+- [ ] **Voice Customization**
+  - [ ] Implement voice cloning for consistent dubbing
+  - [ ] Upload voice samples to ElevenLabs
+  - [ ] Store voice IDs for reuse
+  - [ ] Add voice selection UI per language
+  
+- [ ] **Database Schema for ElevenLabs Pipeline**
+  - [ ] Create `dubbing_jobs` table:
+    - `id`, `job_id`, `elevenlabs_job_id`
+    - `source_video_url`, `source_language`
+    - `target_languages` (jsonb array)
+    - `status`, `progress`, `error_message`
+    - `created_at`, `completed_at`
+  - [ ] Update existing tables to reference dubbing jobs
+  
+- [ ] **Cost Tracking**
+  - [ ] Calculate cost per minute of video
+  - [ ] Track total dubbing costs per job
+  - [ ] Implement cost estimation before job submission
+  - [ ] Add budget alerts for users
+
+---
+
+#### 1a. Transcription Service (Alternative/Modular Path)
 **Goal**: Extract dialogue and audio from source videos with timestamps
 
 - [ ] **Choose & Configure Provider**
@@ -91,7 +270,7 @@ Olleey is an automated global release engine for creators. When a creator upload
   - [ ] Cache transcripts to avoid re-processing same video
   - [ ] Add transcript export endpoint (SRT, VTT, TXT formats)
 
-#### 2. Translation Service
+#### 2a. Translation Service (Alternative/Modular Path)
 **Goal**: Translate transcripts into target languages while preserving meaning and timing
 
 - [ ] **Choose & Configure Provider**
@@ -128,14 +307,15 @@ Olleey is an automated global release engine for creators. When a creator upload
   - [ ] Create translation comparison view (original vs translated)
   - [ ] Store translation alternatives for A/B testing
 
-#### 3. Dubbing Service (ElevenLabs)
-**Goal**: Generate high-quality dubbed audio in target languages
+#### 3a. Text-to-Speech Service (Alternative/Modular Path)
+**Goal**: Generate high-quality dubbed audio from translated text (if not using ElevenLabs Dubbing API)
 
 - [ ] **ElevenLabs Integration Enhancement**
   - [ ] Review existing `elevenlabs_service.py` implementation
-  - [ ] Update to latest ElevenLabs API version
+  - [ ] Update to latest ElevenLabs Text-to-Speech API version
   - [ ] Add support for all voice models (multilingual v2, turbo)
   - [ ] Implement voice settings management (stability, similarity, style)
+  - [ ] NOTE: If using ElevenLabs Dubbing API (Section 1), this is already included
   
 - [ ] **Voice Management**
   - [ ] Create `voices` table in database:
@@ -177,7 +357,7 @@ Olleey is an automated global release engine for creators. When a creator upload
     - `status`, `provider`, `created_at`
 
 #### 4. Lip Sync Service (SyncLabs)
-**Goal**: Regenerate video with lip movements matching dubbed audio
+**Goal**: Regenerate video with lip movements matching dubbed audio (applies to both pipeline options)
 
 - [ ] **SyncLabs Integration Enhancement**
   - [ ] Review existing `synclabs.py` implementation
@@ -219,7 +399,7 @@ Olleey is an automated global release engine for creators. When a creator upload
     - `cost`, `created_at`, `completed_at`
 
 #### 5. Video Assembly Service
-**Goal**: Combine original video, dubbed audio, and lip sync into final output
+**Goal**: Combine original video, dubbed audio, and lip sync into final output (applies to both pipeline options)
 
 - [ ] **Create Video Assembly Module** (`services/video_assembly.py`)
   - [ ] Set up FFmpeg integration
@@ -1568,12 +1748,19 @@ Olleey is an automated global release engine for creators. When a creator upload
 ### Implementation Priority
 
 **Phase 1: Core Pipeline (MVP)**
-- [ ] Transcription Service (Item 1)
-- [ ] Translation Service (Item 2)
-- [ ] Dubbing Service Enhancement (Item 3)
-- [ ] Lip Sync Service Enhancement (Item 4)
-- [ ] Video Assembly Service (Item 5)
-- [ ] Job Queue Infrastructure (Item 6)
+- [ ] **Architecture Decision**: Choose between ElevenLabs All-in-One (Section 1) or Modular Pipeline (Sections 1a-3a)
+- [ ] **If ElevenLabs All-in-One (RECOMMENDED)**:
+  - [ ] ElevenLabs Dubbing API Integration (Item 1)
+  - [ ] Lip Sync Service Enhancement (Item 4)
+  - [ ] Video Assembly Service (Item 5)
+  - [ ] Job Queue Infrastructure (Item 6)
+- [ ] **If Modular Pipeline**:
+  - [ ] Transcription Service (Item 1a)
+  - [ ] Translation Service (Item 2a)
+  - [ ] Text-to-Speech Service (Item 3a)
+  - [ ] Lip Sync Service Enhancement (Item 4)
+  - [ ] Video Assembly Service (Item 5)
+  - [ ] Job Queue Infrastructure (Item 6)
 
 **Phase 2: User Experience**
 - [ ] Review & Approval Workflow (Item 11)
