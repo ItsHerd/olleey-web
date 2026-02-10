@@ -1,34 +1,25 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import HeroAscii from "@/components/ui/hero-ascii";
 import Footer from "./Footer";
 import VideoDubbingShowcase from "./VideoDubbingShowcase";
 import { GlobalLifecycle } from "./GlobalLifecycle";
 import { SEO } from "@/components/SEO";
 import FAQ from "./FAQ";
+import PixelatedGlobe from "./PixelatedGlobe";
 
 interface LandingPageProps {
     onNavigation: () => void;
-    initialAuthMode?: 'login' | 'register';
-    autoShowAuth?: boolean;
 }
 
-export default function LandingPage({ onNavigation, initialAuthMode = 'login', autoShowAuth = false }: LandingPageProps) {
-    const [showAuth, setShowAuth] = React.useState(autoShowAuth);
-    const [authMode, setAuthMode] = React.useState<'login' | 'register'>(initialAuthMode);
-
-    const triggerAuth = (mode: 'login' | 'register') => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setAuthMode(mode);
-        setShowAuth(true);
-    };
-
+export default function LandingPage({ onNavigation }: LandingPageProps) {
+    const router = useRouter();
     const navLinks = [
-        { label: 'HOME', href: '#' },
-        { label: 'WORKFLOWS', href: "#distribution" },
-        { label: 'PRODUCT', href: '#product' },
+        { label: 'Home', href: '#' },
+        { label: 'Workflows', href: "#distribution" },
+        { label: 'Product', href: '#product' },
         { label: 'FAQ', href: '#faq' },
     ];
 
@@ -43,19 +34,17 @@ export default function LandingPage({ onNavigation, initialAuthMode = 'login', a
             <HeroAscii
                 navLinks={navLinks}
                 onAuthenticated={onNavigation}
-                showAuth={showAuth}
-                setShowAuth={setShowAuth}
-                authMode={authMode}
-                setAuthMode={setAuthMode}
             />
 
-            <GlobalLifecycle />
-            <VideoDubbingShowcase />
+            <PixelatedGlobe />
 
+            <div className="relative z-20 -mt-[100vh]">
+                <GlobalLifecycle />
+                <VideoDubbingShowcase />
+                <FAQ />
+            </div>
 
-            <FAQ />
-
-            <Footer onGetStarted={() => triggerAuth('register')} />
+            <Footer onGetStarted={() => router.push("/register")} />
         </div>
     );
 }

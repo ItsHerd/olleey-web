@@ -1,11 +1,18 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
+import { DM_Sans } from "next/font/google";
 import ThemeProviderWrapper from "./ThemeProviderWrapper";
 import { ThemeProvider } from "@/lib/ThemeContext";
 import { ToastProvider } from "@/components/ui/use-toast";
 import { AuthProvider } from "@/lib/AuthContext";
 import { AuthInitializer } from "@/components/AuthInitializer";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Olleey | AI-Powered Global Content Automation",
@@ -24,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={GeistSans.className}>
+      <body className={dmSans.className}>
         <ThemeProvider>
           <ThemeProviderWrapper>
             <ToastProvider>

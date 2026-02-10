@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { getUserFriendlyErrorMessage, isNetworkError } from "@/lib/errorMessages";
-import { SignUpPage, type Testimonial } from "@/components/ui/sign-in";
+import { SignUpPage } from "@/components/ui/sign-in";
 import { useTheme } from "@/lib/useTheme";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -12,21 +12,6 @@ import Link from "next/link";
 interface RegisterPageProps {
     onRegisterSuccess: () => void;
 }
-
-const sampleTestimonials: Testimonial[] = [
-    {
-        avatarSrc: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop",
-        name: "Sarah Jenkins",
-        handle: "@sarahj_content",
-        text: "olleey helped me reach 5 new countries in just 48 hours. The quality is insane!"
-    },
-    {
-        avatarSrc: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop",
-        name: "David Chen",
-        handle: "@dchen_tech",
-        text: "The translation is so natural, my viewers couldn't even tell it was AI dubbed."
-    }
-];
 
 export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
     const { theme } = useTheme();
@@ -110,7 +95,7 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
     };
 
     const handleSignInClick = () => {
-        router.push("/app");
+        router.push("/login");
     };
 
     return (
@@ -124,8 +109,7 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
                 <SignUpPage
                     title={<span className="font-light text-foreground tracking-tighter">Join <span className="font-semibold">olleey</span></span>}
                     description="Olleey is currently by invitation only. Please enter your invite access code to create your account."
-                    heroImageSrc="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=2160&q=80"
-                    testimonials={sampleTestimonials}
+                    heroImageSrc="https://prcdn.freetls.fastly.net/release_image/25003/2706/25003-2706-bc8c6db8376f553272c6165ba6071223-924x1200.jpg?width=1950&height=1350&quality=85%2C65&format=jpeg&auto=webp&fit=bounds&bg-color=fff"
                     onSignUp={handleRegister}
                     onGoogleSignUp={handleGoogleSignUp}
                     onSignInClick={handleSignInClick}

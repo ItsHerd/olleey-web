@@ -62,7 +62,7 @@ export default function FAQ() {
                             className="inline-flex items-center gap-3 px-4 py-1 border border-black/30 dark:border-white/30 backdrop-blur-sm mb-6 bg-black/5 dark:bg-black transition-colors duration-300 rounded-full"
                         >
                             <span className="w-1.5 h-1.5 bg-black dark:bg-white animate-pulse transition-colors duration-300" />
-                            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-black dark:text-white transition-colors duration-300">SYS.INFO</span>
+                            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-black dark:text-white transition-colors duration-300">Info</span>
                         </motion.div>
 
                         <motion.h2 

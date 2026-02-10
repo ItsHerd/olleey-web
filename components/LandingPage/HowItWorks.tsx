@@ -96,7 +96,7 @@ export function HowItWorks({ onGetStarted }: HowItWorksProps) {
                                 </div>
                             )}
 
-                            <div className="relative p-6 lg:p-8 bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-2xl hover:border-black/20 dark:hover:border-white/20 transition-all duration-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] group-hover:shadow-[0_0_40px_rgba(0,0,0,0.05)] dark:group-hover:shadow-[0_0_40px_rgba(255,255,255,0.05)]">
+                            <div className="relative ring-0 ring-black/20 border border-black bg-[#f1ede6] dark:bg-[#25292f] rounded-2xl p-xl flex items-center transition-all duration-300">
                                 {/* Step Number */}
                                 <div className="absolute -top-3 left-6 px-3 py-1 bg-white dark:bg-black border border-black/20 dark:border-white/20 rounded-full transition-colors duration-300">
                                     <span className="text-[10px] font-mono text-black/60 dark:text-white/60 tracking-widest transition-colors duration-300">STEP {step.number}</span>

@@ -164,7 +164,7 @@ function AppContent() {
 
     const handleLogout = async () => {
         await signOut();
-        router.push('/?auth=login');
+        router.push('/login');
     };
 
     const renderPage = () => {
@@ -192,7 +192,7 @@ function AppContent() {
     // Redirect to login if not authenticated (in useEffect to avoid setState during render)
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
-            router.push('/?auth=login');
+            router.push('/login');
         }
     }, [authLoading, isAuthenticated, router]);
 

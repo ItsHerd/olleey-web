@@ -112,7 +112,7 @@ export default function Footer({ onGetStarted }: { onGetStarted?: () => void }) 
                     {/* Contact section */}
                     <div>
                         <h4 className="text-white text-[10px] font-mono font-bold uppercase tracking-widest mb-6 border-l-2 border-olleey-yellow pl-2">
-                            SYSTEM_CONTACT
+                            Contact
                         </h4>
                         <ul className="space-y-4">
                             {contactInfo.map((item, i) => (
@@ -155,8 +155,8 @@ export default function Footer({ onGetStarted }: { onGetStarted?: () => void }) 
                     </div>
 
                     {/* Copyright */}
-                    <p className="text-center md:text-left text-[10px] tracking-tight opacity-50 uppercase">
-                        [ SYS.TIME: {currentYear} ] © OLLEEY_INC. <span className="text-olleey-yellow/50">ARCHITECTED FOR GLOBAL GROWTH.</span>
+                    <p className="text-center md:text-left text-[10px] tracking-tight opacity-50">
+                        © {currentYear} Olleey. <span className="text-olleey-yellow/50">Built for global growth.</span>
                     </p>
                 </div>
             </motion.div>

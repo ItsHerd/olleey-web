@@ -44,29 +44,29 @@ const steps = [
 
 export const GlobalLifecycle = () => {
     return (
-        <section id="distribution" className="py-32 bg-white dark:bg-black border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300">
-             {/* Grid Background - Light Mode */}
-             <div className="absolute inset-0 z-0 opacity-5 dark:opacity-0 transition-opacity duration-300" 
-                style={{ 
+        <section id="distribution" className="py-32 bg-white dark:bg-black border-t border-black/10 dark:border-white/10 relative z-10 overflow-hidden transition-colors duration-300">
+            {/* Grid Background - Light Mode */}
+            <div className="absolute inset-0 z-0 opacity-5 dark:opacity-0 transition-opacity duration-300"
+                style={{
                     backgroundImage: 'linear-gradient(black 1px, transparent 1px), linear-gradient(90deg, black 1px, transparent 1px)',
                     backgroundSize: '40px 40px'
-                }} 
+                }}
             />
             {/* Grid Background - Dark Mode */}
-            <div className="absolute inset-0 z-0 opacity-0 dark:opacity-10 transition-opacity duration-300" 
-               style={{ 
-                   backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
-                   backgroundSize: '40px 40px'
-               }} 
-           />
-            
+            <div className="absolute inset-0 z-0 opacity-0 dark:opacity-10 transition-opacity duration-300"
+                style={{
+                    backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
+                    backgroundSize: '40px 40px'
+                }}
+            />
+
             <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px] relative z-10">
                 {/* Header Text */}
                 <div className="mb-24 relative border-l-2 border-black/20 dark:border-white/20 pl-8 transition-colors duration-300">
-                     <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white dark:bg-black border-2 border-black/20 dark:border-white/20 transition-colors duration-300" />
-                     <div className="absolute -left-[5px] bottom-0 w-2 h-2 rounded-full bg-black/20 dark:bg-white/20 transition-colors duration-300" />
-                     
-                    <motion.div 
+                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white dark:bg-black border-2 border-black/20 dark:border-white/20 transition-colors duration-300" />
+                    <div className="absolute -left-[5px] bottom-0 w-2 h-2 rounded-full bg-black/20 dark:bg-white/20 transition-colors duration-300" />
+
+                    <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
@@ -76,7 +76,7 @@ export const GlobalLifecycle = () => {
                         <span className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white animate-pulse transition-colors duration-300" />
                         <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-black dark:text-white transition-colors duration-300">The Workflow</span>
                     </motion.div>
-                    <motion.h2 
+                    <motion.h2
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
@@ -113,7 +113,7 @@ export const GlobalLifecycle = () => {
                                         <div className="absolute bottom-0 left-0 p-1">
                                             <div className="w-1.5 h-1.5 border border-black/40 dark:border-white/40 bg-black/10 dark:bg-white/10 transition-colors duration-300" />
                                         </div>
-                                        
+
                                         <Icon className="w-8 h-8 text-black/60 dark:text-white/60 group-hover:text-black dark:group-hover:text-white transition-colors duration-300 stroke-[1.5]" />
                                     </div>
                                     <div className="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-black border border-black/20 dark:border-white/20 flex items-center justify-center text-[10px] font-mono text-black/50 dark:text-white/50 group-hover:text-black dark:group-hover:text-white group-hover:border-black dark:group-hover:border-white transition-all z-20 rounded-full md:rounded-none">

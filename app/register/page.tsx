@@ -2,18 +2,19 @@
 
 import RegisterPage from "../RegisterPage";
 import { useRouter } from "next/navigation";
-import { tokenStorage } from "@/lib/api";
 import { useEffect } from "react";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Register() {
     const router = useRouter();
+    const { user, loading } = useAuth();
 
     useEffect(() => {
         // Redirect to /app if already authenticated
-        if (tokenStorage.isAuthenticated()) {
+        if (!loading && user) {
             router.push("/app");
         }
-    }, [router]);
+    }, [loading, user, router]);
 
     const handleRegisterSuccess = () => {
         // Redirect to app after successful registration

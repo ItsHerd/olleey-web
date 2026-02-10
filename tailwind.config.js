@@ -4,6 +4,9 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-dm-sans)', 'DM Sans', 'sans-serif'],
+      },
       animation: {
         "shimmer-slide":
           "shimmer-slide var(--speed) ease-in-out infinite alternate",
@@ -72,10 +75,10 @@ module.exports = {
       colors: {
         // Light Theme - Enhanced Visibility
         light: {
-          bg: "#f8f9fa",
+          bg: "#e8e8e8",
           bgAlt: "#f1f3f5",
           card: "#ffffff",
-          cardAlt: "#f8f9fa",
+          cardAlt: "#f1f3f5",
           text: "#111827",
           textSecondary: "#374151",
           accent: "#dc2626",

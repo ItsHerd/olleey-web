@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
-import { SignInPage, type Testimonial } from "@/components/ui/sign-in";
+import { SignInPage } from "@/components/ui/sign-in";
 import { getUserFriendlyErrorMessage, isNetworkError } from "@/lib/errorMessages";
 import { useTheme } from "@/lib/useTheme";
 import { useRouter } from "next/navigation";
@@ -11,8 +11,6 @@ import { useRouter } from "next/navigation";
 interface LoginPageProps {
   onLoginSuccess: () => void;
 }
-
-const sampleTestimonials: Testimonial[] = [];
 
 import Link from "next/link";
 
@@ -88,7 +86,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
   return (
     <div className={`min-h-screen ${bgClass} ${textClass}`}>
-      <Link href="/" className="fixed top-8 left-8 z-50 flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all group">
+      <Link href="/" className="fixed top-8 left-8 z-50 flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all group text-black dark:text-white hover:text-black dark:hover:text-white border border-black/10 dark:border-white/10 rounded-full px-4 py-2 hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         Go Home
       </Link>
@@ -102,8 +100,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
             </div>
           }
           description="Sign in to your account and continue your journey with us"
-          heroImageSrc="https://wallpapercave.com/wp/wp4975107.jpg"
-          testimonials={sampleTestimonials}
+          heroImageSrc="https://cdn.powerofpositivity.com/wp-content/uploads/2022/10/Therapists-Explain-6-Ways-Art-Can-Make-You-Happier.jpg"
           onSignIn={handleSignIn}
           onGoogleSignIn={handleGoogleSignIn}
           googleButtonRef={googleButtonRef}

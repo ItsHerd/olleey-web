@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
-import LandingPage from "@/components/LandingPage/LandingPage";
+import LoginPage from "../LoginPage";
 
-function LandingPageWrapper() {
+export default function Login() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
@@ -14,17 +14,11 @@ function LandingPageWrapper() {
     if (!loading && user) {
       router.push("/app");
     }
-  }, [user, loading, router]);
+  }, [loading, user, router]);
 
-  const handleNavigation = () => {
+  const handleLoginSuccess = () => {
     router.push("/app");
   };
 
-  return (
-    <LandingPage onNavigation={handleNavigation} />
-  );
-}
-
-export default function Index() {
-  return <LandingPageWrapper />;
+  return <LoginPage onLoginSuccess={handleLoginSuccess} />;
 }

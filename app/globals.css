@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* DM Sans Font Configuration */
+* {
+  font-family: "DM Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -9,6 +16,9 @@
 }
 
 body {
+  font-family: "DM Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -100,7 +110,7 @@ html {
 /* Theme CSS Variables */
 :root {
   /* Light Theme Default - Enhanced Visibility */
-  --theme-bg: #f8f9fa;
+  --theme-bg: #e8e8e8;
   --theme-bg-alt: #ffffff;
   --theme-card: #ffffff;
   --theme-text: #111827;
@@ -125,7 +135,7 @@ html.dark {
 
 html.light {
   /* Light Theme - Enhanced Visibility */
-  --theme-bg: #f8f9fa;
+  --theme-bg: #e8e8e8;
   --theme-bg-alt: #ffffff;
   --theme-card: #ffffff;
   --theme-card-alt: #f1f3f5;
