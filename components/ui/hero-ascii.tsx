@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-import { X, Sun, Moon, Zap, CheckCircle2 } from 'lucide-react';
+import { X, Sun, Moon, Zap, CheckCircle2, Play } from 'lucide-react';
 import { useAuth } from "@/lib/AuthContext";
 import { getUserFriendlyErrorMessage } from "@/lib/errorMessages";
 import { useThemeContext } from "@/lib/ThemeContext";
@@ -118,26 +118,26 @@ export default function HeroAscii({
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#FAFAFA] dark:bg-black transition-colors duration-300">
       {/* Top Header - Seamless with Hero */}
-      <div className="absolute top-0 left-0 right-0 z-20 p-4 lg:p-6">
+      <div className="absolute top-0 left-0 right-0 z-20 bg-white/90 dark:bg-black/90 backdrop-blur-sm border-b border-zinc-100 dark:border-white/10 p-4 lg:p-6 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             {/* Left: Logo */}
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-white/10 border border-black/10 dark:border-white/20 p-2 transition-transform group-hover:scale-110">
+              <div className="relative w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-white/10 dark:border-white/20 p-2 transition-transform group-hover:scale-110">
                 <Image
-                  src="/images/translogowhite.png"
+                  src="/logo-transparent.png"
                   alt="Olleey Logo"
                   fill
-                  className="object-contain dark:filter-none invert transition-all duration-300"
+                  className="object-contain transition-all duration-300"
                 />
               </div>
-              <span className="font-mono text-black dark:text-white text-xl lg:text-2xl font-semibold group-hover:text-black/70 dark:group-hover:text-white/80 transition-colors">
+              <span className="text-black dark:text-white text-2xl lg:text-2xl font-300 group-hover:text-black/70 dark:group-hover:text-white/80 transition-colors">
                 olleey.com
               </span>
             </Link>
 
             {/* Center: Nav Links - Subtle Pill Style */}
-            <div className="hidden lg:flex items-center gap-1 bg-black/5 dark:bg-white/[0.05] backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-full p-1 transition-colors duration-300">
+            <div className="hidden lg:flex items-center gap-1 bg-zinc-50 dark:bg-white/[0.05] rounded-full p-1 transition-colors duration-300">
               {navLinks?.map((link) => (
                 <a
                   key={link.label}
@@ -148,7 +148,7 @@ export default function HeroAscii({
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                   }}
-                  className="px-4 py-2 text-xs font-mono text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all tracking-normal rounded-full cursor-pointer"
+                  className="px-4 py-2 text-30 text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all tracking-normal rounded-full cursor-pointer"
                 >
                   {link.label}
                 </a>
@@ -412,12 +412,6 @@ export default function HeroAscii({
                       </p>
                       <div className="flex flex-wrap gap-4">
                         <button
-                          onClick={() => router.push('/register')}
-                          className="px-6 py-3 bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 rounded-md font-sans font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all text-sm"
-                        >
-                          Learn more
-                        </button>
-                        <button
                           onClick={() => window.open("https://cal.com/ahmad-moltafet-q8mgvt", "_blank", "noopener,noreferrer")}
                           className="px-6 py-3 bg-transparent border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-50 rounded-full font-sans font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all text-sm"
                         >
@@ -427,7 +421,8 @@ export default function HeroAscii({
                     </div>
 
                     {/* Right side: Feature Collage */}
-                    <div className="relative h-[600px] w-full hidden lg:block">
+                    <div className="relative h-[720px] w-full hidden lg:block scale-110">
+
 
 
                       {/* Card 2: Report Preview (Olleey Data) */}
@@ -435,16 +430,16 @@ export default function HeroAscii({
                         initial={{ opacity: 0, y: 20, rotate: 2 }}
                         animate={{ opacity: 1, y: 0, rotate: 0 }}
                         transition={{ duration: 0.8, delay: 0.4 }}
-                        className="absolute top-0 right-0 w-[420px] bg-white dark:bg-zinc-900 p-8 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-800 z-0"
+                        className="absolute -top-10 right-0 w-[440px] bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-2xl border border-zinc-100 dark:border-zinc-800 z-0"
                       >
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4 block">Report Preview</span>
                         <div className="grid grid-cols-2 gap-8 mb-6">
                           <div>
                             <span className="text-[9px] font-bold text-zinc-400 uppercase block mb-1">GLOBAL CAMPAIGN</span>
                             <p className="text-xl font-medium text-zinc-900 dark:text-zinc-100">Regional distribution</p>
-                            <div className="flex gap-1.5 mt-2">
+                            <div className="flex gap-1.5 mt-3">
                               {['ES', 'MX', 'BR', 'DE', 'FR'].map(country => (
-                                <span key={country} className="text-[8px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-bold">{country}</span>
+                                <span key={country} className="text-[8px] px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-bold border border-zinc-200/50 dark:border-zinc-700/50">{country}</span>
                               ))}
                             </div>
                           </div>
@@ -459,9 +454,37 @@ export default function HeroAscii({
                             </div>
                           </div>
                         </div>
-                        <div className="w-full h-40 bg-[#d4e157]/20 rounded-xl overflow-hidden relative">
-                          <div className="absolute inset-0 dither-pattern opacity-20" />
-                          <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#d4e157]/40 to-transparent" />
+                        <div className="w-full h-40 bg-[#d4e157]/15 rounded-2xl overflow-hidden relative border border-[#d4e157]/20 flex items-center justify-center">
+                          <div className="absolute inset-0 dither-pattern opacity-10" />
+                          <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#d4e157]/30 to-transparent" />
+
+                          <div className="relative flex -space-x-3 z-10">
+                            {[
+                              { c: 'us', d: 0.1 },
+                              { c: 'gb', d: 0.2 },
+                              { c: 'es', d: 0.3 },
+                              { c: 'br', d: 0.4 },
+                              { c: 'mx', d: 0.5 }
+                            ].map((flag, i) => (
+                              <motion.div
+                                key={flag.c}
+                                initial={{ opacity: 0, scale: 0.8, x: -10 }}
+                                animate={{ opacity: 1, scale: 1, x: 0 }}
+                                transition={{ delay: 1.2 + flag.d, duration: 0.4 }}
+                                className="w-12 h-12 rounded-full border-4 border-white dark:border-zinc-900 overflow-hidden shadow-xl"
+                                style={{ zIndex: 10 - i }}
+                              >
+                                <img
+                                  src={`https://flagcdn.com/w80/${flag.c}.png`}
+                                  className="w-full h-full object-cover"
+                                  alt={flag.c}
+                                />
+                              </motion.div>
+                            ))}
+                            <div className="w-12 h-12 rounded-full border-4 border-white dark:border-zinc-900 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shadow-xl text-[10px] font-bold text-zinc-500 z-0">
+                              +12
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
 
@@ -470,61 +493,81 @@ export default function HeroAscii({
                         initial={{ opacity: 0, x: -40 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8, delay: 0.6 }}
-                        className="absolute bottom-10 left-0 w-64 bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-800 z-20"
+                        className="absolute bottom-32 left-[-20px] w-72 bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-2xl border border-zinc-100 dark:border-zinc-800 z-20"
                       >
-                        <div className="flex items-center gap-2 mb-4">
-                          <div className="w-4 h-4 rounded bg-emerald-500 flex items-center justify-center">
-                            <Zap className="w-2 h-2 text-white" />
+                        <div className="flex items-center gap-2 mb-6">
+                          <div className="w-5 h-5 rounded-full bg-zinc-900 dark:bg-white flex items-center justify-center">
+                            <Zap className="w-3 h-3 text-white dark:text-zinc-900" />
                           </div>
-                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Voice matching</span>
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Vocal Identity Match</span>
                         </div>
-                        <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-6 relative overflow-hidden">
+                        <div className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-8 relative overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: "88%" }}
+                            animate={{ width: "94%" }}
                             transition={{ duration: 1.5, delay: 1 }}
                             className="absolute inset-y-0 left-0 bg-zinc-900 dark:bg-zinc-100"
                           />
                         </div>
-                        <p className="text-[11px] font-medium text-zinc-400 mb-3">Does the emotive match feel natural?</p>
-                        <div className="flex gap-1 mb-2">
+                        <p className="text-[12px] font-medium text-zinc-500 mb-4 leading-relaxed">Identity preservation across target regions.</p>
+                        <div className="flex gap-1.5 mb-2">
                           {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className={`w-3.5 h-3.5 ${i <= 4 ? 'text-lime-400' : 'text-zinc-200 dark:text-zinc-700'}`}>
+                            <div key={i} className={`w-4 h-4 ${i <= 5 ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-200 dark:text-zinc-700'}`}>
                               <CheckCircle2 className="w-full h-full" />
                             </div>
                           ))}
                         </div>
-                        <span className="text-[9px] text-zinc-300 dark:text-zinc-600">88% Confidence score</span>
+                        <span className="text-[10px] text-zinc-400">94.8% Similarity score</span>
                       </motion.div>
 
-                      {/* Card 4: Moderated (Lip Sync) */}
+                      {/* Card 4: Video Player (The active component) */}
                       <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0, scale: 0.9, y: 40 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
                         transition={{ duration: 1, delay: 0.8 }}
-                        className="absolute bottom-0 right-0 w-80 bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-800 z-30"
+                        className="absolute -bottom-10 right-0 w-[480px] bg-zinc-900 p-1.5 rounded-[2rem] shadow-[0_40px_80px_rgba(0,0,0,0.4)] border border-white/10 z-30"
                       >
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-4 h-4 bg-blue-500 rounded flex items-center justify-center">
-                            <Image src="/images/translogowhite.png" alt="O" width={8} height={8} />
-                          </div>
-                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Automated Lip-Sync</span>
-                        </div>
-                        <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 mb-3 group">
+                        <div className="relative aspect-video rounded-[1.8rem] overflow-hidden bg-black group">
                           <Image
                             src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop"
-                            alt="Demo"
+                            alt="Sydney Office Interview"
                             fill
-                            className="object-cover transition-transform group-hover:scale-105"
+                            className="object-cover opacity-80"
+                            style={{ objectPosition: '50% 15%' }}
                           />
-                          <div className="absolute inset-0 bg-black/10" />
-                          <div className="absolute bottom-3 left-4 right-4 h-0.5 bg-white/30 rounded-full">
-                            <div className="w-[60%] h-full bg-blue-500 rounded-full relative">
-                              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full border border-blue-500" />
+
+                          {/* Player UI */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform">
+                              <Play className="w-6 h-6 text-white ml-1 fill-white" />
                             </div>
                           </div>
+
+                          {/* Bottom Controls */}
+                          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex gap-3 items-center">
+                                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                                <span className="text-[10px] font-mono text-white/80 tracking-widest uppercase">SYDNEY_OFFICE_INTERVIEW_EN.MP4</span>
+                              </div>
+                              <span className="text-[10px] font-mono text-white/60 tracking-wider">04:22 / 12:00</span>
+                            </div>
+                            <div className="w-full h-1 bg-white/20 rounded-full relative overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: "35%" }}
+                                transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+                                className="absolute inset-y-0 left-0 bg-blue-500"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Process Tag */}
+                          <div className="absolute top-6 right-6 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full border border-white/20 flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[9px] font-mono text-white/90 uppercase tracking-tighter">AI Localizing...</span>
+                          </div>
                         </div>
-                        <p className="text-[10px] text-zinc-400 font-medium">Refining mouth movement for Spanish (Latin America)</p>
                       </motion.div>
                     </div>
                   </div>
