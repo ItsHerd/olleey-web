@@ -27,10 +27,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 const saved = localStorage.getItem("theme") as Theme;
                 if (saved) {
                     resolvedTheme = saved;
-                } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-                    resolvedTheme = 'dark';
                 } else {
-                    resolvedTheme = 'light';
+                    resolvedTheme = 'dark';
                 }
             }
 
