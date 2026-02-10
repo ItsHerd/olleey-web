@@ -6,35 +6,35 @@ import { Globe, Zap, Languages, CheckCircle2, Rocket } from 'lucide-react';
 
 const steps = [
     {
-        title: "Your video hits the web.",
+        title: "When you publish your video on the web",
         description: "Zero-latency master detection across YouTube, RSS, and storage buckets the moment you upload.",
         icon: Globe,
         color: "text-blue-500",
         delay: 0.1
     },
     {
-        title: "Olleey rebuilds it for every language.",
+        title: "Olleey rebuilds for every language",
         description: "Simultaneous neural voice cloning and regenerative lip-syncing spin up in parallel for every region.",
         icon: Languages,
         color: "text-purple-500",
         delay: 0.2
     },
     {
-        title: "Everything feels native.",
+        title: "It ensures authentic and quality videos",
         description: "Preserving 1:1 vocal identity and emotive nuances so your identity remains native globally.",
         icon: Zap,
         color: "text-olleey-yellow",
         delay: 0.3
     },
     {
-        title: "Olleey publishes to your destinations.",
+        title: "Olleey deploys dubbed videos to other channels",
         description: "Direct-to-platform distribution via YouTube MLA tracks or regional satellite channels.",
         icon: Rocket,
         color: "text-orange-500",
         delay: 0.4
     },
     {
-        title: "You reach the world—hands free.",
+        title: "You reach the world hands free.",
         description: "The result: a frictionless global release, every time. Pure automation from end to end.",
         icon: CheckCircle2,
         color: "text-green-500",
@@ -45,20 +45,6 @@ const steps = [
 export const GlobalLifecycle = () => {
     return (
         <section id="distribution" className="py-32 bg-white dark:bg-black border-t border-black/10 dark:border-white/10 relative z-10 overflow-hidden transition-colors duration-300">
-            {/* Grid Background - Light Mode */}
-            <div className="absolute inset-0 z-0 opacity-5 dark:opacity-0 transition-opacity duration-300"
-                style={{
-                    backgroundImage: 'linear-gradient(black 1px, transparent 1px), linear-gradient(90deg, black 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
-                }}
-            />
-            {/* Grid Background - Dark Mode */}
-            <div className="absolute inset-0 z-0 opacity-0 dark:opacity-10 transition-opacity duration-300"
-                style={{
-                    backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
-                }}
-            />
 
             <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px] relative z-10">
                 {/* Header Text */}

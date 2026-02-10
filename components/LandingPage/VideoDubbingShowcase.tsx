@@ -147,7 +147,19 @@ export default function VideoDubbingShowcase() {
     return (
         <section id="product" className="py-24 bg-white dark:bg-black border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300">
             {/* Background Grid - Light Mode */}
-
+            <div className="absolute inset-0 z-0 opacity-5 dark:opacity-0 transition-opacity duration-300"
+                style={{
+                    backgroundImage: 'linear-gradient(black 1px, transparent 1px), linear-gradient(90deg, black 1px, transparent 1px)',
+                    backgroundSize: '40px 40px'
+                }}
+            />
+            {/* Grid Background - Dark Mode */}
+            <div className="absolute inset-0 z-0 opacity-0 dark:opacity-10 transition-opacity duration-300"
+                style={{
+                    backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
+                    backgroundSize: '40px 40px'
+                }}
+            />
 
             <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] relative z-10">
                 <div className="text-center mb-16">

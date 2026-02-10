@@ -38,9 +38,10 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
 
             <PixelatedGlobe />
 
-            <div className="relative z-20 -mt-[100vh]">
-                <GlobalLifecycle />
+            <div className="relative z-20 -mt-[100vh] pt-10">
                 <VideoDubbingShowcase />
+
+                <GlobalLifecycle />
                 <FAQ />
             </div>
 

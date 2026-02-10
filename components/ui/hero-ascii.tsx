@@ -199,7 +199,7 @@ export default function HeroAscii({
         </div>
       </div>
 
-      <div className="relative z-10 flex min-h-screen items-center" style={{ marginTop: '5vh' }}>
+      <div className="relative z-10 flex h-screen items-center">
         <div className="container mx-auto px-6 lg:px-16">
           <div className="relative">
 
@@ -421,7 +421,7 @@ export default function HeroAscii({
                     </div>
 
                     {/* Right side: Feature Collage */}
-                    <div className="relative h-[720px] w-full hidden lg:block scale-110">
+                    <div className="relative h-[650px] w-full hidden lg:block">
 
 
 
@@ -430,7 +430,7 @@ export default function HeroAscii({
                         initial={{ opacity: 0, y: 20, rotate: 2 }}
                         animate={{ opacity: 1, y: 0, rotate: 0 }}
                         transition={{ duration: 0.8, delay: 0.4 }}
-                        className="absolute -top-10 right-0 w-[440px] bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-2xl border border-zinc-100 dark:border-zinc-800 z-0"
+                        className="absolute top-0 right-0 w-[440px] bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-2xl border border-zinc-100 dark:border-zinc-800 z-0"
                       >
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4 block">Report Preview</span>
                         <div className="grid grid-cols-2 gap-8 mb-6">
@@ -525,7 +525,7 @@ export default function HeroAscii({
                         initial={{ opacity: 0, scale: 0.9, y: 40 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         transition={{ duration: 1, delay: 0.8 }}
-                        className="absolute -bottom-10 right-0 w-[480px] bg-zinc-900 p-1.5 rounded-[2rem] shadow-[0_40px_80px_rgba(0,0,0,0.4)] border border-white/10 z-30"
+                        className="absolute bottom-4 right-0 w-[480px] bg-zinc-900 p-1.5 rounded-[2rem] shadow-[0_40px_80px_rgba(0,0,0,0.4)] border border-white/10 z-30"
                       >
                         <div className="relative aspect-video rounded-[1.8rem] overflow-hidden bg-black group">
                           <Image

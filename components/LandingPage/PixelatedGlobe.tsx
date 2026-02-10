@@ -35,13 +35,12 @@ export default function PixelatedGlobe() {
     restDelta: 0.001
   });
 
-  // Transformation for the "assembling" effect (0 to 0.4 of section scroll)
-  const assembleProgress = useTransform(smoothProgress, [0, 0.3], [0, 1]);
+  // Transformation for the "assembling" effect
+  const assembleProgress = useTransform(smoothProgress, [0.1, 0.4], [0, 1]);
 
   // Transformation for the "hiding" effect - we'll use sticky positioning for this
-  // but we can also fade it out slightly or scale it.
   const opacity = useTransform(smoothProgress, [0.7, 0.9], [1, 0]);
-  const scale = useTransform(smoothProgress, [0, 0.3, 0.7, 1], [0.8, 1, 1, 0.9]);
+  const scale = useTransform(smoothProgress, [0, 0.1, 0.5, 0.7, 1], [0.8, 0.8, 1, 1, 0.9]);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -179,7 +178,7 @@ export default function PixelatedGlobe() {
   }, [isMobile]);
 
   return (
-    <div ref={containerRef} className="relative h-[200vh] z-0 bg-white dark:bg-black transition-colors duration-300">
+    <div ref={containerRef} className="relative h-[400vh] z-0 bg-white dark:bg-black transition-colors duration-300">
       {/* Sticky container for the globe */}
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden pointer-events-none">
         <motion.div
@@ -215,7 +214,7 @@ export default function PixelatedGlobe() {
       </div>
 
       {/* Spacer for scroll assembly effect */}
-      <div className="h-screen" />
+      <div className="h-[300vh]" />
     </div>
   );
 }
