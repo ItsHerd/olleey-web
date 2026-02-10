@@ -63,15 +63,6 @@ Olleey uses a **two-service architecture**:
 └─────────────────────────────────────┘
 ```
 
-**Why Keep Separate?**
-- ✅ Video processing is CPU/memory intensive (better suited for Python backend)
-- ✅ API keys security (never exposed to frontend)
-- ✅ Long-running jobs (10-30 minutes) need persistent workers
-- ✅ Job queue requires background workers (Celery/RQ)
-- ✅ Python ecosystem has better video processing libraries
-- ✅ Independent scaling (scale workers separately from web servers)
-- ✅ Clear separation of concerns
-
 **Frontend Responsibilities (olleey-web):**
 - Display UI and handle user interactions
 - Manage client-side state and authentication
@@ -157,21 +148,6 @@ Olleey uses a **two-service architecture**:
   - Cannot mix/match best-in-class providers per stage
   - Dependent on single provider's uptime
 - **Use when**: Building MVP, want faster time-to-market, or prioritize simplicity
-
-**Option B: Modular Pipeline (Separate Services)**
-- **What it includes**: Choose best provider for each stage (Whisper for transcription, DeepL for translation, ElevenLabs for TTS, etc.)
-- **Pros**: 
-  - Flexibility to use best-in-class service per stage
-  - Can swap providers without full refactor
-  - Better for specific use cases (e.g., specialized translation domains)
-- **Cons**: 
-  - More complex integration
-  - More code to maintain
-  - Higher costs (paying multiple providers)
-  - Manual timing synchronization between stages
-- **Use when**: Need best quality per stage, have specific provider requirements, or want maximum flexibility
-
-**Recommended Approach**: Start with **Option A (ElevenLabs Dubbing API)** for MVP, then optionally add Option B as an advanced/premium feature.
 
 ---
 
