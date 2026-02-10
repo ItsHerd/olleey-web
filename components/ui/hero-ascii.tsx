@@ -405,7 +405,7 @@ export default function HeroAscii({
                     {/* Left side: Typography & CTA */}
                     <div className="max-w-xl">
                       <h1 className="text-6xl lg:text-[96px] font-normal tracking-[-0.05em] leading-[0.9] text-zinc-900 dark:text-zinc-50 mb-10 font-sans">
-                        Platform to expand your reach <br /> in your voice
+                        Expand your reach <br /> in your own voice
                       </h1>
                       <p className="text-xl lg:text-2xl text-zinc-500 dark:text-zinc-400 mb-12 leading-relaxed font-sans max-w-sm">
                         In a world moving faster than ever, Olleey turns global distribution into clarity your team can act on.
