@@ -44,10 +44,10 @@ export function AccountView({ theme }: { theme: string }) {
                 {settings.map((item, idx) => (
                     <div
                         key={idx}
-                        className={`p-4 rounded-2xl border ${borderClass} hover:bg-white/[0.02] cursor-pointer transition-all flex items-center justify-between group`}
+                        className={`p-4 rounded-2xl border ${borderClass} ${isDark ? "hover:bg-white/[0.02]" : "hover:bg-white hover:border-gray-300"} cursor-pointer transition-all flex items-center justify-between group`}
                     >
                         <div className="flex items-center gap-4">
-                            <div className={`p-2 rounded-xl bg-white/5 border border-white/5 group-hover:border-white/10 group-hover:bg-white/10 transition-colors`}>
+                            <div className={`p-2 rounded-xl border ${isDark ? "bg-white/5 border-white/5 group-hover:border-white/10 group-hover:bg-white/10" : "bg-gray-100 border-gray-200 group-hover:bg-gray-200"} transition-colors`}>
                                 <item.icon className={`w-5 h-5 ${mutedTextClass}`} />
                             </div>
                             <div>
@@ -55,7 +55,7 @@ export function AccountView({ theme }: { theme: string }) {
                                 <p className={`text-sm ${mutedTextClass}`}>{item.desc}</p>
                             </div>
                         </div>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${mutedTextClass} group-hover:text-white transition-colors`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${mutedTextClass} ${isDark ? "group-hover:text-white" : "group-hover:text-gray-900"} transition-colors`}>
                             →
                         </div>
                     </div>

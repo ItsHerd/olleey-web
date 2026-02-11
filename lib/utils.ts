@@ -61,3 +61,14 @@ export function formatDuration(seconds: number): string {
   }
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
+
+export function getInitialsAvatar(name: string) {
+  const initials = name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  return `https://ui-avatars.com/api/?name=${initials}&background=random&color=fff&bold=true`;
+}

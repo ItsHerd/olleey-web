@@ -76,10 +76,10 @@ export function ManualWorkflowView({ onViewChange, theme }: ManualWorkflowViewPr
     if (isLoading) {
         return (
             <div className={`flex flex-col items-center justify-center h-full p-8 animate-pulse`}>
-                <div className="w-20 h-20 rounded-[2.5rem] bg-white/5 border border-white/10 flex items-center justify-center mb-8">
+                <div className={`w-20 h-20 rounded-[2.5rem] ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200"} border flex items-center justify-center mb-8`}>
                     <Loader2 className={`h-10 w-10 animate-spin text-olleey-yellow stroke-[1.5px]`} />
                 </div>
-                <p className="text-xs font-black uppercase tracking-[0.4em] text-white/30">Calibrating Engines...</p>
+                <p className={`text-xs font-black uppercase tracking-[0.4em] ${isDark ? "text-white/30" : "text-gray-400"}`}>Calibrating Engines...</p>
             </div>
         );
     }
@@ -93,16 +93,16 @@ export function ManualWorkflowView({ onViewChange, theme }: ManualWorkflowViewPr
                 className="max-w-5xl mx-auto space-y-6"
             >
                 {/* Simplified Header */}
-                <motion.div variants={itemVariants} className="relative group rounded-3xl border border-white/5 bg-[#0c0c0c] p-8 overflow-hidden shadow-2xl">
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                <motion.div variants={itemVariants} className={`relative group rounded-3xl border ${isDark ? "border-white/5 bg-[#0c0c0c]" : "border-gray-200 bg-white"} p-8 overflow-hidden shadow-2xl`}>
+                    <div className={`absolute inset-0 ${isDark ? "bg-gradient-to-br from-white/5 to-transparent" : "bg-gradient-to-br from-gray-50 to-transparent"} pointer-events-none`} />
                     <div className="relative z-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-olleey-yellow/10 border border-olleey-yellow/20 text-[9px] font-black uppercase tracking-[0.2em] text-olleey-yellow mb-4 shadow-sm">
                             <Rocket className="w-3 h-3" /> Deployment
                         </div>
-                        <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">
+                        <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"} mb-2 tracking-tight`}>
                             Manual Ingestion
                         </h1>
-                        <p className="text-gray-400 text-sm max-w-xl leading-relaxed">
+                        <p className={`${isDark ? "text-gray-400" : "text-gray-600"} text-sm max-w-xl leading-relaxed`}>
                             Configure your AI dubbing pipeline and launch new localizations.
                         </p>
                     </div>

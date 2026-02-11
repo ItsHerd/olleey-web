@@ -1,8 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Plus, Filter, Search, LayoutGrid, MessageSquare } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Plus,
+  Filter,
+  Search,
+  LayoutGrid,
+  MessageSquare,
+  Activity,
+  ChevronRight,
+  Zap,
+  TrendingUp,
+  Clock
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectedItem } from "../DashboardV2Layout";
@@ -18,6 +29,29 @@ interface DashboardViewProps {
   theme: string;
   onViewChange?: (view: any) => void;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 25
+    } as const
+  }
+};
 
 export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardViewProps) {
   const [viewMode, setViewMode] = useState<"agent" | "grid">("agent");
@@ -47,187 +81,224 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
 
   const completedRecentJobs = jobs.filter(j =>
     j.status === 'completed'
-  ).slice(0, 3); // Show last 3 completed
+  ).slice(0, 3);
 
-  const textClass = isDark ? "text-gray-300" : "text-gray-700";
+  const textClass = isDark ? "text-white" : "text-gray-900";
   const textSecondaryClass = isDark ? "text-gray-500" : "text-gray-500";
-  const cardBgClass = isDark ? "bg-[#1A1A1A]" : "bg-white";
-
-  // Show agent view by default
-  if (viewMode === "agent") {
-    return (
-      <div className="h-full flex flex-col">
-        <AgentView theme={theme} onViewChange={onViewChange} />
-      </div>
-    );
-  }
+  const cardBgClass = isDark ? "bg-[#141414]" : "bg-white";
+  const borderClass = isDark ? "border-white/10" : "border-gray-200";
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="px-8 py-5 border-b border-white/10">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold mb-0.5">Control Room</h1>
-            <p className={`text-xs ${textSecondaryClass}`}>
-              Monitor active pipelines and review completed localizations
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setViewMode("agent")}
-              className="gap-2 h-9 px-3 text-xs"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              Agent View
-            </Button>
-            <Button
-              onClick={() => setShowNewModal(true)}
-              className="bg-[#FFC107] hover:bg-[#FFB300] text-black font-semibold gap-2 h-9 px-4 text-xs border border-amber-400/50 shadow-lg shadow-amber-400/10"
-            >
-              <Plus className="w-4 h-4" />
-              New Localization
-            </Button>
-          </div>
+    <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-gray-50"}`}>
+      {viewMode === "agent" ? (
+        <div className="h-full flex flex-col">
+          <AgentView theme={theme} onViewChange={onViewChange} />
         </div>
+      ) : (
+        <>
+          {/* Background Glow */}
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FFC107]/5 blur-[120px] rounded-full pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
 
-        {/* Search & Filter Bar */}
-        <div className="flex gap-2 mt-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <Input
-              placeholder="Search jobs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-9 text-xs"
-            />
+          {/* Header */}
+          <div className={`px-8 py-6 border-b ${borderClass} relative z-10 backdrop-blur-sm bg-opacity-80`}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Activity className="w-4 h-4 text-[#FFC107]" />
+                  <h1 className={`text-2xl font-black tracking-tight ${textClass}`}>Olleey Control</h1>
+                </div>
+                <p className={`text-xs font-medium uppercase tracking-widest ${textSecondaryClass} opacity-80`}>
+                  Quantum localizations pipeline monitor
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center p-1 rounded-2xl ${isDark ? 'bg-white/5' : 'bg-gray-100'} border ${borderClass}`}>
+                  <button
+                    onClick={() => setViewMode("agent")}
+                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'agent' ? 'bg-[#FFC107] text-black shadow-lg shadow-[#FFC107]/10' : `${textSecondaryClass} hover:${isDark ? 'text-white' : 'text-gray-900'}`}`}
+                  >
+                    Agent
+                  </button>
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-[#FFC107] text-black shadow-lg shadow-[#FFC107]/10' : `${textSecondaryClass} hover:${isDark ? 'text-white' : 'text-gray-900'}`}`}
+                  >
+                    Grid
+                  </button>
+                </div>
+                <Button
+                  onClick={() => setShowNewModal(true)}
+                  className="bg-white hover:bg-gray-100 text-black font-black px-6 h-11 rounded-2xl text-[10px] uppercase tracking-widest gap-2 border-2 border-gray-100 transition-all active:scale-95 shadow-xl shadow-black/5"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[3px]" />
+                  Initialize
+                </Button>
+              </div>
+            </div>
+
+            {/* Search & Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-3 mt-8">
+              <div className="relative flex-1">
+                <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${textSecondaryClass}`} />
+                <input
+                  placeholder="Search pipelines..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`w-full ${isDark ? 'bg-white/[0.03]' : 'bg-white'} border ${borderClass} rounded-2xl h-12 pl-12 pr-4 text-xs font-medium focus:outline-none focus:border-[#FFC107]/40 transition-all`}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className={`h-12 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${borderClass} ${isDark ? 'bg-white/5' : 'bg-white'}`}>
+                  <Filter className="w-3.5 h-3.5 mr-2" />
+                  Filter
+                </Button>
+              </div>
+            </div>
           </div>
-          <Button variant="outline" size="sm" className="gap-2 h-9">
-            <Filter className="w-3.5 h-3.5" />
-            Filter
-          </Button>
-        </div>
-      </div>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-auto p-6">
-        {/* Active Pipelines */}
-        {activeJobs.length > 0 && (
-          <section className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">Active Pipelines</h2>
-              <span className={`text-xs ${textSecondaryClass}`}>
-                {activeJobs.length} running
-              </span>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {activeJobs.map((job, idx) => (
-                <motion.div
-                  key={job.job_id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                >
-                  <JobCard
-                    job={job}
-                    onClick={() =>
-                      onSelectJob({ type: "job", id: job.job_id, data: job })
-                    }
-                    theme={theme}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Needs Review */}
-        {needsReviewJobs.length > 0 && (
-          <section className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">Needs Review</h2>
-              <span className="text-xs text-[#FFC107]">
-                {needsReviewJobs.length} awaiting approval
-              </span>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {needsReviewJobs.map((job, idx) => (
-                <motion.div
-                  key={job.job_id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                >
-                  <JobCard
-                    job={job}
-                    onClick={() =>
-                      onSelectJob({ type: "job", id: job.job_id, data: job })
-                    }
-                    theme={theme}
-                    highlight="review"
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Recently Completed */}
-        {completedRecentJobs.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Recently Completed</h2>
-              <Button variant="ghost" size="sm" className="text-[#FFC107]">
-                View All →
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {completedRecentJobs.map((job, idx) => (
-                <motion.div
-                  key={job.job_id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                >
-                  <JobCard
-                    job={job}
-                    onClick={() =>
-                      onSelectJob({ type: "job", id: job.job_id, data: job })
-                    }
-                    theme={theme}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Empty State */}
-        {activeJobs.length === 0 && needsReviewJobs.length === 0 && completedRecentJobs.length === 0 && !loading && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={`${cardBgClass} rounded-2xl border border-white/10 p-12 text-center`}
-          >
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FFC107]/10 flex items-center justify-center">
-              <Plus className="w-8 h-8 text-[#FFC107]" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">No Active Jobs</h3>
-            <p className={`${textSecondaryClass} mb-6 max-w-md mx-auto`}>
-              Start your first localization to see your pipeline in action. Upload a video
-              and select target languages to begin.
-            </p>
-            <Button
-              onClick={() => setShowNewModal(true)}
-              className="bg-[#FFC107] hover:bg-[#FFB300] text-black font-semibold"
+          {/* Content Area */}
+          <div className="flex-1 overflow-auto p-8 custom-scrollbar relative z-10">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="max-w-7xl mx-auto space-y-12"
             >
-              Create First Job
-            </Button>
-          </motion.div>
-        )}
-      </div>
+              {/* Quick Stats Header (Visual only) */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: "Active Nodes", value: activeJobs.length, icon: Zap, color: "text-blue-400" },
+                  { label: "Awaiting Review", value: needsReviewJobs.length, icon: Clock, color: "text-[#FFC107]" },
+                  { label: "Success Rate", value: "98.4%", icon: TrendingUp, color: "text-green-400" },
+                  { label: "Total Capacity", value: "1.2 TB", icon: Activity, color: "text-purple-400" }
+                ].map((stat, idx) => (
+                  <motion.div
+                    key={idx}
+                    variants={itemVariants}
+                    className={`${cardBgClass} border ${borderClass} p-5 rounded-3xl group hover:border-[#FFC107]/20 transition-all cursor-default shadow-sm`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                      <ChevronRight className={`w-3 h-3 ${textSecondaryClass} opacity-0 group-hover:opacity-100 transition-all`} />
+                    </div>
+                    <div className={`text-2xl font-black ${textClass}`}>{stat.value}</div>
+                    <div className={`text-[9px] font-black uppercase tracking-widest ${textSecondaryClass} mt-1`}>{stat.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Active Pipelines */}
+              {activeJobs.length > 0 && (
+                <section>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-6 bg-blue-500 rounded-full" />
+                      <h2 className={`text-xl font-black ${textClass} tracking-tight`}>Active Pipelines</h2>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {activeJobs.map((job) => (
+                      <motion.div variants={itemVariants} key={job.job_id}>
+                        <JobCard
+                          job={job}
+                          onClick={() =>
+                            onSelectJob({ type: "job", id: job.job_id, data: job })
+                          }
+                          theme={theme}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Needs Review */}
+              {needsReviewJobs.length > 0 && (
+                <section>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-6 bg-[#FFC107] rounded-full" />
+                      <h2 className={`text-xl font-black ${textClass} tracking-tight`}>Human in the Loop</h2>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#FFC107] bg-[#FFC107]/10 px-3 py-1 rounded-full border border-[#FFC107]/20">
+                      {needsReviewJobs.length} Review Requested
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {needsReviewJobs.map((job) => (
+                      <motion.div variants={itemVariants} key={job.job_id}>
+                        <JobCard
+                          job={job}
+                          onClick={() =>
+                            onSelectJob({ type: "job", id: job.job_id, data: job })
+                          }
+                          theme={theme}
+                          highlight="review"
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Recently Completed */}
+              {completedRecentJobs.length > 0 && (
+                <section>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-6 bg-green-500 rounded-full" />
+                      <h2 className={`text-xl font-black ${textClass} tracking-tight`}>Operation History</h2>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-[#D97757] hover:underline">
+                      Terminal Log →
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {completedRecentJobs.map((job) => (
+                      <motion.div variants={itemVariants} key={job.job_id}>
+                        <JobCard
+                          job={job}
+                          onClick={() =>
+                            onSelectJob({ type: "job", id: job.job_id, data: job })
+                          }
+                          theme={theme}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Empty State */}
+              {activeJobs.length === 0 && needsReviewJobs.length === 0 && completedRecentJobs.length === 0 && !loading && (
+                <motion.div
+                  variants={itemVariants}
+                  className={`${cardBgClass} rounded-[3rem] border ${borderClass} p-20 text-center relative overflow-hidden group`}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#FFC107]/5 to-transparent opacity-50 pointer-events-none" />
+                  <div className="relative z-10">
+                    <div className="w-24 h-24 mx-auto mb-8 rounded-[2rem] bg-[#FFC107]/10 border border-[#FFC107]/20 flex items-center justify-center rotate-6 group-hover:rotate-0 transition-transform duration-500 shadow-2xl shadow-[#FFC107]/10">
+                      <Zap className="w-12 h-12 text-[#FFC107]" />
+                    </div>
+                    <h3 className={`text-3xl font-black mb-4 tracking-tighter ${textClass}`}>Digital Void Detected</h3>
+                    <p className={`text-base ${textSecondaryClass} mb-12 max-w-md mx-auto font-medium leading-relaxed`}>
+                      No active localization streams detected in this project. Initialize your first neural node to begin global synchronization.
+                    </p>
+                    <Button
+                      onClick={() => setShowNewModal(true)}
+                      className="bg-[#FFC107] hover:bg-[#FFB300] text-black font-black px-12 h-14 rounded-2xl text-sm uppercase tracking-[0.1em] shadow-2xl shadow-[#FFC107]/20 transition-all active:scale-95"
+                    >
+                      Initialize First Pipeline
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          </div>
+        </>
+      )}
 
       {/* New Localization Modal */}
       <NewLocalizationModal

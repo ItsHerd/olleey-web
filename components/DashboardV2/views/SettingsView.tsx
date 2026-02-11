@@ -42,10 +42,10 @@ export function SettingsView({ theme }: { theme: string }) {
               {group.items.map((item, i) => (
                 <div
                   key={i}
-                  className={`p-4 rounded-2xl border ${borderClass} ${cardBgClass} flex items-center justify-between hover:border-white/20 transition-all cursor-pointer group`}
+                  className={`p-4 rounded-2xl border ${borderClass} ${cardBgClass} flex items-center justify-between ${isDark ? "hover:border-white/20" : "hover:border-gray-300 hover:bg-white"} transition-all cursor-pointer group`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-xl bg-white/5 border border-white/5">
+                    <div className={`p-2 rounded-xl ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} border shadow-sm`}>
                       <item.icon className={`w-5 h-5 ${mutedTextClass}`} />
                     </div>
                     <span className={`font-medium ${textClass}`}>{item.label}</span>

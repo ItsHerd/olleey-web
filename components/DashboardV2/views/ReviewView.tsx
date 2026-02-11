@@ -205,27 +205,27 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
     return (
         <div className={`w-full h-full flex flex-col ${bgClass} overflow-hidden rounded-tl-3xl shadow-2xl`}>
             {/* Header Toolbar */}
-            <div className={`flex items-center justify-between px-6 py-4 border-b ${borderClass} bg-[#0c0c0c] shadow-md z-30`}>
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${borderClass} ${isDark ? "bg-[#0c0c0c]" : "bg-white"} shadow-md z-30`}>
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => onViewChange?.("dashboard")} className="rounded-full w-8 h-8 hover:bg-white/10 border border-white/0 hover:border-white/10 transition-all">
+                    <Button variant="ghost" size="icon" onClick={() => onViewChange?.("dashboard")} className={`rounded-full w-8 h-8 ${isDark ? "hover:bg-white/10 border-white/0 hover:border-white/10" : "hover:bg-gray-100 border-transparent hover:border-gray-200"} transition-all`}>
                         <X className="w-4 h-4" />
                     </Button>
                     <div>
-                        <h2 className="text-sm font-bold text-white leading-tight">{videoTitle || "Untitled Video"}</h2>
+                        <h2 className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"} leading-tight`}>{videoTitle || "Untitled Video"}</h2>
                         <div className="flex items-center gap-2 mt-0.5">
-                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-white/10 text-white/50">{languageName}</Badge>
-                            <span className="text-[10px] text-white/30 truncate max-w-[200px]">{videoIdFromUrl}</span>
+                            <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 ${isDark ? "border-white/10 text-white/50" : "border-gray-200 text-gray-500"}`}>{languageName}</Badge>
+                            <span className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"} truncate max-w-[200px]`}>{videoIdFromUrl}</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <div className={`flex items-center bg-white/5 rounded-full p-1 border border-white/10 shadow-inner`}>
+                    <div className={`flex items-center ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200"} rounded-full p-1 border shadow-inner`}>
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setIsPreviewMode(false)}
-                            className={cn("h-7 px-3 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all", !isPreviewMode ? "bg-white text-black shadow-lg" : "text-white/40 hover:text-white")}
+                            className={cn("h-7 px-3 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all", !isPreviewMode ? (isDark ? "bg-white text-black shadow-lg" : "bg-white text-gray-900 shadow-md border border-gray-200") : `${isDark ? "text-white/40 hover:text-white" : "text-gray-500 hover:text-gray-900"}`)}
                         >
                             Edit
                         </Button>
@@ -233,7 +233,7 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
                             variant="ghost"
                             size="sm"
                             onClick={() => setIsPreviewMode(true)}
-                            className={cn("h-7 px-3 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all", isPreviewMode ? "bg-white text-black shadow-lg" : "text-white/40 hover:text-white")}
+                            className={cn("h-7 px-3 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all", isPreviewMode ? (isDark ? "bg-white text-black shadow-lg" : "bg-white text-gray-900 shadow-md border border-gray-200") : `${isDark ? "text-white/40 hover:text-white" : "text-gray-500 hover:text-gray-900"}`)}
                         >
                             Preview
                         </Button>
@@ -247,9 +247,9 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
             {/* Content Area */}
             <div className="flex-1 flex overflow-hidden">
                 {/* Video Player Area */}
-                <div className="flex-1 bg-black/40 relative p-6 flex flex-col items-center justify-center">
+                <div className={`flex-1 ${isDark ? "bg-black/40" : "bg-gray-100"} relative p-6 flex flex-col items-center justify-center`}>
                     <div className="w-full max-w-5xl aspect-video bg-black rounded-2xl border border-white/10 relative overflow-hidden group shadow-2xl">
-                        <div className={`grid ${isPreviewMode ? 'grid-cols-1' : 'grid-cols-2'} h-full divide-x divide-white/10`}>
+                        <div className={`grid ${isPreviewMode ? 'grid-cols-1' : 'grid-cols-2'} h-full divide-x ${isDark ? "divide-white/10" : "divide-white/20"}`}>
                             {/* Original */}
                             {!isPreviewMode && (
                                 <div className="relative group/source">
@@ -306,16 +306,16 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
 
                 {/* Sidebar Tools (if needed) */}
                 {!isPreviewMode && (
-                    <div className="w-80 border-l border-white/5 bg-[#0c0c0c] flex flex-col">
-                        <div className="p-4 border-b border-white/5">
-                            <h3 className="text-xs font-black uppercase tracking-widest text-white/50">Quality Check</h3>
+                    <div className={`w-80 border-l ${isDark ? "border-white/5 bg-[#0c0c0c]" : "border-gray-200 bg-white"} flex flex-col`}>
+                        <div className={`p-4 border-b ${isDark ? "border-white/5" : "border-gray-200"}`}>
+                            <h3 className={`text-xs font-black uppercase tracking-widest ${isDark ? "text-white/50" : "text-gray-400"}`}>Quality Check</h3>
                         </div>
                         <div className="p-4 space-y-4 overflow-y-auto flex-1">
                             {/* Simplifed checklist for V2 demo */}
                             {['Lip Sync Accuracy', 'Audio Clarity', 'Translation Tone', 'Timing Sync'].map((item) => (
-                                <div key={item} className="p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between group cursor-pointer hover:bg-white/10">
-                                    <span className="text-xs font-medium text-white/70 group-hover:text-white">{item}</span>
-                                    <CheckCircle className="w-4 h-4 text-white/20 group-hover:text-emerald-500 transition-colors" />
+                                <div key={item} className={`p-3 rounded-xl ${isDark ? "bg-white/5 border-white/5 hover:bg-white/10" : "bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300"} border flex items-center justify-between group cursor-pointer transition-all`}>
+                                    <span className={`text-xs font-medium ${isDark ? "text-white/70 group-hover:text-white" : "text-gray-600 group-hover:text-gray-900"}`}>{item}</span>
+                                    <CheckCircle className={`w-4 h-4 ${isDark ? "text-white/20" : "text-gray-300"} group-hover:text-emerald-500 transition-colors`} />
                                 </div>
                             ))}
                         </div>

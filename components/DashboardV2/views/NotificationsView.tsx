@@ -69,7 +69,7 @@ export function NotificationsView({ theme }: { theme: string }) {
                 {notifications.map((notif) => (
                     <div
                         key={notif.id}
-                        className={`p-5 rounded-2xl border ${borderClass} ${cardBgClass} flex gap-5 hover:border-white/20 transition-all cursor-pointer group`}
+                        className={`p-5 rounded-2xl border ${borderClass} ${cardBgClass} flex gap-5 ${isDark ? "hover:border-white/20" : "hover:border-gray-300 hover:bg-white"} transition-all cursor-pointer group`}
                     >
                         <div className={`w-12 h-12 rounded-xl ${notif.iconBg} flex items-center justify-center shrink-0`}>
                             <notif.icon className={`w-6 h-6 ${notif.iconColor}`} />
@@ -87,7 +87,7 @@ export function NotificationsView({ theme }: { theme: string }) {
 
             {notifications.length === 0 && (
                 <div className="py-20 text-center">
-                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className={`w-16 h-16 ${isDark ? "bg-white/5" : "bg-gray-100"} rounded-full flex items-center justify-center mx-auto mb-4`}>
                         <Bell className={`w-8 h-8 ${mutedTextClass}`} />
                     </div>
                     <h3 className={`text-lg font-semibold ${textClass}`}>No new notifications</h3>

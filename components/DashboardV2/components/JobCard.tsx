@@ -67,7 +67,7 @@ export function JobCard({ job, onClick, theme, highlight }: JobCardProps) {
     ? "border-[#FFC107]/50 shadow-lg shadow-[#FFC107]/10"
     : highlight === "error"
       ? "border-red-500/50"
-      : "border-white/10";
+      : isDark ? "border-white/10" : "border-gray-200";
 
   return (
     <motion.div
@@ -119,7 +119,7 @@ export function JobCard({ job, onClick, theme, highlight }: JobCardProps) {
           {/* Quick Actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 border border-white/5 hover:border-white/20 hover:bg-white/10 transition-all">
+              <Button variant="ghost" size="sm" className={`h-8 w-8 p-0 border ${isDark ? "border-white/5 hover:border-white/20 hover:bg-white/10" : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"} transition-all`}>
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>

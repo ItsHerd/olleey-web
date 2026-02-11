@@ -16,7 +16,9 @@ import {
   Settings,
   HelpCircle,
   Globe,
-  Share2
+  Share2,
+  Sun,
+  Moon
 } from "lucide-react";
 import { ViewType } from "./DashboardV2Layout";
 import { useAuth } from "@/lib/AuthContext";
@@ -25,6 +27,7 @@ import { useDashboardChannels } from "@/lib/useDashboardChannels";
 import { useDashboardConnections } from "@/lib/useDashboardConnections";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { useVideos } from "@/lib/useVideos";
+import { useTheme } from "@/lib/useTheme";
 import { API_BASE_URL } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import {
@@ -71,6 +74,7 @@ export function LeftSidebar({
 }: LeftSidebarProps) {
   const { user } = useAuth();
   const { selectedProject } = useProject();
+  const { setTheme } = useTheme();
   const isDark = theme === "dark";
 
   const { channels, loading: channelsLoading, refetch: refetchChannels } = useDashboardChannels({
@@ -211,7 +215,7 @@ export function LeftSidebar({
         <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${mutedTextClass} opacity-60`} />
         <Input
           placeholder="Jump to..."
-          className={`pl-10 h-11 border-white/5 focus-visible:ring-1 focus-visible:ring-white/10 rounded-2xl ${isDark ? "bg-white/[0.02]" : "bg-gray-50/50"}`}
+          className={`pl-10 h-11 ${isDark ? "border-white/5 focus-visible:ring-white/10 bg-white/[0.02]" : "border-gray-200 focus-visible:ring-gray-300 bg-gray-50/50"} rounded-2xl`}
         />
       </div>
 
@@ -220,7 +224,7 @@ export function LeftSidebar({
         <Accordion type="multiple" defaultValue={["channels", "runs"]} className="space-y-1 relative">
           <AccordionItem value="channels" className="border-none">
             <AccordionTrigger
-              className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-2xl border ${borderClass} bg-white/[0.02] hover:bg-white/[0.05] ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}
+              className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-2xl border ${borderClass} ${isDark ? "bg-white/[0.02] hover:bg-white/[0.05]" : "bg-gray-50/50 hover:bg-gray-100/50"} ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}
             >
               <div className="flex items-center gap-2.5">
                 <Radio className="w-4 h-4 text-[#D97757]" />
@@ -238,14 +242,14 @@ export function LeftSidebar({
                     <motion.div
                       key={channel.id}
                       whileHover={{ x: 4 }}
-                      className={`group w-full p-2.5 rounded-2xl border ${borderClass} ${glassBgClass} flex items-center justify-between hover:border-white/20 transition-all cursor-default shadow-sm`}
+                      className={`group w-full p-2.5 rounded-2xl border ${borderClass} ${glassBgClass} flex items-center justify-between ${isDark ? "hover:border-white/20" : "hover:border-gray-300"} transition-all cursor-default shadow-sm`}
                     >
                       <div className="flex items-center gap-3 w-full overflow-hidden">
                         <div className="relative shrink-0">
                           {channel.channel_avatar_url ? (
-                            <img src={channel.channel_avatar_url} className="w-8 h-8 rounded-lg object-cover border border-white/10" alt="" />
+                            <img src={channel.channel_avatar_url} className={`w-8 h-8 rounded-lg object-cover border ${isDark ? "border-white/10" : "border-gray-200"}`} alt="" />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center">
+                            <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} border flex items-center justify-center`}>
                               <User className="w-4 h-4 text-gray-600" />
                             </div>
                           )}
@@ -276,7 +280,7 @@ export function LeftSidebar({
                       <div className="flex items-center gap-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} hover:border-white/20 hover:bg-white/10 transition-all shadow-sm mt-1`}>
+                            <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} ${isDark ? "hover:border-white/20 hover:bg-white/10" : "hover:border-gray-300 hover:bg-gray-50"} transition-all shadow-sm mt-1`}>
                               <MoreHorizontal className={`w-3.5 h-3.5 ${mutedTextClass}`} />
                             </button>
                           </DropdownMenuTrigger>
@@ -320,7 +324,7 @@ export function LeftSidebar({
 
           <AccordionItem value="runs" className="border-none">
             <AccordionTrigger
-              className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-2xl border ${borderClass} bg-white/[0.02] hover:bg-white/[0.05] ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}
+              className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-2xl border ${borderClass} ${isDark ? "bg-white/[0.02] hover:bg-white/[0.05]" : "bg-gray-50/50 hover:bg-gray-100/50"} ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}
               onClick={() => onViewChange("dashboard")}
             >
               <div className="flex items-center gap-2.5">
@@ -417,7 +421,7 @@ export function LeftSidebar({
           </AccordionItem>
 
           <AccordionItem value="distributions" className="border-none">
-            <AccordionTrigger className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-2xl border ${borderClass} bg-white/[0.02] hover:bg-white/[0.05] ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}>
+            <AccordionTrigger className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-2xl border ${borderClass} ${isDark ? "bg-white/[0.02] hover:bg-white/[0.05]" : "bg-gray-50/50 hover:bg-gray-100/50"} ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}>
               <div className="flex items-center gap-2.5">
                 <Share2 className="w-4 h-4 text-purple-400" />
                 Active Distributions
@@ -439,9 +443,9 @@ export function LeftSidebar({
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           {connection.channel_avatar_url ? (
-                            <img src={connection.channel_avatar_url} className="w-8 h-8 rounded-lg object-cover border border-white/10" alt="" />
+                            <img src={connection.channel_avatar_url} className={`w-8 h-8 rounded-lg object-cover border ${isDark ? "border-white/10" : "border-gray-200"}`} alt="" />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center">
+                            <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} border flex items-center justify-center`}>
                               <Globe className="w-4 h-4 text-gray-600" />
                             </div>
                           )}
@@ -464,7 +468,7 @@ export function LeftSidebar({
                         )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} hover:border-white/20 hover:bg-white/10 transition-all shadow-sm`}>
+                            <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} ${isDark ? "hover:border-white/20 hover:bg-white/10" : "hover:border-gray-300 hover:bg-gray-50"} transition-all shadow-sm`}>
                               <MoreHorizontal className={`w-3.5 h-3.5 ${mutedTextClass}`} />
                             </button>
                           </DropdownMenuTrigger>
@@ -505,7 +509,27 @@ export function LeftSidebar({
         </Accordion>
       </div>
 
-      <div className="mt-auto pt-6 border-t border-white/5 relative z-10">
+      <div className="mt-auto pt-6 border-t border-white/5 relative z-10 space-y-4">
+        {/* Theme Toggle */}
+        <div className={`p-1.5 rounded-2xl ${isDark ? 'bg-white/[0.03]' : 'bg-gray-100'} border ${borderClass} flex items-center gap-1.5`}>
+          <button
+            onClick={() => setTheme("light")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-[11px] font-bold transition-all duration-200 ${!isDark ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-400'
+              }`}
+          >
+            <Sun className={`w-3.5 h-3.5 ${!isDark ? 'text-amber-500' : ''}`} />
+            Light
+          </button>
+          <button
+            onClick={() => setTheme("dark")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-[11px] font-bold transition-all duration-200 ${isDark ? 'bg-[#1A1A1A] shadow-sm text-white' : 'text-gray-500 hover:text-gray-900'
+              }`}
+          >
+            <Moon className={`w-3.5 h-3.5 ${isDark ? 'text-blue-400' : ''}`} />
+            Dark
+          </button>
+        </div>
+
         <div className={`p-4 rounded-2xl ${isDark ? 'bg-[#D97757]/5' : 'bg-gray-50'} border ${borderClass} border-[#D97757]/10 flex items-center gap-3`}>
           <div className="w-8 h-8 rounded-full bg-[#D97757]/20 flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-[#D97757]" />

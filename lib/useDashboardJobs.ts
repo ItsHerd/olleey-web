@@ -46,8 +46,10 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
   const [error, setError] = useState<string | null>(null);
 
   const loadJobs = useCallback(async () => {
-    if (!enabled) {
-      console.log('[useDashboardJobs] Load disabled');
+    // Only load from legacy API if enabled and no Supabase data is present
+    // This avoids unnecessary "Failed to fetch" errors when backend is down but Supabase works
+    if (!enabled || (supabaseJobs && supabaseJobs.length > 0)) {
+      console.log('[useDashboardJobs] Load skipped: enabled=' + enabled + ', supabaseJobs=' + (supabaseJobs?.length || 0));
       return;
     }
 

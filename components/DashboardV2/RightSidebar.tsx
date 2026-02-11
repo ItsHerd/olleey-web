@@ -116,7 +116,7 @@ export function RightSidebar({
         <ExpandableTabs
           tabs={tabs}
           selected={getSelectedIndex()}
-          activeColor="text-white"
+          activeColor={isDark ? "text-white" : "text-gray-900"}
           className={isDark ? "border-white/10 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"}
           onChange={handleTabChange}
         />
@@ -260,7 +260,7 @@ export function RightSidebar({
                           {job.progress}%
                         </span>
                       </div>
-                      <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className={`w-full h-1 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-full overflow-hidden`}>
                         <motion.div
                           className="h-full bg-blue-500/50"
                           initial={{ width: 0 }}
@@ -285,13 +285,13 @@ export function RightSidebar({
       </div>
 
       {/* Manual Workflow Button */}
-      <div className="pt-4 border-t border-white/5 z-10">
+      <div className={`pt-4 border-t ${isDark ? "border-white/5" : "border-gray-100"} z-10`}>
         <Button
           variant="outline"
           onClick={() => onViewChange?.("manual_workflow")}
-          className="w-full flex items-center justify-center gap-2 h-10 border-dashed border-white/20 hover:border-white/40 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all text-xs font-medium uppercase tracking-wider"
+          className={`w-full flex items-center justify-center gap-2 h-10 border-dashed ${isDark ? "border-white/20 hover:border-white/40 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900"} transition-all text-xs font-medium uppercase tracking-wider`}
         >
-          <div className="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center">
+          <div className={`w-4 h-4 rounded-full border ${isDark ? "border-white/30" : "border-gray-400"} flex items-center justify-center`}>
             <span className="text-[9px] leading-none">+</span>
           </div>
           Manual Workflow

@@ -24,6 +24,8 @@ export default function DashboardV2Layout() {
   const { user, loading: authLoading } = useAuth();
   const { selectedProject } = useProject();
   const userId = user?.id;
+  const isDark = theme === "dark";
+  const bgClass = theme === "light" ? "bg-gray-50" : "bg-[#0A0A0A]";
 
   // Navigation state - must be declared before any conditional returns
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
@@ -41,10 +43,10 @@ export default function DashboardV2Layout() {
   // Show loading state while checking auth
   if (authLoading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#0A0A0A]">
+      <div className={`flex h-screen w-screen items-center justify-center ${isDark ? "bg-[#0A0A0A]" : "bg-gray-50"}`}>
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-[#FFC107] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Loading...</p>
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading...</p>
         </div>
       </div>
     );
@@ -62,10 +64,6 @@ export default function DashboardV2Layout() {
     ['pending', 'downloading', 'processing', 'uploading'].includes(j.status)
   ).length;
 
-  // Theme classes
-  const bgClass = theme === "light" ? "bg-gray-50" : "bg-[#0A0A0A]";
-  const isDark = theme === "dark";
-
   return (
     <div className={`flex h-screen w-screen overflow-hidden ${bgClass}`}>
       {/* Left Sidebar - Persistent Navigation (Collapsible) */}
@@ -76,7 +74,7 @@ export default function DashboardV2Layout() {
             animate={{ width: 320, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="h-full border-r border-white/10"
+            className={`h-full border-r ${isDark ? "border-white/10" : "border-gray-200"}`}
           >
             <LeftSidebar
               currentView={currentView}
@@ -99,7 +97,7 @@ export default function DashboardV2Layout() {
           <button
             onClick={() => setLeftSidebarOpen(true)}
             className={`absolute left-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-r-xl ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-white hover:bg-gray-50"
-              } border-r border-t border-b border-white/10 transition-all shadow-xl active:scale-95`}
+              } border-r border-t border-b ${isDark ? "border-white/10" : "border-gray-200"} transition-all shadow-xl active:scale-95`}
           >
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -123,7 +121,7 @@ export default function DashboardV2Layout() {
           <button
             onClick={() => setRightSidebarOpen(true)}
             className={`absolute right-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-l-xl ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-white hover:bg-gray-50"
-              } border-l border-t border-b border-white/10 transition-all shadow-xl active:scale-95`}
+              } border-l border-t border-b ${isDark ? "border-white/10" : "border-gray-200"} transition-all shadow-xl active:scale-95`}
           >
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -140,7 +138,7 @@ export default function DashboardV2Layout() {
             animate={{ width: 380, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="border-l border-white/10"
+            className={`border-l ${isDark ? "border-white/10" : "border-gray-200"}`}
           >
             <RightSidebar
               selectedItem={selectedItem}

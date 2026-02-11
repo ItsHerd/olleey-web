@@ -988,40 +988,53 @@ export const authenticatedFetch = async (
     Authorization: `Bearer ${token}`,
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-  // If token expired, try to refresh
-  if (response.status === 401) {
-    try {
-      await authAPI.refresh();
-      // Retry the request with new token
-      const newToken = tokenStorage.getAccessToken();
-      if (newToken) {
-        return fetch(url, {
-          ...options,
-          headers: {
-            ...options.headers,
-            Authorization: `Bearer ${newToken}`,
-          },
+    // If token expired, try to refresh
+    if (response.status === 401) {
+      try {
+        await authAPI.refresh();
+        // Retry the request with new token
+        const newToken = tokenStorage.getAccessToken();
+        if (newToken) {
+          return await fetch(url, {
+            ...options,
+            headers: {
+              ...options.headers,
+              Authorization: `Bearer ${newToken}`,
+            },
+          });
+        }
+      } catch (error) {
+        tokenStorage.clearTokens();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('olleey-session-expired'));
+        }
+        return new Response(JSON.stringify({ detail: "Session expired. Please login again." }), {
+          status: 401,
+          statusText: "Unauthorized",
+          headers: { "Content-Type": "application/json" }
         });
       }
-    } catch (error) {
-      tokenStorage.clearTokens();
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('olleey-session-expired'));
-      }
-      return new Response(JSON.stringify({ detail: "Session expired. Please login again." }), {
-        status: 401,
-        statusText: "Unauthorized",
-        headers: { "Content-Type": "application/json" }
-      });
     }
-  }
 
-  return response;
+    return response;
+  } catch (error) {
+    console.error(`[API FETCH ERROR] ${url}:`, error);
+    // Return a failed response instead of throwing to prevent UI crashes
+    return new Response(JSON.stringify({
+      detail: "Backend server unreachable. Please make sure the backend is running on port 8000.",
+      error: error instanceof Error ? error.message : String(error)
+    }), {
+      status: 503,
+      statusText: "Service Unavailable",
+      headers: { "Content-Type": "application/json" }
+    });
+  }
 };
 
 /**

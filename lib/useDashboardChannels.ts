@@ -43,7 +43,10 @@ export function useDashboardChannels(params: { projectId?: string; enabled?: boo
   const [error, setError] = useState<string | null>(null);
 
   const loadChannels = useCallback(async () => {
-    if (!enabled) return;
+    // Only load from legacy API if enabled and no Supabase data is present
+    if (!enabled || (supabaseChannels && supabaseChannels.length > 0)) {
+      return;
+    }
 
     console.log('[useDashboardChannels] Loading channels...', { projectId });
     try {

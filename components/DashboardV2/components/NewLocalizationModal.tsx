@@ -83,15 +83,15 @@ export function NewLocalizationModal({
       />
 
       {/* Modal */}
-      <div className={`relative ${cardBgClass} max-w-3xl w-full border border-white/10 rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col`}>
+      <div className={`relative ${cardBgClass} max-w-3xl w-full border ${isDark ? "border-white/10" : "border-gray-200"} rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col`}>
         {/* Header */}
-        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+        <div className={`p-6 border-b ${isDark ? "border-white/10" : "border-gray-200"} flex items-center justify-between`}>
           <h2 className="text-2xl font-bold">New Localization</h2>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-8 w-8 p-0"
+            className={`h-8 w-8 p-0 ${!isDark && "hover:bg-gray-100"}`}
           >
             <X className="w-4 h-4" />
           </Button>
@@ -107,13 +107,13 @@ export function NewLocalizationModal({
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${idx <= currentStepIndex
                     ? "bg-[#FFC107] text-black"
-                    : "bg-gray-800 text-gray-500"
+                    : `${isDark ? "bg-gray-800 text-gray-500" : "bg-gray-200 text-gray-400"}`
                     }`}
                 >
                   {idx + 1}
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`h-0.5 w-12 ${idx < currentStepIndex ? "bg-[#FFC107]" : "bg-gray-800"}`} />
+                  <div className={`h-0.5 w-12 ${idx < currentStepIndex ? "bg-[#FFC107]" : `${isDark ? "bg-gray-800" : "bg-gray-200"}`}`} />
                 )}
               </div>
             ))}
@@ -168,7 +168,7 @@ export function NewLocalizationModal({
         </div>
 
         {/* Actions */}
-        <div className="p-6 border-t border-white/10 flex items-center justify-between">
+        <div className={`p-6 border-t ${isDark ? "border-white/10" : "border-gray-200"} flex items-center justify-between`}>
           <Button
             variant="outline"
             onClick={currentStepIndex === 0 ? onClose : handleBack}
@@ -223,7 +223,7 @@ function SourceStep({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => onSourceTypeChange("youtube")}
-            className={`${cardBgClass} border-2 ${sourceType === "youtube" ? "border-[#FFC107]" : "border-white/10"
+            className={`${cardBgClass} border-2 ${sourceType === "youtube" ? "border-[#FFC107]" : `${isDark ? "border-white/10" : "border-gray-200"}`
               } rounded-xl p-6 text-center transition-colors`}
           >
             <Youtube className="w-12 h-12 mx-auto mb-3 text-red-500" />
@@ -235,7 +235,7 @@ function SourceStep({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => onSourceTypeChange("upload")}
-            className={`${cardBgClass} border-2 ${sourceType === "upload" ? "border-[#FFC107]" : "border-white/10"
+            className={`${cardBgClass} border-2 ${sourceType === "upload" ? "border-[#FFC107]" : `${isDark ? "border-white/10" : "border-gray-200"}`
               } rounded-xl p-6 text-center transition-colors`}
           >
             <Upload className="w-12 h-12 mx-auto mb-3 text-[#FFC107]" />
@@ -268,7 +268,7 @@ function SourceStep({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`${cardBgClass} border-2 border-dashed border-white/20 rounded-xl p-12 text-center`}
+          className={`${cardBgClass} border-2 border-dashed ${isDark ? "border-white/20" : "border-gray-300"} rounded-xl p-12 text-center`}
         >
           <Upload className="w-12 h-12 mx-auto mb-4 text-gray-500" />
           <div className="font-semibold mb-2">Drag and drop video here</div>
@@ -281,6 +281,7 @@ function SourceStep({
 }
 
 function LanguagesStep({ selectedLanguages, onToggleLanguage, theme }: any) {
+  const isDark = theme === "dark";
   const popularLanguages = LANGUAGE_OPTIONS.slice(0, 12);
 
   return (
@@ -303,7 +304,7 @@ function LanguagesStep({ selectedLanguages, onToggleLanguage, theme }: any) {
             onClick={() => onToggleLanguage(lang.code)}
             className={`p-4 rounded-lg border-2 transition-colors ${selectedLanguages.includes(lang.code)
               ? "border-[#FFC107] bg-[#FFC107]/10"
-              : "border-white/10"
+              : `${isDark ? "border-white/10" : "border-gray-200"}`
               }`}
           >
             <Globe className="w-6 h-6 mx-auto mb-2" />
@@ -322,6 +323,7 @@ function LanguagesStep({ selectedLanguages, onToggleLanguage, theme }: any) {
 }
 
 function VoicesStep({ selectedLanguages, theme }: any) {
+  const isDark = theme === "dark";
   return (
     <div className="space-y-6">
       <div>
@@ -335,12 +337,12 @@ function VoicesStep({ selectedLanguages, theme }: any) {
 
       <div className="space-y-3">
         {selectedLanguages.map((lang: string) => (
-          <div key={lang} className="flex items-center justify-between p-4 bg-[#0F0F0F] rounded-lg">
+          <div key={lang} className={`flex items-center justify-between p-4 ${isDark ? "bg-[#0F0F0F]" : "bg-gray-100"} rounded-lg`}>
             <div className="flex items-center gap-3">
               <Mic className="w-5 h-5 text-[#FFC107]" />
               <span className="font-medium">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.name}</span>
             </div>
-            <select className="bg-[#1A1A1A] border border-white/10 hover:border-white/20 rounded px-3 py-1.5 text-xs outline-none focus:border-olleey-yellow transition-all cursor-pointer shadow-sm">
+            <select className={`${isDark ? "bg-[#1A1A1A] border-white/10" : "bg-white border-gray-200"} border hover:border-olleey-yellow rounded px-3 py-1.5 text-xs outline-none focus:border-olleey-yellow transition-all cursor-pointer shadow-sm`}>
               <option>Default Voice</option>
               <option>Custom Voice Clone</option>
             </select>
@@ -352,6 +354,7 @@ function VoicesStep({ selectedLanguages, theme }: any) {
 }
 
 function DistributionStep({ selectedLanguages, theme }: any) {
+  const isDark = theme === "dark";
   return (
     <div className="space-y-6">
       <div>
@@ -365,12 +368,12 @@ function DistributionStep({ selectedLanguages, theme }: any) {
 
       <div className="space-y-3">
         {selectedLanguages.map((lang: string) => (
-          <div key={lang} className="flex items-center justify-between p-4 bg-[#0F0F0F] rounded-lg">
+          <div key={lang} className={`flex items-center justify-between p-4 ${isDark ? "bg-[#0F0F0F]" : "bg-gray-100"} rounded-lg`}>
             <div className="flex items-center gap-3">
               <Radio className="w-5 h-5 text-[#FFC107]" />
               <span className="font-medium">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.name}</span>
             </div>
-            <select className="bg-[#1A1A1A] border border-white/10 hover:border-white/20 rounded px-3 py-1.5 text-xs outline-none focus:border-olleey-yellow transition-all cursor-pointer shadow-sm">
+            <select className={`${isDark ? "bg-[#1A1A1A] border-white/10" : "bg-white border-gray-200"} border hover:border-olleey-yellow rounded px-3 py-1.5 text-xs outline-none focus:border-olleey-yellow transition-all cursor-pointer shadow-sm`}>
               <option>Main Channel (MLA)</option>
               <option>Spanish Channel</option>
               <option>French Channel</option>
@@ -383,6 +386,7 @@ function DistributionStep({ selectedLanguages, theme }: any) {
 }
 
 function ConfirmStep({ sourceUrl, languages, theme }: any) {
+  const isDark = theme === "dark";
   return (
     <div className="space-y-6">
       <div>
@@ -395,22 +399,22 @@ function ConfirmStep({ sourceUrl, languages, theme }: any) {
       </div>
 
       <div className="space-y-4">
-        <div className="p-4 bg-[#0F0F0F] rounded-lg">
+        <div className={`p-4 ${isDark ? "bg-[#0F0F0F]" : "bg-gray-100"} rounded-lg`}>
           <div className="text-sm text-gray-500 mb-1">Source Video</div>
           <div className="font-medium truncate">{sourceUrl}</div>
         </div>
 
-        <div className="p-4 bg-[#0F0F0F] rounded-lg">
+        <div className={`p-4 ${isDark ? "bg-[#0F0F0F]" : "bg-gray-100"} rounded-lg`}>
           <div className="text-sm text-gray-500 mb-1">Target Languages</div>
           <div className="font-medium">{languages.length} languages selected</div>
         </div>
 
-        <div className="p-4 bg-[#0F0F0F] rounded-lg">
+        <div className={`p-4 ${isDark ? "bg-[#0F0F0F]" : "bg-gray-100"} rounded-lg`}>
           <div className="text-sm text-gray-500 mb-1">Estimated Cost</div>
           <div className="font-medium text-[#FFC107]">~${(languages.length * 8.5).toFixed(2)}</div>
         </div>
 
-        <div className="p-4 bg-[#0F0F0F] rounded-lg">
+        <div className={`p-4 ${isDark ? "bg-[#0F0F0F]" : "bg-gray-100"} rounded-lg`}>
           <div className="text-sm text-gray-500 mb-1">Estimated Time</div>
           <div className="font-medium">~{languages.length * 5} minutes</div>
         </div>

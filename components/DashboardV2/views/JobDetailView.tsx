@@ -52,18 +52,18 @@ export function JobDetailView({ jobId, onBack, theme }: JobDetailViewProps) {
   return (
     <div className={`h-full flex flex-col ${bgClass}`}>
       {/* Header */}
-      <div className={`${cardBgClass} border-b border-white/10 p-6`}>
+      <div className={`${cardBgClass} border-b ${isDark ? "border-white/10" : "border-gray-200"} p-6`}>
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="gap-2 border border-white/0 hover:border-white/10 transition-all"
+            className={`gap-2 border ${isDark ? "border-white/0 hover:border-white/10" : "border-transparent hover:border-gray-200 hover:bg-gray-50"} transition-all`}
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </Button>
-          <div className="h-6 w-px bg-white/10" />
+          <div className={`h-6 w-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
           <div className="flex-1">
             <h1 className="text-2xl font-bold">How to Build a Startup</h1>
             <p className={`text-sm ${textSecondaryClass} mt-1`}>
@@ -83,7 +83,7 @@ export function JobDetailView({ jobId, onBack, theme }: JobDetailViewProps) {
       {/* Tabs Workspace */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Tab List */}
-        <div className={`${cardBgClass} border-b border-white/10 flex`}>
+        <div className={`${cardBgClass} border-b ${isDark ? "border-white/10" : "border-gray-200"} flex`}>
           {[
             { id: "overview", label: "Overview" },
             { id: "review", label: "Review" },
@@ -95,8 +95,8 @@ export function JobDetailView({ jobId, onBack, theme }: JobDetailViewProps) {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-6 py-3 font-medium transition-colors relative ${activeTab === tab.id
-                  ? "text-[#FFC107]"
-                  : "text-gray-500 hover:text-gray-300"
+                ? "text-[#FFC107]"
+                : `text-gray-500 ${isDark ? "hover:text-gray-300" : "hover:text-gray-900"}`
                 }`}
             >
               {tab.label}
@@ -104,7 +104,7 @@ export function JobDetailView({ jobId, onBack, theme }: JobDetailViewProps) {
                 <motion.div
                   layoutId="activeTab"
                   className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FFC107]"
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 } as const}
                 />
               )}
             </button>
@@ -157,7 +157,7 @@ function OverviewTab({
           {["Spanish", "French", "German"].map((lang) => (
             <motion.div
               key={lang}
-              className={`${cardBgClass} border border-white/10 rounded-lg p-4`}
+              className={`${cardBgClass} border ${isDark ? "border-white/10" : "border-gray-200"} rounded-lg p-4`}
               whileHover={{ scale: 1.02 }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -189,7 +189,7 @@ function OverviewTab({
       {/* Stage Details */}
       <div>
         <h3 className="text-lg font-semibold mb-4">Current Stage: Dubbing</h3>
-        <div className={`${cardBgClass} border border-white/10 rounded-lg p-6`}>
+        <div className={`${cardBgClass} border ${isDark ? "border-white/10" : "border-gray-200"} rounded-lg p-6`}>
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-full bg-[#FFC107]/10 flex items-center justify-center">
               <Mic className="w-6 h-6 text-[#FFC107]" />
@@ -204,7 +204,7 @@ function OverviewTab({
                   <span>Progress</span>
                   <span className="text-[#FFC107]">3 of 7 languages complete</span>
                 </div>
-                <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div className={`w-full h-2 ${isDark ? "bg-gray-800" : "bg-gray-200"} rounded-full overflow-hidden`}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: "43%" }}
