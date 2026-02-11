@@ -59,7 +59,7 @@ function AppContent() {
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearchFocused, setIsSearchFocused] = useState(false);
-    
+
     const isAuthenticated = !!user;
     const userEmail = user?.email;
 
@@ -75,11 +75,11 @@ function AppContent() {
     }, [isSidebarOpen]);
 
     const { projects, selectedProject, setSelectedProject } = useProject();
-    const { dashboard } = useDashboard({ projectId: selectedProject?.id, enabled: isAuthenticated });
-    
+    const { dashboard } = useDashboard({ projectId: selectedProject?.id, enabled: isAuthenticated && !authLoading });
+
     // Get userId from auth context
     const userId = user?.id;
-    const { videos } = useVideos({ project_id: selectedProject?.id, user_id: userId }, { enabled: isAuthenticated && !!userId });
+    const { videos } = useVideos({ project_id: selectedProject?.id, user_id: userId }, { enabled: isAuthenticated && !!userId && !authLoading });
 
     const projectAvatars = useMemo(() => {
         const map: Record<string, string> = {};
@@ -126,7 +126,7 @@ function AppContent() {
 
     useEffect(() => {
         const loadChannelGraph = async () => {
-            if (isAuthenticated) {
+            if (isAuthenticated && !authLoading) {
                 try {
                     const graph = await youtubeAPI.getChannelGraph();
                     setChannelGraph(graph.master_nodes || []);

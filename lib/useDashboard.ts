@@ -8,6 +8,7 @@ export function useDashboard(params: { projectId?: string; enabled?: boolean } =
   const [error, setError] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async () => {
+    if (!enabled) return;
     console.log('[useDashboard] Loading dashboard...', { projectId, enabled });
     try {
       setLoading(true);
@@ -24,7 +25,8 @@ export function useDashboard(params: { projectId?: string; enabled?: boolean } =
       });
       setDashboard(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load dashboard");
+      const errorMessage = err instanceof Error ? err.message : "Failed to load dashboard";
+      setError(errorMessage);
       console.error("[useDashboard] Dashboard error:", err);
     } finally {
       setLoading(false);

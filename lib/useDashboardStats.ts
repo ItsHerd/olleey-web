@@ -39,14 +39,16 @@ export function useDashboardStats(params: { projectId?: string; enabled?: boolea
       const response = await authenticatedFetch(url, { method: "GET" });
 
       if (!response.ok) {
-        throw new Error(`Failed to load stats: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Failed to load stats: ${response.statusText}`);
       }
 
       const data = await response.json();
       console.log('[useDashboardStats] Stats loaded:', data);
       setStats(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load stats");
+      const errorMessage = err instanceof Error ? err.message : "Failed to load stats";
+      setError(errorMessage);
       console.error("[useDashboardStats] Error:", err);
     } finally {
       setLoading(false);

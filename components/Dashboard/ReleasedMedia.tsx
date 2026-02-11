@@ -44,7 +44,7 @@ export function ReleasedMedia({
                     <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white/20' : 'text-gray-400'}`}>Archive Offline</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
                     {liveVideos.map((video, idx) => {
                         const liveLangs = Object.keys(video.localizations || {})
                             .filter(l => video.localizations?.[l].status === 'live');
@@ -56,58 +56,71 @@ export function ReleasedMedia({
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.05 }}
                                 onClick={() => onNavigate(video.video_id)}
-                                className={`group relative ${isDark ? 'bg-white/[0.03] border-white/5 hover:bg-white/[0.06] hover:border-white/10' : 'bg-gray-50 border-gray-200 hover:bg-gray-100/80 hover:border-gray-300'} border rounded-3xl p-3 cursor-pointer hover:shadow-2xl hover:shadow-black/10 transition-all duration-300 overflow-hidden`}
+                                className={`group relative ${isDark ? 'bg-white/[0.03] border-white/5 hover:bg-white/[0.06] hover:border-white/10' : 'bg-gray-50 border-gray-200 hover:bg-gray-100/80 hover:border-gray-300'} border rounded-[2rem] p-3 cursor-pointer hover:shadow-2xl hover:shadow-black/20 transition-all duration-500 overflow-hidden flex flex-col`}
                             >
                                 {/* Active Broadcast Indication */}
-                                <div className="absolute top-0 right-0 p-4 z-20">
+                                <div className="absolute top-2 right-2 z-20">
                                     <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full backdrop-blur-md">
                                         <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_5px_rgba(52,211,153,0.5)]" />
-                                        <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Active</span>
+                                        <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Live</span>
                                     </div>
                                 </div>
 
-                                <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/40 border border-white/5 mb-3 group-hover:scale-[1.02] transition-transform duration-500">
-                                    <img
-                                        src={getFullUrl(video.thumbnail_url) || video.thumbnail_url}
-                                        className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500"
-                                        alt=""
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/40 border border-white/5 mb-3 group-hover:scale-[1.02] transition-transform duration-700">
+                                    {video.thumbnail_url ? (
+                                        <img
+                                            src={getFullUrl(video.thumbnail_url) || video.thumbnail_url}
+                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700 blur-[1px] group-hover:blur-0"
+                                            alt=""
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/[0.02]">
+                                            <Layers className="w-6 h-6 text-white/10" />
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="space-y-3 flex-1">
                                     <div className="space-y-1">
-                                        <span className={`text-[8px] font-black ${isDark ? 'text-white/20' : 'text-gray-400'} uppercase tracking-[0.2em] italic`}>Module::Distribution</span>
-                                        <h4 className={`text-[11px] font-bold ${isDark ? 'text-white' : 'text-gray-900'} truncate leading-none group-hover:text-olleey-yellow transition-colors`}>
+                                        <div className="flex items-center justify-between">
+                                            <span className={`text-[8px] font-black ${isDark ? 'text-white/20' : 'text-gray-400'} uppercase tracking-[0.25em] italic`}>DISTRIBUTION</span>
+                                            <span className={`text-[8px] font-black ${isDark ? 'text-white/20' : 'text-gray-400'} uppercase tracking-widest`}>
+                                                {getRelativeTime(video.published_at)}
+                                            </span>
+                                        </div>
+                                        <h4 className={`text-[11px] font-bold ${isDark ? 'text-white' : 'text-gray-900'} line-clamp-2 leading-tight group-hover:text-olleey-yellow transition-colors min-h-[2.4em]`}>
                                             {video.title}
                                         </h4>
                                     </div>
 
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-center justify-between pt-1 border-t border-white/5">
                                         <div className="flex items-center -space-x-1.5">
-                                            {liveLangs.slice(0, 3).map((lang, lIdx) => (
+                                            {liveLangs.slice(0, 4).map((lang, lIdx) => (
                                                 <div
                                                     key={lang}
                                                     className={`w-5 h-5 rounded-full ${isDark ? 'bg-white/5 border-[#0c0c0c]' : 'bg-white border-gray-200'} border flex items-center justify-center shadow-sm relative group/flag hover:z-10 hover:scale-110 transition-transform`}
                                                     style={{ zIndex: 10 - lIdx }}
+                                                    title={LANGUAGE_OPTIONS.find(l => l.code === lang)?.name}
                                                 >
                                                     <span className="text-[10px]">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.flag}</span>
                                                 </div>
                                             ))}
-                                            {liveLangs.length > 3 && (
+                                            {liveLangs.length > 4 && (
                                                 <div className={`w-5 h-5 rounded-full ${isDark ? 'bg-white/5 border-[#0c0c0c]' : 'bg-gray-100 border-gray-200'} border flex items-center justify-center z-0`}>
-                                                    <span className={`text-[7px] font-black ${isDark ? 'text-white/40' : 'text-gray-500'}`}>+{liveLangs.length - 3}</span>
+                                                    <span className={`text-[7px] font-black ${isDark ? 'text-white/40' : 'text-gray-500'}`}>+{liveLangs.length - 4}</span>
                                                 </div>
                                             )}
                                         </div>
-                                        <span className={`text-[8px] font-black ${isDark ? 'text-white/20' : 'text-gray-400'} uppercase tracking-widest italic`}>
-                                            {getRelativeTime(video.published_at)}
-                                        </span>
+                                        <div className="flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity duration-500">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-rolle-yellow" />
+                                            <span className="text-[7px] font-black text-white uppercase tracking-widest">Syncd</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Hover Glow */}
-                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1/2 h-4 bg-olleey-yellow/5 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                {/* Interactive Shine Effect */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                             </motion.div>
                         );
                     })}

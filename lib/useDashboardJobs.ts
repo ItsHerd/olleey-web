@@ -22,7 +22,7 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
       userId: user_id,
       projectId
     });
-    
+
     if (supabaseJobs.length > 0) {
       // Supabase already returns data sorted and limited, just map it
       const mapped: ProcessingJob[] = supabaseJobs.map(sj => ({
@@ -34,7 +34,7 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
         created_at: sj.created_at,
         project_id: sj.project_id,
       }));
-      
+
       console.log('[useDashboardJobs] Mapped jobs:', mapped);
       setJobs(mapped);
     } else {
@@ -64,12 +64,13 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
       const response = await authenticatedFetch(url, { method: "GET" });
 
       if (!response.ok) {
-        throw new Error(`Failed to load jobs: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Failed to load jobs: ${response.statusText}`);
       }
 
       const data = await response.json();
       console.log('[useDashboardJobs] Legacy API jobs loaded:', { count: data.jobs?.length || 0 });
-      
+
       // Don't override Supabase data with legacy API data
       if (supabaseJobs.length > 0) {
         console.log('[useDashboardJobs] Supabase has data, skipping legacy API update');
@@ -78,7 +79,8 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
         setTotal(data.total || 0);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load jobs");
+      const errorMessage = err instanceof Error ? err.message : "Failed to load jobs";
+      setError(errorMessage);
       console.error("[useDashboardJobs] Error:", err);
     } finally {
       setLoading(false);

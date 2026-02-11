@@ -1,47 +1,53 @@
 import { useState, useEffect } from "react";
 import { type Video } from "./api";
 import { useSupabaseVideos } from "./useSupabase";
+import { useAuth } from "./AuthContext";
 
 /**
  * React hook for fetching and managing video data from Supabase
  * Provides real-time updates and automatic refetching
  */
 export function useVideos(
-  params?: { 
-    page?: number; 
-    page_size?: number; 
-    channel_id?: string; 
-    project_id?: string; 
-    user_id?: string 
-  }, 
+  params?: {
+    page?: number;
+    page_size?: number;
+    channel_id?: string;
+    project_id?: string;
+    user_id?: string
+  },
   options: { enabled?: boolean } = { enabled: true }
 ) {
   const { enabled = true } = options;
+  const { user, loading: authLoading } = useAuth();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  console.log('[useVideos] Hook initialized with:', { 
-    params, 
-    userId: params?.user_id,
-    enabled
+
+  // Resolve user_id: provided param > auth context > localStorage
+  const resolvedUserId = params?.user_id || user?.id || (typeof window !== 'undefined' ? localStorage.getItem('userId') : null);
+
+  console.log('[useVideos] Hook initialized with:', {
+    params,
+    userId: resolvedUserId,
+    enabled,
+    authLoading
   });
 
   // Fetch videos from Supabase with real-time updates
-  const { 
-    videos: supabaseVideos, 
+  const {
+    videos: supabaseVideos,
     loading: supabaseLoading,
     error: supabaseError,
     refetch: supabaseRefetch
   } = useSupabaseVideos(
-    params?.user_id,
+    resolvedUserId || undefined,
     { project_id: params?.project_id, channel_id: params?.channel_id },
-    { enabled: enabled && !!params?.user_id }
+    { enabled: enabled && !!resolvedUserId }
   );
-  
+
   console.log('[useVideos] Supabase videos received:', {
     count: supabaseVideos?.length || 0,
-    enabled: enabled && !!params?.user_id,
+    enabled: enabled && !!resolvedUserId,
     loading: supabaseLoading
   });
 
@@ -51,7 +57,7 @@ export function useVideos(
       supabaseVideosLength: supabaseVideos.length,
       supabaseLoading
     });
-    
+
     if (supabaseVideos.length > 0) {
       // Map Supabase videos to our Video type
       const mapped: Video[] = supabaseVideos.map(sv => ({
@@ -70,21 +76,21 @@ export function useVideos(
         source_video_id: sv.source_video_id,
         language_code: sv.language_code,
       }));
-      
+
       console.log('[useVideos] Setting videos:', {
         count: mapped.length,
         firstVideo: mapped[0]?.video_id
       });
-      
+
       setVideos(mapped);
       setError(null);
     } else if (!supabaseLoading) {
       // Only clear videos if loading is complete and we have no results
       setVideos([]);
     }
-    
+
     setLoading(supabaseLoading);
-    
+
     if (supabaseError) {
       setError(supabaseError);
     }

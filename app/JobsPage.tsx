@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/lib/useTheme";
-import { jobsAPI, type Job, type JobWorkflowState } from "@/lib/api";
+import { jobsAPI, type Job, type JobWorkflowState, API_BASE_URL } from "@/lib/api";
 import { useVideos } from "@/lib/useVideos";
 import { useSupabaseJobs } from "@/lib/useSupabase";
 import { useAuth } from "@/lib/AuthContext";
@@ -63,26 +63,26 @@ export default function JobsPage() {
     const { selectedProject } = useProject();
     const { user, loading: authLoading } = useAuth();
     const userId = user?.id;
-    
+
     // Fetch videos and jobs from Supabase
     const { videos } = useVideos({ user_id: userId }, { enabled: !!userId && !authLoading });
-    const { 
-        jobs: supabaseJobs, 
-        loading: jobsLoading, 
-        error: jobsError, 
-        refetch: refetchJobs 
+    const {
+        jobs: supabaseJobs,
+        loading: jobsLoading,
+        error: jobsError,
+        refetch: refetchJobs
     } = useSupabaseJobs(
         userId,
         { project_id: selectedProject?.id },
         { enabled: !!userId && !authLoading }
     );
-    
+
     const [selectedGraphJobId, setSelectedGraphJobId] = useState<string | null>(null);
     const [filter, setFilter] = useState<JobFilter>("all");
     const { theme } = useTheme();
     const { toast } = useToast();
     const { openReview } = useReview();
-    
+
     // Convert Supabase jobs to legacy Job format
     const jobs = useMemo(() => {
         console.log('[JobsPage] Supabase jobs received:', {
@@ -100,13 +100,13 @@ export default function JobsPage() {
             workflow_state: (job.workflow_state || {}) as JobWorkflowState,
         })) as Job[];
     }, [supabaseJobs, userId, authLoading, selectedProject?.id]);
-    
+
     const loading = jobsLoading;
     const error = jobsError;
-    
-    console.log('[JobsPage] State:', { 
-        jobsCount: jobs.length, 
-        loading, 
+
+    console.log('[JobsPage] State:', {
+        jobsCount: jobs.length,
+        loading,
         error,
         userId,
         authLoading,
@@ -121,11 +121,10 @@ export default function JobsPage() {
     const borderClass = theme === "light" ? "border-light-border" : "border-dark-border";
     const isDark = theme === "dark";
 
-    // Helper to construct full URL for storage paths
     const getFullUrl = (url: string | undefined) => {
         if (!url) return undefined;
         if (url.startsWith('http')) return url;
-        return url; // Already complete from Supabase
+        return `${API_BASE_URL}${url}`;
     };
 
     // Handle refresh events
@@ -385,6 +384,7 @@ export default function JobsPage() {
                     <div className={`flex-1 min-h-[600px] border ${borderClass} rounded-[2.5rem] overflow-hidden ${isDark ? 'bg-white/[0.01]' : 'bg-white'} shadow-2xl`}>
                         <JobsTable
                             jobs={filteredJobs}
+                            videos={videos}
                             projectId={selectedProject?.id}
                             onViewWorkflow={(jobId) => setSelectedGraphJobId(jobId)}
                             onPreview={handlePreview}

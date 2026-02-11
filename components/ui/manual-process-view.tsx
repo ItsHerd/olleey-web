@@ -57,6 +57,7 @@ interface ManualProcessViewProps {
     projectId?: string;
     onSuccess?: () => void;
     onCancel?: () => void;
+    compact?: boolean;
 }
 
 export function ManualProcessView({
@@ -64,6 +65,7 @@ export function ManualProcessView({
     projectId,
     onSuccess,
     onCancel,
+    compact = false,
 }: ManualProcessViewProps) {
     const router = useRouter();
     const { theme } = useTheme();
@@ -120,7 +122,7 @@ export function ManualProcessView({
                     setLoadingVideos(true);
                     setError(null);
                     console.log('[ManualProcessView] Loading channel videos from Supabase:', { sourceChannelId, userId });
-                    
+
                     const { data, error: queryError } = await supabase
                         .from('videos')
                         .select('*')
@@ -128,9 +130,9 @@ export function ManualProcessView({
                         .eq('user_id', userId)
                         .is('deleted_at', null)
                         .order('published_at', { ascending: false });
-                    
+
                     if (queryError) throw queryError;
-                    
+
                     console.log('[ManualProcessView] Loaded videos:', { count: data?.length || 0 });
                     setChannelVideos(data || []);
                 } catch (err: any) {
@@ -144,7 +146,7 @@ export function ManualProcessView({
         };
         loadChannelVideos();
     }, [sourceChannelId, activeTab, userId]);
-    
+
     // Load draft videos
     useEffect(() => {
         const loadDraftVideos = async () => {
@@ -351,11 +353,11 @@ export function ManualProcessView({
                 targetLanguages,
                 saveAsDraft
             });
-            
+
             if (!userId) {
                 throw new Error('User not authenticated');
             }
-            
+
             const jobData = {
                 user_id: userId,
                 project_id: projectId || null,
@@ -379,9 +381,9 @@ export function ManualProcessView({
                     )
                 }
             };
-            
+
             console.log('[ManualProcessView] Job data to insert:', jobData);
-            
+
             const { data: job, error: jobError } = await supabase
                 .from('processing_jobs')
                 .insert(jobData)
@@ -392,7 +394,7 @@ export function ManualProcessView({
                 console.error('[ManualProcessView] Job creation error:', jobError);
                 throw new Error(`Failed to create job: ${jobError.message}`);
             }
-            
+
             console.log('[ManualProcessView] Job created successfully:', {
                 jobId: job?.id,
                 videoId: job?.source_video_id,
@@ -404,7 +406,7 @@ export function ManualProcessView({
             setTimeout(() => {
                 setIsSubmitting(false);
                 setIsSuccessState(true);
-                const message = saveAsDraft 
+                const message = saveAsDraft
                     ? `💾 Saved as Draft: "${customTitle || 'Video'}" ready for later processing`
                     : `🚀 Production Pipeline Started! Processing "${customTitle || 'Video'}"`;
                 toast(message, "success");
@@ -420,19 +422,19 @@ export function ManualProcessView({
     const currentThumbnail = (() => {
         // Priority: User uploaded thumbnail > Selected video thumbnail > Default
         if (thumbnailPreview) return thumbnailPreview;
-        
+
         // For channel tab - use selected video's thumbnail
         if (activeTab === 'channel' && selectedVideoId) {
             const video = channelVideos.find(v => v.video_id === selectedVideoId);
             if (video?.thumbnail_url) return video.thumbnail_url;
         }
-        
+
         // For drafts tab - use selected draft video's thumbnail
         if (activeTab === 'drafts' && selectedVideoId) {
             const video = draftVideos.find(v => v.video_id === selectedVideoId);
             if (video?.thumbnail_url) return video.thumbnail_url;
         }
-        
+
         // For URL tab - try to generate YouTube thumbnail
         if (activeTab === 'url' && sourceVideoUrl) {
             const vid = extractVideoId(sourceVideoUrl);
@@ -441,37 +443,39 @@ export function ManualProcessView({
                 return `https://img.youtube.com/vi/${vid}/mqdefault.jpg`;
             }
         }
-        
+
         return null;
     })();
 
     return (
-        <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-7xl mx-auto py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className={`animate-in fade-in slide-in-from-bottom-8 duration-700 w-full mx-auto ${compact ? 'py-0' : 'py-8 max-w-7xl'}`}>
+            <div className={`grid grid-cols-1 ${compact ? 'lg:grid-cols-1 gap-6' : 'lg:grid-cols-3 gap-12'}`}>
                 {/* Main Configuration Flow */}
-                <div className="lg:col-span-2 space-y-10">
+                <div className={`${compact ? 'w-full space-y-6' : 'lg:col-span-2 space-y-10'}`}>
 
                     {/* STAGE 01: SOURCE HUB */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-6 group">
-                            <div className="flex items-center justify-center w-10 h-10 bg-olleey-yellow text-black font-black text-[13px] rounded-2xl shrink-0 transition-transform group-hover:rotate-12">01</div>
-                            <div className="flex flex-col">
-                                <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textClass}`}>Source Acquisition</h3>
-                                <p className={`text-[11px] ${textSecondaryClass} font-medium tracking-tight opacity-50`}>Select the root asset for global synchronization</p>
+                        {!compact && (
+                            <div className="flex items-center gap-6 group">
+                                <div className="flex items-center justify-center w-10 h-10 bg-olleey-yellow text-black font-black text-[13px] rounded-2xl shrink-0 transition-transform group-hover:rotate-12">01</div>
+                                <div className="flex flex-col">
+                                    <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textClass}`}>Source Acquisition</h3>
+                                    <p className={`text-[11px] ${textSecondaryClass} font-medium tracking-tight opacity-50`}>Select the root asset for global synchronization</p>
+                                </div>
+                                <div className={`h-[1px] flex-1 ${borderClass} opacity-20 mx-4`}></div>
                             </div>
-                            <div className={`h-[1px] flex-1 ${borderClass} opacity-20 mx-4`}></div>
-                        </div>
+                        )}
 
                         <div className="space-y-6">
-                            <div className={`${cardClass} border ${borderClass} rounded-[1.5rem] p-1.5 ${activeBgClass} backdrop-blur-xl`}>
+                            <div className={`${cardClass} border ${borderClass} rounded-[1.5rem] p-1.5 ${activeBgClass} backdrop-blur-xl shadow-sm`}>
                                 <div className="flex items-center gap-1.5">
                                     {(['channel', 'url', 'upload', 'drafts'] as SourceTab[]).map((tab) => (
                                         <button
                                             key={tab}
                                             onClick={() => setActiveTab(tab)}
-                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 relative group/btn ${activeTab === tab
-                                                ? 'bg-olleey-yellow text-black'
-                                                : `${textSecondaryClass} ${isDark ? 'hover:text-white hover:bg-white/5' : 'hover:text-gray-900 hover:bg-gray-50'}`
+                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 relative group/btn border ${activeTab === tab
+                                                ? 'bg-olleey-yellow text-black border-olleey-yellow shadow-sm'
+                                                : `border-transparent ${textSecondaryClass} ${isDark ? 'hover:text-white hover:bg-white/5 hover:border-white/10' : 'hover:text-gray-900 hover:bg-gray-50 hover:border-gray-200'}`
                                                 }`}
                                         >
                                             <span className="flex items-center justify-center gap-2">
@@ -490,7 +494,7 @@ export function ManualProcessView({
                                 key={activeTab}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-8 lg:p-12 transition-all ${activeBgClass} overflow-hidden relative`}
+                                className={`${cardClass} border ${borderClass} rounded-[2.5rem] ${compact ? 'p-6' : 'p-8 lg:p-12'} transition-all ${activeBgClass} overflow-hidden relative`}
                             >
                                 <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none">
                                     {activeTab === 'channel' && <Youtube className="w-40 h-40" />}
@@ -506,7 +510,7 @@ export function ManualProcessView({
                                             <select
                                                 value={sourceChannelId}
                                                 onChange={(e) => setSourceChannelId(e.target.value)}
-                                                className={`w-full ${cardAltClass} border ${borderClass} ${textClass} rounded-2xl px-6 py-5 text-[13px] font-medium focus:border-olleey-yellow outline-none transition-all appearance-none cursor-pointer ${hoverBgClass}`}
+                                                className={`w-full ${cardAltClass} border border-white/10 hover:border-white/20 ${textClass} rounded-2xl px-6 py-5 text-xs font-medium focus:border-olleey-yellow outline-none transition-all appearance-none cursor-pointer ${hoverBgClass} shadow-sm`}
                                             >
                                                 <option value="" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Select source hub...</option>
                                                 {availableChannels.map(c => <option key={c.id} value={c.id} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{c.name}</option>)}
@@ -530,12 +534,12 @@ export function ManualProcessView({
                                                         {channelVideos.map((video, idx) => (
                                                             <div
                                                                 key={`${video.video_id}-${idx}`}
-                                                            onClick={() => {
-                                                                setSelectedVideoId(video.video_id);
-                                                                setCustomTitle(video.title);
-                                                                setCustomDescription(video.description || '');
-                                                                // Don't set thumbnailPreview here - let currentThumbnail compute it
-                                                            }}
+                                                                onClick={() => {
+                                                                    setSelectedVideoId(video.video_id);
+                                                                    setCustomTitle(video.title);
+                                                                    setCustomDescription(video.description || '');
+                                                                    // Don't set thumbnailPreview here - let currentThumbnail compute it
+                                                                }}
                                                                 className={`flex items-center gap-8 p-6 cursor-pointer transition-all duration-300 group/item ${selectedVideoId === video.video_id ? 'bg-olleey-yellow/10' : isDark ? 'hover:bg-white/[0.04]' : 'hover:bg-gray-50'}`}
                                                             >
                                                                 <div className={`relative w-36 aspect-video rounded-xl ${isDark ? 'bg-black' : 'bg-gray-200'} overflow-hidden shrink-0 border ${inputBorderClass} group-hover/item:scale-[1.02] transition-transform`}>
@@ -590,7 +594,7 @@ export function ManualProcessView({
                                             <select
                                                 value={sourceChannelId}
                                                 onChange={(e) => setSourceChannelId(e.target.value)}
-                                                className={`w-full ${inputBgClass} border ${inputBorderClass} ${textClass} rounded-2xl px-6 py-5 text-[13px] font-medium focus:border-olleey-yellow outline-none transition-all appearance-none cursor-pointer ${hoverBgClass}`}
+                                                className={`w-full ${inputBgClass} border border-white/10 hover:border-white/20 ${textClass} rounded-2xl px-6 py-5 text-xs font-medium focus:border-olleey-yellow outline-none transition-all appearance-none cursor-pointer ${hoverBgClass} shadow-sm`}
                                             >
                                                 <option value="" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Select associated channel...</option>
                                                 {availableChannels.map(c => <option key={c.id} value={c.id} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{c.name}</option>)}
@@ -637,8 +641,8 @@ export function ManualProcessView({
                                                         <p className={`text-[11px] font-black uppercase tracking-widest ${textTertiaryClass}`}>{(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB • Deployment Ready</p>
                                                     </div>
                                                     <button
-                                                        onClick={(e) => { 
-                                                            e.stopPropagation(); 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
                                                             setUploadedFile(null);
                                                             setCustomTitle('');
                                                         }}
@@ -752,16 +756,18 @@ export function ManualProcessView({
 
                     {/* STAGE 02: ANALYSIS & NEURAL PARAMS */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-6 group">
-                            <div className="flex items-center justify-center w-10 h-10 bg-indigo-500 text-white font-black text-[13px] rounded-2xl shrink-0 transition-transform group-hover:rotate-12">02</div>
-                            <div className="flex flex-col">
-                                <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textClass}`}>Neural Configuration</h3>
-                                <p className={`text-[11px] ${textSecondaryClass} font-medium tracking-tight opacity-50`}>Define linguistic context and metadata layers</p>
+                        {!compact && (
+                            <div className="flex items-center gap-6 group">
+                                <div className="flex items-center justify-center w-10 h-10 bg-indigo-500 text-white font-black text-[13px] rounded-2xl shrink-0 transition-transform group-hover:rotate-12">02</div>
+                                <div className="flex flex-col">
+                                    <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textClass}`}>Neural Configuration</h3>
+                                    <p className={`text-[11px] ${textSecondaryClass} font-medium tracking-tight opacity-50`}>Define linguistic context and metadata layers</p>
+                                </div>
+                                <div className={`h-[1px] flex-1 ${borderClass} opacity-20 mx-4`}></div>
                             </div>
-                            <div className={`h-[1px] flex-1 ${borderClass} opacity-20 mx-4`}></div>
-                        </div>
+                        )}
 
-                        <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-10 lg:p-14 ${activeBgClass} space-y-10 backdrop-blur-3xl`}>
+                        <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] ${compact ? 'p-6 space-y-6' : 'p-10 lg:p-14 space-y-10'} ${activeBgClass} backdrop-blur-3xl`}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3 mb-2">
@@ -771,7 +777,7 @@ export function ManualProcessView({
                                     <select
                                         value={sourceLanguage}
                                         onChange={(e) => setSourceLanguage(e.target.value)}
-                                        className={`w-full ${inputBgClass} border ${inputBorderClass} ${textClass} rounded-2xl px-6 py-5 text-[13px] font-medium focus:border-indigo-400 outline-none transition-all appearance-none cursor-pointer ${hoverBgClass}`}
+                                        className={`w-full ${inputBgClass} border border-white/10 hover:border-white/20 ${textClass} rounded-2xl px-6 py-5 text-xs font-medium focus:border-indigo-400 outline-none transition-all appearance-none cursor-pointer ${hoverBgClass} shadow-sm`}
                                     >
                                         <option value="" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Auto-detect by neural engine</option>
                                         {LANGUAGE_OPTIONS.map(l => <option key={l.code} value={l.code} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{l.flag} {l.name}</option>)}
@@ -809,16 +815,18 @@ export function ManualProcessView({
 
                     {/* STAGE 03: GLOBAL DEPLOYMENT */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-6 group">
-                            <div className="flex items-center justify-center w-10 h-10 bg-emerald-500 text-white font-black text-[13px] rounded-2xl shrink-0 transition-transform group-hover:rotate-12">03</div>
-                            <div className="flex flex-col">
-                                <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textClass}`}>Distribution Targets</h3>
-                                <p className={`text-[11px] ${textSecondaryClass} font-medium tracking-tight opacity-50`}>Select international deployment hubs</p>
+                        {!compact && (
+                            <div className="flex items-center gap-6 group">
+                                <div className="flex items-center justify-center w-10 h-10 bg-emerald-500 text-white font-black text-[13px] rounded-2xl shrink-0 transition-transform group-hover:rotate-12">03</div>
+                                <div className="flex flex-col">
+                                    <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textClass}`}>Distribution Targets</h3>
+                                    <p className={`text-[11px] ${textSecondaryClass} font-medium tracking-tight opacity-50`}>Select international deployment hubs</p>
+                                </div>
+                                <div className={`h-[1px] flex-1 ${borderClass} opacity-20 mx-4`}></div>
                             </div>
-                            <div className={`h-[1px] flex-1 ${borderClass} opacity-20 mx-4`}></div>
-                        </div>
+                        )}
 
-                        <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] p-10 lg:p-14 ${activeBgClass} backdrop-blur-3xl`}>
+                        <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] ${compact ? 'p-6' : 'p-10 lg:p-14'} ${activeBgClass} backdrop-blur-3xl`}>
                             <div className="space-y-6">
                                 <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass} mb-4 block`}>Select Synchronization Nodes <span className="text-emerald-500 ml-2 font-bold opacity-50 underline underline-offset-4">CRITICAL STEP</span></label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -860,7 +868,7 @@ export function ManualProcessView({
                                                     <select
                                                         value={targetLanguageOverrides[c.id] || ""}
                                                         onChange={(e) => setTargetLanguageOverrides(prev => ({ ...prev, [c.id]: e.target.value }))}
-                                                        className={`w-full ${isDark ? 'bg-black/40' : 'bg-gray-100'} border border-emerald-500/20 ${textClass} rounded-xl px-4 py-3 text-[11px] font-bold focus:border-emerald-500 outline-none appearance-none cursor-pointer`}
+                                                        className={`w-full ${isDark ? 'bg-black/40' : 'bg-gray-100'} border border-emerald-500/20 hover:border-emerald-500/40 ${textClass} rounded-xl px-4 py-3 text-[10px] font-bold focus:border-emerald-500 outline-none appearance-none cursor-pointer shadow-sm`}
                                                     >
                                                         <option value="">Choose linguistic target...</option>
                                                         {LANGUAGE_OPTIONS.map(l => (
@@ -927,8 +935,8 @@ export function ManualProcessView({
                 </div>
 
                 {/* Right Column: EXECUTION COMMAND CENTER */}
-                <div className="space-y-6 sticky top-8 h-fit">
-                    <div className={`${cardClass} border ${borderLightClass} rounded-[2.5rem] p-10 relative overflow-hidden ${activeBgClass} backdrop-blur-[40px]`}>
+                <div className={`space-y-6 sticky top-8 h-fit ${compact ? 'lg:col-span-1' : ''}`}>
+                    <div className={`${cardClass} border ${borderLightClass} rounded-[2.5rem] ${compact ? 'p-6' : 'p-10'} relative overflow-hidden ${activeBgClass} backdrop-blur-[40px]`}>
                         <div className={`absolute top-0 right-0 p-8 ${isDark ? 'opacity-[0.03]' : 'opacity-[0.02]'} pointer-events-none`}>
                             <Cpu className="w-32 h-32" />
                         </div>
@@ -1083,10 +1091,10 @@ export function ManualProcessView({
                                     size="lg"
                                     onClick={(e) => handleSubmit(e, false)}
                                     disabled={isSubmitting || isSuccessState}
-                                    className={`w-full h-14 text-[11px] font-black uppercase tracking-[0.3em] transition-all duration-500 rounded-[1.5rem] relative overflow-hidden group/submit ${isSuccessState
-                                        ? 'bg-emerald-500 text-white'
-                                        : `bg-olleey-yellow text-black active:scale-95 ${isDark ? 'hover:bg-amber-300' : 'hover:bg-amber-400'}`
-                                        }`}
+                                    className={`w-full h-14 text-[11px] font-black uppercase tracking-[0.3em] transition-all duration-500 rounded-[1.5rem] relative overflow-hidden group/submit border ${isSuccessState
+                                        ? 'bg-emerald-500 text-white border-emerald-400/50'
+                                        : `bg-olleey-yellow text-black border-olleey-yellow/50 active:scale-95 ${isDark ? 'hover:bg-amber-300 hover:border-amber-400' : 'hover:bg-amber-400 hover:border-amber-500'}`
+                                        } shadow-xl`}
                                 >
                                     <div className={`absolute inset-x-0 top-0 h-[1px] ${isDark ? 'bg-white/20' : 'bg-black/10'} pointer-events-none`} />
                                     {isSubmitting ? (
@@ -1112,11 +1120,10 @@ export function ManualProcessView({
                                             size="lg"
                                             onClick={(e) => handleSubmit(e, true)}
                                             disabled={isSubmitting || isSuccessState}
-                                            className={`w-full h-12 text-[10px] font-black uppercase tracking-[0.25em] transition-all duration-500 rounded-[1.5rem] relative overflow-hidden group/draft ${
-                                                isDark 
-                                                    ? 'bg-white/5 text-white/70 border-2 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20' 
-                                                    : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 hover:text-gray-900 hover:border-gray-300'
-                                            } active:scale-95`}
+                                            className={`w-full h-12 text-[10px] font-black uppercase tracking-[0.25em] transition-all duration-500 rounded-[1.5rem] relative overflow-hidden group/draft ${isDark
+                                                ? 'bg-white/5 text-white/70 border-2 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
+                                                : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 hover:text-gray-900 hover:border-gray-300'
+                                                } active:scale-95`}
                                         >
                                             <span className="flex items-center gap-3">
                                                 <FolderOpen className="w-4 h-4 group-hover/draft:scale-110 transition-transform" />
@@ -1126,13 +1133,11 @@ export function ManualProcessView({
                                         <Button
                                             variant="ghost"
                                             onClick={onCancel}
-                                            className={`w-full h-10 text-[10px] font-black uppercase tracking-widest ${
-                                                isDark 
-                                                    ? 'text-white/20 hover:text-red-400 hover:bg-red-500/5' 
-                                                    : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
-                                            } transition-all rounded-full border border-transparent ${
-                                                isDark ? 'hover:border-red-500/10' : 'hover:border-red-200'
-                                            }`}
+                                            className={`w-full h-10 text-[10px] font-black uppercase tracking-widest ${isDark
+                                                ? 'text-white/20 hover:text-red-400 hover:bg-red-500/5'
+                                                : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
+                                                } transition-all rounded-full border border-transparent ${isDark ? 'hover:border-red-500/10' : 'hover:border-red-200'
+                                                }`}
                                         >
                                             Abort Operation
                                         </Button>

@@ -27,16 +27,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('[SupabaseAuth] Initial session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
-      
+
+      // Sync access tokens for authenticatedFetch
+      if (session?.access_token) {
+        localStorage.setItem('access_token', session.access_token);
+        if (session.refresh_token) {
+          localStorage.setItem('refresh_token', session.refresh_token);
+        }
+        console.log('[SupabaseAuth] ✅ Synced Supabase tokens to localStorage');
+      }
+
       // Sync userId to localStorage for backward compatibility
       if (session?.user) {
         localStorage.setItem('userId', session.user.id);
         console.log('[SupabaseAuth] ✅ Set userId in localStorage:', session.user.id);
-        
+
         // Sync user to users table
         syncUserToDatabase(session.user);
       }
-      
+
       setLoading(false);
     });
 
@@ -47,12 +56,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('[SupabaseAuth] Auth state changed:', _event, session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
-      
+
+      // Sync access tokens
+      if (session?.access_token) {
+        localStorage.setItem('access_token', session.access_token);
+        if (session.refresh_token) {
+          localStorage.setItem('refresh_token', session.refresh_token);
+        }
+      } else {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+      }
+
       // Sync userId to localStorage
       if (session?.user) {
         localStorage.setItem('userId', session.user.id);
         console.log('[SupabaseAuth] ✅ Updated userId in localStorage:', session.user.id);
-        
+
         // Sync user to users table (important for OAuth sign-ins)
         if (_event === 'SIGNED_IN') {
           syncUserToDatabase(session.user);
@@ -66,11 +86,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Listen for global session expiration from legacy API
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      console.warn('[SupabaseAuth] ⚠️ Session expired event received, signing out...');
+      signOut();
+    };
+
+    window.addEventListener('olleey-session-expired', handleSessionExpired);
+    return () => window.removeEventListener('olleey-session-expired', handleSessionExpired);
+  }, []);
+
   // Helper function to sync user to database
   const syncUserToDatabase = async (user: User) => {
     try {
       console.log('[SupabaseAuth] Syncing user to database:', user.id);
-      
+
       const { error } = await supabase
         .from('users')
         .upsert({
@@ -82,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }, {
           onConflict: 'user_id'
         });
-      
+
       if (error) {
         console.warn('[SupabaseAuth] Could not sync user to users table:', error);
       } else {
@@ -106,11 +137,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     console.log('[SupabaseAuth] ✅ Sign in successful:', data.user?.id);
-    
+
     // Store userId in localStorage
-    if (data.user) {
+    if (data.user && data.session) {
       localStorage.setItem('userId', data.user.id);
-      
+      localStorage.setItem('access_token', data.session.access_token);
+      if (data.session.refresh_token) {
+        localStorage.setItem('refresh_token', data.session.refresh_token);
+      }
+
       // Also ensure user exists in users table
       const { error: upsertError } = await supabase
         .from('users')
@@ -122,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }, {
           onConflict: 'user_id'
         });
-      
+
       if (upsertError) {
         console.warn('[SupabaseAuth] Could not sync user to users table:', upsertError);
       }
@@ -147,11 +182,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     console.log('[SupabaseAuth] ✅ Sign up successful:', data.user?.id);
-    
+
     // Store userId in localStorage
-    if (data.user) {
+    if (data.user && data.session) {
       localStorage.setItem('userId', data.user.id);
-      
+      localStorage.setItem('access_token', data.session.access_token);
+      if (data.session.refresh_token) {
+        localStorage.setItem('refresh_token', data.session.refresh_token);
+      }
+
       // Create user in users table
       const { error: insertError } = await supabase
         .from('users')
@@ -162,7 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           is_active: true,
           preferences: { theme: 'dark', language: 'en' },
         });
-      
+
       if (insertError) {
         console.warn('[SupabaseAuth] Could not create user in users table:', insertError);
       }

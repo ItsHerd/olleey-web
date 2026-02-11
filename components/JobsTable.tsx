@@ -41,7 +41,7 @@ import {
     ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Job, youtubeAPI, MasterNode, API_BASE_URL } from "@/lib/api";
+import { Job, youtubeAPI, MasterNode, API_BASE_URL, Video } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useVideos } from "@/lib/useVideos";
 import { getLanguageFlag, LANGUAGE_OPTIONS } from "@/lib/languages";
@@ -52,6 +52,7 @@ interface JobsTableProps {
     onViewWorkflow: (jobId: string) => void;
     onPreview: (job: Job) => void;
     projectId?: string;
+    videos?: Video[];
 }
 
 interface VideoGroup {
@@ -63,10 +64,14 @@ interface VideoGroup {
     status_counts: Record<string, number>;
 }
 
-export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId }: JobsTableProps) {
+export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId, videos: videosProp }: JobsTableProps) {
     const { theme } = useTheme();
     const router = useRouter();
-    const { videos } = useVideos();
+    const { videos: fetchedVideos } = useVideos(
+        { project_id: projectId },
+        { enabled: !videosProp }
+    );
+    const videos = videosProp || fetchedVideos;
     const [sorting, setSorting] = useState<SortingState>([]);
     const [expandedVideos, setExpandedVideos] = useState<Set<string>>(new Set());
     const [masterChannels, setMasterChannels] = useState<MasterNode[]>([]);

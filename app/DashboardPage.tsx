@@ -67,11 +67,28 @@ export default function DashboardPage() {
   console.log('[DashboardPage] Auth state:', { userId, authLoading, hasUser: !!user });
 
   // Individual dashboard data queries - load independently
-  const { dashboard, loading: dashboardLoading, refetch: refetchDashboard } = useDashboard({ projectId: selectedProject?.id });
-  const { stats, loading: statsLoading, refetch: refetchStats } = useDashboardStats({ projectId: selectedProject?.id });
-  const { jobs: dashboardJobs, loading: jobsLoading, refetch: refetchJobs } = useDashboardJobs({ projectId: selectedProject?.id, limit: 20, user_id: userId });
-  const { projects: dashboardProjects, loading: projectsLoading, refetch: refetchProjects } = useDashboardProjects();
-  const { channels: dashboardChannels, loading: channelsLoading, refetch: refetchChannels } = useDashboardChannels({ projectId: selectedProject?.id, user_id: userId });
+  const { dashboard, loading: dashboardLoading, refetch: refetchDashboard } = useDashboard({
+    projectId: selectedProject?.id,
+    enabled: !!userId && !authLoading
+  });
+  const { stats, loading: statsLoading, refetch: refetchStats } = useDashboardStats({
+    projectId: selectedProject?.id,
+    enabled: !!userId && !authLoading
+  });
+  const { jobs: dashboardJobs, loading: jobsLoading, refetch: refetchJobs } = useDashboardJobs({
+    projectId: selectedProject?.id,
+    limit: 20,
+    user_id: userId,
+    enabled: !!userId && !authLoading
+  });
+  const { projects: dashboardProjects, loading: projectsLoading, refetch: refetchProjects } = useDashboardProjects({
+    enabled: !!userId && !authLoading
+  });
+  const { channels: dashboardChannels, loading: channelsLoading, refetch: refetchChannels } = useDashboardChannels({
+    projectId: selectedProject?.id,
+    user_id: userId,
+    enabled: !!userId && !authLoading
+  });
 
   console.log('[DashboardPage] Dashboard jobs:', {
     count: dashboardJobs?.length || 0,
@@ -137,15 +154,15 @@ export default function DashboardPage() {
     useMemo(() => {
       // Build query params - only user_id and optionally project_id
       const params: any = { user_id: userId };
-      
+
       // Only add project filter if a SPECIFIC project is selected
       // If selectedProject is null/undefined (All Projects mode), don't filter by project
       if (selectedProject?.id) {
         params.project_id = selectedProject.id;
       }
-      
+
       // NO channel filtering on dashboard - removed entirely
-      
+
       return params;
     }, [selectedProject?.id, userId]),
     { enabled: !!userId && !authLoading } // Only fetch when we have a userId and auth is loaded

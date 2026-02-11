@@ -18,7 +18,7 @@ export default function ActivityQueue() {
   const { theme } = useTheme();
   const { selectedProject } = useProject();
   const { dashboard, loading: dashboardLoading } = useDashboard();
-  const { videos } = useVideos();
+  const { videos } = useVideos({ project_id: selectedProject?.id });
   const { jobs, activeJobs, isLoading: jobsLoading, hasActiveJobs } = useActiveJobs({
     enabled: true,
   });

@@ -34,7 +34,7 @@ export function useDashboardChannels(params: { projectId?: string; enabled?: boo
         last_upload: null,
         is_paused: (sc as any).is_paused || false
       }));
-      
+
       setChannels(mapped);
     }
   }, [supabaseChannels]);
@@ -57,7 +57,8 @@ export function useDashboardChannels(params: { projectId?: string; enabled?: boo
       const response = await authenticatedFetch(url, { method: "GET" });
 
       if (!response.ok) {
-        throw new Error(`Failed to load channels: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Failed to load channels: ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -65,7 +66,8 @@ export function useDashboardChannels(params: { projectId?: string; enabled?: boo
       setChannels(data.channels || []);
       setTotal(data.total || 0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load channels");
+      const errorMessage = err instanceof Error ? err.message : "Failed to load channels";
+      setError(errorMessage);
       console.error("[useDashboardChannels] Error:", err);
     } finally {
       setLoading(false);

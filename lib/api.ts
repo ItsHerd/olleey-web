@@ -1,5 +1,5 @@
-// API Configuration
 import { LocalizationStatus, JobStatus, VideoType, VideoStatus, ChannelStatus as ChannelStatusEnum } from "./schema";
+import { supabase } from "./supabase";
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -59,6 +59,7 @@ export interface YouTubeConnection {
   connection_id: string;
   youtube_channel_id: string;
   youtube_channel_name: string;
+  channel_avatar_url?: string;
   language_code?: string;
   language_name?: string;
   is_primary: boolean;
@@ -352,11 +353,34 @@ export const authAPI = {
    * Refresh access token
    */
   refresh: async (): Promise<TokenResponse> => {
+    console.log('[API] Attempting to refresh token...');
+
+    // First, try to get a fresh session from Supabase
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (session && !sessionError) {
+        console.log('[API] Found valid Supabase session, syncing tokens');
+        const tokens: TokenResponse = {
+          access_token: session.access_token,
+          refresh_token: session.refresh_token || '',
+          token_type: session.token_type || 'bearer',
+          expires_in: session.expires_in || 3600,
+        };
+        tokenStorage.setTokens(tokens);
+        return tokens;
+      }
+    } catch (supabaseErr) {
+      console.warn('[API] Supabase session check failed:', supabaseErr);
+    }
+
+    // Fallback to legacy refresh logic if Supabase fails
     const refreshToken = tokenStorage.getRefreshToken();
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
 
+    console.log('[API] Falling back to legacy refresh endpoint');
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: "POST",
       headers: {
@@ -369,7 +393,7 @@ export const authAPI = {
 
     if (!response.ok) {
       tokenStorage.clearTokens();
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.detail || "Token refresh failed");
     }
 
@@ -952,7 +976,11 @@ export const authenticatedFetch = async (
   const token = tokenStorage.getAccessToken();
 
   if (!token) {
-    throw new Error("No access token available");
+    return new Response(JSON.stringify({ detail: "No access token available" }), {
+      status: 401,
+      statusText: "Unauthorized",
+      headers: { "Content-Type": "application/json" }
+    });
   }
 
   const headers = {
@@ -982,7 +1010,14 @@ export const authenticatedFetch = async (
       }
     } catch (error) {
       tokenStorage.clearTokens();
-      throw new Error("Session expired. Please login again.");
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('olleey-session-expired'));
+      }
+      return new Response(JSON.stringify({ detail: "Session expired. Please login again." }), {
+        status: 401,
+        statusText: "Unauthorized",
+        headers: { "Content-Type": "application/json" }
+      });
     }
   }
 
