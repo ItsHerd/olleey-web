@@ -15,6 +15,7 @@ import { GuardrailsView } from "./views/GuardrailsView";
 import { SupportView } from "./views/SupportView";
 import { ManualWorkflowView } from "./views/ManualWorkflowView";
 import { ReviewView } from "./views/ReviewView";
+import { PreviewView } from "./views/PreviewView";
 
 interface CenterPanelProps {
   currentView: ViewType;
@@ -32,7 +33,7 @@ export function CenterPanel({
   theme
 }: CenterPanelProps) {
   const isDark = theme === "dark";
-  const bgClass = isDark ? "bg-[#0A0A0A]" : "bg-gray-50";
+  const bgClass = isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]";
 
   // Determine which view to show based on selection
   const renderView = () => {
@@ -50,7 +51,7 @@ export function CenterPanel({
     // Otherwise show the main view
     switch (currentView) {
       case "dashboard":
-        return <DashboardView onSelectJob={onSelectItem} theme={theme} />;
+        return <DashboardView onSelectJob={onSelectItem} theme={theme} onViewChange={onViewChange} />;
       case "videos":
         return <VideosView theme={theme} />;
       case "channels":
@@ -73,6 +74,8 @@ export function CenterPanel({
         return <ManualWorkflowView onViewChange={onViewChange} theme={theme} />;
       case "review":
         return <ReviewView onViewChange={onViewChange} theme={theme} />;
+      case "preview":
+        return <PreviewView onViewChange={onViewChange} theme={theme} />;
       default:
         return <DashboardView onSelectJob={onSelectItem} theme={theme} onViewChange={onViewChange} />;
     }

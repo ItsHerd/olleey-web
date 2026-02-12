@@ -69,7 +69,10 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
 
   const isDark = theme === "dark";
   const cardBgClass = isDark ? "bg-[#141414]" : "bg-white";
-  const textSecondaryClass = isDark ? "text-gray-500" : "text-gray-500";
+  const borderClass = isDark ? "border-white/10" : "border-transparent";
+  const shadowClass = isDark ? "shadow-xl" : "shadow-none";
+  const textClass = isDark ? "text-white" : "text-gray-900";
+  const textSecondaryClass = isDark ? "text-gray-400" : "text-gray-600";
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -112,7 +115,7 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
   };
 
   return (
-    <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-gray-50"}`}>
+    <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
       {/* Grid Background */}
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.03]"
@@ -137,25 +140,25 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
                     }`}
                 >
                   <div
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${message.role === "assistant"
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${message.role === "assistant"
                       ? "bg-[#D97757]/20 border border-[#D97757]/30"
-                      : "bg-white/5 border border-white/10"
+                      : isDark ? "bg-white/5 border border-white/10" : "bg-black/5 border border-black/10"
                       }`}
                   >
                     {message.role === "assistant" ? (
                       <OlleeyLogo className="w-6 h-6" />
                     ) : (
-                      <span className="text-lg font-bold text-white">Y</span>
+                      <span className={`text-lg font-bold ${textClass}`}>Y</span>
                     )}
                   </div>
 
                   <div
                     className={`flex-1 max-w-[85%] ${message.role === "user"
-                      ? `${cardBgClass} border border-white/10 rounded-2xl p-4 shadow-xl`
+                      ? `${cardBgClass} border ${borderClass} rounded-xl p-4 ${isDark ? 'shadow-xl' : 'shadow-none'}`
                       : ""
                       }`}
                   >
-                    <p className="text-lg leading-relaxed text-gray-100 whitespace-pre-wrap">{message.content}</p>
+                    <p className={`text-lg leading-relaxed ${textClass} whitespace-pre-wrap`}>{message.content}</p>
                     <span className={`text-sm ${textSecondaryClass} mt-3 block`}>
                       {message.timestamp.toLocaleTimeString()}
                     </span>
@@ -195,32 +198,32 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
             >
               <div className="mb-6 px-4">
                 <OlleeyLogo className="w-10 h-10" />
-                <h1 className="text-2xl font-serif mb-4 text-white tracking-tight">Let's knock something off your list</h1>
+                <h1 className={`text-2xl font-serif mb-4 ${textClass} tracking-tight`}>Let's knock something off your list</h1>
               </div>
 
               {/* Connect Tools Banner */}
               <motion.div
                 whileHover={{ scale: 1.005 }}
-                className={`${cardBgClass} border border-white/5 rounded-2xl p-4 mb-4 cursor-pointer flex items-center justify-between group shadow-xl transition-all hover:bg-white/5`}
+                className={`${cardBgClass} border ${borderClass} rounded-xl p-4 mb-4 cursor-pointer flex items-center justify-between group ${isDark ? 'shadow-xl' : 'shadow-none'} transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'}`}
               >
                 <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-gray-300">Connect your channels to Olleey</span>
+                  <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>Connect your channels to Olleey</span>
                   <div className="flex items-center -space-x-1">
 
-                    <div className="w-8 h-8 rounded-lg bg-red-500/20 border border-white/10 flex items-center justify-center overflow-hidden">
+                    <div className={`w-8 h-8 rounded-lg bg-red-500/20 border ${isDark ? "border-white/10" : "border-black/5"} flex items-center justify-center overflow-hidden`}>
                       <img src="https://cdn-icons-png.flaticon.com/512/174/174883.png" className="w-5 h-5" />
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-gray-400 transition-colors" />
+                <ChevronRight className={`w-5 h-5 ${isDark ? "text-gray-600 group-hover:text-gray-400" : "text-gray-400 group-hover:text-gray-600"} transition-colors`} />
               </motion.div>
 
               {/* Quick Actions */}
               <div className="px-4">
                 <div className="flex items-center gap-2 mb-6">
-                  <Sparkles className="w-4 h-4 text-gray-500" />
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Pick a task, any task</span>
-                  <span className="ml-auto text-xs text-gray-500 cursor-pointer hover:text-gray-300">+ Customize with plugins</span>
+                  <Sparkles className={`w-4 h-4 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
+                  <span className={`text-xs font-medium ${isDark ? "text-gray-500" : "text-gray-500"} uppercase tracking-wider`}>Pick a task, any task</span>
+                  <span className={`ml-auto text-xs ${isDark ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-900"} cursor-pointer transition-colors`}>+ Customize with plugins</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {quickActions.map((action, idx) => {
@@ -231,15 +234,15 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
-                        whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.02)" }}
+                        whileHover={{ scale: 1.02, backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)" }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleQuickAction(action)}
-                        className={`${cardBgClass} border border-white/10 rounded-xl p-4 text-left transition-all flex flex-col h-full shadow-lg group`}
+                        className={`${cardBgClass} border ${borderClass} rounded-lg p-4 text-left transition-all flex flex-col h-full ${isDark ? 'shadow-lg' : 'shadow-none'} group`}
                       >
-                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center mb-3 group-hover:border-white/10 group-hover:bg-white/10 transition-colors">
-                          <Icon className="w-4 h-4 text-gray-400" />
+                        <div className={`w-8 h-8 rounded-lg ${isDark ? 'bg-white/5 border-white/5 group-hover:border-white/10 group-hover:bg-white/10' : 'bg-black/5 border-black/5 group-hover:border-black/10 group-hover:bg-black/10'} flex items-center justify-center mb-3 transition-colors`}>
+                          <Icon className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
                         </div>
-                        <div className="font-semibold text-white text-sm mb-0.5">{action.title}</div>
+                        <div className={`font-semibold ${textClass} text-sm mb-0.5`}>{action.title}</div>
                         <div className={`text-xs ${textSecondaryClass}`}>
                           {action.description}
                         </div>

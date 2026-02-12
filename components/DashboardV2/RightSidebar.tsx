@@ -18,6 +18,7 @@ interface RightSidebarProps {
   onClose: () => void;
   theme: string;
   onViewChange?: (view: any) => void;
+  onSelectItem?: (item: SelectedItem) => void;
 }
 
 export function RightSidebar({
@@ -25,17 +26,18 @@ export function RightSidebar({
   currentView,
   onClose,
   theme,
-  onViewChange
+  onViewChange,
+  onSelectItem
 }: RightSidebarProps) {
   const { user } = useAuth();
   const { selectedProject } = useProject();
   const userId = user?.id;
   const isDark = theme === "dark";
-  const bgClass = isDark ? "bg-[#0A0A0A]/80" : "bg-white/80";
+  const bgClass = isDark ? "bg-[#0D0D0D]" : "bg-[#EBEBDC]";
   const borderClass = isDark ? "border-white/10" : "border-gray-200";
   const textClass = isDark ? "text-white" : "text-gray-900";
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
-  const glassBgClass = isDark ? "bg-white/[0.03] backdrop-blur-md" : "bg-gray-50/50 backdrop-blur-md";
+  const glassBgClass = isDark ? "bg-white/[0.05]" : "bg-gray-100/50";
 
   const { jobs, loading, error: jobsError } = useDashboardJobs({
     projectId: selectedProject?.id,
@@ -51,7 +53,7 @@ export function RightSidebar({
   // If there's an auth error, show a message
   if (jobsError?.includes("access token") || videosError?.includes("access token")) {
     return (
-      <div className={`h-full ${bgClass} backdrop-blur-xl flex flex-col items-center justify-center p-6`}>
+      <div className={`h-full ${bgClass} flex flex-col items-center justify-center p-6`}>
         <div className="text-center">
           <p className={`text-sm ${mutedTextClass} mb-4`}>Please log in to view status</p>
           <Button
@@ -107,7 +109,7 @@ export function RightSidebar({
   };
 
   return (
-    <div className={`h-full ${bgClass} backdrop-blur-xl flex flex-col p-6 space-y-6 overflow-hidden relative`}>
+    <div className={`h-full ${bgClass} flex flex-col p-6 space-y-6 overflow-hidden relative`}>
       {/* Subtle Background Glow */}
       <div className="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
 
@@ -130,7 +132,7 @@ export function RightSidebar({
         </div>
         <button
           onClick={onClose}
-          className={`p-2 rounded-xl border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
+          className={`p-2 rounded-lg border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
         >
           <ChevronRight className="w-4 h-4 text-gray-400" />
         </button>
@@ -140,7 +142,7 @@ export function RightSidebar({
         {/* Table for videos that need review */}
         <div className="flex flex-col">
           <div className="flex items-center justify-between mb-4 px-2">
-            <h4 className={`text-sm font-bold flex items-center gap-2 ${textClass} tracking-tight`}>
+            <h4 className={`text-sm font-400 flex items-center gap-2 ${textClass} tracking-tight`}>
               <div className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.5)]" />
               Need Review
             </h4>
@@ -151,7 +153,7 @@ export function RightSidebar({
             {loading ? (
               <div className="space-y-3">
                 {[1, 2].map(i => (
-                  <div key={i} className={`h-16 rounded-2xl border ${borderClass} animate-pulse bg-white/5`} />
+                  <div key={i} className={`h-16 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
                 ))}
               </div>
             ) : needsReviewJobs.length > 0 ? (
@@ -161,7 +163,15 @@ export function RightSidebar({
                   <motion.div
                     key={job.job_id}
                     whileHover={{ x: -4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
-                    className={`p-3 rounded-2xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group shadow-sm`}
+                    onClick={() => {
+                      onSelectItem?.({ type: "job", id: job.job_id, data: job });
+                      if (job.status === 'waiting_approval') {
+                        onViewChange?.("review");
+                      } else {
+                        onViewChange?.("dashboard");
+                      }
+                    }}
+                    className={`p-3 rounded-xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group ${isDark ? 'shadow-sm' : 'shadow-none'}`}
                   >
                     <div className="flex gap-3">
                       <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
@@ -230,7 +240,15 @@ export function RightSidebar({
                   <motion.div
                     key={job.job_id}
                     whileHover={{ x: -4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
-                    className={`p-3 rounded-2xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group shadow-sm`}
+                    onClick={() => {
+                      onSelectItem?.({ type: "job", id: job.job_id, data: job });
+                      if (job.status === 'waiting_approval') {
+                        onViewChange?.("review");
+                      } else {
+                        onViewChange?.("dashboard");
+                      }
+                    }}
+                    className={`p-3 rounded-xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group ${isDark ? 'shadow-sm' : 'shadow-none'}`}
                   >
                     <div className="flex gap-3 mb-3">
                       <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">

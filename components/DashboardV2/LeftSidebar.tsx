@@ -60,6 +60,7 @@ import { MoreHorizontal, Trash, Edit, Star, Play, Pause, X } from "lucide-react"
 interface LeftSidebarProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
+  onSelectItem: (item: any) => void;
   activeJobsCount: number;
   theme: string;
   onClose: () => void;
@@ -68,6 +69,7 @@ interface LeftSidebarProps {
 export function LeftSidebar({
   currentView,
   onViewChange,
+  onSelectItem,
   activeJobsCount,
   theme,
   onClose
@@ -178,15 +180,15 @@ export function LeftSidebar({
 
 
 
-  const bgClass = isDark ? "bg-[#0A0A0A]/80" : "bg-white/80";
+  const bgClass = isDark ? "bg-[#0D0D0D]" : "bg-[#EBEBDC]";
   const borderClass = isDark ? "border-white/10" : "border-gray-200";
   const textClass = isDark ? "text-white" : "text-gray-900";
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
-  const glassBgClass = isDark ? "bg-white/[0.03] backdrop-blur-md" : "bg-gray-50/50 backdrop-blur-md";
+  const glassBgClass = isDark ? "bg-white/[0.05]" : "bg-gray-100/50";
 
   return (
     <div
-      className={`w-80 h-full ${bgClass} backdrop-blur-xl border-r ${borderClass} flex flex-col p-6 overflow-hidden relative`}
+      className={`w-80 h-full ${bgClass} border-r ${borderClass} flex flex-col p-6 overflow-hidden relative`}
     >
       {/* Subtle Background Glow */}
       <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-[#D97757]/5 to-transparent pointer-events-none" />
@@ -204,7 +206,7 @@ export function LeftSidebar({
         </div>
         <button
           onClick={onClose}
-          className={`p-2 rounded-xl border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
+          className={`p-2 rounded-lg border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
         >
           <ChevronLeft className="w-4 h-4 text-gray-400" />
         </button>
@@ -215,7 +217,7 @@ export function LeftSidebar({
         <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${mutedTextClass} opacity-60`} />
         <Input
           placeholder="Jump to..."
-          className={`pl-10 h-11 ${isDark ? "border-white/5 focus-visible:ring-white/10 bg-white/[0.02]" : "border-gray-200 focus-visible:ring-gray-300 bg-gray-50/50"} rounded-2xl`}
+          className={`pl-10 h-11 ${isDark ? "border-white/5 focus-visible:ring-white/10 bg-white/[0.02]" : "border-gray-200 focus-visible:ring-gray-300 bg-white/50"} rounded-xl`}
         />
       </div>
 
@@ -224,7 +226,8 @@ export function LeftSidebar({
         <Accordion type="multiple" defaultValue={["channels", "runs"]} className="space-y-1 relative">
           <AccordionItem value="channels" className="border-none">
             <AccordionTrigger
-              className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-2xl border ${borderClass} ${isDark ? "bg-white/[0.02] hover:bg-white/[0.05]" : "bg-gray-50/50 hover:bg-gray-100/50"} ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}
+              onClick={() => onViewChange("channels")}
+              className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-xl border ${borderClass} ${isDark ? "bg-white/[0.02] hover:bg-white/[0.05]" : "bg-white/20 hover:bg-white/40"} ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}
             >
               <div className="flex items-center gap-2.5">
                 <Radio className="w-4 h-4 text-[#D97757]" />
@@ -235,14 +238,18 @@ export function LeftSidebar({
               <div className="space-y-2">
                 {channelsLoading ? (
                   Array.from({ length: 2 }).map((_, i) => (
-                    <div key={i} className={`h-12 rounded-2xl border ${borderClass} animate-pulse bg-white/5`} />
+                    <div key={i} className={`h-12 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
                   ))
                 ) : channels.length > 0 ? (
                   channels.map((channel) => (
                     <motion.div
                       key={channel.id}
                       whileHover={{ x: 4 }}
-                      className={`group w-full p-2.5 rounded-2xl border ${borderClass} ${glassBgClass} flex items-center justify-between ${isDark ? "hover:border-white/20" : "hover:border-gray-300"} transition-all cursor-default shadow-sm`}
+                      onClick={() => {
+                        onSelectItem({ type: "channel", id: channel.id, data: channel });
+                        onViewChange("channels");
+                      }}
+                      className={`group w-full p-2.5 rounded-xl border ${borderClass} ${glassBgClass} flex items-center justify-between ${isDark ? "hover:border-white/20" : "hover:border-gray-300 shadow-none"} transition-all cursor-pointer ${isDark ? 'shadow-sm' : 'shadow-none'}`}
                     >
                       <div className="flex items-center gap-3 w-full overflow-hidden">
                         <div className="relative shrink-0">
@@ -309,12 +316,12 @@ export function LeftSidebar({
                     </motion.div>
                   ))
                 ) : (
-                  <div className={`p-8 text-center rounded-2xl border border-dashed ${borderClass}`}>
+                  <div className={`p-8 text-center rounded-xl border border-dashed ${borderClass}`}>
                     <p className={`text-xs ${mutedTextClass}`}>No channels connected</p>
                   </div>
                 )}
 
-                <button className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-2xl border-2 border-dashed ${borderClass} hover:border-[#D97757]/50 hover:text-[#D97757] hover:bg-[#D97757]/5 transition-all duration-200 bg-transparent group`}>
+                <button className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-xl border-2 border-dashed ${borderClass} hover:border-[#D97757]/50 hover:text-[#D97757] hover:bg-[#D97757]/5 transition-all duration-200 bg-transparent group`}>
                   <Plus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
                   Connect New
                 </button>
@@ -350,6 +357,14 @@ export function LeftSidebar({
                       <motion.div
                         key={job.job_id}
                         whileHover={{ x: 4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
+                        onClick={() => {
+                          onSelectItem({ type: "job", id: job.job_id, data: job });
+                          if (job.status === 'waiting_approval') {
+                            onViewChange("review");
+                          } else {
+                            onViewChange("dashboard");
+                          }
+                        }}
                         className={`p-3 rounded-2xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group shadow-sm`}
                       >
                         <div className="flex gap-3 mb-2.5">

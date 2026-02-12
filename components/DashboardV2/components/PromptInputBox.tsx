@@ -101,7 +101,7 @@ const DialogContent = React.forwardRef<
         <DialogPrimitive.Content
             ref={ref}
             className={cn(
-                "fixed left-[50%] top-[50%] z-50 grid w-full max-w-[90vw] md:max-w-[800px] translate-x-[-50%] translate-y-[-50%] gap-4 border border-[#333333] bg-[#1F2023] p-0 shadow-xl duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 rounded-2xl",
+                "fixed left-[50%] top-[50%] z-50 grid w-full max-w-[90vw] md:max-w-[800px] translate-x-[-50%] translate-y-[-50%] gap-4 border border-[#333333] bg-[#1F2023] p-0 shadow-xl duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 rounded-xl",
                 className
             )}
             {...props}
@@ -245,12 +245,12 @@ const ImageViewDialog: React.FC<ImageViewDialogProps> = ({ imageUrl, onClose }) 
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="relative bg-[#1F2023] rounded-2xl overflow-hidden shadow-2xl"
+                    className="relative bg-[#1F2023] rounded-xl overflow-hidden shadow-2xl"
                 >
                     <img
                         src={imageUrl}
                         alt="Full preview"
-                        className="w-full max-h-[80vh] object-contain rounded-2xl"
+                        className="w-full max-h-[80vh] object-contain rounded-xl"
                     />
                 </motion.div>
             </DialogContent>
@@ -331,7 +331,7 @@ const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
                     <div
                         ref={ref}
                         className={cn(
-                            "rounded-[2.5rem] border border-[#444444] bg-[#141414] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300",
+                            "rounded-2xl border border-[#444444] bg-[#141414] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300",
                             isLoading && "border-[#D97757]/70",
                             className
                         )}
@@ -578,7 +578,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                             <div key={index} className="relative group">
                                 {file.type.startsWith("image/") && filePreviews[file.name] && (
                                     <div
-                                        className="w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ring-1 ring-white/10"
+                                        className="w-20 h-20 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ring-1 ring-white/10"
                                         onClick={() => openImageModal(filePreviews[file.name])}
                                     >
                                         <img
@@ -753,7 +753,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                             variant="default"
                             size="icon"
                             className={cn(
-                                "h-10 w-10 rounded-2xl transition-all duration-200",
+                                "h-10 w-10 rounded-xl transition-all duration-200",
                                 isRecording
                                     ? "bg-transparent hover:bg-gray-600/30 text-red-500"
                                     : hasContent

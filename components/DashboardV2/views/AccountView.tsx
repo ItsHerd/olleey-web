@@ -9,8 +9,8 @@ export function AccountView({ theme }: { theme: string }) {
     const isDark = theme === "dark";
     const textClass = isDark ? "text-white" : "text-gray-900";
     const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
-    const cardBgClass = isDark ? "bg-white/[0.03]" : "bg-gray-50";
-    const borderClass = isDark ? "border-white/10" : "border-gray-200";
+    const cardBgClass = isDark ? "bg-white/[0.03]" : "bg-white/40";
+    const borderClass = isDark ? "border-white/10" : "border-transparent";
 
     const settings = [
         { icon: User, label: "Profile Information", desc: "Update your name and personal details" },
@@ -27,8 +27,8 @@ export function AccountView({ theme }: { theme: string }) {
                 <p className={mutedTextClass}>Manage your personal information and workspace preferences</p>
             </div>
 
-            <div className={`p-6 rounded-2xl border ${borderClass} ${cardBgClass} mb-8 flex items-center gap-6`}>
-                <div className="w-20 h-20 rounded-2xl bg-[#D97757]/20 flex items-center justify-center text-3xl font-serif text-[#D97757]">
+            <div className={`p-6 rounded-xl border ${borderClass} ${cardBgClass} mb-8 flex items-center gap-6`}>
+                <div className="w-20 h-20 rounded-xl bg-[#D97757]/20 flex items-center justify-center text-3xl font-serif text-[#D97757]">
                     {user?.email?.[0].toUpperCase()}
                 </div>
                 <div>
@@ -44,7 +44,7 @@ export function AccountView({ theme }: { theme: string }) {
                 {settings.map((item, idx) => (
                     <div
                         key={idx}
-                        className={`p-4 rounded-2xl border ${borderClass} ${isDark ? "hover:bg-white/[0.02]" : "hover:bg-white hover:border-gray-300"} cursor-pointer transition-all flex items-center justify-between group`}
+                        className={`p-4 rounded-xl border ${borderClass} ${isDark ? "hover:bg-white/[0.02]" : "hover:bg-white/60"} cursor-pointer transition-all flex items-center justify-between group`}
                     >
                         <div className="flex items-center gap-4">
                             <div className={`p-2 rounded-xl border ${isDark ? "bg-white/5 border-white/5 group-hover:border-white/10 group-hover:bg-white/10" : "bg-gray-100 border-gray-200 group-hover:bg-gray-200"} transition-colors`}>

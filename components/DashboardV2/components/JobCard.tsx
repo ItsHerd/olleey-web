@@ -67,14 +67,14 @@ export function JobCard({ job, onClick, theme, highlight }: JobCardProps) {
     ? "border-[#FFC107]/50 shadow-lg shadow-[#FFC107]/10"
     : highlight === "error"
       ? "border-red-500/50"
-      : isDark ? "border-white/10" : "border-gray-200";
+      : isDark ? "border-white/10" : "border-transparent";
 
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`${cardBgClass} rounded-xl border ${borderClass} overflow-hidden cursor-pointer transition-all`}
+      className={`${cardBgClass} rounded-lg border ${borderClass} overflow-hidden cursor-pointer transition-all ${isDark ? 'shadow-sm' : ''}`}
     >
       {/* Thumbnail & Overlay */}
       <div className="relative aspect-video bg-gradient-to-br from-gray-800 to-gray-900">

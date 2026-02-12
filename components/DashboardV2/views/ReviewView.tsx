@@ -153,8 +153,8 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
 
     // UI Helpers
     const isDark = theme === "dark";
-    const bgClass = isDark ? "bg-[#0c0c0c]" : "bg-gray-50";
-    const borderClass = isDark ? "border-white/5" : "border-gray-200";
+    const bgClass = isDark ? "bg-[#0c0c0c]" : "bg-[#EBEBDC]";
+    const borderClass = isDark ? "border-white/5" : "border-black/5";
 
     // ... (Add back essential handlers: play/pause, seek, sync)
     const togglePlay = () => {
@@ -192,7 +192,7 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
     if (!videoIdFromUrl && !quickCheckState.videoId) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                <div className="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
+                <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
                     <RefreshCw className="w-8 h-8 text-white/20" />
                 </div>
                 <h2 className="text-xl font-bold text-white mb-2">No Review Active</h2>
@@ -203,9 +203,9 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
     }
 
     return (
-        <div className={`w-full h-full flex flex-col ${bgClass} overflow-hidden rounded-tl-3xl shadow-2xl`}>
+        <div className={`w-full h-full flex flex-col ${bgClass} overflow-hidden rounded-xl ${isDark ? 'shadow-2xl' : ''}`}>
             {/* Header Toolbar */}
-            <div className={`flex items-center justify-between px-6 py-4 border-b ${borderClass} ${isDark ? "bg-[#0c0c0c]" : "bg-white"} shadow-md z-30`}>
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${borderClass} ${isDark ? "bg-[#0c0c0c]" : `bg-[#EBEBDC]`} ${isDark ? 'shadow-md' : ''} z-30`}>
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => onViewChange?.("dashboard")} className={`rounded-full w-8 h-8 ${isDark ? "hover:bg-white/10 border-white/0 hover:border-white/10" : "hover:bg-gray-100 border-transparent hover:border-gray-200"} transition-all`}>
                         <X className="w-4 h-4" />
@@ -213,32 +213,32 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
                     <div>
                         <h2 className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"} leading-tight`}>{videoTitle || "Untitled Video"}</h2>
                         <div className="flex items-center gap-2 mt-0.5">
-                            <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 ${isDark ? "border-white/10 text-white/50" : "border-gray-200 text-gray-500"}`}>{languageName}</Badge>
+                            <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 ${isDark ? "border-white/10 text-white/50" : "border-black/5 text-gray-500"}`}>{languageName}</Badge>
                             <span className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"} truncate max-w-[200px]`}>{videoIdFromUrl}</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <div className={`flex items-center ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200"} rounded-full p-1 border shadow-inner`}>
+                    <div className={`flex items-center ${isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/5"} rounded-xl p-1 border`}>
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setIsPreviewMode(false)}
-                            className={cn("h-7 px-3 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all", !isPreviewMode ? (isDark ? "bg-white text-black shadow-lg" : "bg-white text-gray-900 shadow-md border border-gray-200") : `${isDark ? "text-white/40 hover:text-white" : "text-gray-500 hover:text-gray-900"}`)}
+                            className={cn("h-7 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all", !isPreviewMode ? (isDark ? "bg-white text-black shadow-lg" : "bg-white text-gray-900 shadow-sm border border-black/5") : `${isDark ? "text-white/40 hover:text-white" : "text-gray-500 hover:text-gray-900"}`)}
                         >
                             Edit
                         </Button>
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setIsPreviewMode(true)}
-                            className={cn("h-7 px-3 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all", isPreviewMode ? (isDark ? "bg-white text-black shadow-lg" : "bg-white text-gray-900 shadow-md border border-gray-200") : `${isDark ? "text-white/40 hover:text-white" : "text-gray-500 hover:text-gray-900"}`)}
+                            onClick={() => onViewChange?.("preview")}
+                            className={cn("h-7 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all", isPreviewMode ? (isDark ? "bg-white text-black shadow-lg" : "bg-white text-gray-900 shadow-sm border border-black/5") : `${isDark ? "text-white/40 hover:text-white" : "text-gray-500 hover:text-gray-900"}`)}
                         >
                             Preview
                         </Button>
                     </div>
-                    <Button className="h-8 rounded-full bg-olleey-yellow text-black text-[10px] font-black uppercase tracking-widest px-4 hover:bg-white border border-olleey-yellow/50 shadow-lg shadow-olleey-yellow/10 transition-all active:scale-95">
+                    <Button className={`h-8 rounded-xl bg-[#FFC107] text-black text-[10px] font-black uppercase tracking-widest px-4 hover:bg-[#FFC107]/90 border border-[#FFC107]/50 ${isDark ? 'shadow-lg shadow-[#FFC107]/10' : ''} transition-all active:scale-95`}>
                         Publish
                     </Button>
                 </div>
@@ -247,8 +247,8 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
             {/* Content Area */}
             <div className="flex-1 flex overflow-hidden">
                 {/* Video Player Area */}
-                <div className={`flex-1 ${isDark ? "bg-black/40" : "bg-gray-100"} relative p-6 flex flex-col items-center justify-center`}>
-                    <div className="w-full max-w-5xl aspect-video bg-black rounded-2xl border border-white/10 relative overflow-hidden group shadow-2xl">
+                <div className={`flex-1 ${isDark ? "bg-black/40" : "bg-black/5"} relative p-6 flex flex-col items-center justify-center`}>
+                    <div className={`w-full max-w-5xl aspect-video bg-black rounded-lg border border-white/10 relative overflow-hidden group ${isDark ? 'shadow-2xl' : ''}`}>
                         <div className={`grid ${isPreviewMode ? 'grid-cols-1' : 'grid-cols-2'} h-full divide-x ${isDark ? "divide-white/10" : "divide-white/20"}`}>
                             {/* Original */}
                             {!isPreviewMode && (
@@ -313,7 +313,7 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
                         <div className="p-4 space-y-4 overflow-y-auto flex-1">
                             {/* Simplifed checklist for V2 demo */}
                             {['Lip Sync Accuracy', 'Audio Clarity', 'Translation Tone', 'Timing Sync'].map((item) => (
-                                <div key={item} className={`p-3 rounded-xl ${isDark ? "bg-white/5 border-white/5 hover:bg-white/10" : "bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300"} border flex items-center justify-between group cursor-pointer transition-all`}>
+                                <div key={item} className={`p-3 rounded-lg ${isDark ? "bg-white/5 border-white/5 hover:bg-white/10" : "bg-white border-black/5 hover:bg-gray-50"} border flex items-center justify-between group cursor-pointer transition-all`}>
                                     <span className={`text-xs font-medium ${isDark ? "text-white/70 group-hover:text-white" : "text-gray-600 group-hover:text-gray-900"}`}>{item}</span>
                                     <CheckCircle className={`w-4 h-4 ${isDark ? "text-white/20" : "text-gray-300"} group-hover:text-emerald-500 transition-colors`} />
                                 </div>
@@ -322,6 +322,6 @@ export function ReviewView({ onViewChange, theme }: ReviewViewProps) {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

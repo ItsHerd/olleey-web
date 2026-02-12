@@ -86,10 +86,11 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
   const textClass = isDark ? "text-white" : "text-gray-900";
   const textSecondaryClass = isDark ? "text-gray-500" : "text-gray-500";
   const cardBgClass = isDark ? "bg-[#141414]" : "bg-white";
-  const borderClass = isDark ? "border-white/10" : "border-gray-200";
+  const borderClass = isDark ? "border-white/10" : "border-transparent";
+  const shadowClass = isDark ? "shadow-sm" : "shadow-none";
 
   return (
-    <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-gray-50"}`}>
+    <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
       {viewMode === "agent" ? (
         <div className="h-full flex flex-col">
           <AgentView theme={theme} onViewChange={onViewChange} />
@@ -101,7 +102,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
 
           {/* Header */}
-          <div className={`px-8 py-6 border-b ${borderClass} relative z-10 backdrop-blur-sm bg-opacity-80`}>
+          <div className={`px-8 py-6 ${isDark ? 'border-b border-white/10' : ''} relative z-10 backdrop-blur-sm bg-opacity-80`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -117,13 +118,13 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                 <div className={`flex items-center p-1 rounded-2xl ${isDark ? 'bg-white/5' : 'bg-gray-100'} border ${borderClass}`}>
                   <button
                     onClick={() => setViewMode("agent")}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'agent' ? 'bg-[#FFC107] text-black shadow-lg shadow-[#FFC107]/10' : `${textSecondaryClass} hover:${isDark ? 'text-white' : 'text-gray-900'}`}`}
+                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${(viewMode as string) === 'agent' ? 'bg-[#FFC107] text-black shadow-lg shadow-[#FFC107]/10' : `${textSecondaryClass} hover:${isDark ? 'text-white' : 'text-gray-900'}`}`}
                   >
                     Agent
                   </button>
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-[#FFC107] text-black shadow-lg shadow-[#FFC107]/10' : `${textSecondaryClass} hover:${isDark ? 'text-white' : 'text-gray-900'}`}`}
+                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${(viewMode as string) === 'grid' ? 'bg-[#FFC107] text-black shadow-lg shadow-[#FFC107]/10' : `${textSecondaryClass} hover:${isDark ? 'text-white' : 'text-gray-900'}`}`}
                   >
                     Grid
                   </button>
@@ -146,11 +147,11 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                   placeholder="Search pipelines..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full ${isDark ? 'bg-white/[0.03]' : 'bg-white'} border ${borderClass} rounded-2xl h-12 pl-12 pr-4 text-xs font-medium focus:outline-none focus:border-[#FFC107]/40 transition-all`}
+                  className={`w-full ${isDark ? 'bg-white/[0.03]' : 'bg-white'} border ${borderClass} rounded-xl h-12 pl-12 pr-4 text-xs font-medium focus:outline-none focus:border-[#FFC107]/40 transition-all`}
                 />
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" className={`h-12 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${borderClass} ${isDark ? 'bg-white/5' : 'bg-white'}`}>
+                <Button variant="outline" className={`h-12 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest border ${borderClass} ${isDark ? 'bg-white/5' : 'bg-white'}`}>
                   <Filter className="w-3.5 h-3.5 mr-2" />
                   Filter
                 </Button>
@@ -177,7 +178,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                   <motion.div
                     key={idx}
                     variants={itemVariants}
-                    className={`${cardBgClass} border ${borderClass} p-5 rounded-3xl group hover:border-[#FFC107]/20 transition-all cursor-default shadow-sm`}
+                    className={`${cardBgClass} border ${borderClass} p-5 rounded-2xl group hover:border-[#FFC107]/20 transition-all cursor-default ${shadowClass}`}
                   >
                     <div className="flex items-center justify-between mb-3">
                       <stat.icon className={`w-4 h-4 ${stat.color}`} />
@@ -222,18 +223,26 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                       <div className="w-2 h-6 bg-[#FFC107] rounded-full" />
                       <h2 className={`text-xl font-black ${textClass} tracking-tight`}>Human in the Loop</h2>
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#FFC107] bg-[#FFC107]/10 px-3 py-1 rounded-full border border-[#FFC107]/20">
+                    <button
+                      onClick={() => onViewChange?.("review")}
+                      className="text-[10px] font-black uppercase tracking-widest text-[#FFC107] bg-[#FFC107]/10 px-3 py-1 rounded-full border border-[#FFC107]/20 hover:bg-[#FFC107]/20 transition-all cursor-pointer"
+                    >
                       {needsReviewJobs.length} Review Requested
-                    </span>
+                    </button>
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     {needsReviewJobs.map((job) => (
                       <motion.div variants={itemVariants} key={job.job_id}>
                         <JobCard
                           job={job}
-                          onClick={() =>
-                            onSelectJob({ type: "job", id: job.job_id, data: job })
-                          }
+                          onClick={() => {
+                            onSelectJob({ type: "job", id: job.job_id, data: job });
+                            if (job.status === 'waiting_approval') {
+                              onViewChange?.("review");
+                            } else {
+                              onViewChange?.("dashboard");
+                            }
+                          }}
                           theme={theme}
                           highlight="review"
                         />
@@ -275,11 +284,11 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
               {activeJobs.length === 0 && needsReviewJobs.length === 0 && completedRecentJobs.length === 0 && !loading && (
                 <motion.div
                   variants={itemVariants}
-                  className={`${cardBgClass} rounded-[3rem] border ${borderClass} p-20 text-center relative overflow-hidden group`}
+                  className={`${cardBgClass} rounded-[2rem] border ${borderClass} p-20 text-center relative overflow-hidden group`}
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-[#FFC107]/5 to-transparent opacity-50 pointer-events-none" />
                   <div className="relative z-10">
-                    <div className="w-24 h-24 mx-auto mb-8 rounded-[2rem] bg-[#FFC107]/10 border border-[#FFC107]/20 flex items-center justify-center rotate-6 group-hover:rotate-0 transition-transform duration-500 shadow-2xl shadow-[#FFC107]/10">
+                    <div className="w-24 h-24 mx-auto mb-8 rounded-[1.5rem] bg-[#FFC107]/10 border border-[#FFC107]/20 flex items-center justify-center rotate-6 group-hover:rotate-0 transition-transform duration-500 ${isDark ? 'shadow-2xl shadow-[#FFC107]/10' : ''}">
                       <Zap className="w-12 h-12 text-[#FFC107]" />
                     </div>
                     <h3 className={`text-3xl font-black mb-4 tracking-tighter ${textClass}`}>Digital Void Detected</h3>

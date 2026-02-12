@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
 
-export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "settings" | "notifications" | "account" | "guardrails" | "support" | "manual_workflow" | "review";
+export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "settings" | "notifications" | "account" | "guardrails" | "support" | "manual_workflow" | "review" | "preview";
 export type DetailViewType = "job-detail" | "video-detail" | "channel-detail" | null;
 
 export interface SelectedItem {
@@ -19,13 +19,14 @@ export interface SelectedItem {
   data?: any;
 }
 
+
 export default function DashboardV2Layout() {
   const { theme } = useTheme();
   const { user, loading: authLoading } = useAuth();
   const { selectedProject } = useProject();
   const userId = user?.id;
   const isDark = theme === "dark";
-  const bgClass = theme === "light" ? "bg-gray-50" : "bg-[#0A0A0A]";
+  const bgClass = theme === "light" ? "bg-[#EBEBDC]" : "bg-[#0A0A0A]";
 
   // Navigation state - must be declared before any conditional returns
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
@@ -43,7 +44,7 @@ export default function DashboardV2Layout() {
   // Show loading state while checking auth
   if (authLoading) {
     return (
-      <div className={`flex h-screen w-screen items-center justify-center ${isDark ? "bg-[#0A0A0A]" : "bg-gray-50"}`}>
+      <div className={`flex h-screen w-screen items-center justify-center ${isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-[#FFC107] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading...</p>
@@ -82,6 +83,7 @@ export default function DashboardV2Layout() {
                 setCurrentView(view);
                 setSelectedItem({ type: null, id: null }); // Clear selection on view change
               }}
+              onSelectItem={setSelectedItem}
               activeJobsCount={activeJobsCount}
               theme={theme}
               onClose={() => setLeftSidebarOpen(false)}
@@ -96,7 +98,7 @@ export default function DashboardV2Layout() {
         {!leftSidebarOpen && (
           <button
             onClick={() => setLeftSidebarOpen(true)}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-r-xl ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-white hover:bg-gray-50"
+            className={`absolute left-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-r-lg ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-[#EBEBDC] hover:bg-gray-200/50"
               } border-r border-t border-b ${isDark ? "border-white/10" : "border-gray-200"} transition-all shadow-xl active:scale-95`}
           >
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +113,6 @@ export default function DashboardV2Layout() {
           onSelectItem={setSelectedItem}
           onViewChange={(view) => {
             setCurrentView(view);
-            setSelectedItem({ type: null, id: null });
           }}
           theme={theme}
         />
@@ -120,7 +121,7 @@ export default function DashboardV2Layout() {
         {!rightSidebarOpen && (
           <button
             onClick={() => setRightSidebarOpen(true)}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-l-xl ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-white hover:bg-gray-50"
+            className={`absolute right-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-l-lg ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-[#EBEBDC] hover:bg-gray-200/50"
               } border-l border-t border-b ${isDark ? "border-white/10" : "border-gray-200"} transition-all shadow-xl active:scale-95`}
           >
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,6 +150,7 @@ export default function DashboardV2Layout() {
                 setCurrentView(view);
                 setSelectedItem({ type: null, id: null });
               }}
+              onSelectItem={setSelectedItem}
             />
           </motion.div>
         )}
