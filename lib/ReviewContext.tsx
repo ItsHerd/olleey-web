@@ -43,9 +43,9 @@ interface ReviewContextType {
         status?: 'queued' | 'live' | 'draft' | 'processing' | 'not-started' | 'failed' | 'completed' | 'pending' | 'downloading' | 'voice_cloning' | 'lip_sync' | 'uploading' | 'waiting_approval' | 'ready';
         navigate?: boolean; // Optional flag to control navigation (defaults to true)
     }) => void;
-    closeReview: () => void;
-    handleApprove: () => Promise<void>;
-    handleFlag: (reason: string) => void;
+    closeReview: (navigate?: boolean) => void;
+    handleApprove: (navigate?: boolean) => Promise<void>;
+    handleFlag: (reason: string, navigate?: boolean) => void;
 }
 
 const ReviewContext = createContext<ReviewContextType | undefined>(undefined);
@@ -83,13 +83,15 @@ export function ReviewProvider({ children }: { children: React.ReactNode }) {
         }
     }, [router]);
 
-    const closeReview = useCallback(() => {
+    const closeReview = useCallback((navigate: boolean = true) => {
         setQuickCheckState(prev => ({ ...prev, isOpen: false }));
         // Optionally navigate back if we were on the Review Hub page
-        router.push('/app?page=All Media', { scroll: false });
+        if (navigate) {
+            router.push('/app?page=All Media', { scroll: false });
+        }
     }, [router]);
 
-    const handleApprove = useCallback(async () => {
+    const handleApprove = useCallback(async (shouldNavigate: boolean = true) => {
         const { videoId, languageCode } = quickCheckState;
         if (!videoId) return;
 
@@ -105,16 +107,16 @@ export function ReviewProvider({ children }: { children: React.ReactNode }) {
             // Refresh data via global event
             window.dispatchEvent(new CustomEvent('olleey-refresh'));
 
-            closeReview();
+            closeReview(shouldNavigate);
         } catch (err: any) {
             logger.error("ReviewContext", "Failed to approve job", err);
             toast(err.message || "Failed to approve", "error");
         }
     }, [quickCheckState, isDemoMode, updateVideoState, toast, closeReview]);
 
-    const handleFlag = useCallback((reason: string) => {
+    const handleFlag = useCallback((reason: string, shouldNavigate: boolean = true) => {
         logger.info("ReviewContext", `Flagged video ${quickCheckState.videoId} (${quickCheckState.languageCode}): ${reason}`);
-        closeReview();
+        closeReview(shouldNavigate);
         toast("Optimization request submitted", "info");
     }, [quickCheckState, closeReview, toast]);
 

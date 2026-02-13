@@ -6,11 +6,12 @@ import { useTheme } from "@/lib/useTheme";
 import { LeftSidebar } from "./LeftSidebar";
 import { CenterPanel } from "./CenterPanel";
 import { RightSidebar } from "./RightSidebar";
+import { PanelLeftOpen, PanelRightOpen } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
 
-export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "settings" | "notifications" | "account" | "guardrails" | "support" | "manual_workflow" | "review" | "preview";
+export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "settings" | "notifications" | "account" | "guardrails" | "support" | "manual_workflow" | "review" | "preview" | "processing" | "runs";
 export type DetailViewType = "job-detail" | "video-detail" | "channel-detail" | null;
 
 export interface SelectedItem {
@@ -81,7 +82,7 @@ export default function DashboardLayout() {
               currentView={currentView}
               onViewChange={(view) => {
                 setCurrentView(view);
-                setSelectedItem({ type: null, id: null }); // Clear selection on view change
+                // Don't clear selectedItem here - job card clicks depend on the selected item data
               }}
               onSelectItem={setSelectedItem}
               activeJobsCount={activeJobsCount}
@@ -100,10 +101,9 @@ export default function DashboardLayout() {
             onClick={() => setLeftSidebarOpen(true)}
             className={`absolute left-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-r-lg ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-[#EBEBDC] hover:bg-gray-200/50"
               } border-r border-t border-b ${isDark ? "border-white/10" : "border-gray-200"} transition-all shadow-xl active:scale-95`}
+            title="Expand sidebar"
           >
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <PanelLeftOpen className="w-4 h-4 text-gray-400" />
           </button>
         )}
 
@@ -123,10 +123,9 @@ export default function DashboardLayout() {
             onClick={() => setRightSidebarOpen(true)}
             className={`absolute right-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-l-lg ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-[#EBEBDC] hover:bg-gray-200/50"
               } border-l border-t border-b ${isDark ? "border-white/10" : "border-gray-200"} transition-all shadow-xl active:scale-95`}
+            title="Show details"
           >
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+            <PanelRightOpen className="w-4 h-4 text-gray-400" />
           </button>
         )}
       </div>
@@ -148,7 +147,7 @@ export default function DashboardLayout() {
               theme={theme}
               onViewChange={(view) => {
                 setCurrentView(view);
-                setSelectedItem({ type: null, id: null });
+                // Don't clear selectedItem here - RightSidebar navigations depend on the selected item
               }}
               onSelectItem={setSelectedItem}
             />

@@ -4,9 +4,8 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ViewType, SelectedItem } from "./DashboardLayout";
 import { DashboardView } from "./views/DashboardView";
-import { JobDetailView } from "./views/JobDetailView";
 import { VideosView } from "./views/VideosView";
-import { ChannelsView } from "./views/ChannelsView";
+import { RunsView } from "./views/RunsView";
 import { VoicesView } from "./views/VoicesView";
 import { SettingsView } from "./views/SettingsView";
 import { AccountView } from "./views/AccountView";
@@ -15,7 +14,8 @@ import { GuardrailsView } from "./views/GuardrailsView";
 import { SupportView } from "./views/SupportView";
 import { ManualWorkflowView } from "./views/ManualWorkflowView";
 import { ReviewView } from "./views/ReviewView";
-import PreviewPage from "@/app/PreviewPage";
+import { PreviewView } from "./views/PreviewView";
+import ProcessingPage from "@/app/ProcessingPage";
 
 interface CenterPanelProps {
   currentView: ViewType;
@@ -35,27 +35,15 @@ export function CenterPanel({
   const isDark = theme === "dark";
   const bgClass = isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]";
 
-  // Determine which view to show based on selection
+  // Determine which view to show based on currentView
   const renderView = () => {
-    // If a job is selected, show job detail view
-    if (selectedItem.type === "job" && selectedItem.id) {
-      return (
-        <JobDetailView
-          jobId={selectedItem.id}
-          onBack={() => onSelectItem({ type: null, id: null })}
-          theme={theme}
-        />
-      );
-    }
-
-    // Otherwise show the main view
     switch (currentView) {
       case "dashboard":
         return <DashboardView onSelectJob={onSelectItem} theme={theme} onViewChange={onViewChange} />;
       case "videos":
         return <VideosView theme={theme} />;
       case "channels":
-        return <ChannelsView theme={theme} />;
+        return <DashboardView onSelectJob={onSelectItem} theme={theme} onViewChange={onViewChange} />;
       case "voices":
         return <VoicesView theme={theme} />;
       case "settings":
@@ -75,7 +63,11 @@ export function CenterPanel({
       case "review":
         return <ReviewView onViewChange={onViewChange} theme={theme} selectedJob={selectedItem.type === "job" ? selectedItem.data : null} />;
       case "preview":
-        return <PreviewPage />;
+        return <PreviewView onViewChange={onViewChange} theme={theme} />;
+      case "processing":
+        return <ProcessingPage selectedJob={selectedItem.type === "job" ? selectedItem.data : null} onViewChange={onViewChange} />;
+      case "runs":
+        return <RunsView theme={theme} onSelectItem={onSelectItem} onViewChange={onViewChange} />;
       default:
         return <DashboardView onSelectJob={onSelectItem} theme={theme} onViewChange={onViewChange} />;
     }

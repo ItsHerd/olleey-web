@@ -7,7 +7,6 @@ import {
   User,
   Plus,
   Radio,
-
   Shield,
   ChevronRight,
   Sparkles,
@@ -22,7 +21,16 @@ import {
   ChevronDown,
   Check,
   Home,
-  Bell
+  Bell,
+  MoreHorizontal,
+  Trash,
+  Edit,
+  Star,
+  Play,
+  Video,
+  Pause,
+  X,
+  PanelLeftClose
 } from "lucide-react";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { ViewType } from "./DashboardLayout";
@@ -33,9 +41,10 @@ import { useDashboardChannels } from "@/lib/useDashboardChannels";
 import { useDashboardConnections } from "@/lib/useDashboardConnections";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { useVideos } from "@/lib/useVideos";
-import { useTheme } from "@/lib/useTheme";
 import { API_BASE_URL } from "@/lib/api";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
   Accordion,
   AccordionContent,
@@ -61,7 +70,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { channelsAPI, youtubeAPI, LanguageChannel, YouTubeConnection } from "@/lib/api";
-import { MoreHorizontal, Trash, Edit, Star, Play, Pause, X } from "lucide-react";
 
 interface LeftSidebarProps {
   currentView: ViewType;
@@ -82,13 +90,13 @@ export function LeftSidebar({
 }: LeftSidebarProps) {
   const { user } = useAuth();
   const { projects, selectedProject, setSelectedProject } = useProject();
-  const { setTheme } = useTheme();
   const isDark = theme === "dark";
 
   const [editChannel, setEditChannel] = React.useState<LanguageChannel | null>(null);
   const [editConnection, setEditConnection] = React.useState<YouTubeConnection | null>(null);
   const [newLanguage, setNewLanguage] = React.useState("");
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   const { channels, loading: channelsLoading, refetch: refetchChannels } = useDashboardChannels({
     projectId: selectedProject?.id,
@@ -108,7 +116,6 @@ export function LeftSidebar({
     user_id: user?.id,
   }, { enabled: !!user?.id && !!user });
 
-  // Need to destructure refetch from hooks to use them
   const { connections, loading: connectionsLoading, refetch: refetchConnections } = useDashboardConnections({
     enabled: !!user?.id && !!user
   });
@@ -119,7 +126,6 @@ export function LeftSidebar({
     { type: "separator" as const },
     { title: "Settings", icon: Settings },
     { title: "Guardrails", icon: Shield },
-    { title: "Support", icon: HelpCircle },
   ];
 
   const getSelectedIndex = () => {
@@ -128,14 +134,13 @@ export function LeftSidebar({
       case "notifications": return 1;
       case "settings": return 3;
       case "guardrails": return 4;
-      case "support": return 5;
       default: return null;
     }
   };
 
   const handleTabChange = (index: number | null) => {
     if (index === null) return;
-    const views: ViewType[] = ["dashboard", "notifications", "dashboard", "settings", "guardrails", "support"];
+    const views: ViewType[] = ["dashboard", "notifications", "dashboard", "settings", "guardrails"];
     onViewChange?.(views[index]);
   };
 
@@ -201,6 +206,19 @@ export function LeftSidebar({
     }
   };
 
+  const handleConnectNewChannel = async () => {
+    try {
+      const response = await youtubeAPI.initiateConnection(
+        `${window.location.origin}/youtube/connect/success?connection_type=satellite&redirect_to=/dashboard`
+      );
+      if (response.auth_url) {
+        window.location.href = response.auth_url;
+      }
+    } catch (e) {
+      console.error("Failed to connect new channel", e);
+    }
+  };
+
   const getFullUrl = (url: string | undefined) => {
     if (!url) return undefined;
     if (url.startsWith('http')) return url;
@@ -211,176 +229,318 @@ export function LeftSidebar({
     return videos.find(v => v.video_id === videoId);
   };
 
+  const navigateFromJob = (job: any) => {
+    onSelectItem({ type: "job", id: job.job_id, data: job });
+    if (job.status === "waiting_approval" || job.status === "completed") {
+      onViewChange("review");
+    } else if (["pending", "downloading", "processing", "transcribing", "translating", "dubbing", "voice_cloning", "lip_sync", "uploading"].includes(job.status)) {
+      onViewChange("processing");
+    } else {
+      onViewChange("dashboard");
+    }
+  };
 
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const isSearching = normalizedSearch.length > 0;
 
-  const bgClass = isDark ? "bg-[#0D0D0D]" : "bg-[#EBEBDC]";
-  const borderClass = isDark ? "border-white/10" : "border-gray-200";
+  const filteredVideos = isSearching
+    ? videos.filter((video) =>
+      [video.title, video.description, video.video_id]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(normalizedSearch))
+    )
+    : [];
+
+  const filteredChannels = isSearching
+    ? channels.filter((channel) =>
+      [channel.channel_name, channel.language_name, channel.language_code]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(normalizedSearch))
+    )
+    : [];
+
+  const filteredJobs = isSearching
+    ? jobs.filter((job) => {
+      const video = getJobVideo(job.source_video_id);
+      return [
+        video?.title,
+        job.source_video_id,
+        job.job_id,
+        job.status,
+        job.target_languages?.join(" "),
+      ]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(normalizedSearch));
+    })
+    : [];
+
   const textClass = isDark ? "text-white" : "text-gray-900";
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
   const glassBgClass = isDark ? "bg-white/[0.05]" : "bg-gray-100/50";
+  const borderClass = isDark ? "border-white/10" : "border-gray-200";
 
   return (
     <div
-      className={`w-80 h-full ${bgClass} border-r ${borderClass} flex flex-col p-6 overflow-hidden relative`}
+      className={cn(
+        "w-80 h-full flex flex-col border-r shrink-0",
+        isDark ? "bg-[#09090b] border-white/5" : "bg-neutral-50 border-gray-200"
+      )}
     >
-      {/* Subtle Background Glow */}
-      <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-[#D97757]/5 to-transparent pointer-events-none" />
+      <div className="flex flex-col h-full p-4 relative overflow-hidden">
+        {/* Subtle Background Accent */}
+        <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none opacity-50" />
 
-      {/* Header Profile */}
-      <div className="flex items-center justify-between mb-10 relative z-10">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div
-              className="flex flex-col cursor-pointer group"
-            >
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${mutedTextClass} group-hover:text-[#D97757] transition-colors`}>
-                  {selectedProject?.name || "All Instances"}
-                </span>
-                <ChevronDown className={`w-3 h-3 ${mutedTextClass} group-hover:text-[#D97757] transition-all`} />
+        {/* Header Profile */}
+        <div className="flex items-center justify-between mb-8 relative z-10 px-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex flex-col cursor-pointer group">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                    {selectedProject?.name || "Workspace"}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-all" />
+                </div>
+                <h2 className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
+                  {user?.email?.split('@')[0] || "User"}
+                </h2>
               </div>
-              <h2 className={`text-2xl font-serif ${textClass} tracking-tight group-hover:text-[#D97757] transition-colors`}>
-                {user?.email?.split('@')[0] || "User"}
-              </h2>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className={`w-64 ${isDark ? "bg-[#0A0A0A] border-white/10" : "bg-white border-gray-200"} rounded-2xl shadow-2xl p-2 z-[100]`}>
-            <DropdownMenuLabel className={`text-[9px] font-black ${mutedTextClass} uppercase tracking-[0.25em] px-3 py-3 font-mono opacity-70`}>
-              Project Directory
-            </DropdownMenuLabel>
-            <div className="space-y-1">
-              <DropdownMenuItem
-                onClick={() => setSelectedProject(null)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${selectedProject === null
-                  ? (isDark ? 'bg-[#D97757]/10 text-[#D97757]' : 'bg-[#D97757]/5 text-[#B85C3D] font-bold')
-                  : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-100/50')
-                  }`}
-              >
-                <div className={`w-1.5 h-1.5 rounded-full ${selectedProject === null ? 'bg-[#D97757] shadow-[0_0_8px_rgba(217,119,87,0.6)]' : (isDark ? 'bg-white/10' : 'bg-gray-300')}`} />
-                <span className="truncate text-xs font-semibold font-mono">All Instances</span>
-                {selectedProject === null && <Check className="ml-auto w-3.5 h-3.5" />}
-              </DropdownMenuItem>
-
-              {projects.map((project) => (
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64 rounded-xl shadow-lg border p-1 z-[100]">
+              <DropdownMenuLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 py-2 opacity-70">
+                Change Instance
+              </DropdownMenuLabel>
+              <div className="space-y-1">
                 <DropdownMenuItem
-                  key={project.id}
-                  onClick={() => setSelectedProject(project)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${selectedProject?.id === project.id
-                    ? (isDark ? 'bg-[#D97757]/10 text-[#D97757]' : 'bg-[#D97757]/5 text-[#B85C3D] font-bold')
-                    : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-100/50')
-                    }`}
+                  onClick={() => setSelectedProject(null)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all",
+                    selectedProject === null
+                      ? (isDark ? 'bg-primary/10 text-primary' : 'bg-primary/5 text-primary font-bold')
+                      : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-100/50')
+                  )}
                 >
-                  <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === project.id ? 'bg-[#D97757] shadow-[0_0_8px_rgba(217,119,87,0.6)]' : (isDark ? 'bg-white/10' : 'bg-gray-300')}`} />
-                  <span className="truncate text-xs font-semibold font-mono">{project.name}</span>
-                  {selectedProject?.id === project.id && <Check className="ml-auto w-3.5 h-3.5" />}
+                  <div className={cn("w-1.5 h-1.5 rounded-full", selectedProject === null ? 'bg-primary shadow-[0_0_8px_rgba(217,119,87,0.6)]' : (isDark ? 'bg-white/10' : 'bg-gray-300'))} />
+                  <span className="truncate text-xs font-semibold font-mono">All Instances</span>
+                  {selectedProject === null && <Check className="ml-auto w-3.5 h-3.5" />}
                 </DropdownMenuItem>
-              ))}
-            </div>
-            <DropdownMenuSeparator className={`my-2 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
-            <DropdownMenuItem
-              onClick={() => setIsCreateProjectModalOpen(true)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-[#D97757] hover:bg-[#D97757]/10 font-bold transition-all group/new`}
-            >
-              <Plus className="w-4 h-4 group-hover/new:rotate-90 transition-transform" />
-              <span className="text-[10px] uppercase tracking-widest font-mono">Create New Instance</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <button
-          onClick={onClose}
-          className={`p-2 rounded-lg border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
-        >
-          <ChevronLeft className="w-4 h-4 text-gray-400" />
-        </button>
-      </div>
 
-      {/* Navigation Tabs - Moved from RightSidebar */}
-      <div className="relative z-10 mb-6">
-        <ExpandableTabs
-          tabs={tabs}
-          selected={getSelectedIndex()}
-          activeColor={isDark ? "text-white" : "text-gray-900"}
-          className={isDark ? `border-[#2A2A2A] bg-white/[0.02]` : `border-gray-300/50 bg-gray-50/50`}
-          onChange={handleTabChange}
-        />
-      </div>
-
-      {/* Search Bar - Integrated style */}
-      <div className="relative mb-6 z-10">
-        <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${mutedTextClass} opacity-60`} />
-        <Input
-          placeholder="Jump to..."
-          className={`pl-10 h-11 ${isDark ? "border-white/5 focus-visible:ring-white/10 bg-white/[0.02]" : "border-gray-200 focus-visible:ring-gray-300 bg-white/50"} rounded-xl`}
-        />
-      </div>
-
-      {/* Sections Accordion */}
-      <div className="flex-1 overflow-y-auto -mx-2 px-2 scrollbar-none relative z-10">
-        <Accordion type="multiple" defaultValue={["channels", "runs"]} className="space-y-1 relative">
-          <AccordionItem value="channels" className="border-none">
-            <AccordionTrigger
-              onClick={() => onViewChange("channels")}
-              className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-xl border ${borderClass} ${isDark ? "bg-white/[0.02] hover:bg-white/[0.05]" : "bg-white/20 hover:bg-white/40"} ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Radio className="w-4 h-4 text-[#D97757]" />
-                Channels
+                {projects.map((project) => (
+                  <DropdownMenuItem
+                    key={project.id}
+                    onClick={() => setSelectedProject(project)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all",
+                      selectedProject?.id === project.id
+                        ? (isDark ? 'bg-primary/10 text-primary' : 'bg-primary/5 text-primary font-bold')
+                        : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-100/50')
+                    )}
+                  >
+                    <div className={cn("w-1.5 h-1.5 rounded-full", selectedProject?.id === project.id ? 'bg-primary shadow-[0_0_8px_rgba(217,119,87,0.6)]' : (isDark ? 'bg-white/10' : 'bg-gray-300'))} />
+                    <span className="truncate text-xs font-semibold font-mono">{project.name}</span>
+                    {selectedProject?.id === project.id && <Check className="ml-auto w-3.5 h-3.5" />}
+                  </DropdownMenuItem>
+                ))}
               </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-2">
-              <div className="space-y-2">
-                {channelsLoading ? (
-                  Array.from({ length: 2 }).map((_, i) => (
-                    <div key={i} className={`h-12 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
-                  ))
-                ) : channels.length > 0 ? (
-                  channels.map((channel) => (
-                    <motion.div
-                      key={channel.id}
-                      whileHover={{ x: 4 }}
+              <DropdownMenuSeparator className="my-2" />
+              <DropdownMenuItem
+                onClick={() => setIsCreateProjectModalOpen(true)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-primary hover:bg-primary/10 font-bold transition-all group/new"
+              >
+                <Plus className="w-4 h-4 group-hover/new:rotate-90 transition-transform" />
+                <span className="text-[10px] uppercase tracking-widest font-mono">Create New Instance</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <button
+            onClick={onClose}
+            className={`p-2 rounded-lg border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="relative z-10 mb-6 px-2">
+          <ExpandableTabs
+            tabs={tabs}
+            selected={getSelectedIndex()}
+            activeColor="text-primary"
+            className="border-border bg-muted/30"
+            onChange={handleTabChange}
+          />
+        </div>
+
+        <div className="relative mb-6 z-10 px-2">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+          <Input
+            placeholder="Search videos, channels, jobs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-11 h-10 border-border bg-muted/20 rounded-lg focus-visible:ring-primary/20"
+          />
+        </div>
+
+        {/* Sections Accordion */}
+        <div className="flex-1 overflow-y-auto px-2 scrollbar-none relative z-10 space-y-4">
+          {isSearching ? (
+            <div className="space-y-4">
+              {filteredVideos.length > 0 && (
+                <div className="space-y-2">
+                  <p className={`text-[10px] font-bold uppercase tracking-widest ${mutedTextClass} flex items-center gap-1.5`}>
+                    <Video className="w-3 h-3" />
+                    Videos
+                  </p>
+                  {filteredVideos.slice(0, 8).map((video) => (
+                    <button
+                      key={video.video_id}
                       onClick={() => {
-                        onSelectItem({ type: "channel", id: channel.id, data: channel });
-                        onViewChange("channels");
+                        onSelectItem({ type: "video", id: video.video_id, data: video });
+                        onViewChange("videos");
                       }}
-                      className={`group w-full p-2.5 rounded-xl border ${borderClass} ${glassBgClass} flex items-center justify-between ${isDark ? "hover:border-white/20" : "hover:border-gray-300 shadow-none"} transition-all cursor-pointer ${isDark ? 'shadow-sm' : 'shadow-none'}`}
+                      className={cn(
+                        "w-full text-left p-2.5 rounded-lg border transition-all flex items-center gap-2.5",
+                        isDark ? "bg-white/[0.05] border-white/10 hover:border-white/20" : "bg-white border-gray-200 hover:border-gray-300"
+                      )}
                     >
-                      <div className="flex items-center gap-3 w-full overflow-hidden">
-                        <div className="relative shrink-0">
-                          {channel.channel_avatar_url ? (
-                            <img src={channel.channel_avatar_url} className={`w-8 h-8 rounded-lg object-cover border ${isDark ? "border-white/10" : "border-gray-200"}`} alt="" />
-                          ) : (
-                            <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} border flex items-center justify-center`}>
-                              <User className="w-4 h-4 text-gray-600" />
-                            </div>
-                          )}
-                          <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 ${isDark ? 'border-[#0A0A0A]' : 'border-white'} ${channel.status?.status === 'active' ? 'bg-green-500' : 'bg-gray-500'}`} />
+                      <div className={`w-7 h-7 rounded-md border flex items-center justify-center shrink-0 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                        <Video className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`text-xs font-semibold truncate ${textClass}`}>{video.title || video.video_id}</p>
+                        <p className={`text-[10px] truncate ${mutedTextClass}`}>{video.video_id}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {filteredJobs.length > 0 && (
+                <div className="space-y-2">
+                  <p className={`text-[10px] font-bold uppercase tracking-widest ${mutedTextClass} flex items-center gap-1.5`}>
+                    <Play className="w-3 h-3 text-blue-500" />
+                    Pipeline Runs
+                  </p>
+                  {filteredJobs.slice(0, 8).map((job) => {
+                    const video = getJobVideo(job.source_video_id);
+                    return (
+                      <button
+                        key={job.job_id}
+                        onClick={() => navigateFromJob(job)}
+                        className={cn(
+                          "w-full text-left p-2.5 rounded-lg border transition-all flex items-center gap-2.5",
+                          isDark ? "bg-white/[0.05] border-white/10 hover:border-white/20" : "bg-white border-gray-200 hover:border-gray-300"
+                        )}
+                      >
+                        <div className={`w-7 h-7 rounded-md border flex items-center justify-center shrink-0 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                          <Play className="w-3.5 h-3.5 text-blue-500" />
                         </div>
+                        <div className="min-w-0">
+                          <p className={`text-xs font-semibold truncate ${textClass}`}>{video?.title || job.source_video_id}</p>
+                          <p className={`text-[10px] uppercase ${mutedTextClass}`}>{job.status.replace("_", " ")} • {job.progress}%</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <span className={`text-[13px] font-medium ${textClass} truncate opacity-90 group-hover:opacity-100 transition-opacity leading-tight`}>
-                            {channel.channel_name}
-                          </span>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            {channel.language_name && (
-                              <span className={`text-[10px] ${mutedTextClass} opacity-70 truncate`}>
-                                {channel.language_name}
-                              </span>
+              {filteredChannels.length > 0 && (
+                <div className="space-y-2">
+                  <p className={`text-[10px] font-bold uppercase tracking-widest ${mutedTextClass} flex items-center gap-1.5`}>
+                    <Radio className="w-3 h-3 text-primary" />
+                    Channels
+                  </p>
+                  {filteredChannels.slice(0, 8).map((channel) => (
+                    <div
+                      key={channel.id}
+                      className={cn(
+                        "w-full p-2.5 rounded-lg border flex items-center gap-2.5",
+                        isDark ? "bg-white/[0.05] border-white/10" : "bg-white border-gray-200"
+                      )}
+                    >
+                      <div className={`w-7 h-7 rounded-md border flex items-center justify-center shrink-0 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                        <Radio className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`text-xs font-semibold truncate ${textClass}`}>{channel.channel_name}</p>
+                        <p className={`text-[10px] truncate ${mutedTextClass}`}>
+                          {channel.language_name || channel.language_code || "No language set"}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {filteredVideos.length === 0 && filteredJobs.length === 0 && filteredChannels.length === 0 && (
+                <div className={`p-6 rounded-xl border border-dashed text-center ${borderClass}`}>
+                  <p className={`text-xs ${mutedTextClass}`}>No results for "{searchQuery}"</p>
+                </div>
+              )}
+            </div>
+          ) : (
+          <Accordion type="multiple" defaultValue={["channels", "runs"]} className="space-y-1">
+            <AccordionItem value="channels" className="border-none">
+              <AccordionTrigger
+                className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
+              >
+                <div className="flex items-center gap-2">
+                  <Radio className="w-3.5 h-3.5 text-primary" />
+                  Channels
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <div className="space-y-2">
+                  {channelsLoading ? (
+                    Array.from({ length: 2 }).map((_, i) => (
+                      <div key={i} className={`h-12 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
+                    ))
+                  ) : channels.length > 0 ? (
+                    channels.map((channel) => (
+                      <motion.div
+                        key={channel.id}
+                        whileHover={{ x: 4 }}
+                        className={cn(
+                          "group w-full p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-default shadow-sm",
+                          isDark ? "bg-white/[0.05] border-white/5 hover:border-white/20" : "bg-white/50 border-gray-200 hover:border-gray-300"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 w-full overflow-hidden">
+                          <div className="relative shrink-0">
+                            {channel.channel_avatar_url ? (
+                              <img src={channel.channel_avatar_url} className={`w-8 h-8 rounded-lg object-cover border ${isDark ? "border-white/10" : "border-gray-200"}`} alt="" />
+                            ) : (
+                              <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} border flex items-center justify-center`}>
+                                <User className="w-4 h-4 text-gray-600" />
+                              </div>
                             )}
+                            <div className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2", isDark ? 'border-[#0A0A0A]' : 'border-white', channel.status?.status === 'active' ? 'bg-green-500' : 'bg-gray-500')} />
+                          </div>
 
-                            {(channel.videos_count !== undefined || channel.language_name) && (
-                              <span className={`text-[10px] ${mutedTextClass} opacity-40`}>•</span>
-                            )}
-
-                            <span className={`text-[10px] ${mutedTextClass} opacity-70 whitespace-nowrap`}>
-                              {channel.videos_count || 0} videos
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className={`text-[13px] font-medium ${textClass} truncate opacity-90 group-hover:opacity-100 transition-opacity leading-tight`}>
+                              {channel.channel_name}
                             </span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {channel.language_name && (
+                                <span className={`text-[10px] ${mutedTextClass} opacity-70 truncate`}>
+                                  {channel.language_name}
+                                </span>
+                              )}
+                              {(channel.videos_count !== undefined || channel.language_name) && (
+                                <span className={`text-[10px] ${mutedTextClass} opacity-40`}>•</span>
+                              )}
+                              <span className={`text-[10px] ${mutedTextClass} opacity-70 whitespace-nowrap`}>
+                                {channel.videos_count || 0} videos
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} ${isDark ? "hover:border-white/20 hover:bg-white/10" : "hover:border-gray-300 hover:bg-gray-50"} transition-all shadow-sm mt-1`}>
+                            <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} ${isDark ? "hover:border-white/20 hover:bg-white/10" : "hover:border-gray-300 hover:bg-gray-50"} transition-all shadow-sm`}>
                               <MoreHorizontal className={`w-3.5 h-3.5 ${mutedTextClass}`} />
                             </button>
                           </DropdownMenuTrigger>
@@ -405,246 +565,235 @@ export function LeftSidebar({
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </div>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className={`p-8 text-center rounded-xl border border-dashed ${borderClass}`}>
-                    <p className={`text-xs ${mutedTextClass}`}>No channels connected</p>
-                  </div>
-                )}
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className={`p-8 text-center rounded-xl border border-dashed ${borderClass}`}>
+                      <p className={`text-xs ${mutedTextClass}`}>No channels connected</p>
+                    </div>
+                  )}
 
-                <button className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-xl border-2 border-dashed ${borderClass} hover:border-[#D97757]/50 hover:text-[#D97757] hover:bg-[#D97757]/5 transition-all duration-200 bg-transparent group`}>
-                  <Plus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
-                  Connect New
-                </button>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+                  <button
+                    onClick={handleConnectNewChannel}
+                    className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-xl border-2 border-dashed ${borderClass} hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all duration-200 bg-transparent group`}
+                  >
+                    <Plus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
+                    Connect New
+                  </button>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-          <AccordionItem value="runs" className="border-none">
-            <AccordionTrigger
-              className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-2xl border ${borderClass} ${isDark ? "bg-white/[0.02] hover:bg-white/[0.05]" : "bg-gray-50/50 hover:bg-gray-100/50"} ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}
-              onClick={() => onViewChange("dashboard")}
-            >
-              <div className="flex items-center gap-2.5">
-                <Play className="w-4 h-4 text-blue-400" />
-                Pipeline Runs
-                {activeJobsCount > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 text-[10px] font-bold">
-                    {activeJobsCount}
-                  </span>
-                )}
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-2">
-              <div className="space-y-2.5">
-                {jobsLoading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className={`h-16 rounded-2xl border ${borderClass} animate-pulse bg-white/5`} />
-                  ))
-                ) : jobs.length > 0 ? (
-                  jobs.map((job) => {
-                    const video = getJobVideo(job.source_video_id);
-                    return (
-                      <motion.div
-                        key={job.job_id}
-                        whileHover={{ x: 4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
-                        onClick={() => {
-                          onSelectItem({ type: "job", id: job.job_id, data: job });
-                          if (job.status === 'waiting_approval') {
-                            onViewChange("review");
-                          } else {
-                            onViewChange("dashboard");
-                          }
-                        }}
-                        className={`p-3 rounded-2xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group shadow-sm`}
-                      >
-                        <div className="flex gap-3 mb-2.5">
-                          <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
-                            {video?.thumbnail_url ? (
-                              <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Play className="w-3 h-3 text-gray-600" />
+            <AccordionItem value="runs" className="border-none mt-1">
+              <AccordionTrigger
+                className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
+                onClick={() => onViewChange("dashboard")}
+              >
+                <div className="flex items-center gap-2">
+                  <Play className="w-3.5 h-3.5 text-blue-500" />
+                  Pipeline Runs
+                  {activeJobsCount > 0 && (
+                    <Badge variant="secondary" className="ml-2 h-4 px-1 text-[9px] font-bold">
+                      {activeJobsCount}
+                    </Badge>
+                  )}
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <div className="space-y-2.5">
+                  {jobsLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className={`h-16 rounded-2xl border ${borderClass} animate-pulse bg-white/5`} />
+                    ))
+                  ) : jobs.length > 0 ? (
+                    <>
+                    {jobs.slice(0, 5).map((job) => {
+                      const video = getJobVideo(job.source_video_id);
+                      return (
+                        <motion.div
+                          key={job.job_id}
+                          whileHover={{ x: 4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
+                          onClick={() => navigateFromJob(job)}
+                          className={cn("p-3 rounded-2xl border transition-all cursor-pointer group shadow-sm", isDark ? "bg-white/[0.05] border-white/5" : "bg-white/50 border-gray-200")}
+                        >
+                          <div className="flex gap-3 mb-2.5">
+                            <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
+                              {video?.thumbnail_url ? (
+                                <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Play className="w-3 h-3 text-gray-600" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className={`text-[12px] font-semibold ${textClass} truncate opacity-90 group-hover:opacity-100`}>
+                                {video?.title || job.source_video_id}
+                              </span>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={`text-[10px] ${mutedTextClass} opacity-60`}>
+                                  {job.target_languages?.join(' • ')}
+                                </span>
+                                {video?.duration && (
+                                  <>
+                                    <span className="text-[10px] text-gray-700">•</span>
+                                    <span className={`text-[9px] font-mono ${mutedTextClass} opacity-60`}>
+                                      {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-1 h-1 rounded-full ${job.status === 'completed' ? 'bg-green-500' :
+                                  job.status === 'failed' ? 'bg-red-500' :
+                                    'bg-blue-500 animate-pulse'
+                                  }`} />
+                                <span className={`text-[9px] ${mutedTextClass} font-bold uppercase tracking-widest opacity-60`}>
+                                  {job.status.replace('_', ' ')}
+                                </span>
+                              </div>
+                              <span className={`text-[9px] font-mono ${textClass} opacity-40`}>
+                                {job.progress}%
+                              </span>
+                            </div>
+                            {job.status !== 'completed' && job.status !== 'failed' && (
+                              <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                <motion.div
+                                  className="h-full bg-blue-500/50"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${job.progress}%` }}
+                                  transition={{ duration: 1 }}
+                                />
                               </div>
                             )}
                           </div>
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <span className={`text-[12px] font-semibold ${textClass} truncate opacity-90 group-hover:opacity-100`}>
-                              {video?.title || job.source_video_id}
+                        </motion.div>
+                      );
+                    })}
+                    {jobs.length > 5 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onViewChange("runs")}
+                        className="w-full"
+                      >
+                        Show all
+                      </Button>
+                    )}
+                    </>
+                  ) : (
+                    <div className={`p-6 rounded-2xl border ${borderClass} border-dashed text-center opacity-60`}>
+                      <p className={`text-xs ${mutedTextClass}`}>No recent activity</p>
+                    </div>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="distributions" className="border-none mt-1">
+              <AccordionTrigger className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5">
+                <div className="flex items-center gap-2">
+                  <Share2 className="w-3.5 h-3.5 text-purple-500" />
+                  Active Distributions
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2 mt-2">
+                  {connectionsLoading ? (
+                    Array.from({ length: 2 }).map((_, i) => (
+                      <div key={i} className={`h-12 rounded-2xl border ${borderClass} animate-pulse bg-white/5`} />
+                    ))
+                  ) : connections.length > 0 ? (
+                    connections.map((connection) => (
+                      <motion.div
+                        key={connection.connection_id}
+                        whileHover={{ x: 4 }}
+                        className={cn("group w-full p-2.5 rounded-2xl border flex items-center justify-between transition-all cursor-default shadow-sm", isDark ? "bg-white/[0.05] border-white/5 hover:border-white/20" : "bg-white/50 border-gray-200 hover:border-gray-300")}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            {connection.channel_avatar_url ? (
+                              <img src={connection.channel_avatar_url} className={`w-8 h-8 rounded-lg object-cover border ${isDark ? "border-white/10" : "border-gray-200"}`} alt="" />
+                            ) : (
+                              <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} border flex items-center justify-center`}>
+                                <Globe className="w-4 h-4 text-gray-600" />
+                              </div>
+                            )}
+                            <div className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2", isDark ? 'border-[#0A0A0A]' : 'border-white', connection.is_primary ? 'bg-purple-500' : 'bg-gray-500')} />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className={`text-[13px] font-medium ${textClass} truncate max-w-[140px] opacity-90 group-hover:opacity-100 transition-opacity`}>
+                              {connection.youtube_channel_name}
                             </span>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className={`text-[10px] ${mutedTextClass} opacity-60`}>
-                                {job.target_languages?.join(' • ')}
-                              </span>
-                              {video?.duration && (
-                                <>
-                                  <span className="text-[10px] text-gray-700">•</span>
-                                  <span className={`text-[9px] font-mono ${mutedTextClass} opacity-60`}>
-                                    {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}
-                                  </span>
-                                </>
-                              )}
-                            </div>
+                            <span className={`text-[10px] ${mutedTextClass} opacity-60`}>
+                              {connection.connection_type === 'master' ? 'Primary' : 'Satellite'} Node
+                            </span>
                           </div>
                         </div>
-
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-1 h-1 rounded-full ${job.status === 'completed' ? 'bg-green-500' :
-                                job.status === 'failed' ? 'bg-red-500' :
-                                  'bg-blue-500 animate-pulse'
-                                }`} />
-                              <span className={`text-[9px] ${mutedTextClass} font-bold uppercase tracking-widest opacity-60`}>
-                                {job.status.replace('_', ' ')}
-                              </span>
-                            </div>
-                            <span className={`text-[9px] font-mono ${textClass} opacity-40`}>
-                              {job.progress}%
-                            </span>
-                          </div>
-                          {job.status !== 'completed' && job.status !== 'failed' && (
-                            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                              <motion.div
-                                className="h-full bg-blue-500/50"
-                                initial={{ width: 0 }}
-                                animate={{ width: `${job.progress}%` }}
-                                transition={{ duration: 1 }}
-                              />
+                        <div className="flex items-center gap-2">
+                          {connection.is_primary && (
+                            <div className={cn("px-2 py-0.5 rounded-md border flex items-center gap-1", isDark ? 'bg-purple-500/10 border-purple-500/20' : 'bg-purple-50 border-purple-500/10')}>
+                              <span className="text-[9px] font-mono text-purple-400">PRIMARY</span>
                             </div>
                           )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} ${isDark ? "hover:border-white/20 hover:bg-white/10" : "hover:border-gray-300 hover:bg-gray-50"} transition-all shadow-sm`}>
+                                <MoreHorizontal className={`w-3.5 h-3.5 ${mutedTextClass}`} />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuLabel>Distribution Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              {!connection.is_primary && (
+                                <DropdownMenuItem onClick={() => handleSetPrimary(connection.connection_id)}>
+                                  <Star className="w-3.5 h-3.5 mr-2" />
+                                  Make Primary
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => {
+                                setEditConnection(connection);
+                                setNewLanguage(connection.language_code || "");
+                              }}>
+                                <Edit className="w-3.5 h-3.5 mr-2" />
+                                Change Language
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => handleDisconnect(connection.connection_id)}>
+                                <Trash className="w-3.5 h-3.5 mr-2" />
+                                Disconnect
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </motion.div>
-                    );
-                  })
-                ) : (
-                  <div className={`p-6 rounded-2xl border ${borderClass} border-dashed text-center opacity-60`}>
-                    <p className={`text-xs ${mutedTextClass}`}>No recent activity</p>
-                  </div>
-                )}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="distributions" className="border-none">
-            <AccordionTrigger className={`text-sm font-bold hover:no-underline py-3 px-4 rounded-2xl border ${borderClass} ${isDark ? "bg-white/[0.02] hover:bg-white/[0.05]" : "bg-gray-50/50 hover:bg-gray-100/50"} ${textClass} [&>svg]:w-4 [&>svg]:h-4 [&>svg]:transition-transform [&>svg]:duration-300 transition-all duration-200`}>
-              <div className="flex items-center gap-2.5">
-                <Share2 className="w-4 h-4 text-purple-400" />
-                Active Distributions
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-2 mt-2">
-                {connectionsLoading ? (
-                  Array.from({ length: 2 }).map((_, i) => (
-                    <div key={i} className={`h-12 rounded-2xl border ${borderClass} animate-pulse bg-white/5`} />
-                  ))
-                ) : connections.length > 0 ? (
-                  connections.map((connection) => (
-                    <motion.div
-                      key={connection.connection_id}
-                      whileHover={{ x: 4 }}
-                      className={`group w-full p-2.5 rounded-2xl border ${borderClass} ${glassBgClass} flex items-center justify-between hover:border-white/20 transition-all cursor-default shadow-sm`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          {connection.channel_avatar_url ? (
-                            <img src={connection.channel_avatar_url} className={`w-8 h-8 rounded-lg object-cover border ${isDark ? "border-white/10" : "border-gray-200"}`} alt="" />
-                          ) : (
-                            <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} border flex items-center justify-center`}>
-                              <Globe className="w-4 h-4 text-gray-600" />
-                            </div>
-                          )}
-                          <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 ${isDark ? 'border-[#0A0A0A]' : 'border-white'} ${connection.is_primary ? 'bg-purple-500' : 'bg-gray-500'}`} />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className={`text-[13px] font-medium ${textClass} truncate max-w-[140px] opacity-90 group-hover:opacity-100 transition-opacity`}>
-                            {connection.youtube_channel_name}
-                          </span>
-                          <span className={`text-[10px] ${mutedTextClass} opacity-60`}>
-                            {connection.connection_type === 'master' ? 'Primary' : 'Satellite'} Node
-                          </span>
-                        </div>
-                      </div>
-                      <div className={`flex items-center gap-2`}>
-                        {connection.is_primary && (
-                          <div className={`px-2 py-0.5 rounded-md ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'} border border-purple-500/20 flex items-center gap-1`}>
-                            <span className="text-[9px] font-mono text-purple-400">PRIMARY</span>
-                          </div>
-                        )}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} ${isDark ? "hover:border-white/20 hover:bg-white/10" : "hover:border-gray-300 hover:bg-gray-50"} transition-all shadow-sm`}>
-                              <MoreHorizontal className={`w-3.5 h-3.5 ${mutedTextClass}`} />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel>Distribution Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {!connection.is_primary && (
-                              <DropdownMenuItem onClick={() => handleSetPrimary(connection.connection_id)}>
-                                <Star className="w-3.5 h-3.5 mr-2" />
-                                Make Primary
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={() => {
-                              setEditConnection(connection);
-                              setNewLanguage(connection.language_code || "");
-                            }}>
-                              <Edit className="w-3.5 h-3.5 mr-2" />
-                              Change Language
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => handleDisconnect(connection.connection_id)}>
-                              <Trash className="w-3.5 h-3.5 mr-2" />
-                              Disconnect
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className={`p-6 rounded-2xl border ${borderClass} border-dashed text-center opacity-60`}>
-                    <p className={`text-xs ${mutedTextClass}`}>No active distributions</p>
-                  </div>
-                )}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
-
-      <div className="mt-auto pt-6 border-t border-white/5 relative z-10 space-y-4">
-        {/* Theme Toggle */}
-        <div className={`p-1.5 rounded-2xl ${isDark ? 'bg-white/[0.03]' : 'bg-gray-100'} border ${borderClass} flex items-center gap-1.5`}>
-          <button
-            onClick={() => setTheme("light")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-[11px] font-bold transition-all duration-200 ${!isDark ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-400'
-              }`}
-          >
-            <Sun className={`w-3.5 h-3.5 ${!isDark ? 'text-amber-500' : ''}`} />
-            Light
-          </button>
-          <button
-            onClick={() => setTheme("dark")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-[11px] font-bold transition-all duration-200 ${isDark ? 'bg-[#1A1A1A] shadow-sm text-white' : 'text-gray-500 hover:text-gray-900'
-              }`}
-          >
-            <Moon className={`w-3.5 h-3.5 ${isDark ? 'text-blue-400' : ''}`} />
-            Dark
-          </button>
+                    ))
+                  ) : (
+                    <div className={`p-6 rounded-2xl border ${borderClass} border-dashed text-center opacity-60`}>
+                      <p className={`text-xs ${mutedTextClass}`}>No active distributions</p>
+                    </div>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+          )}
         </div>
 
-        <div className={`p-4 rounded-2xl ${isDark ? 'bg-[#D97757]/5' : 'bg-gray-50'} border ${borderClass} border-[#D97757]/10 flex items-center gap-3`}>
-          <div className="w-8 h-8 rounded-full bg-[#D97757]/20 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-[#D97757]" />
-          </div>
-          <div className="flex flex-col">
-            <span className={`text-[11px] font-bold ${textClass} opacity-90`}>Olleey Pro</span>
-            <span className={`text-[10px] ${mutedTextClass}`}>Unlimited translations</span>
+        <div className="mt-auto pt-6 border-t border-border/50 relative z-10 space-y-3 px-2">
+          <div className="p-3 rounded-lg bg-background border border-border flex items-center gap-3 shadow-sm group cursor-pointer hover:border-primary/30 transition-all">
+            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold text-foreground">Olleey Pro</span>
+              <span className="text-[10px] text-muted-foreground">Premium Access</span>
+            </div>
           </div>
         </div>
       </div>
@@ -695,15 +844,14 @@ export function LeftSidebar({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
       <CreateProjectModal
         isOpen={isCreateProjectModalOpen}
         onClose={() => setIsCreateProjectModalOpen(false)}
         onSuccess={() => {
           setIsCreateProjectModalOpen(false);
-          // refreshProjects is called by the modal's internal logic/ProjectContext
         }}
       />
     </div>
   );
 }
-

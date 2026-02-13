@@ -24,13 +24,18 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { useReview } from "@/lib/ReviewContext";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { useTheme } from "@/lib/useTheme";
 import { cn } from "@/lib/utils";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
-import { jobsAPI, API_BASE_URL } from "@/lib/api";
+import { jobsAPI, channelsAPI, API_BASE_URL } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { ViewType } from "../DashboardLayout";
 
@@ -105,6 +110,51 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
 
     const [copied, setCopied] = useState(false);
 
+    // Publishing options state
+    const [scheduledDate, setScheduledDate] = useState<string>("");
+    const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("public");
+    const [selectedChannel, setSelectedChannel] = useState<string>("");
+    const [localizedTags, setLocalizedTags] = useState<string[]>([]);
+    const [availableChannels, setAvailableChannels] = useState<Array<{ id: string; name: string }>>([]);
+
+    // Fetch channels on load
+    useEffect(() => {
+        const fetchChannels = async () => {
+            try {
+                const channels = await channelsAPI.listChannels(selectedProject?.id);
+                setAvailableChannels(channels.map((ch: any) => ({ id: ch.channel_id, name: ch.channel_title })));
+                if (channels.length > 0) {
+                    setSelectedChannel(channels[0].channel_id);
+                }
+            } catch (error) {
+                console.error("Failed to fetch channels:", error);
+            }
+        };
+
+        fetchChannels();
+    }, [selectedProject?.id]);
+
+    // Fetch metadata on load
+    useEffect(() => {
+        const fetchMetadata = async () => {
+            const jobId = quickCheckState.videoId || videoIdFromUrl;
+            const lang = quickCheckState.languageCode || langFromUrl;
+            if (!jobId || !lang) return;
+
+            try {
+                const jobVideos = await jobsAPI.getJobVideos(jobId);
+                const currentLangVideo = jobVideos.find((v: any) => v.language_code === lang);
+                if (currentLangVideo?.tags) {
+                    setLocalizedTags(currentLangVideo.tags);
+                }
+            } catch (error) {
+                console.error("Failed to fetch metadata:", error);
+            }
+        };
+
+        fetchMetadata();
+    }, [quickCheckState.videoId, videoIdFromUrl, quickCheckState.languageCode, langFromUrl]);
+
     const handlePublish = async () => {
         setIsPublishing(true);
         const videoId = quickCheckState.videoId || videoIdFromUrl;
@@ -116,9 +166,24 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
             return;
         }
 
+        if (!selectedChannel) {
+            toast("Please select a channel to publish to", "error");
+            setIsPublishing(false);
+            return;
+        }
+
         try {
-            await jobsAPI.publishToYouTube(videoId, lang);
-            toast("Successfully published to YouTube!", "success");
+            await jobsAPI.publishToYouTube(videoId, lang, {
+                scheduledDate: scheduledDate || undefined,
+                visibility,
+                channelId: selectedChannel
+            });
+
+            const message = scheduledDate
+                ? `Scheduled for ${new Date(scheduledDate).toLocaleString()}`
+                : "Successfully published to YouTube!";
+            toast(message, "success");
+
             window.dispatchEvent(new CustomEvent('olleey-refresh'));
             onViewChange?.('dashboard');
         } catch (error: any) {
@@ -194,33 +259,33 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
     };
 
     const isDark = theme === "dark";
-    const bgClass = isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]";
-    const cardBgClass = isDark ? "bg-[#141414]" : "bg-white";
-    const borderClass = isDark ? "border-white/10" : "border-transparent";
-    const textClass = isDark ? "text-white" : "text-gray-900";
-    const textSecondaryClass = isDark ? "text-gray-400" : "text-gray-500";
+    const bgClass = "bg-background";
+    const cardBgClass = "bg-card";
+    const borderClass = "border-border";
+    const textClass = "text-foreground";
+    const textSecondaryClass = "text-muted-foreground";
 
     if (videosLoading && !currentVideo) {
         return (
-            <div className={`w-full h-full flex items-center justify-center ${bgClass}`}>
+            <div className={cn("w-full h-full flex items-center justify-center", bgClass)}>
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-12 h-12 animate-spin text-[#FFC107]" />
-                    <p className={`text-sm ${textSecondaryClass} uppercase tracking-widest font-black`}>Loading video...</p>
+                    <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Loading video...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className={`w-full h-full flex flex-col overflow-hidden ${bgClass} ${textClass} selection:bg-[#FFC107] selection:text-black transition-colors rounded-tl-xl overflow-y-auto custom-scrollbar`}>
+        <div className={cn("w-full h-full flex flex-col overflow-hidden selection:bg-primary/20 transition-colors rounded-tl-xl overflow-y-auto custom-scrollbar", bgClass, textClass)}>
             {/* Header Toolbar */}
-            <div className={`flex items-center justify-between px-6 py-4 border-b ${isDark ? "border-white/5" : "border-black/5"} shrink-0 sticky top-0 ${bgClass} z-20`}>
+            <div className={cn("flex items-center justify-between px-6 py-4 border-b shrink-0 sticky top-0 z-20 backdrop-blur-sm bg-opacity-80", bgClass, borderClass)}>
                 <div className="flex items-center gap-4">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => onViewChange?.("review")}
-                        className={`rounded-xl w-9 h-9 ${isDark ? "hover:bg-white/5" : "hover:bg-black/5"} transition-all`}
+                        className="rounded-xl w-9 h-9 hover:bg-muted transition-all"
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
@@ -230,27 +295,25 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
                         </h1>
                         <div className="flex items-center gap-2 mt-0.5">
                             {viewMode === 'original' ? (
-                                <Badge className="bg-white/10 text-white/50 border-none text-[8px] h-4 font-black uppercase rounded-lg px-2 tracking-tighter">Source</Badge>
+                                <Badge variant="secondary" className="text-[9px] font-bold uppercase rounded px-2">Source</Badge>
                             ) : isApproved ? (
-                                <Badge className="bg-green-500/10 text-green-500 border-none text-[8px] h-4 font-black uppercase rounded-lg px-2 tracking-tighter">Live</Badge>
+                                <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[9px] font-bold uppercase rounded px-2">Live</Badge>
                             ) : (
-                                <Badge className="bg-[#FFC107]/10 text-[#FFC107] border-none text-[8px] h-4 font-black uppercase rounded-lg px-2 tracking-tighter">Ready</Badge>
+                                <Badge variant="outline" className="text-[9px] font-bold uppercase rounded px-2 border-primary/20 text-primary bg-primary/5">Ready</Badge>
                             )}
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <div className={`flex items-center ${isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/5"} rounded-xl p-1 border hidden sm:flex`}>
+                    <div className="flex items-center bg-muted border border-border rounded-xl p-1 hidden sm:flex">
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setViewMode('original')}
                             className={cn(
-                                "h-7 px-4 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
-                                viewMode === 'original'
-                                    ? (isDark ? "bg-white/10 text-white" : "bg-white text-black shadow-sm")
-                                    : (isDark ? "text-white/30 hover:text-white" : "text-black/40 hover:text-black")
+                                "h-7 px-4 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all",
+                                viewMode === 'original' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
                             Original
@@ -260,10 +323,8 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
                             size="sm"
                             onClick={() => setViewMode('dubbed')}
                             className={cn(
-                                "h-7 px-4 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
-                                viewMode === 'dubbed'
-                                    ? (isDark ? "bg-white/10 text-white" : "bg-white text-black shadow-sm")
-                                    : (isDark ? "text-white/30 hover:text-white" : "text-black/40 hover:text-black")
+                                "h-7 px-4 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all",
+                                viewMode === 'dubbed' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
                             Localized
@@ -272,27 +333,22 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
 
                     <div className="flex items-center gap-2">
                         <Button
+                            variant="outline"
                             size="sm"
                             onClick={handleSaveDraft}
                             disabled={isSavingDraft || isPublishing || viewMode === 'original'}
-                            className={cn(
-                                "rounded-xl border h-9 px-4 text-[10px] font-black uppercase tracking-widest transition-all",
-                                isDark
-                                    ? "bg-white/5 border-white/10 text-white hover:bg-white/10"
-                                    : "bg-white border-black/5 text-gray-900 hover:bg-gray-50"
-                            )}
+                            className="rounded-xl h-9 px-4 text-[10px] font-bold uppercase tracking-widest border-border"
                         >
-                            {isSavingDraft ? <RefreshCw className="w-3 h-3 mr-2 animate-spin" /> : <Save className="w-3 h-3 mr-2" />}
+                            {isSavingDraft ? <RefreshCw className="w-3 h-3 mr-2 animate-spin" /> : <Save className="w-3 h-3 mr-2 text-primary" />}
                             {isSavingDraft ? "Saving..." : "Save Draft"}
                         </Button>
-
                         <Button
                             size="sm"
                             onClick={handlePublish}
                             disabled={isPublishing || isSavingDraft || viewMode === 'original'}
-                            className="rounded-xl bg-[#FFC107] hover:bg-[#FFC107]/90 text-black text-[10px] font-black uppercase tracking-widest h-9 px-4 shadow-lg shadow-[#FFC107]/10 transition-all"
+                            className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-widest h-9 px-4 shadow-sm transition-all"
                         >
-                            {isPublishing ? <RefreshCw className="w-3 h-3 mr-2 animate-spin" /> : <Youtube className="w-3 h-3 mr-2" />}
+                            {isPublishing ? <RefreshCw className="w-3 h-3 mr-2 animate-spin text-white" /> : <Youtube className="w-3 h-3 mr-2 text-white" />}
                             Launch
                         </Button>
                     </div>
@@ -302,16 +358,13 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
             <div className="flex-1 overflow-y-auto lg:p-12 p-6">
                 <div className="max-w-6xl mx-auto space-y-12">
                     {/* Video Player Section */}
-                    <section
-                        className={`relative aspect-video ${cardBgClass} border ${borderClass} group overflow-hidden rounded-xl shadow-2xl cursor-pointer`}
-                        onClick={togglePlay}
-                    >
+                    <Card className="overflow-hidden cursor-pointer" onClick={togglePlay}>
+                        <div className="relative aspect-video bg-black">
                         <video
                             ref={videoRef}
                             key={viewMode === 'original' ? originalVideoUrl : dubbedVideoUrl}
                             src={viewMode === 'original' ? originalVideoUrl : (dubbedVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4")}
                             className="w-full h-full object-contain"
-                            poster={quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200"}
                             onPlay={() => setIsPlaying(true)}
                             onPause={() => setIsPlaying(false)}
                         />
@@ -322,7 +375,7 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: isPlaying ? 0 : 1, scale: 1 }}
                                 whileHover={{ scale: 1.1, opacity: 1 }}
-                                className="w-16 h-16 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 flex items-center justify-center shadow-2xl transition-all duration-300 pointer-events-auto"
+                                className="w-16 h-16 bg-background/20 backdrop-blur-xl rounded-full border border-white/20 flex items-center justify-center shadow-2xl transition-all duration-300 pointer-events-auto"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     togglePlay();
@@ -338,164 +391,255 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
 
                         {/* Cinematic Overlay UI */}
                         <div className="absolute top-4 right-4 flex items-center gap-2 z-10 pointer-events-none">
-                            <Badge className="bg-black/60 backdrop-blur-md border border-white/10 text-[#FFC107] text-[8px] font-bold uppercase px-3 py-1 rounded-lg">
+                            <Badge variant="secondary" className="bg-black/40 backdrop-blur-md border border-white/10 text-primary text-[9px] font-bold uppercase px-3 py-1 rounded-lg">
                                 {viewMode === 'original' ? "Source" : "Localized"}
                             </Badge>
-                            <Badge className="bg-black/60 backdrop-blur-md border border-white/10 text-white/90 text-[8px] font-bold uppercase px-3 py-1 rounded-lg">
+                            <Badge variant="secondary" className="bg-black/40 backdrop-blur-md border border-white/10 text-white/90 text-[9px] font-bold uppercase px-3 py-1 rounded-lg">
                                 {viewMode === 'original' ? "Original" : languageName}
                             </Badge>
                         </div>
-                    </section>
+                        </div>
+                    </Card>
 
                     {/* Content Info Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                         <div className="lg:col-span-2 space-y-10">
                             {viewMode === 'original' ? (
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className={`text-[10px] font-black uppercase tracking-[0.2em] ${textSecondaryClass}`}>Localization Hub</h2>
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-3">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-sm">Available Languages</CardTitle>
+                                        <CardDescription>Switch between localized versions</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
                                         {currentVideo?.localizations && Object.entries(currentVideo.localizations).map(([code, loc]: [string, any]) => {
                                             const lang = LANGUAGE_OPTIONS.find(l => l.code === code);
                                             return (
-                                                <motion.button
+                                                <button
                                                     key={code}
-                                                    whileHover={{ x: 4 }}
                                                     onClick={() => handleSwitchToDub(code, loc)}
-                                                    className={`w-full flex items-center justify-between p-5 rounded-xl border ${borderClass} ${cardBgClass} hover:border-[#FFC107]/40 transition-all group text-left`}
+                                                    className="w-full flex items-center justify-between p-4 rounded-lg border hover:border-primary/40 transition-all group text-left"
                                                 >
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`w-10 h-10 rounded-lg ${isDark ? "bg-white/5" : "bg-gray-100"} flex items-center justify-center text-lg group-hover:bg-[#FFC107]/10 transition-colors`}>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-lg group-hover:bg-primary/10 transition-colors">
                                                             {lang?.flag || "🌐"}
                                                         </div>
                                                         <div>
-                                                            <h3 className="text-sm font-bold group-hover:text-[#FFC107] transition-colors">
-                                                                {lang?.name || code.toUpperCase()} Dub
+                                                            <h3 className="text-sm font-semibold group-hover:text-primary transition-colors">
+                                                                {lang?.name || code.toUpperCase()}
                                                             </h3>
-                                                            <p className={`text-[9px] font-medium ${textSecondaryClass} uppercase tracking-wider mt-0.5`}>
-                                                                Status: {loc.status || "Processing"}
+                                                            <p className="text-xs text-muted-foreground capitalize">
+                                                                {loc.status || "Processing"}
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-4">
-                                                        <Badge className={cn(
-                                                            "border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-lg",
-                                                            loc.status === 'live'
-                                                                ? "bg-green-500/10 border-green-500/20 text-green-500"
-                                                                : "bg-blue-500/10 border-blue-500/20 text-blue-500"
-                                                        )}>
-                                                            {loc.status === 'live' ? 'Verified' : 'In Review'}
+                                                    <div className="flex items-center gap-3">
+                                                        <Badge variant={loc.status === 'live' ? 'default' : 'secondary'} className="rounded-full">
+                                                            {loc.status === 'live' ? 'Live' : 'Review'}
                                                         </Badge>
-                                                        <ChevronRight className={`w-4 h-4 ${textSecondaryClass} group-hover:text-current transition-all`} />
+                                                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-all" />
                                                     </div>
-                                                </motion.button>
+                                                </button>
                                             );
                                         })}
-                                    </div>
-                                </div>
+                                    </CardContent>
+                                </Card>
                             ) : (
                                 <div className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className={`text-[10px] font-black uppercase tracking-[0.2em] ${textSecondaryClass}`}>Asset Manifest</h2>
-                                        <button onClick={handleCopy} className={`${textSecondaryClass} hover:${textClass} transition-colors flex items-center gap-2 group`}>
-                                            <Copy className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                                            <span className="text-[9px] font-bold uppercase tracking-wider">{copied ? "Copied" : "Copy Manifest"}</span>
-                                        </button>
-                                    </div>
-                                    <div className={`p-8 border ${borderClass} ${cardBgClass} space-y-6 rounded-xl shadow-xl`}>
-                                        <div className="space-y-4">
-                                            <div className="flex items-start justify-between gap-6">
-                                                <h3 className="text-xl font-bold leading-tight tracking-tight">{videoTitle}</h3>
-                                                <Badge variant="outline" className="rounded-lg border-green-500/20 text-green-500 bg-green-500/5 text-[9px] font-bold uppercase px-3 py-1 shrink-0">Production Ready</Badge>
+                                    <Card>
+                                        <CardHeader>
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="space-y-1.5 flex-1">
+                                                    <CardTitle className="text-xl">{videoTitle}</CardTitle>
+                                                    <CardDescription className="flex items-center gap-2 flex-wrap">
+                                                        <Badge variant="outline" className="rounded-full">
+                                                            <Youtube className="w-3 h-3 mr-1.5" />
+                                                            Olleey Global Labs
+                                                        </Badge>
+                                                        <Badge variant="outline" className="rounded-full">
+                                                            <Globe className="w-3 h-3 mr-1.5" />
+                                                            {languageName} {LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.flag}
+                                                        </Badge>
+                                                    </CardDescription>
+                                                </div>
+                                                <Badge variant="outline" className="border-emerald-500/20 text-emerald-500 bg-emerald-500/5 shrink-0">
+                                                    Production Ready
+                                                </Badge>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div>
+                                                <Label className="text-xs font-semibold text-muted-foreground">Description</Label>
+                                                <p className="text-sm leading-relaxed mt-2">
+                                                    {videoDescription || "No localized description available."}
+                                                </p>
                                             </div>
 
-                                            <div className="flex flex-wrap gap-3">
-                                                <div className={`flex items-center gap-3 p-2 pr-4 ${isDark ? "bg-white/5" : "bg-black/5"} rounded-xl`}>
-                                                    <Youtube className="w-4 h-4 text-[#FFC107]" />
-                                                    <span className="text-xs font-bold">Olleey Global Labs</span>
-                                                </div>
-                                                <div className={`flex items-center gap-3 p-2 pr-4 ${isDark ? "bg-white/5" : "bg-black/5"} rounded-xl`}>
-                                                    <Globe className="w-4 h-4 text-blue-500" />
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs font-bold">{languageName}</span>
-                                                        <span className="text-xs">{LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.flag}</span>
+                                            {/* Tags Preview */}
+                                            {localizedTags.length > 0 && (
+                                                <>
+                                                    <Separator />
+                                                    <div>
+                                                        <Label className="text-xs font-semibold text-muted-foreground">Tags</Label>
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            {localizedTags.map((tag, i) => (
+                                                                <Badge key={i} variant="secondary" className="rounded-full">
+                                                                    {tag}
+                                                                </Badge>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className={`h-px ${isDark ? "bg-white/5" : "bg-black/5"}`} />
-                                        <p className={`text-sm leading-relaxed font-medium ${textSecondaryClass}`}>
-                                            {videoDescription || "No localized description available."}
-                                        </p>
-                                    </div>
+                                                </>
+                                            )}
+                                        </CardContent>
+                                    </Card>
                                 </div>
                             )}
 
-                            {/* Industrial Metrics */}
+                            {/* Quality Metrics */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 {[
-                                    { label: "Sync Fidelity", value: stats.qualityScore + "%", icon: Zap, color: "text-[#FFC107]" },
-                                    { label: "Vocal Latency", value: stats.syncDrift, icon: Monitor, color: "text-blue-400" },
-                                    { label: "Cultural Tone", value: stats.culturalMatch, icon: Globe, color: "text-purple-400" },
-                                    { label: "AI Synthesis", value: stats.aiProcessing, icon: Layout, color: "text-green-400" }
+                                    { label: "Sync Fidelity", value: stats.qualityScore + "%", icon: Zap, color: "text-primary" },
+                                    { label: "Vocal Latency", value: stats.syncDrift, icon: Monitor, color: "text-blue-500" },
+                                    { label: "Cultural Tone", value: stats.culturalMatch, icon: Globe, color: "text-purple-500" },
+                                    { label: "AI Synthesis", value: stats.aiProcessing, icon: Layout, color: "text-emerald-500" }
                                 ].map((metric, i) => (
-                                    <div key={i} className={`p-4 border ${borderClass} ${cardBgClass} space-y-2 rounded-xl`}>
-                                        <div className={`flex items-center gap-2 ${textSecondaryClass}`}>
-                                            <metric.icon className="w-3 h-3" />
-                                            <span className="text-[8px] font-black uppercase tracking-[0.1em]">{metric.label}</span>
-                                        </div>
-                                        <p className={`text-xs font-bold tracking-tight ${metric.color}`}>{metric.value}</p>
-                                    </div>
+                                    <Card key={i}>
+                                        <CardContent className="pt-6">
+                                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                                <metric.icon className="w-4 h-4" />
+                                                <span className="text-xs font-medium">{metric.label}</span>
+                                            </div>
+                                            <p className={cn("text-2xl font-bold", metric.color)}>{metric.value}</p>
+                                        </CardContent>
+                                    </Card>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="space-y-10">
-                            <div className="space-y-4">
-                                <h2 className={`text-[10px] font-black uppercase tracking-[0.2em] ${textSecondaryClass}`}>Visual Identity</h2>
-                                <div className={`aspect-video border ${borderClass} overflow-hidden group/thumb relative rounded-xl shadow-xl transition-all hover:border-[#FFC107]/40`}>
-                                    <img
-                                        src={quickCheckState.thumbnailUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800"}
-                                        alt="Localized Thumbnail"
-                                        className="w-full h-full object-cover transition-all duration-700 group-hover/thumb:scale-105"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-                                    <div className="absolute inset-x-0 bottom-0 p-4">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/90">Production Cover</span>
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-sm">Thumbnail Preview</CardTitle>
+                                    <CardDescription>Final thumbnail for YouTube</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="aspect-video rounded-lg overflow-hidden border">
+                                        <img
+                                            src={quickCheckState.thumbnailUrl || (currentVideo as any)?.thumbnail_url || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800"}
+                                            alt="Localized Thumbnail"
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
 
-                            <div className={`p-6 border ${isDark ? "border-[#FFC107]/10" : "border-[#FFC107]/20"} ${isDark ? "bg-[#FFC107]/5" : "bg-[#FFC107]/10"} space-y-6 relative overflow-hidden rounded-xl shadow-xl`}>
-                                <div className="relative z-10 space-y-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-lg bg-[#FFC107]/20 flex items-center justify-center border border-[#FFC107]/30">
-                                            <CheckCircle2 className="w-5 h-5 text-[#FFC107]" />
-                                        </div>
-                                        <span className="text-xs font-bold uppercase tracking-[0.1em] text-[#FFC107]">Verification Hub</span>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-sm flex items-center gap-2">
+                                        <Youtube className="w-4 h-4" />
+                                        Publishing Options
+                                    </CardTitle>
+                                    <CardDescription>Configure how and when to publish</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    {/* Channel Selector */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="channel-select">Target Channel</Label>
+                                        <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+                                            <SelectTrigger id="channel-select">
+                                                <SelectValue placeholder="Select a channel" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableChannels.map((channel) => (
+                                                    <SelectItem key={channel.id} value={channel.id}>
+                                                        {channel.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
-                                    <p className={`text-xs leading-relaxed font-medium ${textSecondaryClass}`}>
-                                        Synthesis protocol completed. Ready for deployment.
-                                    </p>
+
+                                    {/* Visibility Selector */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="visibility-select">Visibility</Label>
+                                        <Select value={visibility} onValueChange={(val: any) => setVisibility(val)}>
+                                            <SelectTrigger id="visibility-select">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="public">Public</SelectItem>
+                                                <SelectItem value="unlisted">Unlisted</SelectItem>
+                                                <SelectItem value="private">Private</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Schedule Date/Time */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="schedule-input">Schedule (Optional)</Label>
+                                        <Input
+                                            id="schedule-input"
+                                            type="datetime-local"
+                                            value={scheduledDate}
+                                            onChange={(e) => setScheduledDate(e.target.value)}
+                                            min={new Date().toISOString().slice(0, 16)}
+                                        />
+                                        {scheduledDate && (
+                                            <p className="text-xs text-muted-foreground">
+                                                Will publish on {new Date(scheduledDate).toLocaleString()}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <Separator />
+
+                                    {/* Action Buttons */}
                                     <div className="flex flex-col gap-3">
                                         <Button
                                             onClick={handlePublish}
-                                            disabled={isPublishing || isSavingDraft || viewMode === 'original'}
-                                            className="w-full rounded-xl bg-[#FFC107] hover:bg-[#FFC107]/90 text-black text-[10px] font-black uppercase tracking-widest h-11 transition-all"
+                                            disabled={isPublishing || isSavingDraft || viewMode === 'original' || !selectedChannel}
+                                            size="lg"
+                                            className="w-full"
                                         >
-                                            {isPublishing ? "Publishing..." : "Launch to YouTube"}
+                                            {isPublishing ? (
+                                                <>
+                                                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                                    Publishing...
+                                                </>
+                                            ) : scheduledDate ? (
+                                                <>
+                                                    <Youtube className="w-4 h-4 mr-2" />
+                                                    Schedule Publish
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Youtube className="w-4 h-4 mr-2" />
+                                                    Publish Now
+                                                </>
+                                            )}
                                         </Button>
                                         <Button
                                             onClick={handleSaveDraft}
                                             disabled={isSavingDraft || isPublishing || viewMode === 'original'}
-                                            className={`w-full rounded-xl text-[10px] font-black uppercase tracking-widest h-11 transition-all ${isDark ? "bg-white/5 border-white/10 text-white" : "bg-white border-black/5 text-black"}`}
+                                            variant="outline"
+                                            size="lg"
+                                            className="w-full"
                                         >
-                                            {isSavingDraft ? "Saving..." : "Save Draft"}
+                                            {isSavingDraft ? (
+                                                <>
+                                                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                                    Saving...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Save className="w-4 h-4 mr-2" />
+                                                    Save Draft
+                                                </>
+                                            )}
                                         </Button>
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
                 </div>

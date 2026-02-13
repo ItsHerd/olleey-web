@@ -1507,6 +1507,8 @@ export interface LocalizedVideo {
   thumbnail_url?: string;
   title?: string;
   description?: string;
+  dubbed_audio_url?: string;
+  tags?: string[];
 }
 
 export const jobsAPI = {
@@ -1645,13 +1647,26 @@ export const jobsAPI = {
    * Publish job to YouTube
    * POST /jobs/{job_id}/publish
    */
-  publishToYouTube: async (jobId: string, languageCode: string): Promise<{ message: string; video_id?: string }> => {
+  publishToYouTube: async (
+    jobId: string,
+    languageCode: string,
+    options?: {
+      scheduledDate?: string;
+      visibility?: "public" | "unlisted" | "private";
+      channelId?: string;
+    }
+  ): Promise<{ message: string; video_id?: string }> => {
     const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/publish`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ language_code: languageCode }),
+      body: JSON.stringify({
+        language_code: languageCode,
+        scheduled_date: options?.scheduledDate,
+        visibility: options?.visibility,
+        channel_id: options?.channelId
+      }),
     });
 
     if (!response.ok) {

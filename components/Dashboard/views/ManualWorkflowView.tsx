@@ -83,15 +83,15 @@ export function ManualWorkflowView({ onViewChange, theme }: ManualWorkflowViewPr
     }
 
     return (
-        <div className={`w-full h-full overflow-y-auto pt-6 pb-24 px-8 custom-scrollbar`}>
+        <div className={`w-full h-full overflow-y-auto py-4 px-4 md:px-6 custom-scrollbar`}>
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="max-w-4xl mx-auto space-y-6"
+                className="max-w-6xl mx-auto space-y-4"
             >
                 {/* Compact Header */}
-                <motion.div variants={itemVariants} className="flex items-center justify-between mb-8">
+                <motion.div variants={itemVariants} className="flex items-center justify-between">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2 mb-1">
                             <Rocket className="w-4 h-4 text-[#D97757]" />

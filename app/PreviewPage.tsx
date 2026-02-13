@@ -43,7 +43,7 @@ export default function PreviewPage() {
 
     // Fetch full video data to get all localizations
     const { selectedProject } = useProject();
-    
+
     // Get userId directly from localStorage
     const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') || undefined : undefined;
     const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id, user_id: userId });
@@ -561,25 +561,6 @@ export default function PreviewPage() {
                 </main>
             </div>
 
-            {/* Bottom HUD */}
-            <footer className={`h-12 border-t ${borderClass} ${isDark ? "bg-[#050505]" : "bg-white"} flex items-center justify-between px-8 shrink-0 transition-colors`}>
-                <div className="flex items-center gap-8">
-                    <div className="flex items-center gap-3">
-                        <div className="relative flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-green-500 animate-ping absolute opacity-40" />
-                            <div className="w-2 h-2 rounded-full bg-green-500 relative" />
-                        </div>
-                        <span className={`text-[8px] font-bold uppercase tracking-[0.25em] ${isDark ? "text-white/40" : "text-black/40"}`}>Production Core: Nominal</span>
-                    </div>
-                    <span className={`text-[8px] font-mono ${isDark ? "text-white/20" : "text-black/20"} uppercase tracking-widest`}>Asset ID: OLX_{Math.floor(Math.random() * 99999)}</span>
-                </div>
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <Languages className={`w-3.5 h-3.5 ${isDark ? "text-white/20" : "text-black/20"}`} />
-                        <span className={`text-[8px] font-bold uppercase tracking-[0.25em] ${isDark ? "text-white/40" : "text-black/40"}`}>Live Synthesis Active</span>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 }

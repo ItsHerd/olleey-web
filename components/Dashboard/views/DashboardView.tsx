@@ -23,6 +23,7 @@ import { AgentView } from "./AgentView";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
+import { cn } from "@/lib/utils";
 
 interface DashboardViewProps {
   onSelectJob: (item: SelectedItem) => void;
@@ -106,34 +107,34 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Activity className="w-4 h-4 text-[#FFC107]" />
-                  <h1 className={`text-2xl font-black tracking-tight ${textClass}`}>Olleey Control</h1>
+                  <Activity className="w-4 h-4 text-primary" />
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground">Olleey Control</h1>
                 </div>
-                <p className={`text-xs font-medium uppercase tracking-widest ${textSecondaryClass} opacity-80`}>
-                  Quantum localizations pipeline monitor
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground opacity-70">
+                  Localization Pipeline Monitor
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className={`flex items-center p-1 rounded-2xl ${isDark ? 'bg-white/5' : 'bg-gray-100'} border ${borderClass}`}>
+                <div className="flex items-center p-1 rounded-xl bg-muted border border-border">
                   <button
                     onClick={() => setViewMode("agent")}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${(viewMode as string) === 'agent' ? 'bg-[#FFC107] text-black shadow-lg shadow-[#FFC107]/10' : `${textSecondaryClass} hover:${isDark ? 'text-white' : 'text-gray-900'}`}`}
+                    className="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all text-muted-foreground hover:text-foreground"
                   >
                     Agent
                   </button>
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${(viewMode as string) === 'grid' ? 'bg-[#FFC107] text-black shadow-lg shadow-[#FFC107]/10' : `${textSecondaryClass} hover:${isDark ? 'text-white' : 'text-gray-900'}`}`}
+                    className="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all bg-background text-foreground shadow-sm"
                   >
                     Grid
                   </button>
                 </div>
                 <Button
                   onClick={() => setShowNewModal(true)}
-                  className="bg-white hover:bg-gray-100 text-black font-black px-6 h-11 rounded-2xl text-[10px] uppercase tracking-widest gap-2 border-2 border-gray-100 transition-all active:scale-95 shadow-xl shadow-black/5"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6 h-10 rounded-xl text-[10px] uppercase tracking-widest gap-2 transition-all active:scale-95 shadow-sm"
                 >
-                  <Plus className="w-3.5 h-3.5 stroke-[3px]" />
+                  <Plus className="w-3.5 h-3.5" />
                   Initialize
                 </Button>
               </div>
@@ -142,16 +143,16 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
             {/* Search & Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-3 mt-8">
               <div className="relative flex-1">
-                <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${textSecondaryClass}`} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                 <input
                   placeholder="Search pipelines..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full ${isDark ? 'bg-white/[0.03]' : 'bg-white'} border ${borderClass} rounded-xl h-12 pl-12 pr-4 text-xs font-medium focus:outline-none focus:border-[#FFC107]/40 transition-all`}
+                  className="w-full bg-background border border-border rounded-xl h-11 pl-11 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" className={`h-12 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest border ${borderClass} ${isDark ? 'bg-white/5' : 'bg-white'}`}>
+                <Button variant="outline" className="h-11 px-6 rounded-xl text-[10px] font-bold uppercase tracking-widest border-border">
                   <Filter className="w-3.5 h-3.5 mr-2" />
                   Filter
                 </Button>
@@ -170,22 +171,22 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
               {/* Quick Stats Header (Visual only) */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: "Active Nodes", value: activeJobs.length, icon: Zap, color: "text-blue-400" },
-                  { label: "Awaiting Review", value: needsReviewJobs.length, icon: Clock, color: "text-[#FFC107]" },
-                  { label: "Success Rate", value: "98.4%", icon: TrendingUp, color: "text-green-400" },
-                  { label: "Total Capacity", value: "1.2 TB", icon: Activity, color: "text-purple-400" }
+                  { label: "Active Nodes", value: activeJobs.length, icon: Zap, color: "text-blue-500" },
+                  { label: "Awaiting Review", value: needsReviewJobs.length, icon: Clock, color: "text-amber-500" },
+                  { label: "Success Rate", value: "98.4%", icon: TrendingUp, color: "text-emerald-500" },
+                  { label: "Total Capacity", value: "1.2 TB", icon: Activity, color: "text-purple-500" }
                 ].map((stat, idx) => (
                   <motion.div
                     key={idx}
                     variants={itemVariants}
-                    className={`${cardBgClass} border ${borderClass} p-5 rounded-2xl group hover:border-[#FFC107]/20 transition-all cursor-default ${shadowClass}`}
+                    className="bg-card border border-border p-5 rounded-xl group hover:border-primary/20 transition-all cursor-default shadow-sm"
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                      <ChevronRight className={`w-3 h-3 ${textSecondaryClass} opacity-0 group-hover:opacity-100 transition-all`} />
+                      <stat.icon className={cn("w-4 h-4", stat.color)} />
+                      <ChevronRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all" />
                     </div>
-                    <div className={`text-2xl font-black ${textClass}`}>{stat.value}</div>
-                    <div className={`text-[9px] font-black uppercase tracking-widest ${textSecondaryClass} mt-1`}>{stat.label}</div>
+                    <div className="text-2xl font-bold text-foreground tracking-tight">{stat.value}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1 opacity-70">{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
@@ -195,8 +196,8 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                 <section>
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-6 bg-blue-500 rounded-full" />
-                      <h2 className={`text-xl font-black ${textClass} tracking-tight`}>Active Pipelines</h2>
+                      <div className="w-1.5 h-5 bg-blue-500 rounded-full" />
+                      <h2 className="text-xl font-bold text-foreground tracking-tight">Active Pipelines</h2>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -220,12 +221,12 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                 <section>
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-6 bg-[#FFC107] rounded-full" />
-                      <h2 className={`text-xl font-black ${textClass} tracking-tight`}>Human in the Loop</h2>
+                      <div className="w-1.5 h-5 bg-amber-500 rounded-full" />
+                      <h2 className="text-xl font-bold text-foreground tracking-tight">Human in the Loop</h2>
                     </div>
                     <button
                       onClick={() => onViewChange?.("review")}
-                      className="text-[10px] font-black uppercase tracking-widest text-[#FFC107] bg-[#FFC107]/10 px-3 py-1 rounded-full border border-[#FFC107]/20 hover:bg-[#FFC107]/20 transition-all cursor-pointer"
+                      className="text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer"
                     >
                       {needsReviewJobs.length} Review Requested
                     </button>
@@ -257,10 +258,10 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                 <section>
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-6 bg-green-500 rounded-full" />
-                      <h2 className={`text-xl font-black ${textClass} tracking-tight`}>Operation History</h2>
+                      <div className="w-1.5 h-5 bg-emerald-500 rounded-full" />
+                      <h2 className="text-xl font-bold text-foreground tracking-tight">Operation History</h2>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-[#D97757] hover:underline">
+                    <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80">
                       Terminal Log →
                     </Button>
                   </div>

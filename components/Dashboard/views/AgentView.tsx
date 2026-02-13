@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { PromptInputBox } from "../components/PromptInputBox";
+import { youtubeAPI } from "@/lib/api";
 
 interface AgentViewProps {
   theme: string;
@@ -204,6 +205,14 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
               {/* Connect Tools Banner */}
               <motion.div
                 whileHover={{ scale: 1.005 }}
+                onClick={async () => {
+                  try {
+                    const { auth_url } = await youtubeAPI.initiateConnection();
+                    window.location.href = auth_url;
+                  } catch (error) {
+                    console.error("Failed to initiate YouTube connection:", error);
+                  }
+                }}
                 className={`${cardBgClass} border ${borderClass} rounded-xl p-4 mb-4 cursor-pointer flex items-center justify-between group ${isDark ? 'shadow-xl' : 'shadow-none'} transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'}`}
               >
                 <div className="flex items-center gap-4">

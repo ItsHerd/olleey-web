@@ -187,7 +187,7 @@ Following Cowork's pattern:
 - [x] New localization wizard
 
 ### Phase 2 (Coming Soon)
-- [ ] Real-time WebSocket updates
+- [ ] Real-time supabase
 - [ ] Batch approval interface
 - [ ] Inline commenting system
 - [ ] Advanced filtering

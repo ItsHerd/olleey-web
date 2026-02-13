@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Play, Clock, AlertCircle } from "lucide-react";
+import { ChevronRight, Play, Clock, AlertCircle, PanelRightClose } from "lucide-react";
 import { SelectedItem, ViewType } from "./DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
@@ -89,17 +89,18 @@ export function RightSidebar({
       <div className="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
 
       {/* Header */}
-      <div className="flex items-center justify-between relative z-10">
+      <div className="flex items-center gap-4 relative z-10">
+        <button
+          onClick={onClose}
+          className={`p-2 rounded-lg border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
+          title="Close sidebar"
+        >
+          <PanelRightClose className="w-4 h-4 text-gray-400" />
+        </button>
         <div className="flex flex-col">
           <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${mutedTextClass} mb-1`}>Pipeline</span>
           <h3 className={`font-serif text-2xl ${textClass} tracking-tight`}>Live Status</h3>
         </div>
-        <button
-          onClick={onClose}
-          className={`p-2 rounded-lg border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
-        >
-          <ChevronRight className="w-4 h-4 text-gray-400" />
-        </button>
       </div>
 
       <div className="flex-1 space-y-8 overflow-y-auto custom-scrollbar -mx-2 px-2 relative z-10">
@@ -128,12 +129,15 @@ export function RightSidebar({
                     key={job.job_id}
                     whileHover={{ x: -4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
                     onClick={() => {
+                      console.log('[RightSidebar] Card clicked:', job.job_id, 'status:', job.status);
                       const firstTargetLang = job.target_languages?.[0] || "es";
 
                       // Set selected item
                       onSelectItem?.({ type: "job", id: job.job_id, data: job });
 
-                      if (job.status === 'waiting_approval') {
+                      // Navigate based on job status
+                      if (job.status === 'waiting_approval' || job.status === 'completed') {
+                        console.log('[RightSidebar] Navigating to review');
                         // Open review with proper data
                         openReview({
                           videoId: job.source_video_id,
@@ -151,7 +155,11 @@ export function RightSidebar({
                           navigate: false // Stay within dashboard
                         });
                         onViewChange?.("review");
+                      } else if (['pending', 'downloading', 'processing', 'transcribing', 'translating', 'dubbing', 'voice_cloning', 'lip_sync', 'uploading'].includes(job.status)) {
+                        console.log('[RightSidebar] Navigating to processing view');
+                        onViewChange?.("processing");
                       } else {
+                        console.log('[RightSidebar] Navigating to dashboard');
                         onViewChange?.("dashboard");
                       }
                     }}
@@ -225,10 +233,35 @@ export function RightSidebar({
                     key={job.job_id}
                     whileHover={{ x: -4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
                     onClick={() => {
+                      console.log('[RightSidebar] Processing card clicked:', job.job_id, 'status:', job.status);
                       onSelectItem?.({ type: "job", id: job.job_id, data: job });
-                      if (job.status === 'waiting_approval') {
+
+                      // Navigate based on job status
+                      if (job.status === 'waiting_approval' || job.status === 'completed') {
+                        console.log('[RightSidebar] Navigating to review');
+                        const video = getJobVideo(job.source_video_id);
+                        const firstTargetLang = job.target_languages?.[0] || "es";
+                        openReview({
+                          videoId: job.source_video_id,
+                          languageCode: firstTargetLang,
+                          jobId: job.job_id,
+                          originalVideoUrl: (video as any)?.storage_url || (video as any)?.video_url || "",
+                          dubbedVideoUrl: "",
+                          videoTitle: video?.title || job.source_video_id,
+                          videoDescription: video?.description || "",
+                          thumbnailUrl: video?.thumbnail_url || "",
+                          localizedTitle: "",
+                          localizedDescription: "",
+                          isApproved: false,
+                          approvedAt: video?.published_at || undefined,
+                          navigate: false
+                        });
                         onViewChange?.("review");
+                      } else if (['pending', 'downloading', 'processing', 'transcribing', 'translating', 'dubbing', 'voice_cloning', 'lip_sync', 'uploading'].includes(job.status)) {
+                        console.log('[RightSidebar] Navigating to processing view');
+                        onViewChange?.("processing");
                       } else {
+                        console.log('[RightSidebar] Navigating to dashboard');
                         onViewChange?.("dashboard");
                       }
                     }}

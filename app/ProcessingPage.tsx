@@ -2,419 +2,318 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-    Activity,
-    Cpu,
-    Dna,
-    Mic2,
-    MessageSquare,
-    Zap,
-    Shield,
-    BarChart3,
-    Terminal as TerminalIcon,
-    Radio,
-    Clock,
-    Globe,
+    Loader2,
     CheckCircle2,
-    Pause,
-    RotateCcw,
-    XOctagon,
-    Play,
-    Eye
+    XCircle,
+    AlertCircle,
+    ArrowLeft,
+    Eye,
 } from "lucide-react";
-import { OlleeyLoader } from "@/components/ui/OlleeyLoader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useReview } from "@/lib/ReviewContext";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { useTheme } from "@/lib/useTheme";
 import { cn } from "@/lib/utils";
+import { jobsAPI } from "@/lib/api";
 
-const STAGES = [
-    { id: 'extraction', label: 'Audio Isolation', icon: Mic2, description: 'Separating vocal tracks from background ambient noise.' },
-    { id: 'translation', label: 'Neural Translation', icon: Globe, description: 'LLM-driven linguistic mapping and cultural adaptation.' },
-    { id: 'synthesis', label: 'Voice Cloning', icon: Dna, description: 'Generating high-fidelity vocal performance matching original timber.' },
-    { id: 'sync', label: 'Lip-Sync Alignment', icon: Activity, description: 'Frame-by-frame visual manipulation for perfect phonetic sync.' },
-    { id: 'mastering', label: 'Final Mastering', icon: Zap, description: 'Balancing levels and finalizing metadata injection.' }
+const PIPELINE_STAGES = [
+    { id: 'downloading', label: 'Downloading' },
+    { id: 'transcribing', label: 'Transcribing' },
+    { id: 'translating', label: 'Translating' },
+    { id: 'dubbing', label: 'Dubbing' },
+    { id: 'lip_sync', label: 'Lip Syncing' },
+    { id: 'uploading', label: 'Uploading' },
+    { id: 'waiting_approval', label: 'Complete' },
 ];
 
-export default function ProcessingPage() {
+interface ProcessingPageProps {
+    selectedJob?: any;
+    onViewChange?: (view: any) => void;
+}
+
+export default function ProcessingPage({ selectedJob, onViewChange }: ProcessingPageProps = {}) {
     const { theme } = useTheme();
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
     const { quickCheckState } = useReview();
 
-    // Extract video ID from path (/workflows/processing/[id])
+    // Extract job ID from selected job or URL
     const pathParts = pathname?.split('/') || [];
-    const videoIdFromPath = pathParts[3]; // /workflows/processing/[id]
-    const videoIdFromUrl = videoIdFromPath || searchParams.get("video_id");
+    const videoIdFromPath = pathParts[3];
+    const jobIdFromUrl = selectedJob?.job_id || videoIdFromPath || searchParams.get("job_id");
 
-    const [progress, setProgress] = useState(35);
-    const [activeStage, setActiveStage] = useState(1);
-    const [isPaused, setIsPaused] = useState(false);
-    const [isAborted, setIsAborted] = useState(false);
-    const [previewingStage, setPreviewingStage] = useState<number | null>(null);
+    const [job, setJob] = useState<any>(selectedJob || null);
+    const [loading, setLoading] = useState(!selectedJob);
+    const [error, setError] = useState<string | null>(null);
 
+    // Initialize from selectedJob prop if available
     useEffect(() => {
-        if (isPaused || isAborted) return;
+        if (selectedJob) {
+            console.log('[ProcessingPage] Using selectedJob prop:', selectedJob);
+            setJob(selectedJob);
+            setLoading(false);
+        }
+    }, [selectedJob]);
 
-        const timer = setInterval(() => {
-            setProgress(prev => (prev < 92 ? prev + Math.random() * 2 : prev));
-            if (progress > (activeStage + 1) * 20 && activeStage < STAGES.length - 1) {
-                setActiveStage(prev => prev + 1);
+    // Fetch job status
+    useEffect(() => {
+        // If we already have job from props, don't fetch
+        if (selectedJob) return;
+        if (!jobIdFromUrl) return;
+
+        const fetchJobStatus = async () => {
+            try {
+                console.log('[ProcessingPage] Fetching job:', jobIdFromUrl);
+                const jobData = await jobsAPI.getJobById(jobIdFromUrl);
+                setJob(jobData);
+                setLoading(false);
+            } catch (err: any) {
+                console.error("Failed to fetch job:", err);
+                setError(err.message || "Failed to load job");
+                setLoading(false);
+            }
+        };
+
+        fetchJobStatus();
+
+        // Poll every 3 seconds if job is still processing
+        const interval = setInterval(() => {
+            if (job?.status && !['completed', 'failed', 'waiting_approval'].includes(job.status)) {
+                fetchJobStatus();
             }
         }, 3000);
-        return () => clearInterval(timer);
-    }, [isPaused, isAborted, progress, activeStage]);
 
-    const handleAbort = () => {
-        setIsAborted(true);
+        return () => clearInterval(interval);
+    }, [jobIdFromUrl, selectedJob, job?.status]);
+
+    const handleCancel = async () => {
+        if (!jobIdFromUrl) return;
+
+        try {
+            // await jobsAPI.cancelJob(jobIdFromUrl);
+            if (onViewChange) {
+                onViewChange('dashboard');
+            } else {
+                router.push('/dashboard');
+            }
+        } catch (err: any) {
+            console.error("Failed to cancel job:", err);
+        }
     };
 
-    const handleRetry = (stageIndex: number) => {
-        setIsAborted(false);
-        setIsPaused(false);
-        setActiveStage(stageIndex);
-        setProgress(stageIndex * 20); // Reset progress for the stage
+    const handleGoToReview = () => {
+        if (onViewChange) {
+            // Stay within dashboard
+            onViewChange('review');
+        } else if (job?.source_video_id && job?.target_languages?.[0]) {
+            // Fallback to URL navigation if not in dashboard
+            router.push(`/workflows/review/${job.source_video_id}?lang=${job.target_languages[0]}&job_id=${jobIdFromUrl}`);
+        }
     };
 
-    const { videoTitle, languageCode } = quickCheckState;
-    const languageName = LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.name || "Spanish";
+    // Map job status to stage
+    const getCurrentStageIndex = () => {
+        if (!job?.status) return 0;
+        const statusToStage: Record<string, number> = {
+            'pending': 0,
+            'downloading': 0,
+            'transcribing': 1,
+            'translating': 2,
+            'voice_cloning': 3,
+            'dubbing': 3,
+            'lip_sync': 4,
+            'uploading': 5,
+            'waiting_approval': 6,
+            'completed': 6,
+            'failed': -1,
+        };
+        return statusToStage[job.status] ?? 0;
+    };
 
-    // Show loading if we have a video ID from URL but state isn't ready yet
-    if (videoIdFromUrl && !quickCheckState.videoId) {
+    const currentStageIndex = getCurrentStageIndex();
+    const totalProgress = job?.progress || (currentStageIndex / PIPELINE_STAGES.length) * 100;
+
+    const videoTitle = job?.title || quickCheckState.videoTitle || "Processing Video";
+    const targetLanguages = job?.target_languages || [];
+
+    if (loading && !job) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-[#0a0a0a]">
-                <OlleeyLoader size={80} />
+            <div className="w-full h-full flex items-center justify-center bg-background">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                    <p className="text-sm font-medium text-muted-foreground">Loading job details...</p>
+                </div>
             </div>
         );
     }
 
+    if (error) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-background p-6">
+                <Card className="max-w-md">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <XCircle className="w-5 h-5 text-destructive" />
+                            Error Loading Job
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground">{error}</p>
+                        <Button onClick={() => onViewChange ? onViewChange('dashboard') : router.push('/dashboard')} className="w-full">
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Back to Dashboard
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    const isProcessing = job?.status && !['completed', 'failed', 'waiting_approval'].includes(job.status);
+    const isFailed = job?.status === 'failed';
+    const isCompleted = job?.status === 'completed' || job?.status === 'waiting_approval';
+
     return (
-        <div className="w-full h-full flex flex-col overflow-hidden bg-[#0a0a0a] text-white selection:bg-olleey-yellow selection:text-black">
-            {/* Action Toolbar */}
-            <div className="border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-6 py-3 shrink-0">
-                <div className="flex items-center gap-4">
-                    <span className="text-[10px] font-black uppercase text-olleey-yellow bg-olleey-yellow/10 px-2 py-0.5 border border-olleey-yellow/20 rounded-full">Active Processing</span>
-                    <Badge className="bg-blue-500/10 border-blue-500/20 text-blue-500 text-[8px] font-black uppercase rounded-full px-3 tracking-widest animate-pulse">Neural_Sync_Live</Badge>
-                    <h1 className="text-lg font-black uppercase tracking-tight text-white/90 truncate max-w-[300px]">
-                        {videoTitle || "Unnamed_Asset_01"}
-                    </h1>
-                </div>
-
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setIsPaused(!isPaused)}
-                            className="rounded-full border-white/10 bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase tracking-widest h-8"
-                            disabled={isAborted}
-                        >
-                            {isPaused ? <Play className="w-3 h-3 mr-2" /> : <Pause className="w-3 h-3 mr-2" />}
-                            {isPaused ? "Resume Pipeline" : "Pause Cluster"}
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={handleAbort}
-                            className="rounded-full bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20 text-[9px] font-black uppercase tracking-widest h-8"
-                            disabled={isAborted}
-                        >
-                            <XOctagon className="w-3 h-3 mr-2" />
-                            Abort Sync
-                        </Button>
-                    </div>
-                    <div className="h-4 w-px bg-white/10" />
-                    <div className="flex flex-col items-end">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-white/20 uppercase">Global Progress</span>
-                        <span className="text-sm font-mono font-bold text-olleey-yellow">{isAborted ? "TERMINATED" : `${Math.floor(progress)}%`}</span>
-                    </div>
-                    <div className="w-32 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <motion.div
-                            className={cn(
-                                "h-full shadow-[0_0_10px_rgba(251,191,36,0.5)]",
-                                isAborted ? "bg-red-500" : "bg-olleey-yellow"
-                            )}
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex-1 flex overflow-hidden">
-                <main className="flex-1 overflow-y-auto custom-scrollbar bg-black relative p-8">
-                    <div className="max-w-7xl mx-auto grid grid-cols-12 gap-12">
-
-                        {/* Center Stage - Rendering View */}
-                        <div className="col-span-7 space-y-8">
-                            <section className="relative aspect-video bg-[#050505] border border-white/5 overflow-hidden rounded-[3rem] shadow-2xl group">
-                                {/* Simulated Neural Scan Lines */}
-                                <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden opacity-20">
-                                    <div className="w-full h-1 bg-olleey-yellow/30 absolute top-0 animate-[scan_4s_linear_infinite]" />
-                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]" />
-                                </div>
-
-                                <video
-                                    src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                                    autoPlay
-                                    muted
-                                    loop
-                                    className="w-full h-full object-cover opacity-40 blur-sm grayscale"
-                                />
-
-                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
-                                    <div className="relative">
-                                        {isAborted ? (
-                                            <XOctagon className="w-16 h-16 text-red-500" />
-                                        ) : isPaused ? (
-                                            <Pause className="w-16 h-16 text-olleey-yellow" />
-                                        ) : (
-                                            <OlleeyLoader size={100} />
-                                        )}
-                                        <div className={cn(
-                                            "absolute inset-0 blur-2xl rounded-full",
-                                            isAborted ? "bg-red-500/20" : "bg-olleey-yellow/20 animate-pulse"
-                                        )} />
-                                    </div>
-                                    <div className="space-y-2 text-center">
-                                        <h3 className="text-2xl font-black uppercase tracking-[0.4em] text-white">
-                                            {isAborted ? "Sync Terminated" : isPaused ? "Processing Suspended" : "Neural Synthesis"}
-                                        </h3>
-                                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-olleey-yellow/60">
-                                            {isAborted ? "Cluster Offline" : `Node OL_NX_7742 ${isPaused ? "Dormant" : "Active"}`}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="absolute bottom-10 left-10 right-10 flex items-center justify-between z-20">
-                                    <div className="flex items-center gap-4 bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-[2rem]">
-                                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                                            <Cpu className="w-5 h-5 text-olleey-yellow" />
-                                        </div>
-                                        <div className="flex flex-col text-left">
-                                            <span className="text-[8px] font-black uppercase tracking-widest text-white/40">Active Compute</span>
-                                            <span className="text-xs font-bold text-white/80">NVIDIA Tensor Core H100</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4 bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-[2rem]">
-                                        <div className="flex flex-col text-right">
-                                            <span className="text-[8px] font-black uppercase tracking-widest text-white/40">Throughput</span>
-                                            <span className="text-xs font-bold text-white/80">244 FPS / ~1.2 TB/s</span>
-                                        </div>
-                                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-green-500/20">
-                                            <Activity className="w-5 h-5 text-green-500" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-                        </div>
-
-                        {/* Sidebar - Stages & Gates */}
-                        <div className="col-span-5 space-y-8">
-                            <section className="space-y-6">
-                                <div className="flex items-center justify-between px-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-xl bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20">
-                                            <Shield className="w-4 h-4 text-olleey-yellow" />
-                                        </div>
-                                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-white/80">Processing Pipeline</h2>
-                                    </div>
-                                    <span className="text-[10px] font-mono text-white/20">5_NODES_ACTIVE</span>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {STAGES.map((stage, i) => (
-                                        <div
-                                            key={stage.id}
-                                            className={cn(
-                                                "p-6 border transition-all duration-500 rounded-[2.5rem] relative overflow-hidden group",
-                                                i < activeStage
-                                                    ? "bg-green-500/[0.03] border-green-500/20"
-                                                    : (i === activeStage ? "bg-olleey-yellow/[0.03] border-olleey-yellow/30 shadow-[0_20px_40px_-12px_rgba(251,191,36,0.1)]" : "bg-white/[0.01] border-white/5 opacity-40")
-                                            )}
-                                        >
-                                            <div className="flex gap-6 relative z-10">
-                                                <div className={cn(
-                                                    "w-14 h-14 rounded-3xl flex items-center justify-center shrink-0 border transition-all duration-500",
-                                                    i < activeStage
-                                                        ? "bg-green-500/10 border-green-500/20 text-green-500"
-                                                        : (i === activeStage
-                                                            ? "bg-olleey-yellow/10 border-olleey-yellow/30 text-olleey-yellow scale-110 shadow-[0_0_20px_rgba(251,191,36,0.2)]"
-                                                            : "bg-white/5 border-white/10 text-white/20")
-                                                )}>
-                                                    <stage.icon className="w-7 h-7" />
-                                                </div>
-                                                <div className="space-y-2 flex-1">
-                                                    <div className="flex items-center justify-between">
-                                                        <h3 className={cn(
-                                                            "text-sm font-black uppercase tracking-widest",
-                                                            i <= activeStage ? "text-white" : "text-white/20"
-                                                        )}>{stage.label}</h3>
-                                                        {i < activeStage && (
-                                                            <div className="flex items-center gap-1 text-green-500">
-                                                                <CheckCircle2 className="w-4 h-4" />
-                                                                <span className="text-[8px] font-black uppercase tracking-widest">Done</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-[11px] font-medium text-white/40 leading-relaxed italic pr-4">{stage.description}</p>
-
-                                                    {/* PROMINENT BUTTONS */}
-                                                    {(i <= activeStage) && (
-                                                        <div className="flex items-center gap-2 pt-4">
-                                                            {i < activeStage && (
-                                                                <Button
-                                                                    onClick={(e) => { e.stopPropagation(); setPreviewingStage(i); }}
-                                                                    className="flex-1 h-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/10 text-[10px] font-black uppercase tracking-widest gap-2 shadow-xl"
-                                                                >
-                                                                    <Eye className="w-4 h-4" /> Preview
-                                                                </Button>
-                                                            )}
-                                                            <Button
-                                                                onClick={(e) => { e.stopPropagation(); handleRetry(i); }}
-                                                                variant="outline"
-                                                                className={cn(
-                                                                    "h-10 rounded-2xl text-[10px] font-black uppercase tracking-widest gap-2 transition-all",
-                                                                    i === activeStage
-                                                                        ? "flex-1 bg-olleey-yellow/10 border-olleey-yellow/30 text-olleey-yellow hover:bg-olleey-yellow/20"
-                                                                        : "px-4 border-white/10 hover:bg-white/5 text-white/40 hover:text-white"
-                                                                )}
-                                                                disabled={isAborted}
-                                                            >
-                                                                <RotateCcw className="w-4 h-4" /> {i === activeStage ? "Restart Stage" : ""}
-                                                            </Button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {i === activeStage && !isPaused && !isAborted && (
-                                                <motion.div
-                                                    className="absolute bottom-0 left-0 h-1 bg-olleey-yellow shadow-[0_0_10px_rgba(251,191,36,0.5)]"
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: '100%' }}
-                                                    transition={{ duration: 10, repeat: Infinity }}
-                                                />
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        </div>
-                    </div>
-                </main>
-            </div>
-
-            {/* Bottom HUD */}
-            <footer className="h-10 border-t border-white/5 bg-[#050505] flex items-center justify-between px-8 shrink-0">
-                <div className="flex items-center gap-10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white/40">Core Neural Engine Online</span>
-                    </div>
-                    <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.2em]">Job_ID: {quickCheckState.videoId || "OL_J_8841"}</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-olleey-yellow/60 italic">Estimated Completion: ~4.2 minutes</span>
-                </div>
-            </footer>
-
-            {/* Neural Gate Preview Modal */}
-            <AnimatePresence>
-                {previewingStage !== null && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-black/95 backdrop-blur-3xl"
+        <div className="w-full h-full flex items-center justify-center bg-background p-6">
+            <div className="w-full max-w-2xl space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewChange ? onViewChange('dashboard') : router.push('/dashboard')}
                     >
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0, y: 30 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, y: 30 }}
-                            className="w-full max-w-5xl bg-[#050505] border border-white/10 rounded-[4rem] overflow-hidden shadow-[0_0_120px_rgba(0,0,0,0.9)] relative"
-                        >
-                            <div className="h-20 border-b border-white/5 bg-white/[0.02] flex items-center justify-between px-10">
-                                <div className="flex items-center gap-5">
-                                    <div className="w-12 h-12 bg-olleey-yellow/10 rounded-2xl flex items-center justify-center border border-olleey-yellow/20">
-                                        {React.createElement(STAGES[previewingStage].icon, { className: "w-6 h-6 text-olleey-yellow" })}
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back
+                    </Button>
+                    {isCompleted && (
+                        <Button onClick={handleGoToReview}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            Review Video
+                        </Button>
+                    )}
+                </div>
+
+                {/* Main Card */}
+                <Card>
+                    <CardHeader className="text-center pb-4">
+                        <div className="space-y-2">
+                            <h1 className="text-2xl font-semibold">{videoTitle}</h1>
+                            <div className="flex items-center justify-center gap-2 flex-wrap">
+                                {targetLanguages.map((lang: string) => {
+                                    const langInfo = LANGUAGE_OPTIONS.find(l => l.code === lang);
+                                    return (
+                                        <Badge key={lang} variant="outline">
+                                            {langInfo?.flag} {langInfo?.name || lang}
+                                        </Badge>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {/* Status Badge */}
+                        <div className="flex justify-center">
+                            {isProcessing && (
+                                <Badge variant="secondary" className="animate-pulse px-4 py-2">
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Processing
+                                </Badge>
+                            )}
+                            {isCompleted && (
+                                <Badge className="bg-emerald-500 px-4 py-2">
+                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                    Complete
+                                </Badge>
+                            )}
+                            {isFailed && (
+                                <Badge variant="destructive" className="px-4 py-2">
+                                    <XCircle className="w-4 h-4 mr-2" />
+                                    Failed
+                                </Badge>
+                            )}
+                        </div>
+
+                        {/* Progress */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                    {isCompleted ? 'Completed' :
+                                     isFailed ? 'Failed' :
+                                     PIPELINE_STAGES[currentStageIndex]?.label || 'Processing'}
+                                </span>
+                                <span className="font-semibold">{Math.round(totalProgress)}%</span>
+                            </div>
+                            <Progress value={totalProgress} className="h-2" />
+                        </div>
+
+                        {/* Pipeline Steps */}
+                        <div className="flex justify-between items-center pt-2">
+                            {PIPELINE_STAGES.map((stage, index) => {
+                                const isActive = index === currentStageIndex && isProcessing;
+                                const isComplete = index < currentStageIndex || isCompleted;
+                                const isStageFailed = job?.status === 'failed' && index === currentStageIndex;
+
+                                return (
+                                    <div key={stage.id} className="flex flex-col items-center gap-2">
+                                        <div className={cn(
+                                            "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all",
+                                            isActive && "bg-primary text-primary-foreground ring-4 ring-primary/20",
+                                            isComplete && "bg-emerald-500 text-white",
+                                            isStageFailed && "bg-destructive text-destructive-foreground",
+                                            !isActive && !isComplete && !isStageFailed && "bg-muted text-muted-foreground"
+                                        )}>
+                                            {isComplete ? (
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            ) : isActive ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : isStageFailed ? (
+                                                <XCircle className="w-4 h-4" />
+                                            ) : (
+                                                index + 1
+                                            )}
+                                        </div>
+                                        <span className={cn(
+                                            "text-[10px] text-center max-w-[60px] leading-tight",
+                                            isActive && "text-primary font-medium",
+                                            isComplete && "text-emerald-600",
+                                            !isActive && !isComplete && "text-muted-foreground"
+                                        )}>
+                                            {stage.label}
+                                        </span>
                                     </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Gate Validation Protocol</span>
-                                        <h2 className="text-xl font-black uppercase tracking-widest text-white">{STAGES[previewingStage].label}</h2>
-                                    </div>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => setPreviewingStage(null)}
-                                    className="h-12 w-12 rounded-full p-0 hover:bg-white/10 hover:rotate-90 transition-all duration-500"
-                                >
-                                    <XOctagon className="w-6 h-6 text-white/40" />
+                                );
+                            })}
+                        </div>
+
+                        {/* Error Alert */}
+                        {isFailed && (
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                    {job?.error_message || 'An error occurred during processing. Please try again or contact support.'}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
+                        {/* Actions */}
+                        {isProcessing && (
+                            <div className="pt-4 flex justify-center">
+                                <Button variant="outline" onClick={handleCancel}>
+                                    Cancel Processing
                                 </Button>
                             </div>
-
-                            <div className="p-10 space-y-10">
-                                <div className="aspect-video bg-black rounded-[3rem] overflow-hidden border border-white/10 relative group shadow-2xl">
-                                    <video
-                                        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                                        autoPlay
-                                        muted
-                                        loop
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 p-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <Badge className="bg-green-500/20 border-green-500/30 text-green-400 text-[10px] font-black uppercase rounded-xl px-4 py-1.5 tracking-widest shadow-lg">Stage_Sync_Verified</Badge>
-                                                <div className="h-4 w-px bg-white/10" />
-                                                <span className="text-xs font-mono text-white/60 tracking-wider">TS: 00:02:44:12</span>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">Neural Confidence</span>
-                                                    <span className="text-sm font-bold text-olleey-yellow font-mono">0.9841</span>
-                                                </div>
-                                                <div className="w-10 h-10 rounded-full bg-olleey-yellow/10 flex items-center justify-center border border-olleey-yellow/20">
-                                                    <Activity className="w-5 h-5 text-olleey-yellow animate-pulse" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-8">
-                                    <div className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 space-y-3 group hover:bg-white/[0.05] transition-colors">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Operational Status</span>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                                            <p className="text-sm font-black text-green-500 uppercase tracking-widest">Optimized</p>
-                                        </div>
-                                    </div>
-                                    <div className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 space-y-3 group hover:bg-white/[0.05] transition-colors">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Data Integrity</span>
-                                        <p className="text-sm font-black text-white uppercase tracking-widest">100% Validated</p>
-                                    </div>
-                                    <div className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 space-y-3 group hover:bg-white/[0.05] transition-colors">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Artifact Detection</span>
-                                        <p className="text-sm font-black text-olleey-yellow uppercase tracking-widest italic">Zero Anomalies</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <style jsx global>{`
-                @keyframes scan {
-                    from { transform: translateY(0); }
-                    to { transform: translateY(1080px); }
-                }
-            `}</style>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }
