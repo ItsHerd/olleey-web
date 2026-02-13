@@ -41,6 +41,27 @@ export const YC_CEO_SPANISH_TRANSLATION = {
 };
 
 /**
+ * Mock transcript and translation data for testing inline editing
+ */
+export const YC_CEO_DEMO_TRANSCRIPT = {
+  job_id: "demo_job_yc_ceo",
+  source_language: "en",
+  transcript_text: "When you're building an early-stage startup, the most important thing is to make something people want. That sounds obvious, but it's actually really hard to do in practice. You need to talk to users constantly, iterate quickly, and be willing to change your product based on what you learn. The key is to get something out there fast, even if it's not perfect, and then improve it based on real feedback from real users.",
+  confidence_score: 0.95,
+  created_at: new Date().toISOString()
+};
+
+export const YC_CEO_DEMO_TRANSLATION = {
+  job_id: "demo_job_yc_ceo",
+  target_language: "es",
+  source_language: "en",
+  translated_text: "Cuando estás construyendo una startup en etapa temprana, lo más importante es crear algo que la gente quiera. Eso suena obvio, pero en realidad es muy difícil de hacer en la práctica. Necesitas hablar con los usuarios constantemente, iterar rápidamente y estar dispuesto a cambiar tu producto según lo que aprendas. La clave es sacar algo rápido, incluso si no es perfecto, y luego mejorarlo basándote en comentarios reales de usuarios reales.",
+  confidence_score: 0.92,
+  translation_engine: "elevenlabs",
+  created_at: new Date().toISOString()
+};
+
+/**
  * Check if a user is the demo user
  */
 export function isDemoUser(userId?: string): boolean {

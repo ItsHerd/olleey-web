@@ -181,7 +181,7 @@ export function useSupabaseVideos(
 export function useSupabaseJobs(
   userId: string | undefined,
   filters?: { status?: string; project_id?: string; limit?: number },
-  options?: { enabled?: boolean; realtime?: boolean }
+  options?: { enabled?: boolean; realtime?: boolean; showToasts?: boolean }
 ) {
   const [jobs, setJobs] = useState<SupabaseJob[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,6 +189,7 @@ export function useSupabaseJobs(
 
   const enabled = options?.enabled !== false;
   const realtime = options?.realtime !== false;
+  const showToasts = options?.showToasts !== false; // Default to showing toasts
   const limit = filters?.limit || 100;
 
   const fetchJobs = useCallback(async () => {
@@ -261,12 +262,39 @@ export function useSupabaseJobs(
       // Handle different event types
       if (payload.eventType === 'INSERT') {
         setJobs((prev) => [payload.new as SupabaseJob, ...prev]);
+
+        // Show toast for new job (if enabled)
+        if (showToasts && typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('olleey-toast', {
+            detail: { message: 'Job created', type: 'success' }
+          }));
+        }
       } else if (payload.eventType === 'UPDATE') {
+        const oldJob = jobs.find(j => j.id === payload.old?.id);
+        const newJob = payload.new as SupabaseJob;
+
         setJobs((prev) =>
           prev.map((job) =>
-            job.id === payload.new.id ? (payload.new as SupabaseJob) : job
+            job.id === newJob.id ? newJob : job
           )
         );
+
+        // Show toast for status changes (if enabled)
+        if (showToasts && oldJob && oldJob.status !== newJob.status && typeof window !== 'undefined') {
+          if (newJob.status === 'completed' || newJob.status === 'waiting_approval') {
+            window.dispatchEvent(new CustomEvent('olleey-toast', {
+              detail: { message: '✅ Video ready for review!', type: 'success' }
+            }));
+          } else if (newJob.status === 'failed') {
+            window.dispatchEvent(new CustomEvent('olleey-toast', {
+              detail: { message: '❌ Job failed', type: 'error' }
+            }));
+          } else if (newJob.status === 'processing' && oldJob.status !== 'processing') {
+            window.dispatchEvent(new CustomEvent('olleey-toast', {
+              detail: { message: '🎬 Processing video...', type: 'info' }
+            }));
+          }
+        }
       } else if (payload.eventType === 'DELETE') {
         setJobs((prev) => prev.filter((job) => job.id !== payload.old.id));
       }

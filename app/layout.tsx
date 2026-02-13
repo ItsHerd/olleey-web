@@ -4,6 +4,7 @@ import { DM_Sans } from "next/font/google";
 import ThemeProviderWrapper from "./ThemeProviderWrapper";
 import { ThemeProvider } from "@/lib/ThemeContext";
 import { ToastProvider } from "@/components/ui/use-toast";
+import { ToastListener } from "@/components/ToastListener";
 import { AuthProvider } from "@/lib/AuthContext";
 import { AuthInitializer } from "@/components/AuthInitializer";
 
@@ -37,6 +38,7 @@ export default function RootLayout({
             <ToastProvider>
               <AuthProvider>
                 <AuthInitializer />
+                <ToastListener />
                 {children}
               </AuthProvider>
             </ToastProvider>

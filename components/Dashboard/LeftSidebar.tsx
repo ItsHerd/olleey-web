@@ -18,9 +18,15 @@ import {
   Globe,
   Share2,
   Sun,
-  Moon
+  Moon,
+  ChevronDown,
+  Check,
+  Home,
+  Bell
 } from "lucide-react";
-import { ViewType } from "./DashboardV2Layout";
+import { ExpandableTabs } from "@/components/ui/expandable-tabs";
+import { ViewType } from "./DashboardLayout";
+import { CreateProjectModal } from "@/components/ui/create-project-modal";
 import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
 import { useDashboardChannels } from "@/lib/useDashboardChannels";
@@ -75,9 +81,14 @@ export function LeftSidebar({
   onClose
 }: LeftSidebarProps) {
   const { user } = useAuth();
-  const { selectedProject } = useProject();
+  const { projects, selectedProject, setSelectedProject } = useProject();
   const { setTheme } = useTheme();
   const isDark = theme === "dark";
+
+  const [editChannel, setEditChannel] = React.useState<LanguageChannel | null>(null);
+  const [editConnection, setEditConnection] = React.useState<YouTubeConnection | null>(null);
+  const [newLanguage, setNewLanguage] = React.useState("");
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = React.useState(false);
 
   const { channels, loading: channelsLoading, refetch: refetchChannels } = useDashboardChannels({
     projectId: selectedProject?.id,
@@ -102,9 +113,31 @@ export function LeftSidebar({
     enabled: !!user?.id && !!user
   });
 
-  const [editChannel, setEditChannel] = React.useState<LanguageChannel | null>(null);
-  const [editConnection, setEditConnection] = React.useState<YouTubeConnection | null>(null);
-  const [newLanguage, setNewLanguage] = React.useState("");
+  const tabs = [
+    { title: "Home", icon: Home },
+    { title: "Messages", icon: Bell },
+    { type: "separator" as const },
+    { title: "Settings", icon: Settings },
+    { title: "Guardrails", icon: Shield },
+    { title: "Support", icon: HelpCircle },
+  ];
+
+  const getSelectedIndex = () => {
+    switch (currentView) {
+      case "dashboard": return 0;
+      case "notifications": return 1;
+      case "settings": return 3;
+      case "guardrails": return 4;
+      case "support": return 5;
+      default: return null;
+    }
+  };
+
+  const handleTabChange = (index: number | null) => {
+    if (index === null) return;
+    const views: ViewType[] = ["dashboard", "notifications", "dashboard", "settings", "guardrails", "support"];
+    onViewChange?.(views[index]);
+  };
 
   const handleUpdateChannelLanguage = async () => {
     if (!editChannel || !newLanguage) return;
@@ -195,21 +228,81 @@ export function LeftSidebar({
 
       {/* Header Profile */}
       <div className="flex items-center justify-between mb-10 relative z-10">
-        <div
-          className="flex flex-col cursor-pointer group"
-          onClick={() => onViewChange("account")}
-        >
-          <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${mutedTextClass} mb-1 group-hover:text-[#D97757] transition-colors`}>Workspace</span>
-          <h2 className={`text-2xl font-serif ${textClass} tracking-tight group-hover:text-[#D97757] transition-colors`}>
-            {user?.email?.split('@')[0] || "User"}
-          </h2>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div
+              className="flex flex-col cursor-pointer group"
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${mutedTextClass} group-hover:text-[#D97757] transition-colors`}>
+                  {selectedProject?.name || "All Instances"}
+                </span>
+                <ChevronDown className={`w-3 h-3 ${mutedTextClass} group-hover:text-[#D97757] transition-all`} />
+              </div>
+              <h2 className={`text-2xl font-serif ${textClass} tracking-tight group-hover:text-[#D97757] transition-colors`}>
+                {user?.email?.split('@')[0] || "User"}
+              </h2>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className={`w-64 ${isDark ? "bg-[#0A0A0A] border-white/10" : "bg-white border-gray-200"} rounded-2xl shadow-2xl p-2 z-[100]`}>
+            <DropdownMenuLabel className={`text-[9px] font-black ${mutedTextClass} uppercase tracking-[0.25em] px-3 py-3 font-mono opacity-70`}>
+              Project Directory
+            </DropdownMenuLabel>
+            <div className="space-y-1">
+              <DropdownMenuItem
+                onClick={() => setSelectedProject(null)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${selectedProject === null
+                  ? (isDark ? 'bg-[#D97757]/10 text-[#D97757]' : 'bg-[#D97757]/5 text-[#B85C3D] font-bold')
+                  : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-100/50')
+                  }`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${selectedProject === null ? 'bg-[#D97757] shadow-[0_0_8px_rgba(217,119,87,0.6)]' : (isDark ? 'bg-white/10' : 'bg-gray-300')}`} />
+                <span className="truncate text-xs font-semibold font-mono">All Instances</span>
+                {selectedProject === null && <Check className="ml-auto w-3.5 h-3.5" />}
+              </DropdownMenuItem>
+
+              {projects.map((project) => (
+                <DropdownMenuItem
+                  key={project.id}
+                  onClick={() => setSelectedProject(project)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${selectedProject?.id === project.id
+                    ? (isDark ? 'bg-[#D97757]/10 text-[#D97757]' : 'bg-[#D97757]/5 text-[#B85C3D] font-bold')
+                    : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-100/50')
+                    }`}
+                >
+                  <div className={`w-1.5 h-1.5 rounded-full ${selectedProject?.id === project.id ? 'bg-[#D97757] shadow-[0_0_8px_rgba(217,119,87,0.6)]' : (isDark ? 'bg-white/10' : 'bg-gray-300')}`} />
+                  <span className="truncate text-xs font-semibold font-mono">{project.name}</span>
+                  {selectedProject?.id === project.id && <Check className="ml-auto w-3.5 h-3.5" />}
+                </DropdownMenuItem>
+              ))}
+            </div>
+            <DropdownMenuSeparator className={`my-2 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`} />
+            <DropdownMenuItem
+              onClick={() => setIsCreateProjectModalOpen(true)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-[#D97757] hover:bg-[#D97757]/10 font-bold transition-all group/new`}
+            >
+              <Plus className="w-4 h-4 group-hover/new:rotate-90 transition-transform" />
+              <span className="text-[10px] uppercase tracking-widest font-mono">Create New Instance</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <button
           onClick={onClose}
           className={`p-2 rounded-lg border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
         >
           <ChevronLeft className="w-4 h-4 text-gray-400" />
         </button>
+      </div>
+
+      {/* Navigation Tabs - Moved from RightSidebar */}
+      <div className="relative z-10 mb-6">
+        <ExpandableTabs
+          tabs={tabs}
+          selected={getSelectedIndex()}
+          activeColor={isDark ? "text-white" : "text-gray-900"}
+          className={isDark ? `border-[#2A2A2A] bg-white/[0.02]` : `border-gray-300/50 bg-gray-50/50`}
+          onChange={handleTabChange}
+        />
       </div>
 
       {/* Search Bar - Integrated style */}
@@ -602,6 +695,14 @@ export function LeftSidebar({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <CreateProjectModal
+        isOpen={isCreateProjectModalOpen}
+        onClose={() => setIsCreateProjectModalOpen(false)}
+        onSuccess={() => {
+          setIsCreateProjectModalOpen(false);
+          // refreshProjects is called by the modal's internal logic/ProjectContext
+        }}
+      />
     </div>
   );
 }

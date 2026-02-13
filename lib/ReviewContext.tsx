@@ -11,6 +11,7 @@ import { useDemo } from './DemoContext';
 interface QuickCheckState {
     isOpen: boolean;
     videoId: string | null;
+    jobId?: string | null;
     languageCode: string | null;
     originalVideoUrl?: string;
     dubbedVideoUrl?: string;
@@ -28,6 +29,7 @@ interface ReviewContextType {
     quickCheckState: QuickCheckState;
     openReview: (params: {
         videoId: string;
+        jobId?: string;
         languageCode: string;
         originalVideoUrl?: string;
         dubbedVideoUrl?: string;
@@ -39,6 +41,7 @@ interface ReviewContextType {
         isApproved?: boolean;
         approvedAt?: string;
         status?: 'queued' | 'live' | 'draft' | 'processing' | 'not-started' | 'failed' | 'completed' | 'pending' | 'downloading' | 'voice_cloning' | 'lip_sync' | 'uploading' | 'waiting_approval' | 'ready';
+        navigate?: boolean; // Optional flag to control navigation (defaults to true)
     }) => void;
     closeReview: () => void;
     handleApprove: () => Promise<void>;
@@ -71,8 +74,13 @@ export function ReviewProvider({ children }: { children: React.ReactNode }) {
             ...params,
         });
 
-        // Navigate to review page for all videos (preview functionality is merged into review page)
-        router.push(`/workflows/review/${params.videoId}?lang=${params.languageCode || 'es'}`, { scroll: false });
+        // Only navigate if explicitly requested (defaults to true for backward compatibility)
+        // When navigate=false, we're staying within the dashboard
+        if (params.navigate !== false) {
+            // Navigate to review page for all videos (preview functionality is merged into review page)
+            const jobIdParam = params.jobId ? `&job_id=${params.jobId}` : '';
+            router.push(`/workflows/review/${params.videoId}?lang=${params.languageCode || 'es'}${jobIdParam}`, { scroll: false });
+        }
     }, [router]);
 
     const closeReview = useCallback(() => {

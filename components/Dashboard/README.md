@@ -1,4 +1,4 @@
-# Dashboard V2 - Cowork-Inspired Design
+# Dashboard - Cowork-Inspired Design
 
 A modern, workflow-first dashboard for Olleey, inspired by Anthropic's Cowork mode principles.
 
@@ -35,8 +35,8 @@ A modern, workflow-first dashboard for Olleey, inspired by Anthropic's Cowork mo
 ## 📦 Component Structure
 
 ```
-DashboardV2/
-├── DashboardV2Layout.tsx      # Main layout coordinator
+Dashboard/
+├── DashboardLayout.tsx      # Main layout coordinator
 ├── LeftSidebar.tsx             # Navigation & user profile
 ├── CenterPanel.tsx             # View router
 ├── RightSidebar.tsx            # Contextual details
@@ -63,13 +63,13 @@ DashboardV2/
 
 ### Basic Integration
 
-Replace your existing dashboard with Dashboard V2:
+Replace your existing dashboard with Dashboard:
 
 ```tsx
-import DashboardV2Layout from "@/components/DashboardV2/DashboardV2Layout";
+import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 
 export default function DashboardPage() {
-  return <DashboardV2Layout />;
+  return <DashboardLayout />;
 }
 ```
 
@@ -136,7 +136,7 @@ export function MyCustomView({ theme }: { theme: string }) {
 }
 ```
 
-2. Add to `ViewType` in `DashboardV2Layout.tsx`:
+2. Add to `ViewType` in `DashboardLayout.tsx`:
 ```tsx
 export type ViewType = "dashboard" | "videos" | "my-view";
 ```
@@ -165,7 +165,7 @@ Toggle via `useTheme()` hook.
 
 ## 📊 State Management
 
-- **Navigation**: Local state in `DashboardV2Layout`
+- **Navigation**: Local state in `DashboardLayout`
 - **Jobs Data**: `useDashboardJobs` hook
 - **Selection**: `SelectedItem` interface for drill-down
 - **Sidebar**: `rightSidebarOpen` boolean

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SelectedItem } from "../DashboardV2Layout";
+import { SelectedItem } from "../DashboardLayout";
 import { JobCard } from "../components/JobCard";
 import { NewLocalizationModal } from "../components/NewLocalizationModal";
 import { AgentView } from "./AgentView";

@@ -1,17 +1,17 @@
 "use client";
 
-import DashboardV2Layout from "@/components/DashboardV2/DashboardV2Layout";
+import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import { DemoProvider } from "@/lib/DemoContext";
 import { ReviewProvider } from "@/lib/ReviewContext";
 import { useAuth } from "@/lib/AuthContext";
 
-export default function DashboardV2Page() {
+export default function DashboardPage() {
   const { user } = useAuth();
 
   return (
     <DemoProvider userEmail={user?.email}>
       <ReviewProvider>
-        <DashboardV2Layout />
+        <DashboardLayout />
       </ReviewProvider>
     </DemoProvider>
   );

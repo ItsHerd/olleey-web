@@ -2,14 +2,14 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Play, Clock, AlertCircle, Home, Bell, Settings, Shield, HelpCircle } from "lucide-react";
-import { ExpandableTabs } from "@/components/ui/expandable-tabs";
-import { SelectedItem, ViewType } from "./DashboardV2Layout";
+import { ChevronRight, Play, Clock, AlertCircle } from "lucide-react";
+import { SelectedItem, ViewType } from "./DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
 import { useVideos } from "@/lib/useVideos";
+import { useReview } from "@/lib/ReviewContext";
 import { API_BASE_URL } from "@/lib/api";
 
 interface RightSidebarProps {
@@ -31,13 +31,14 @@ export function RightSidebar({
 }: RightSidebarProps) {
   const { user } = useAuth();
   const { selectedProject } = useProject();
+  const { openReview } = useReview();
   const userId = user?.id;
   const isDark = theme === "dark";
   const bgClass = isDark ? "bg-[#0D0D0D]" : "bg-[#EBEBDC]";
-  const borderClass = isDark ? "border-white/10" : "border-gray-200";
+  const borderClass = isDark ? "border-[#2A2A2A]" : "border-gray-300/50";
   const textClass = isDark ? "text-white" : "text-gray-900";
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
-  const glassBgClass = isDark ? "bg-white/[0.05]" : "bg-gray-100/50";
+  const glassBgClass = isDark ? "bg-white/[0.03]" : "bg-gray-100/30";
 
   const { jobs, loading, error: jobsError } = useDashboardJobs({
     projectId: selectedProject?.id,
@@ -82,47 +83,10 @@ export function RightSidebar({
     ['pending', 'downloading', 'processing', 'uploading'].includes(j.status)
   );
 
-  const tabs = [
-    { title: "Home", icon: Home },
-    { title: "Messages", icon: Bell },
-    { type: "separator" as const },
-    { title: "Settings", icon: Settings },
-    { title: "Guardrails", icon: Shield },
-    { title: "Support", icon: HelpCircle },
-  ];
-
-  const getSelectedIndex = () => {
-    switch (currentView) {
-      case "dashboard": return 0;
-      case "notifications": return 1;
-      case "settings": return 3;
-      case "guardrails": return 4;
-      case "support": return 5;
-      default: return null;
-    }
-  };
-
-  const handleTabChange = (index: number | null) => {
-    if (index === null) return;
-    const views: ViewType[] = ["dashboard", "notifications", "dashboard", "settings", "guardrails", "support"];
-    onViewChange?.(views[index]);
-  };
-
   return (
     <div className={`h-full ${bgClass} flex flex-col p-6 space-y-6 overflow-hidden relative`}>
       {/* Subtle Background Glow */}
       <div className="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
-
-      {/* Navigation Tabs */}
-      <div className="relative z-10">
-        <ExpandableTabs
-          tabs={tabs}
-          selected={getSelectedIndex()}
-          activeColor={isDark ? "text-white" : "text-gray-900"}
-          className={isDark ? "border-white/10 bg-white/[0.02]" : "border-gray-200 bg-gray-50/50"}
-          onChange={handleTabChange}
-        />
-      </div>
 
       {/* Header */}
       <div className="flex items-center justify-between relative z-10">
@@ -164,8 +128,28 @@ export function RightSidebar({
                     key={job.job_id}
                     whileHover={{ x: -4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
                     onClick={() => {
+                      const firstTargetLang = job.target_languages?.[0] || "es";
+
+                      // Set selected item
                       onSelectItem?.({ type: "job", id: job.job_id, data: job });
+
                       if (job.status === 'waiting_approval') {
+                        // Open review with proper data
+                        openReview({
+                          videoId: job.source_video_id,
+                          languageCode: firstTargetLang,
+                          jobId: job.job_id,
+                          originalVideoUrl: (video as any)?.storage_url || (video as any)?.video_url || "",
+                          dubbedVideoUrl: "", // Will be fetched in ReviewView
+                          videoTitle: video?.title || job.source_video_id,
+                          videoDescription: video?.description || "",
+                          thumbnailUrl: video?.thumbnail_url || "",
+                          localizedTitle: "",
+                          localizedDescription: "",
+                          isApproved: false,
+                          approvedAt: video?.published_at || undefined,
+                          navigate: false // Stay within dashboard
+                        });
                         onViewChange?.("review");
                       } else {
                         onViewChange?.("dashboard");
@@ -307,7 +291,7 @@ export function RightSidebar({
         <Button
           variant="outline"
           onClick={() => onViewChange?.("manual_workflow")}
-          className={`w-full flex items-center justify-center gap-2 h-10 border-dashed ${isDark ? "border-white/20 hover:border-white/40 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900"} transition-all text-xs font-medium uppercase tracking-wider`}
+          className={`w-full flex items-center justify-center gap-2 h-10 border-dashed ${isDark ? "border-[#2A2A2A] hover:border-white/40 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "border-gray-400/50 hover:border-gray-400 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900"} transition-all text-xs font-medium uppercase tracking-wider`}
         >
           <div className={`w-4 h-4 rounded-full border ${isDark ? "border-white/30" : "border-gray-400"} flex items-center justify-center`}>
             <span className="text-[9px] leading-none">+</span>

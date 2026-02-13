@@ -47,7 +47,7 @@ const spanVariants = {
   exit: { width: 0, opacity: 0 },
 };
 
-const transition = { delay: 0.1, type: "spring", bounce: 0, duration: 0.6 };
+const transition = { delay: 0.1, type: "spring" as const, bounce: 0, duration: 0.6 };
 
 export function ExpandableTabs({
   tabs,
@@ -57,12 +57,12 @@ export function ExpandableTabs({
   onChange,
 }: ExpandableTabsProps) {
   const [internalSelected, setInternalSelected] = React.useState<number | null>(null);
-  const outsideClickRef = React.useRef(null);
+  const outsideClickRef = React.useRef<HTMLDivElement>(null);
 
   // Use controlled selected if provided, otherwise use internal state
   const selected = controlledSelected !== undefined ? controlledSelected : internalSelected;
 
-  useOnClickOutside(outsideClickRef, () => {
+  useOnClickOutside(outsideClickRef as any, () => {
     if (controlledSelected === undefined) {
       setInternalSelected(null);
     }

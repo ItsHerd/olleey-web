@@ -20,7 +20,7 @@ export interface SelectedItem {
 }
 
 
-export default function DashboardV2Layout() {
+export default function DashboardLayout() {
   const { theme } = useTheme();
   const { user, loading: authLoading } = useAuth();
   const { selectedProject } = useProject();

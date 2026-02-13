@@ -9,7 +9,7 @@ import { useVideos } from "@/lib/useVideos";
 import { useSupabaseChannels } from "@/lib/useSupabase";
 import { Loader2, Rocket } from "lucide-react";
 import { motion } from "framer-motion";
-import { ViewType } from "../DashboardV2Layout";
+import { ViewType } from "../DashboardLayout";
 
 interface ManualWorkflowViewProps {
     onViewChange?: (view: ViewType) => void;
@@ -75,11 +75,9 @@ export function ManualWorkflowView({ onViewChange, theme }: ManualWorkflowViewPr
 
     if (isLoading) {
         return (
-            <div className={`flex flex-col items-center justify-center h-full p-8 animate-pulse`}>
-                <div className={`w-20 h-20 rounded-[2.5rem] ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200"} border flex items-center justify-center mb-8`}>
-                    <Loader2 className={`h-10 w-10 animate-spin text-olleey-yellow stroke-[1.5px]`} />
-                </div>
-                <p className={`text-xs font-black uppercase tracking-[0.4em] ${isDark ? "text-white/30" : "text-gray-400"}`}>Calibrating Engines...</p>
+            <div className={`flex flex-col items-center justify-center h-full p-8`}>
+                <Loader2 className={`h-8 w-8 animate-spin text-[#D97757] mb-4`} />
+                <p className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>Calibrating Engines...</p>
             </div>
         );
     }
@@ -90,20 +88,19 @@ export function ManualWorkflowView({ onViewChange, theme }: ManualWorkflowViewPr
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="max-w-5xl mx-auto space-y-6"
+                className="max-w-4xl mx-auto space-y-6"
             >
-                {/* Simplified Header */}
-                <motion.div variants={itemVariants} className={`relative group rounded-3xl border ${isDark ? "border-white/5 bg-[#0c0c0c]" : "border-gray-200 bg-white"} p-8 overflow-hidden shadow-2xl`}>
-                    <div className={`absolute inset-0 ${isDark ? "bg-gradient-to-br from-white/5 to-transparent" : "bg-gradient-to-br from-gray-50 to-transparent"} pointer-events-none`} />
-                    <div className="relative z-10">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-olleey-yellow/10 border border-olleey-yellow/20 text-[9px] font-black uppercase tracking-[0.2em] text-olleey-yellow mb-4 shadow-sm">
-                            <Rocket className="w-3 h-3" /> Deployment
+                {/* Compact Header */}
+                <motion.div variants={itemVariants} className="flex items-center justify-between mb-8">
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Rocket className="w-4 h-4 text-[#D97757]" />
+                            <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"} tracking-tight`}>
+                                Manual Ingestion
+                            </h1>
                         </div>
-                        <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"} mb-2 tracking-tight`}>
-                            Manual Ingestion
-                        </h1>
-                        <p className={`${isDark ? "text-gray-400" : "text-gray-600"} text-sm max-w-xl leading-relaxed`}>
-                            Configure your AI dubbing pipeline and launch new localizations.
+                        <p className={`${isDark ? "text-gray-500" : "text-gray-500"} text-xs font-medium uppercase tracking-widest`}>
+                            Configure your AI dubbing pipeline
                         </p>
                     </div>
                 </motion.div>

@@ -72,6 +72,7 @@ export function ManualProcessView({
     const { user } = useAuth();
     const userId = user?.id;
     const [activeTab, setActiveTab] = useState<SourceTab>("channel");
+    const [currentStep, setCurrentStep] = useState(1);
     const [sourceVideoUrl, setSourceVideoUrl] = useState("");
     const [sourceChannelId, setSourceChannelId] = useState("");
     const [selectedVideoId, setSelectedVideoId] = useState("");
@@ -113,6 +114,12 @@ export function ManualProcessView({
     const inputBorderClass = isDark ? "border-white/5" : "border-gray-200";
     const overlayClass = isDark ? "bg-black/20" : "bg-gray-100/50";
     const dividerClass = isDark ? "divide-white/[0.03]" : "divide-gray-100";
+
+    const steps = [
+        { id: 1, name: "Source", icon: Radio },
+        { id: 2, name: "Configure", icon: SlidersHorizontal },
+        { id: 3, name: "Targets", icon: Globe },
+    ];
 
     // Load videos when channel is selected
     useEffect(() => {
@@ -448,96 +455,302 @@ export function ManualProcessView({
     })();
 
     return (
-        <div className={`animate-in fade-in slide-in-from-bottom-8 duration-700 w-full mx-auto ${compact ? 'py-0' : 'py-8 max-w-7xl'}`}>
-            <div className={`grid grid-cols-1 ${compact ? 'lg:grid-cols-1 gap-6' : 'lg:grid-cols-3 gap-12'}`}>
-                {/* Main Configuration Flow */}
-                <div className={`${compact ? 'w-full space-y-6' : 'lg:col-span-2 space-y-10'}`}>
-
-                    {/* STAGE 01: SOURCE HUB */}
-                    <div className="space-y-6">
-                        {!compact && (
-                            <div className="flex items-center gap-6 group">
-                                <div className="flex items-center justify-center w-10 h-10 bg-olleey-yellow text-black font-black text-[13px] rounded-2xl shrink-0 transition-transform group-hover:rotate-12">01</div>
-                                <div className="flex flex-col">
-                                    <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textClass}`}>Source Acquisition</h3>
-                                    <p className={`text-[11px] ${textSecondaryClass} font-medium tracking-tight opacity-50`}>Select the root asset for global synchronization</p>
-                                </div>
-                                <div className={`h-[1px] flex-1 ${borderClass} opacity-20 mx-4`}></div>
-                            </div>
-                        )}
-
-                        <div className="space-y-6">
-                            <div className={`${cardClass} border ${borderClass} rounded-[1.5rem] p-1.5 ${activeBgClass} backdrop-blur-xl shadow-sm`}>
-                                <div className="flex items-center gap-1.5">
-                                    {(['channel', 'url', 'upload', 'drafts'] as SourceTab[]).map((tab) => (
-                                        <button
-                                            key={tab}
-                                            onClick={() => setActiveTab(tab)}
-                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 relative group/btn border ${activeTab === tab
-                                                ? 'bg-olleey-yellow text-black border-olleey-yellow shadow-sm'
-                                                : `border-transparent ${textSecondaryClass} ${isDark ? 'hover:text-white hover:bg-white/5 hover:border-white/10' : 'hover:text-gray-900 hover:bg-gray-50 hover:border-gray-200'}`
-                                                }`}
-                                        >
-                                            <span className="flex items-center justify-center gap-2">
-                                                {tab === 'channel' && <Youtube className="w-3.5 h-3.5" />}
-                                                {tab === 'url' && <LinkIcon className="w-3.5 h-3.5" />}
-                                                {tab === 'upload' && <UploadIcon className="w-3.5 h-3.5" />}
-                                                {tab === 'drafts' && <FolderOpen className="w-3.5 h-3.5" />}
-                                                {tab}
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <motion.div
-                                key={activeTab}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`${cardClass} border ${borderClass} rounded-[2.5rem] ${compact ? 'p-6' : 'p-8 lg:p-12'} transition-all ${activeBgClass} overflow-hidden relative`}
+        <div className={`w-full mx-auto ${compact ? 'py-0' : 'py-4 max-w-5xl'}`}>
+            {/* Compact Stepper */}
+            <div className="flex items-center justify-between mb-8 px-4">
+                {steps.map((step, idx) => {
+                    const Icon = step.icon;
+                    const isActive = currentStep === step.id;
+                    const isCompleted = currentStep > step.id;
+                    return (
+                        <React.Fragment key={step.id}>
+                            <div
+                                onClick={() => isCompleted && setCurrentStep(step.id)}
+                                className={`flex items-center gap-3 cursor-pointer transition-all ${isActive ? 'opacity-100' : isCompleted ? 'opacity-60 hover:opacity-100' : 'opacity-30'}`}
                             >
-                                <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none">
-                                    {activeTab === 'channel' && <Youtube className="w-40 h-40" />}
-                                    {activeTab === 'url' && <LinkIcon className="w-40 h-40" />}
-                                    {activeTab === 'upload' && <UploadIcon className="w-40 h-40" />}
-                                    {activeTab === 'drafts' && <FolderOpen className="w-40 h-40" />}
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border-2 transition-all ${isActive ? 'border-[#D97757] bg-[#D97757]/10 text-[#D97757]' :
+                                    isCompleted ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500' :
+                                        borderClass + ' bg-transparent'
+                                    }`}>
+                                    {isCompleted ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? textClass : textSecondaryClass}`}>
+                                        Step 0{step.id}
+                                    </span>
+                                    <span className={`text-xs font-bold tracking-tight ${isActive ? textClass : textSecondaryClass}`}>
+                                        {step.name}
+                                    </span>
+                                </div>
+                            </div>
+                            {idx < steps.length - 1 && (
+                                <div className={`flex-1 h-[1px] mx-4 ${isCompleted ? 'bg-emerald-500/30' : borderClass}`} />
+                            )}
+                        </React.Fragment>
+                    );
+                })}
+            </div>
+
+            <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 items-start`}>
+                {/* Main Content Area */}
+                <div className="lg:col-span-8 space-y-6">
+                    <AnimatePresence mode="wait">
+                        {currentStep === 1 && (
+                            <motion.div
+                                key="step-1"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                className="space-y-6"
+                            >
+                                <div className={`${cardClass} border ${borderClass} rounded-2xl p-6 ${activeBgClass} backdrop-blur-xl shadow-sm`}>
+                                    <div className="flex items-center gap-2 mb-6">
+                                        {(['channel', 'url', 'upload', 'drafts'] as SourceTab[]).map((tab) => (
+                                            <button
+                                                key={tab}
+                                                onClick={() => setActiveTab(tab)}
+                                                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 relative group/btn border ${activeTab === tab
+                                                    ? 'bg-olleey-yellow text-black border-olleey-yellow shadow-sm'
+                                                    : `border-transparent ${textSecondaryClass} ${isDark ? 'hover:text-white hover:bg-white/5 hover:border-white/10' : 'hover:text-gray-900 hover:bg-gray-50 hover:border-gray-200'}`
+                                                    }`}
+                                            >
+                                                <span className="flex items-center justify-center gap-2">
+                                                    {tab === 'channel' && <Youtube className="w-3.5 h-3.5" />}
+                                                    {tab === 'url' && <LinkIcon className="w-3.5 h-3.5" />}
+                                                    {tab === 'upload' && <UploadIcon className="w-3.5 h-3.5" />}
+                                                    {tab === 'drafts' && <FolderOpen className="w-3.5 h-3.5" />}
+                                                    {tab}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
-                                {activeTab === 'channel' && (
-                                    <div className="space-y-8 relative z-10">
-                                        <div className="space-y-2">
-                                            <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Source Repository</label>
-                                            <select
-                                                value={sourceChannelId}
-                                                onChange={(e) => setSourceChannelId(e.target.value)}
-                                                className={`w-full ${cardAltClass} border border-white/10 hover:border-white/20 ${textClass} rounded-2xl px-6 py-5 text-xs font-medium focus:border-olleey-yellow outline-none transition-all appearance-none cursor-pointer ${hoverBgClass} shadow-sm`}
-                                            >
-                                                <option value="" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Select source hub...</option>
-                                                {availableChannels.map(c => <option key={c.id} value={c.id} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{c.name}</option>)}
-                                            </select>
-                                        </div>
+                                <motion.div
+                                    key={activeTab}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`${cardClass} border ${borderClass} rounded-[2.5rem] ${compact ? 'p-6' : 'p-8 lg:p-12'} transition-all ${activeBgClass} overflow-hidden relative`}
+                                >
+                                    <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none">
+                                        {activeTab === 'channel' && <Youtube className="w-40 h-40" />}
+                                        {activeTab === 'url' && <LinkIcon className="w-40 h-40" />}
+                                        {activeTab === 'upload' && <UploadIcon className="w-40 h-40" />}
+                                        {activeTab === 'drafts' && <FolderOpen className="w-40 h-40" />}
+                                    </div>
 
-                                        {sourceChannelId && (
+                                    {activeTab === 'channel' && (
+                                        <div className="space-y-8 relative z-10">
+                                            <div className="space-y-2">
+                                                <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Source Repository</label>
+                                                <select
+                                                    value={sourceChannelId}
+                                                    onChange={(e) => setSourceChannelId(e.target.value)}
+                                                    className={`w-full ${cardAltClass} border border-white/10 hover:border-white/20 ${textClass} rounded-2xl px-6 py-5 text-xs font-medium focus:border-olleey-yellow outline-none transition-all appearance-none cursor-pointer ${hoverBgClass} shadow-sm`}
+                                                >
+                                                    <option value="" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Select source hub...</option>
+                                                    {availableChannels.map(c => <option key={c.id} value={c.id} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{c.name}</option>)}
+                                                </select>
+                                            </div>
+
+                                            {sourceChannelId && (
+                                                <div className={`border ${borderClass} rounded-[2rem] overflow-hidden max-h-[380px] overflow-y-auto ${overlayClass} custom-scrollbar`}>
+                                                    {loadingVideos ? (
+                                                        <div className="p-24 flex flex-col items-center gap-4">
+                                                            <Loader2 className="w-10 h-10 animate-spin text-olleey-yellow stroke-[1.5px]" />
+                                                            <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${textTertiaryClass}`}>Accessing Assets...</span>
+                                                        </div>
+                                                    ) : channelVideos.length === 0 ? (
+                                                        <div className={`p-20 text-center ${textTertiaryClass}`}>
+                                                            <Search className="w-12 h-12 mx-auto mb-4" />
+                                                            <p className="text-sm font-bold tracking-tight">Zero assets found in this hub</p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className={`divide-y ${dividerClass}`}>
+                                                            {channelVideos.map((video, idx) => (
+                                                                <div
+                                                                    key={`${video.video_id}-${idx}`}
+                                                                    onClick={() => {
+                                                                        setSelectedVideoId(video.video_id);
+                                                                        setCustomTitle(video.title);
+                                                                        setCustomDescription(video.description || '');
+                                                                        // Don't set thumbnailPreview here - let currentThumbnail compute it
+                                                                    }}
+                                                                    className={`flex items-center gap-8 p-6 cursor-pointer transition-all duration-300 group/item ${selectedVideoId === video.video_id ? 'bg-olleey-yellow/10' : isDark ? 'hover:bg-white/[0.04]' : 'hover:bg-gray-50'}`}
+                                                                >
+                                                                    <div className={`relative w-36 aspect-video rounded-xl ${isDark ? 'bg-black' : 'bg-gray-200'} overflow-hidden shrink-0 border ${inputBorderClass} group-hover/item:scale-[1.02] transition-transform`}>
+                                                                        {video.thumbnail_url && <img src={video.thumbnail_url} className="w-full h-full object-cover grayscale-[0.3] group-hover/item:grayscale-0 transition-all duration-700" alt="" />}
+                                                                        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-t from-black/60' : 'bg-gradient-to-t from-gray-900/40'} to-transparent flex items-end justify-end p-2 opacity-0 group-hover/item:opacity-100 transition-opacity`}>
+                                                                            <PlayCircle className="w-6 h-6 text-white" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className={`text-[15px] font-bold ${selectedVideoId === video.video_id ? 'text-olleey-yellow' : isDark ? 'text-white/80' : 'text-gray-700'} ${isDark ? 'group-hover/item:text-white' : 'group-hover/item:text-gray-900'} transition-colors line-clamp-2 leading-tight tracking-tight`}>{video.title}</p>
+                                                                        <div className="flex items-center gap-4 mt-3">
+                                                                            <span className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>
+                                                                                {new Date(video.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                                            </span>
+                                                                            <div className={`w-1 h-1 rounded-full ${inputBorderClass}`} />
+                                                                            <span className="text-[10px] font-black uppercase tracking-widest text-olleey-yellow/40">MASTER ASSET</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    {selectedVideoId === video.video_id && (
+                                                                        <div className="w-8 h-8 rounded-full bg-olleey-yellow flex items-center justify-center">
+                                                                            <CheckCircle className="w-5 h-5 text-black" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {activeTab === 'url' && (
+                                        <div className="space-y-8 relative z-10">
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <LinkIcon className="w-4 h-4 text-olleey-yellow" />
+                                                    <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Video Source URL</label>
+                                                </div>
+                                                <Input
+                                                    placeholder="https://example.com/video.mp4 or any video URL..."
+                                                    value={sourceVideoUrl}
+                                                    onChange={(e) => setSourceVideoUrl(e.target.value)}
+                                                    className={`${inputBgClass} ${inputBorderClass} ${textClass} h-16 rounded-2xl px-8 text-[13px] font-medium focus:border-olleey-yellow/40 ${isDark ? 'focus:bg-white/[0.05]' : 'focus:bg-white'} transition-all outline-none ${isDark ? 'placeholder:text-white/10' : 'placeholder:text-gray-400'}`}
+                                                />
+                                            </div>
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <Youtube className="w-4 h-4 text-olleey-yellow" />
+                                                    <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Assign Origin Hub</label>
+                                                </div>
+                                                <select
+                                                    value={sourceChannelId}
+                                                    onChange={(e) => setSourceChannelId(e.target.value)}
+                                                    className={`w-full ${inputBgClass} border border-white/10 hover:border-white/20 ${textClass} rounded-2xl px-6 py-5 text-xs font-medium focus:border-olleey-yellow outline-none transition-all appearance-none cursor-pointer ${hoverBgClass} shadow-sm`}
+                                                >
+                                                    <option value="" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Select associated channel...</option>
+                                                    {availableChannels.map(c => <option key={c.id} value={c.id} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{c.name}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {activeTab === 'upload' && (
+                                        <div
+                                            className={`border-2 border-dashed ${uploadedFile ? 'border-olleey-yellow bg-olleey-yellow/5' : isDark ? 'border-white/5 bg-white/[0.01]' : 'border-gray-200 bg-gray-50/50'} rounded-[2.5rem] p-24 text-center ${isDark ? 'hover:bg-white/[0.03] hover:border-olleey-yellow/20' : 'hover:bg-gray-100 hover:border-olleey-yellow/30'} transition-all group cursor-pointer relative overflow-hidden`}
+                                            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                            onDragLeave={() => setIsDragging(false)}
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                setIsDragging(false);
+                                                const file = e.dataTransfer.files?.[0];
+                                                if (file) {
+                                                    setUploadedFile(file);
+                                                    setCustomTitle(file.name.split('.')[0]);
+                                                }
+                                            }}
+                                            onClick={() => document.getElementById('video-upload')?.click()}
+                                        >
+                                            <input
+                                                type="file"
+                                                id="video-upload"
+                                                className="hidden"
+                                                accept="video/*"
+                                                onChange={handleFileSelect}
+                                            />
+                                            <AnimatePresence mode="wait">
+                                                {uploadedFile ? (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        className="space-y-8"
+                                                    >
+                                                        <div className="p-10 bg-olleey-yellow text-black inline-flex rounded-3xl">
+                                                            <FileVideo className="w-14 h-14" />
+                                                        </div>
+                                                        <div>
+                                                            <p className={`text-xl font-bold tracking-tighter ${textClass} mb-2`}>{uploadedFile.name}</p>
+                                                            <p className={`text-[11px] font-black uppercase tracking-widest ${textTertiaryClass}`}>{(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB • Deployment Ready</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setUploadedFile(null);
+                                                                setCustomTitle('');
+                                                            }}
+                                                            className={`px-8 py-3 ${isDark ? 'bg-white/5 hover:bg-red-500/10' : 'bg-gray-100 hover:bg-red-50'} text-red-400 hover:text-red-500 text-[10px] font-black uppercase tracking-widest rounded-full transition-all border ${isDark ? 'border-red-500/10' : 'border-red-200'}`}
+                                                        >
+                                                            Discard Asset
+                                                        </button>
+                                                    </motion.div>
+                                                ) : (
+                                                    <motion.div
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        className="space-y-6"
+                                                    >
+                                                        <div className="relative inline-block">
+                                                            <div className={`p-10 ${isDark ? 'bg-white/3' : 'bg-gray-100'} inline-flex rounded-[2rem] border ${borderClass} ${isDark ? 'group-hover:bg-white/5' : 'group-hover:bg-gray-200'} transition-all group-hover:border-olleey-yellow/30 group-hover:scale-110 duration-500`}>
+                                                                <UploadIcon className={`w-12 h-12 ${isDark ? 'text-white/20' : 'text-gray-500'} group-hover:text-olleey-yellow transition-colors`} />
+                                                            </div>
+                                                            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-olleey-yellow rounded-2xl flex items-center justify-center text-black scale-0 group-hover:scale-100 transition-transform duration-500">
+                                                                <Plus className="w-6 h-6 stroke-[3px]" />
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <p className={`text-lg font-normal ${textClass} tracking-tighter`}>Initiate Local Uplink</p>
+                                                            <p className={`text-[11px] font-black uppercase tracking-[0.2em] ${textQuaternaryClass} mt-2`}>Drag-n-drop high-bitrate media unit</p>
+                                                        </div>
+                                                        <div className="flex items-center justify-center gap-6 mt-10">
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <span className={`text-[9px] font-black ${textTertiaryClass} uppercase tracking-widest`}>Limit</span>
+                                                                <span className={`text-xs font-bold ${textSecondaryClass}`}>2.0 GB</span>
+                                                            </div>
+                                                            <div className={`w-px h-8 ${inputBorderClass}`} />
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <span className={`text-[9px] font-black ${textTertiaryClass} uppercase tracking-widest`}>Formats</span>
+                                                                <span className={`text-xs font-bold ${textSecondaryClass}`}>MP4, MOV</span>
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    )}
+
+                                    {activeTab === 'drafts' && (
+                                        <div className="space-y-8 relative z-10">
+                                            <div className="space-y-2">
+                                                <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Storage Vault</label>
+                                                <p className={`text-[11px] ${textSecondaryClass} font-medium`}>Select from your uploaded videos in Supabase storage</p>
+                                            </div>
+
                                             <div className={`border ${borderClass} rounded-[2rem] overflow-hidden max-h-[380px] overflow-y-auto ${overlayClass} custom-scrollbar`}>
                                                 {loadingVideos ? (
                                                     <div className="p-24 flex flex-col items-center gap-4">
                                                         <Loader2 className="w-10 h-10 animate-spin text-olleey-yellow stroke-[1.5px]" />
-                                                        <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${textTertiaryClass}`}>Accessing Assets...</span>
+                                                        <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${textTertiaryClass}`}>Loading Drafts...</span>
                                                     </div>
-                                                ) : channelVideos.length === 0 ? (
+                                                ) : draftVideos.length === 0 ? (
                                                     <div className={`p-20 text-center ${textTertiaryClass}`}>
-                                                        <Search className="w-12 h-12 mx-auto mb-4" />
-                                                        <p className="text-sm font-bold tracking-tight">Zero assets found in this hub</p>
+                                                        <FolderOpen className="w-12 h-12 mx-auto mb-4" />
+                                                        <p className="text-sm font-bold tracking-tight">No draft videos found</p>
+                                                        <p className={`text-xs ${textSecondaryClass} mt-2`}>Upload videos to see them here</p>
                                                     </div>
                                                 ) : (
                                                     <div className={`divide-y ${dividerClass}`}>
-                                                        {channelVideos.map((video, idx) => (
+                                                        {draftVideos.map((video, idx) => (
                                                             <div
                                                                 key={`${video.video_id}-${idx}`}
                                                                 onClick={() => {
                                                                     setSelectedVideoId(video.video_id);
                                                                     setCustomTitle(video.title);
                                                                     setCustomDescription(video.description || '');
+                                                                    setSourceChannelId(video.channel_id || availableChannels[0]?.id || '');
                                                                     // Don't set thumbnailPreview here - let currentThumbnail compute it
                                                                 }}
                                                                 className={`flex items-center gap-8 p-6 cursor-pointer transition-all duration-300 group/item ${selectedVideoId === video.video_id ? 'bg-olleey-yellow/10' : isDark ? 'hover:bg-white/[0.04]' : 'hover:bg-gray-50'}`}
@@ -547,6 +760,9 @@ export function ManualProcessView({
                                                                     <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-t from-black/60' : 'bg-gradient-to-t from-gray-900/40'} to-transparent flex items-end justify-end p-2 opacity-0 group-hover/item:opacity-100 transition-opacity`}>
                                                                         <PlayCircle className="w-6 h-6 text-white" />
                                                                     </div>
+                                                                    <div className="absolute top-2 left-2 px-2 py-1 bg-purple-500/80 backdrop-blur-sm rounded text-[8px] font-black uppercase tracking-wider text-white">
+                                                                        Draft
+                                                                    </div>
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
                                                                     <p className={`text-[15px] font-bold ${selectedVideoId === video.video_id ? 'text-olleey-yellow' : isDark ? 'text-white/80' : 'text-gray-700'} ${isDark ? 'group-hover/item:text-white' : 'group-hover/item:text-gray-900'} transition-colors line-clamp-2 leading-tight tracking-tight`}>{video.title}</p>
@@ -555,7 +771,7 @@ export function ManualProcessView({
                                                                             {new Date(video.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                                         </span>
                                                                         <div className={`w-1 h-1 rounded-full ${inputBorderClass}`} />
-                                                                        <span className="text-[10px] font-black uppercase tracking-widest text-olleey-yellow/40">MASTER ASSET</span>
+                                                                        <span className="text-[10px] font-black uppercase tracking-widest text-purple-400/60">STORAGE VAULT</span>
                                                                     </div>
                                                                 </div>
                                                                 {selectedVideoId === video.video_id && (
@@ -568,383 +784,220 @@ export function ManualProcessView({
                                                     </div>
                                                 )}
                                             </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {activeTab === 'url' && (
-                                    <div className="space-y-8 relative z-10">
-                                        <div className="space-y-4">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <LinkIcon className="w-4 h-4 text-olleey-yellow" />
-                                                <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Video Source URL</label>
-                                            </div>
-                                            <Input
-                                                placeholder="https://example.com/video.mp4 or any video URL..."
-                                                value={sourceVideoUrl}
-                                                onChange={(e) => setSourceVideoUrl(e.target.value)}
-                                                className={`${inputBgClass} ${inputBorderClass} ${textClass} h-16 rounded-2xl px-8 text-[13px] font-medium focus:border-olleey-yellow/40 ${isDark ? 'focus:bg-white/[0.05]' : 'focus:bg-white'} transition-all outline-none ${isDark ? 'placeholder:text-white/10' : 'placeholder:text-gray-400'}`}
-                                            />
-                                        </div>
-                                        <div className="space-y-4">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <Youtube className="w-4 h-4 text-olleey-yellow" />
-                                                <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Assign Origin Hub</label>
-                                            </div>
-                                            <select
-                                                value={sourceChannelId}
-                                                onChange={(e) => setSourceChannelId(e.target.value)}
-                                                className={`w-full ${inputBgClass} border border-white/10 hover:border-white/20 ${textClass} rounded-2xl px-6 py-5 text-xs font-medium focus:border-olleey-yellow outline-none transition-all appearance-none cursor-pointer ${hoverBgClass} shadow-sm`}
-                                            >
-                                                <option value="" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Select associated channel...</option>
-                                                {availableChannels.map(c => <option key={c.id} value={c.id} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{c.name}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeTab === 'upload' && (
-                                    <div
-                                        className={`border-2 border-dashed ${uploadedFile ? 'border-olleey-yellow bg-olleey-yellow/5' : isDark ? 'border-white/5 bg-white/[0.01]' : 'border-gray-200 bg-gray-50/50'} rounded-[2.5rem] p-24 text-center ${isDark ? 'hover:bg-white/[0.03] hover:border-olleey-yellow/20' : 'hover:bg-gray-100 hover:border-olleey-yellow/30'} transition-all group cursor-pointer relative overflow-hidden`}
-                                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                                        onDragLeave={() => setIsDragging(false)}
-                                        onDrop={(e) => {
-                                            e.preventDefault();
-                                            setIsDragging(false);
-                                            const file = e.dataTransfer.files?.[0];
-                                            if (file) {
-                                                setUploadedFile(file);
-                                                setCustomTitle(file.name.split('.')[0]);
-                                            }
-                                        }}
-                                        onClick={() => document.getElementById('video-upload')?.click()}
-                                    >
-                                        <input
-                                            type="file"
-                                            id="video-upload"
-                                            className="hidden"
-                                            accept="video/*"
-                                            onChange={handleFileSelect}
-                                        />
-                                        <AnimatePresence mode="wait">
-                                            {uploadedFile ? (
-                                                <motion.div
-                                                    initial={{ opacity: 0, scale: 0.9 }}
-                                                    animate={{ opacity: 1, scale: 1 }}
-                                                    className="space-y-8"
-                                                >
-                                                    <div className="p-10 bg-olleey-yellow text-black inline-flex rounded-3xl">
-                                                        <FileVideo className="w-14 h-14" />
-                                                    </div>
-                                                    <div>
-                                                        <p className={`text-xl font-bold tracking-tighter ${textClass} mb-2`}>{uploadedFile.name}</p>
-                                                        <p className={`text-[11px] font-black uppercase tracking-widest ${textTertiaryClass}`}>{(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB • Deployment Ready</p>
-                                                    </div>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setUploadedFile(null);
-                                                            setCustomTitle('');
-                                                        }}
-                                                        className={`px-8 py-3 ${isDark ? 'bg-white/5 hover:bg-red-500/10' : 'bg-gray-100 hover:bg-red-50'} text-red-400 hover:text-red-500 text-[10px] font-black uppercase tracking-widest rounded-full transition-all border ${isDark ? 'border-red-500/10' : 'border-red-200'}`}
-                                                    >
-                                                        Discard Asset
-                                                    </button>
-                                                </motion.div>
-                                            ) : (
-                                                <motion.div
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    className="space-y-6"
-                                                >
-                                                    <div className="relative inline-block">
-                                                        <div className={`p-10 ${isDark ? 'bg-white/3' : 'bg-gray-100'} inline-flex rounded-[2rem] border ${borderClass} ${isDark ? 'group-hover:bg-white/5' : 'group-hover:bg-gray-200'} transition-all group-hover:border-olleey-yellow/30 group-hover:scale-110 duration-500`}>
-                                                            <UploadIcon className={`w-12 h-12 ${isDark ? 'text-white/20' : 'text-gray-500'} group-hover:text-olleey-yellow transition-colors`} />
-                                                        </div>
-                                                        <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-olleey-yellow rounded-2xl flex items-center justify-center text-black scale-0 group-hover:scale-100 transition-transform duration-500">
-                                                            <Plus className="w-6 h-6 stroke-[3px]" />
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <p className={`text-lg font-normal ${textClass} tracking-tighter`}>Initiate Local Uplink</p>
-                                                        <p className={`text-[11px] font-black uppercase tracking-[0.2em] ${textQuaternaryClass} mt-2`}>Drag-n-drop high-bitrate media unit</p>
-                                                    </div>
-                                                    <div className="flex items-center justify-center gap-6 mt-10">
-                                                        <div className="flex flex-col items-center gap-1">
-                                                            <span className={`text-[9px] font-black ${textTertiaryClass} uppercase tracking-widest`}>Limit</span>
-                                                            <span className={`text-xs font-bold ${textSecondaryClass}`}>2.0 GB</span>
-                                                        </div>
-                                                        <div className={`w-px h-8 ${inputBorderClass}`} />
-                                                        <div className="flex flex-col items-center gap-1">
-                                                            <span className={`text-[9px] font-black ${textTertiaryClass} uppercase tracking-widest`}>Formats</span>
-                                                            <span className={`text-xs font-bold ${textSecondaryClass}`}>MP4, MOV</span>
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                )}
-
-                                {activeTab === 'drafts' && (
-                                    <div className="space-y-8 relative z-10">
-                                        <div className="space-y-2">
-                                            <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Storage Vault</label>
-                                            <p className={`text-[11px] ${textSecondaryClass} font-medium`}>Select from your uploaded videos in Supabase storage</p>
-                                        </div>
-
-                                        <div className={`border ${borderClass} rounded-[2rem] overflow-hidden max-h-[380px] overflow-y-auto ${overlayClass} custom-scrollbar`}>
-                                            {loadingVideos ? (
-                                                <div className="p-24 flex flex-col items-center gap-4">
-                                                    <Loader2 className="w-10 h-10 animate-spin text-olleey-yellow stroke-[1.5px]" />
-                                                    <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${textTertiaryClass}`}>Loading Drafts...</span>
-                                                </div>
-                                            ) : draftVideos.length === 0 ? (
-                                                <div className={`p-20 text-center ${textTertiaryClass}`}>
-                                                    <FolderOpen className="w-12 h-12 mx-auto mb-4" />
-                                                    <p className="text-sm font-bold tracking-tight">No draft videos found</p>
-                                                    <p className={`text-xs ${textSecondaryClass} mt-2`}>Upload videos to see them here</p>
-                                                </div>
-                                            ) : (
-                                                <div className={`divide-y ${dividerClass}`}>
-                                                    {draftVideos.map((video, idx) => (
-                                                        <div
-                                                            key={`${video.video_id}-${idx}`}
-                                                            onClick={() => {
-                                                                setSelectedVideoId(video.video_id);
-                                                                setCustomTitle(video.title);
-                                                                setCustomDescription(video.description || '');
-                                                                setSourceChannelId(video.channel_id || availableChannels[0]?.id || '');
-                                                                // Don't set thumbnailPreview here - let currentThumbnail compute it
-                                                            }}
-                                                            className={`flex items-center gap-8 p-6 cursor-pointer transition-all duration-300 group/item ${selectedVideoId === video.video_id ? 'bg-olleey-yellow/10' : isDark ? 'hover:bg-white/[0.04]' : 'hover:bg-gray-50'}`}
-                                                        >
-                                                            <div className={`relative w-36 aspect-video rounded-xl ${isDark ? 'bg-black' : 'bg-gray-200'} overflow-hidden shrink-0 border ${inputBorderClass} group-hover/item:scale-[1.02] transition-transform`}>
-                                                                {video.thumbnail_url && <img src={video.thumbnail_url} className="w-full h-full object-cover grayscale-[0.3] group-hover/item:grayscale-0 transition-all duration-700" alt="" />}
-                                                                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-t from-black/60' : 'bg-gradient-to-t from-gray-900/40'} to-transparent flex items-end justify-end p-2 opacity-0 group-hover/item:opacity-100 transition-opacity`}>
-                                                                    <PlayCircle className="w-6 h-6 text-white" />
-                                                                </div>
-                                                                <div className="absolute top-2 left-2 px-2 py-1 bg-purple-500/80 backdrop-blur-sm rounded text-[8px] font-black uppercase tracking-wider text-white">
-                                                                    Draft
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className={`text-[15px] font-bold ${selectedVideoId === video.video_id ? 'text-olleey-yellow' : isDark ? 'text-white/80' : 'text-gray-700'} ${isDark ? 'group-hover/item:text-white' : 'group-hover/item:text-gray-900'} transition-colors line-clamp-2 leading-tight tracking-tight`}>{video.title}</p>
-                                                                <div className="flex items-center gap-4 mt-3">
-                                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>
-                                                                        {new Date(video.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                                    </span>
-                                                                    <div className={`w-1 h-1 rounded-full ${inputBorderClass}`} />
-                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-purple-400/60">STORAGE VAULT</span>
-                                                                </div>
-                                                            </div>
-                                                            {selectedVideoId === video.video_id && (
-                                                                <div className="w-8 h-8 rounded-full bg-olleey-yellow flex items-center justify-center">
-                                                                    <CheckCircle className="w-5 h-5 text-black" />
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </motion.div>
-                        </div>
-                    </div>
-
-                    {/* STAGE 02: ANALYSIS & NEURAL PARAMS */}
-                    <div className="space-y-6">
-                        {!compact && (
-                            <div className="flex items-center gap-6 group">
-                                <div className="flex items-center justify-center w-10 h-10 bg-indigo-500 text-white font-black text-[13px] rounded-2xl shrink-0 transition-transform group-hover:rotate-12">02</div>
-                                <div className="flex flex-col">
-                                    <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textClass}`}>Neural Configuration</h3>
-                                    <p className={`text-[11px] ${textSecondaryClass} font-medium tracking-tight opacity-50`}>Define linguistic context and metadata layers</p>
-                                </div>
-                                <div className={`h-[1px] flex-1 ${borderClass} opacity-20 mx-4`}></div>
-                            </div>
-                        )}
-
-                        <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] ${compact ? 'p-6 space-y-6' : 'p-10 lg:p-14 space-y-10'} ${activeBgClass} backdrop-blur-3xl`}>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <Globe className="w-4 h-4 text-indigo-400" />
-                                        <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Source Linguistics</label>
-                                    </div>
-                                    <select
-                                        value={sourceLanguage}
-                                        onChange={(e) => setSourceLanguage(e.target.value)}
-                                        className={`w-full ${inputBgClass} border border-white/10 hover:border-white/20 ${textClass} rounded-2xl px-6 py-5 text-xs font-medium focus:border-indigo-400 outline-none transition-all appearance-none cursor-pointer ${hoverBgClass} shadow-sm`}
-                                    >
-                                        <option value="" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Auto-detect by neural engine</option>
-                                        {LANGUAGE_OPTIONS.map(l => <option key={l.code} value={l.code} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{l.flag} {l.name}</option>)}
-                                    </select>
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <Layers className="w-4 h-4 text-indigo-400" />
-                                        <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Public Registry Title</label>
-                                    </div>
-                                    <Input
-                                        placeholder="Target publication title..."
-                                        value={customTitle}
-                                        onChange={(e) => setCustomTitle(e.target.value)}
-                                        className={`${inputBgClass} ${inputBorderClass} ${textClass} h-[62px] rounded-2xl px-6 text-[13px] font-medium focus:border-indigo-400/40 ${isDark ? 'focus:bg-white/[0.05]' : 'focus:bg-white'} transition-all outline-none`}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <Sparkles className="w-4 h-4 text-indigo-400" />
-                                    <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Global Distribution Description</label>
-                                </div>
-                                <textarea
-                                    rows={5}
-                                    placeholder="Enter descriptive metadata for the global versions..."
-                                    value={customDescription}
-                                    onChange={(e) => setCustomDescription(e.target.value)}
-                                    className={`w-full ${inputBgClass} border ${inputBorderClass} ${isDark ? 'text-white/70' : 'text-gray-700'} rounded-[2rem] p-8 text-sm font-medium focus:border-indigo-400 outline-none resize-none transition-all ${hoverBgClass} leading-relaxed`}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* STAGE 03: GLOBAL DEPLOYMENT */}
-                    <div className="space-y-6">
-                        {!compact && (
-                            <div className="flex items-center gap-6 group">
-                                <div className="flex items-center justify-center w-10 h-10 bg-emerald-500 text-white font-black text-[13px] rounded-2xl shrink-0 transition-transform group-hover:rotate-12">03</div>
-                                <div className="flex flex-col">
-                                    <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textClass}`}>Distribution Targets</h3>
-                                    <p className={`text-[11px] ${textSecondaryClass} font-medium tracking-tight opacity-50`}>Select international deployment hubs</p>
-                                </div>
-                                <div className={`h-[1px] flex-1 ${borderClass} opacity-20 mx-4`}></div>
-                            </div>
-                        )}
-
-                        <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] ${compact ? 'p-6' : 'p-10 lg:p-14'} ${activeBgClass} backdrop-blur-3xl`}>
-                            <div className="space-y-6">
-                                <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass} mb-4 block`}>Select Synchronization Nodes <span className="text-emerald-500 ml-2 font-bold opacity-50 underline underline-offset-4">CRITICAL STEP</span></label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {availableChannels.filter(c => c.id !== sourceChannelId).map(c => (
-                                        <div
-                                            key={c.id}
-                                            onClick={() => toggleTargetChannel(c.id)}
-                                            className={`relative group/node flex flex-col p-8 rounded-[2rem] border transition-all duration-500 cursor-pointer overflow-hidden ${selectedTargetChannels.includes(c.id)
-                                                ? 'border-emerald-500/30 bg-emerald-500/5'
-                                                : isDark ? 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100 hover:border-gray-300'}`}
-                                        >
-                                            <div className={`absolute top-0 right-0 p-6 ${isDark ? 'opacity-[0.03]' : 'opacity-[0.02]'} pointer-events-none group-hover/node:scale-110 transition-transform`}>
-                                                <Globe className="w-20 h-20" />
-                                            </div>
-
-                                            <div className="flex items-center justify-between mb-8 relative z-10">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-3xl transition-all ${selectedTargetChannels.includes(c.id) ? 'bg-emerald-500 text-white scale-110' : isDark ? 'bg-white/5 opacity-40 group-hover/node:opacity-100 group-hover/node:bg-white/10' : 'bg-gray-100 opacity-60 group-hover/node:opacity-100 group-hover/node:bg-gray-200'}`}>
-                                                        {c.language_code ? getLanguageFlag(c.language_code) : '🌐'}
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className={`text-[15px] font-bold tracking-tight leading-none ${selectedTargetChannels.includes(c.id) ? textClass : isDark ? 'text-white/40 group-hover/node:text-white/70' : 'text-gray-500 group-hover/node:text-gray-700'}`}>{c.name}</span>
-                                                        <span className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass} mt-1.5`}>{c.language_name || 'Generic Sync Hub'}</span>
-                                                    </div>
-                                                </div>
-                                                <div className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${selectedTargetChannels.includes(c.id) ? 'border-emerald-500 bg-emerald-500' : isDark ? 'border-white/10' : 'border-gray-300'}`}>
-                                                    {selectedTargetChannels.includes(c.id) && <CheckCircle className="w-4 h-4 text-black stroke-[3px]" />}
-                                                </div>
-                                            </div>
-
-                                            {!c.language_code && selectedTargetChannels.includes(c.id) && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, height: 0 }}
-                                                    animate={{ opacity: 1, height: 'auto' }}
-                                                    className="mt-2 space-y-3"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <label className="text-[9px] font-black uppercase tracking-widest text-emerald-500/60">Define Sync Language</label>
-                                                    <select
-                                                        value={targetLanguageOverrides[c.id] || ""}
-                                                        onChange={(e) => setTargetLanguageOverrides(prev => ({ ...prev, [c.id]: e.target.value }))}
-                                                        className={`w-full ${isDark ? 'bg-black/40' : 'bg-gray-100'} border border-emerald-500/20 hover:border-emerald-500/40 ${textClass} rounded-xl px-4 py-3 text-[10px] font-bold focus:border-emerald-500 outline-none appearance-none cursor-pointer shadow-sm`}
-                                                    >
-                                                        <option value="">Choose linguistic target...</option>
-                                                        {LANGUAGE_OPTIONS.map(l => (
-                                                            <option key={l.code} value={l.code} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{l.flag} {l.name}</option>
-                                                        ))}
-                                                    </select>
-                                                </motion.div>
-                                            )}
-                                        </div>
-                                    ))}
-                                    {availableChannels.filter(c => c.id !== sourceChannelId).length === 0 && (
-                                        <div className={`col-span-full space-y-6`}>
-                                            <div className={`p-12 text-center rounded-[2rem] border border-dashed ${isDark ? 'border-white/10 bg-white/[0.01]' : 'border-gray-200 bg-gray-50'}`}>
-                                                <div className={`p-6 ${isDark ? 'bg-white/3' : 'bg-gray-100'} inline-flex rounded-3xl mb-6 ${textTertiaryClass}`}>
-                                                    <Globe className="w-10 h-10" />
-                                                </div>
-                                                <p className={`text-base font-normal ${textSecondaryClass} tracking-tighter mb-2`}>No channels connected</p>
-                                                <p className={`text-xs ${textTertiaryClass} mb-6`}>Select target languages below to create drafts</p>
-                                            </div>
-
-                                            {/* Direct Language Selection */}
-                                            <div className="space-y-4">
-                                                <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass} block`}>
-                                                    Select Target Languages <span className="text-emerald-500 ml-2">For Drafts</span>
-                                                </label>
-                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                                    {LANGUAGE_OPTIONS.slice(0, 12).map(lang => (
-                                                        <div
-                                                            key={lang.code}
-                                                            onClick={() => {
-                                                                const langId = `lang_${lang.code}`;
-                                                                if (selectedTargetChannels.includes(langId)) {
-                                                                    setSelectedTargetChannels(prev => prev.filter(id => id !== langId));
-                                                                    setTargetLanguageOverrides(prev => {
-                                                                        const newOverrides = { ...prev };
-                                                                        delete newOverrides[langId];
-                                                                        return newOverrides;
-                                                                    });
-                                                                } else {
-                                                                    setSelectedTargetChannels(prev => [...prev, langId]);
-                                                                    setTargetLanguageOverrides(prev => ({ ...prev, [langId]: lang.code }));
-                                                                }
-                                                            }}
-                                                            className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${selectedTargetChannels.includes(`lang_${lang.code}`)
-                                                                ? 'border-emerald-500/30 bg-emerald-500/5'
-                                                                : isDark ? 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05]' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100'
-                                                                }`}
-                                                        >
-                                                            <span className="text-2xl">{lang.flag}</span>
-                                                            <span className={`text-xs font-bold ${isDark ? 'text-white/70' : 'text-gray-700'}`}>{lang.name}</span>
-                                                            {selectedTargetChannels.includes(`lang_${lang.code}`) && (
-                                                                <CheckCircle className="w-4 h-4 text-emerald-500 ml-auto" />
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
                                         </div>
                                     )}
+                                </motion.div>
+                            </motion.div>
+                        )}
+
+                        {currentStep === 2 && (
+                            <motion.div
+                                key="step-2"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                className="space-y-6"
+                            >
+                                <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] ${compact ? 'p-6 space-y-6' : 'p-10 lg:p-14 space-y-10'} ${activeBgClass} backdrop-blur-3xl`}>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <Globe className="w-4 h-4 text-indigo-400" />
+                                                <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Source Linguistics</label>
+                                            </div>
+                                            <select
+                                                value={sourceLanguage}
+                                                onChange={(e) => setSourceLanguage(e.target.value)}
+                                                className={`w-full ${inputBgClass} border border-white/10 hover:border-white/20 ${textClass} rounded-2xl px-6 py-5 text-xs font-medium focus:border-indigo-400 outline-none transition-all appearance-none cursor-pointer ${hoverBgClass} shadow-sm`}
+                                            >
+                                                <option value="" className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>Auto-detect by neural engine</option>
+                                                {LANGUAGE_OPTIONS.map(l => <option key={l.code} value={l.code} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{l.flag} {l.name}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <Layers className="w-4 h-4 text-indigo-400" />
+                                                <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Public Registry Title</label>
+                                            </div>
+                                            <Input
+                                                placeholder="Target publication title..."
+                                                value={customTitle}
+                                                onChange={(e) => setCustomTitle(e.target.value)}
+                                                className={`${inputBgClass} ${inputBorderClass} ${textClass} h-[62px] rounded-2xl px-6 text-[13px] font-medium focus:border-indigo-400/40 ${isDark ? 'focus:bg-white/[0.05]' : 'focus:bg-white'} transition-all outline-none`}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <Sparkles className="w-4 h-4 text-indigo-400" />
+                                            <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass}`}>Global Distribution Description</label>
+                                        </div>
+                                        <textarea
+                                            rows={5}
+                                            placeholder="Enter descriptive metadata for the global versions..."
+                                            value={customDescription}
+                                            onChange={(e) => setCustomDescription(e.target.value)}
+                                            className={`w-full ${inputBgClass} border ${inputBorderClass} ${isDark ? 'text-white/70' : 'text-gray-700'} rounded-[2rem] p-8 text-sm font-medium focus:border-indigo-400 outline-none resize-none transition-all ${hoverBgClass} leading-relaxed`}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            </motion.div>
+                        )}
+
+                        {currentStep === 3 && (
+                            <motion.div
+                                key="step-3"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                className="space-y-6"
+                            >
+                                <div className={`${cardClass} border ${borderClass} rounded-[2.5rem] ${compact ? 'p-6' : 'p-10 lg:p-14'} ${activeBgClass} backdrop-blur-3xl`}>
+                                    <div className="space-y-6">
+                                        <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass} mb-4 block`}>Select Synchronization Nodes <span className="text-emerald-500 ml-2 font-bold opacity-50 underline underline-offset-4">CRITICAL STEP</span></label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {availableChannels.filter(c => c.id !== sourceChannelId).map(c => (
+                                                <div
+                                                    key={c.id}
+                                                    onClick={() => toggleTargetChannel(c.id)}
+                                                    className={`relative group/node flex flex-col p-8 rounded-[2rem] border transition-all duration-500 cursor-pointer overflow-hidden ${selectedTargetChannels.includes(c.id)
+                                                        ? 'border-emerald-500/30 bg-emerald-500/5'
+                                                        : isDark ? 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100 hover:border-gray-300'}`}
+                                                >
+                                                    <div className={`absolute top-0 right-0 p-6 ${isDark ? 'opacity-[0.03]' : 'opacity-[0.02]'} pointer-events-none group-hover/node:scale-110 transition-transform`}>
+                                                        <Globe className="w-20 h-20" />
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between mb-8 relative z-10">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-3xl transition-all ${selectedTargetChannels.includes(c.id) ? 'bg-emerald-500 text-white scale-110' : isDark ? 'bg-white/5 opacity-40 group-hover/node:opacity-100 group-hover/node:bg-white/10' : 'bg-gray-100 opacity-60 group-hover/node:opacity-100 group-hover/node:bg-gray-200'}`}>
+                                                                {c.language_code ? getLanguageFlag(c.language_code) : '🌐'}
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className={`text-[15px] font-bold tracking-tight leading-none ${selectedTargetChannels.includes(c.id) ? textClass : isDark ? 'text-white/40 group-hover/node:text-white/70' : 'text-gray-500 group-hover/node:text-gray-700'}`}>{c.name}</span>
+                                                                <span className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass} mt-1.5`}>{c.language_name || 'Generic Sync Hub'}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${selectedTargetChannels.includes(c.id) ? 'border-emerald-500 bg-emerald-500' : isDark ? 'border-white/10' : 'border-gray-300'}`}>
+                                                            {selectedTargetChannels.includes(c.id) && <CheckCircle className="w-4 h-4 text-black stroke-[3px]" />}
+                                                        </div>
+                                                    </div>
+
+                                                    {!c.language_code && selectedTargetChannels.includes(c.id) && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, height: 0 }}
+                                                            animate={{ opacity: 1, height: 'auto' }}
+                                                            className="mt-2 space-y-3"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-emerald-500/60">Define Sync Language</label>
+                                                            <select
+                                                                value={targetLanguageOverrides[c.id] || ""}
+                                                                onChange={(e) => setTargetLanguageOverrides(prev => ({ ...prev, [c.id]: e.target.value }))}
+                                                                className={`w-full ${isDark ? 'bg-black/40' : 'bg-gray-100'} border border-emerald-500/20 hover:border-emerald-500/40 ${textClass} rounded-xl px-4 py-3 text-[10px] font-bold focus:border-emerald-500 outline-none appearance-none cursor-pointer shadow-sm`}
+                                                            >
+                                                                <option value="">Choose linguistic target...</option>
+                                                                {LANGUAGE_OPTIONS.map(l => (
+                                                                    <option key={l.code} value={l.code} className={isDark ? "bg-[#0a0a0a]" : "bg-white"}>{l.flag} {l.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </motion.div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            {availableChannels.filter(c => c.id !== sourceChannelId).length === 0 && (
+                                                <div className={`col-span-full space-y-6`}>
+                                                    <div className={`p-12 text-center rounded-[2rem] border border-dashed ${isDark ? 'border-white/10 bg-white/[0.01]' : 'border-gray-200 bg-gray-50'}`}>
+                                                        <div className={`p-6 ${isDark ? 'bg-white/3' : 'bg-gray-100'} inline-flex rounded-3xl mb-6 ${textTertiaryClass}`}>
+                                                            <Globe className="w-10 h-10" />
+                                                        </div>
+                                                        <p className={`text-base font-normal ${textSecondaryClass} tracking-tighter mb-2`}>No channels connected</p>
+                                                        <p className={`text-xs ${textTertiaryClass} mb-6`}>Select target languages below to create drafts</p>
+                                                    </div>
+
+                                                    {/* Direct Language Selection */}
+                                                    <div className="space-y-4">
+                                                        <label className={`text-[10px] font-black uppercase tracking-widest ${textTertiaryClass} block`}>
+                                                            Select Target Languages <span className="text-emerald-500 ml-2">For Drafts</span>
+                                                        </label>
+                                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                            {LANGUAGE_OPTIONS.slice(0, 12).map(lang => (
+                                                                <div
+                                                                    key={lang.code}
+                                                                    onClick={() => {
+                                                                        const langId = `lang_${lang.code}`;
+                                                                        if (selectedTargetChannels.includes(langId)) {
+                                                                            setSelectedTargetChannels(prev => prev.filter(id => id !== langId));
+                                                                            setTargetLanguageOverrides(prev => {
+                                                                                const newOverrides = { ...prev };
+                                                                                delete newOverrides[langId];
+                                                                                return newOverrides;
+                                                                            });
+                                                                        } else {
+                                                                            setSelectedTargetChannels(prev => [...prev, langId]);
+                                                                            setTargetLanguageOverrides(prev => ({ ...prev, [langId]: lang.code }));
+                                                                        }
+                                                                    }}
+                                                                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${selectedTargetChannels.includes(`lang_${lang.code}`)
+                                                                        ? 'border-emerald-500/30 bg-emerald-500/5'
+                                                                        : isDark ? 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05]' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100'
+                                                                        }`}
+                                                                >
+                                                                    <span className="text-2xl">{lang.flag}</span>
+                                                                    <span className={`text-xs font-bold ${isDark ? 'text-white/70' : 'text-gray-700'}`}>{lang.name}</span>
+                                                                    {selectedTargetChannels.includes(`lang_${lang.code}`) && (
+                                                                        <CheckCircle className="w-4 h-4 text-emerald-500 ml-auto" />
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Navigation Buttons */}
+                    <div className="flex items-center justify-between pt-4">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setCurrentStep(prev => prev - 1)}
+                            disabled={currentStep === 1}
+                            className={`flex items-center gap-2 ${textSecondaryClass}`}
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                if (currentStep < 3) {
+                                    setCurrentStep(prev => prev + 1);
+                                }
+                            }}
+                            className={`flex items-center gap-2 bg-olleey-yellow text-black hover:bg-olleey-yellow/90 ${currentStep === 3 ? 'hidden' : ''}`}
+                        >
+                            Continue
+                            <ArrowRight className="w-4 h-4" />
+                        </Button>
                     </div>
                 </div>
 
                 {/* Right Column: EXECUTION COMMAND CENTER */}
-                <div className={`space-y-6 sticky top-8 h-fit ${compact ? 'lg:col-span-1' : ''}`}>
-                    <div className={`${cardClass} border ${borderLightClass} rounded-[2.5rem] ${compact ? 'p-6' : 'p-10'} relative overflow-hidden ${activeBgClass} backdrop-blur-[40px]`}>
+                <div className="lg:col-span-4 space-y-4 sticky top-6">
+                    <div className={`${cardClass} border ${borderLightClass} rounded-[2.5rem] ${compact ? 'p-6' : 'p-10'} relative overflow-hidden backdrop-blur-[40px] shadow-2xl`}>
                         <div className={`absolute top-0 right-0 p-8 ${isDark ? 'opacity-[0.03]' : 'opacity-[0.02]'} pointer-events-none`}>
                             <Cpu className="w-32 h-32" />
                         </div>
 
                         <div className={`flex items-center gap-3 mb-10 pb-6 border-b ${inputBorderClass}`}>
-                            <div className="w-2 h-2 rounded-full bg-olleey-yellow animate-pulse" />
-                            <h3 className={`text-sm font-black uppercase tracking-[0.25em] ${textClass}`}>
-                                Preview
+                            <Activity className="w-4 h-4 text-olleey-yellow animate-pulse" />
+                            <h3 className={`text-xs font-black uppercase tracking-[0.25em] ${textClass}`}>
+                                Live Preview
                             </h3>
                         </div>
 
@@ -1076,7 +1129,9 @@ export function ManualProcessView({
                                         <p className="text-xs font-medium text-red-400 leading-tight opacity-80">{error}</p>
                                     </div>
                                 </div>
-                            ) || isSuccessState && (
+                            )}
+
+                            {isSuccessState && (
                                 <div className={`flex items-center gap-4 p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl backdrop-blur-xl`}>
                                     <ShieldCheck className="w-6 h-6 text-emerald-500 shrink-0" />
                                     <div className="flex flex-col gap-0.5">

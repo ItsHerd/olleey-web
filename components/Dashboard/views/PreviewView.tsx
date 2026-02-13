@@ -32,7 +32,7 @@ import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
 import { jobsAPI, API_BASE_URL } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
-import { ViewType } from "../DashboardV2Layout";
+import { ViewType } from "../DashboardLayout";
 
 interface PreviewViewProps {
     onViewChange?: (view: ViewType) => void;
@@ -79,7 +79,8 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
                 videoDescription: currentVideo.description,
                 thumbnailUrl: getFullUrl(currentVideo.thumbnail_url),
                 isApproved: loc?.status === "live",
-                approvedAt: currentVideo.published_at
+                approvedAt: currentVideo.published_at,
+                navigate: false // Stay within dashboard
             });
         }
     }, [currentVideo, videoIdFromUrl, langFromUrl, quickCheckState.videoId, openReview]);
@@ -180,7 +181,8 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
             videoDescription: loc.description || currentVideo.description,
             thumbnailUrl: getFullUrl(loc.thumbnail_url || currentVideo.thumbnail_url),
             isApproved: loc.status === "live",
-            approvedAt: currentVideo.published_at || (currentVideo as any).created_at
+            approvedAt: currentVideo.published_at || (currentVideo as any).created_at,
+            navigate: false // Stay within dashboard
         });
         setViewMode('dubbed');
     };

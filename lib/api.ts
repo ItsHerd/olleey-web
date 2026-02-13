@@ -501,11 +501,109 @@ export const dashboardAPI = {
   },
 
   /**
-   * Get global activity feed
+   * Get dashboard stats
    */
-  getActivity: async (projectId?: string): Promise<ActivityItem[]> => {
+  getStats: async (projectId?: string): Promise<any> => {
     const queryParams = new URLSearchParams();
     if (projectId) queryParams.append("project_id", projectId);
+
+    const url = `${API_BASE_URL}/dashboard/stats${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to load dashboard stats");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get dashboard jobs
+   */
+  getJobs: async (projectId?: string, limit?: number): Promise<any> => {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.append("project_id", projectId);
+    if (limit) queryParams.append("limit", limit.toString());
+
+    const url = `${API_BASE_URL}/dashboard/jobs${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to load dashboard jobs");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get dashboard channels
+   */
+  getChannels: async (projectId?: string): Promise<any> => {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.append("project_id", projectId);
+
+    const url = `${API_BASE_URL}/dashboard/channels${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to load dashboard channels");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get dashboard projects
+   */
+  getProjects: async (): Promise<any> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/projects`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to load dashboard projects");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get dashboard connections
+   */
+  getConnections: async (projectId?: string): Promise<any> => {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.append("project_id", projectId);
+
+    const url = `${API_BASE_URL}/dashboard/connections${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to load dashboard connections");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get global activity feed
+   */
+  getActivity: async (projectId?: string, limit?: number): Promise<ActivityItem[]> => {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.append("project_id", projectId);
+    if (limit) queryParams.append("limit", limit.toString());
 
     const url = `${API_BASE_URL}/dashboard/activity${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     const response = await authenticatedFetch(url, {
@@ -606,6 +704,62 @@ export const projectsAPI = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.detail || "Failed to create project");
+    }
+
+    return await response.json();
+  },
+
+  getProject: async (projectId: string): Promise<Project> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/projects/${projectId}`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get project");
+    }
+
+    return await response.json();
+  },
+
+  updateProject: async (projectId: string, data: { name?: string }): Promise<Project> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/projects/${projectId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to update project");
+    }
+
+    return await response.json();
+  },
+
+  deleteProject: async (projectId: string): Promise<{ message: string }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/projects/${projectId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to delete project");
+    }
+
+    return await response.json();
+  },
+
+  getProjectActivity: async (projectId: string): Promise<any[]> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/projects/${projectId}/activity`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get project activity");
     }
 
     return await response.json();
@@ -1597,6 +1751,334 @@ export const jobsAPI = {
 
     return await response.json();
   },
+
+  /**
+   * Get transcript for a job
+   * GET /jobs/{job_id}/transcript
+   */
+  getJobTranscript: async (jobId: string): Promise<any> => {
+    // Return mock data for demo jobs
+    if (jobId.startsWith('demo_')) {
+      const { YC_CEO_DEMO_TRANSCRIPT } = await import('./mockDemoData');
+      return YC_CEO_DEMO_TRANSCRIPT;
+    }
+
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/transcript`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get transcript");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get all translations for a job
+   * GET /jobs/{job_id}/translations
+   */
+  getJobTranslations: async (jobId: string): Promise<any[]> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/translations`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get translations");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get translation for a specific language
+   * GET /jobs/{job_id}/translations/{language_code}
+   */
+  getJobTranslation: async (jobId: string, languageCode: string): Promise<any> => {
+    // Return mock data for demo jobs
+    if (jobId.startsWith('demo_')) {
+      const { YC_CEO_DEMO_TRANSLATION } = await import('./mockDemoData');
+      return YC_CEO_DEMO_TRANSLATION;
+    }
+
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/translations/${languageCode}`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get translation");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Update transcript text
+   * PATCH /jobs/{job_id}/transcript
+   */
+  updateTranscript: async (jobId: string, data: { transcript_text: string }): Promise<{ success: boolean; message: string }> => {
+    // Return success for demo jobs (no actual update)
+    if (jobId.startsWith('demo_')) {
+      return {
+        success: true,
+        message: "Transcript updated successfully (demo mode)"
+      };
+    }
+
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/transcript`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to update transcript");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Update translation text for a specific language
+   * PATCH /jobs/{job_id}/translations/{language_code}
+   */
+  updateTranslation: async (jobId: string, languageCode: string, data: { translated_text: string }): Promise<{ success: boolean; message: string }> => {
+    // Return success for demo jobs (no actual update)
+    if (jobId.startsWith('demo_')) {
+      return {
+        success: true,
+        message: "Translation updated successfully (demo mode)"
+      };
+    }
+
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/translations/${languageCode}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to update translation");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Create manual job from video URL
+   * POST /jobs/manual
+   */
+  createManualJob: async (data: { video_url: string; target_languages: string[]; project_id: string }): Promise<Job> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/manual`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to create manual job");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Approve localized videos
+   * POST /jobs/{job_id}/videos/approve
+   */
+  approveVideos: async (jobId: string, languageCodes: string[]): Promise<{ message: string; approved_count: number }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/videos/approve`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ language_codes: languageCodes }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to approve videos");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Reject localized videos
+   * POST /jobs/{job_id}/videos/reject
+   */
+  rejectVideos: async (jobId: string, data: { language_codes: string[]; reason: string; feedback?: string }): Promise<{ message: string; rejected_count: number }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/videos/reject`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to reject videos");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Update video status
+   * POST /jobs/{job_id}/videos/{language_code}/status
+   */
+  updateVideoStatus: async (jobId: string, languageCode: string, status: string): Promise<{ message: string }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/videos/${languageCode}/status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to update video status");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Start job processing
+   * POST /jobs/{job_id}/start-processing
+   */
+  startProcessing: async (jobId: string): Promise<{ message: string; job_id: string }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/start-processing`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to start processing");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Pause job
+   * POST /jobs/{job_id}/pause
+   */
+  pauseJob: async (jobId: string): Promise<{ message: string }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/pause`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to pause job");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get job statistics - metrics
+   * GET /jobs/statistics/metrics
+   */
+  getStatisticsMetrics: async (): Promise<any> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/statistics/metrics`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get statistics");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get job statistics - recent
+   * GET /jobs/statistics/recent
+   */
+  getStatisticsRecent: async (): Promise<any> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/statistics/recent`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get recent statistics");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get job statistics - errors
+   * GET /jobs/statistics/errors
+   */
+  getStatisticsErrors: async (days?: number): Promise<any> => {
+    const queryParams = new URLSearchParams();
+    if (days) queryParams.append("days", days.toString());
+
+    const url = `${API_BASE_URL}/jobs/statistics/errors${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get error statistics");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get job statistics - languages
+   * GET /jobs/statistics/languages
+   */
+  getStatisticsLanguages: async (): Promise<any> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/statistics/languages`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get language statistics");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get job statistics - insights
+   * GET /jobs/statistics/insights
+   */
+  getStatisticsInsights: async (): Promise<any> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/statistics/insights`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get insights");
+    }
+
+    return await response.json();
+  },
 };
 
 /**
@@ -1649,5 +2131,181 @@ export const settingsAPI = {
     }
 
     return await response.json();
+  },
+};
+
+/**
+ * Costs API
+ * Cost estimation and tracking
+ */
+export interface CostEstimateRequest {
+  video_duration_seconds: number;
+  target_languages: string[];
+  include_lip_sync?: boolean;
+}
+
+export interface CostEstimateResponse {
+  estimated_cost: number;
+  breakdown: {
+    dubbing: number;
+    lip_sync: number;
+    per_language: number;
+  };
+  currency: string;
+}
+
+export interface UserCostSummary {
+  total_spent: number;
+  current_month: number;
+  last_month: number;
+  currency: string;
+  breakdown_by_service: {
+    dubbing: number;
+    lip_sync: number;
+  };
+}
+
+export interface JobCostDetails {
+  job_id: string;
+  estimated_cost: number;
+  actual_cost: number;
+  cost_breakdown: {
+    dubbing: number;
+    lip_sync: number;
+  };
+  currency: string;
+}
+
+export const costsAPI = {
+  /**
+   * Estimate job cost
+   * POST /costs/estimate
+   */
+  estimateCost: async (data: CostEstimateRequest): Promise<CostEstimateResponse> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/costs/estimate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to estimate cost");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get user cost summary
+   * GET /costs/summary
+   */
+  getSummary: async (): Promise<UserCostSummary> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/costs/summary`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get cost summary");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get job cost details
+   * GET /costs/job/{job_id}
+   */
+  getJobCost: async (jobId: string): Promise<JobCostDetails> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/costs/job/${jobId}`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to get job cost");
+    }
+
+    return await response.json();
+  },
+};
+
+/**
+ * Localization API
+ * Caption and subtitle management
+ */
+export interface CaptionUploadResponse {
+  caption_id: string;
+  language_code: string;
+  success: boolean;
+}
+
+export const localizationAPI = {
+  /**
+   * Upload captions
+   * POST /localization/captions/upload
+   */
+  uploadCaptions: async (captionFile: File, languageCode: string, videoId: string): Promise<CaptionUploadResponse> => {
+    const formData = new FormData();
+    formData.append("caption_file", captionFile);
+    formData.append("language_code", languageCode);
+    formData.append("video_id", videoId);
+
+    const token = tokenStorage.getAccessToken();
+    if (!token) {
+      throw new Error("No access token available");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/localization/captions/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to upload captions");
+    }
+
+    return await response.json();
+  },
+};
+
+/**
+ * Events API (Server-Sent Events)
+ * Real-time updates
+ */
+export const eventsAPI = {
+  /**
+   * Connect to SSE stream for real-time updates
+   * GET /events/stream
+   */
+  connectToStream: (onMessage: (event: MessageEvent) => void, onError?: (error: Event) => void): EventSource => {
+    const token = tokenStorage.getAccessToken();
+    if (!token) {
+      throw new Error("No access token available");
+    }
+
+    const eventSource = new EventSource(`${API_BASE_URL}/events/stream?token=${token}`);
+
+    eventSource.onmessage = onMessage;
+
+    if (onError) {
+      eventSource.onerror = onError;
+    }
+
+    return eventSource;
+  },
+
+  /**
+   * Disconnect from SSE stream
+   */
+  disconnectFromStream: (eventSource: EventSource): void => {
+    eventSource.close();
   },
 };

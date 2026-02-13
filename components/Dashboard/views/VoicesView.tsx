@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Mic, Sparkles, AudioLines, Music4, Zap } from "lucide-react";
+import { Mic, Sparkles, AudioLines, Music4, Zap, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface VoicesViewProps {
