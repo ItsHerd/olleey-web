@@ -147,7 +147,8 @@ export function LeftSidebar({
   const handleUpdateChannelLanguage = async () => {
     if (!editChannel || !newLanguage) return;
     try {
-      await channelsAPI.updateChannel(editChannel.id, { language_code: newLanguage });
+      const apiChannelId = editChannel.channel_id || editChannel.id;
+      await channelsAPI.updateChannel(apiChannelId, { language_code: newLanguage });
       setEditChannel(null);
       setNewLanguage("");
       refetchChannels();
@@ -190,7 +191,8 @@ export function LeftSidebar({
 
   const handleTogglePause = async (channel: LanguageChannel) => {
     try {
-      await channelsAPI.updateChannel(channel.id, { is_paused: !channel.is_paused });
+      const apiChannelId = channel.channel_id || channel.id;
+      await channelsAPI.updateChannel(apiChannelId, { is_paused: !channel.is_paused });
       refetchChannels();
     } catch (e) {
       console.error("Failed to toggle pause", e);
@@ -559,7 +561,7 @@ export function LeftSidebar({
                               Change Language
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => handleDeleteChannel(channel.id)}>
+                            <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => handleDeleteChannel(channel.channel_id || channel.id)}>
                               <Trash className="w-3.5 h-3.5 mr-2" />
                               Remove Channel
                             </DropdownMenuItem>

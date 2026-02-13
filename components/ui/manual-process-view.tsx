@@ -126,6 +126,13 @@ export function ManualProcessView({
         { id: 3, name: "Targets", icon: Globe },
     ];
 
+    // Default to first available source channel for better UX.
+    useEffect(() => {
+        if (!sourceChannelId && availableChannels.length > 0) {
+            setSourceChannelId(availableChannels[0].id);
+        }
+    }, [availableChannels, sourceChannelId]);
+
     // Load videos when channel is selected
     useEffect(() => {
         const loadChannelVideos = async () => {
@@ -133,20 +140,18 @@ export function ManualProcessView({
                 try {
                     setLoadingVideos(true);
                     setError(null);
-                    console.log('[ManualProcessView] Loading channel videos from Supabase:', { sourceChannelId, userId });
+                    console.log('[ManualProcessView] Loading channel videos from API:', { sourceChannelId, userId, projectId });
 
-                    const { data, error: queryError } = await supabase
-                        .from('videos')
-                        .select('*')
-                        .eq('channel_id', sourceChannelId)
-                        .eq('user_id', userId)
-                        .is('deleted_at', null)
-                        .order('published_at', { ascending: false });
+                    // Use backend list endpoint so we include both persisted DB videos
+                    // and live YouTube videos for the selected channel.
+                    const response = await videosAPI.listVideos({
+                        channel_id: sourceChannelId,
+                        project_id: projectId,
+                        page_size: 50,
+                    });
 
-                    if (queryError) throw queryError;
-
-                    console.log('[ManualProcessView] Loaded videos:', { count: data?.length || 0 });
-                    setChannelVideos(data || []);
+                    console.log('[ManualProcessView] Loaded videos:', { count: response?.videos?.length || 0 });
+                    setChannelVideos(response?.videos || []);
                 } catch (err: any) {
                     logger.error("ManualProcessView", "Failed to load channel videos", err);
                     setError("Failed to load videos for this channel");
@@ -157,7 +162,7 @@ export function ManualProcessView({
             }
         };
         loadChannelVideos();
-    }, [sourceChannelId, activeTab, userId]);
+    }, [sourceChannelId, activeTab, userId, projectId]);
 
     // Load draft videos
     useEffect(() => {
