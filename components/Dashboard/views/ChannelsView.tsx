@@ -55,10 +55,10 @@ export function ChannelsView({ theme }: ChannelsViewProps) {
               <Radio className="w-16 h-16 text-red-500" />
             </div>
 
-            <div className="absolute -top-6 -right-6 w-14 h-14 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center shadow-2xl">
+            <div className={`absolute -top-6 -right-6 w-14 h-14 rounded-2xl ${isDark ? "bg-white/5 border border-white/10" : "bg-gray-100 border border-gray-200"} backdrop-blur-md flex items-center justify-center shadow-2xl`}>
               <Youtube className="w-7 h-7 text-red-600" />
             </div>
-            <div className="absolute -bottom-4 -left-8 w-12 h-12 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center shadow-2xl">
+            <div className={`absolute -bottom-4 -left-8 w-12 h-12 rounded-xl ${isDark ? "bg-white/5 border border-white/10" : "bg-gray-100 border border-gray-200"} backdrop-blur-md flex items-center justify-center shadow-2xl`}>
               <Globe className="w-6 h-6 text-blue-400" />
             </div>
           </motion.div>
@@ -81,7 +81,7 @@ export function ChannelsView({ theme }: ChannelsViewProps) {
             ))}
           </div>
 
-          <div className={`mt-16 pt-8 border-t border-white/[0.03] w-full max-w-md`}>
+          <div className={`mt-16 pt-8 border-t ${isDark ? "border-white/[0.03]" : "border-gray-200"} w-full max-w-md`}>
             <p className={`text-[11px] font-black uppercase tracking-widest mb-4 opacity-50 ${mutedTextClass}`}>Platform Status</p>
             <div className="flex items-center justify-center gap-8">
               <div className="flex items-center gap-2">

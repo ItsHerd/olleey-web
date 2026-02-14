@@ -173,7 +173,7 @@ export function SupportView({ theme }: SupportViewProps) {
                     {option.description}
                   </p>
                 </div>
-                <div className="pt-4 border-t border-white/[0.03] mt-auto">
+                <div className={`pt-4 border-t ${isDark ? "border-white/[0.03]" : "border-gray-200"} mt-auto`}>
                   <div className={`text-[10px] font-black uppercase tracking-widest ${themeColors.text} mb-4`}>
                     {option.stats}
                   </div>

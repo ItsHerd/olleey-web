@@ -87,7 +87,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
   const textClass = isDark ? "text-white" : "text-gray-900";
   const textSecondaryClass = isDark ? "text-gray-500" : "text-gray-500";
   const cardBgClass = isDark ? "bg-[#141414]" : "bg-white";
-  const borderClass = isDark ? "border-white/10" : "border-transparent";
+  const borderClass = isDark ? "border-white/10" : "border-gray-200";
   const shadowClass = isDark ? "shadow-sm" : "shadow-none";
 
   return (

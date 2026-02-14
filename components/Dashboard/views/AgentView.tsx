@@ -34,10 +34,10 @@ interface Message {
 
 import Image from "next/image";
 
-const OlleeyLogo = ({ className = "" }: { className?: string }) => (
+const OlleeyLogo = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
   <div className={`relative w-12 h-12 ${className}`}>
     <Image
-      src="/images/translogowhite.png"
+      src={isDark ? "/images/translogowhite.png" : "/logo-transparent.png"}
       alt="Olleey Logo"
       fill
       className="object-contain"
@@ -70,7 +70,7 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
 
   const isDark = theme === "dark";
   const cardBgClass = isDark ? "bg-[#141414]" : "bg-white";
-  const borderClass = isDark ? "border-white/10" : "border-transparent";
+  const borderClass = isDark ? "border-white/10" : "border-gray-200";
   const shadowClass = isDark ? "shadow-xl" : "shadow-none";
   const textClass = isDark ? "text-white" : "text-gray-900";
   const textSecondaryClass = isDark ? "text-gray-400" : "text-gray-600";
@@ -147,7 +147,7 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
                       }`}
                   >
                     {message.role === "assistant" ? (
-                      <OlleeyLogo className="w-6 h-6" />
+                      <OlleeyLogo className="w-6 h-6" isDark={isDark} />
                     ) : (
                       <span className={`text-lg font-bold ${textClass}`}>Y</span>
                     )}
@@ -198,7 +198,7 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
               className="pb-12"
             >
               <div className="mb-6 px-4">
-                <OlleeyLogo className="w-10 h-10" />
+                <OlleeyLogo className="w-10 h-10" isDark={isDark} />
                 <h1 className={`text-2xl font-serif mb-4 ${textClass} tracking-tight`}>Let's knock something off your list</h1>
               </div>
 
@@ -267,6 +267,7 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
             onSend={handleSend}
             isLoading={isTyping}
             placeholder="How can I help you today?"
+            theme={theme}
           />
         </div>
       </div>

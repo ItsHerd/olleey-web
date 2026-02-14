@@ -41,8 +41,8 @@ export function RightSidebar({
   const bgClass = isDark ? "bg-[#0D0D0D]" : "bg-[#EBEBDC]";
   const borderClass = isDark ? "border-[#2A2A2A]" : "border-gray-300/50";
   const textClass = isDark ? "text-white" : "text-gray-900";
-  const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
-  const glassBgClass = isDark ? "bg-white/[0.03]" : "bg-gray-100/30";
+  const mutedTextClass = isDark ? "text-gray-500" : "text-gray-500";
+  const glassBgClass = isDark ? "bg-white/[0.03]" : "bg-white/60";
 
   const { jobs, loading, error: jobsError, refetch: refetchJobs } = useDashboardJobs({
     projectId: selectedProject?.id,
@@ -191,10 +191,10 @@ export function RightSidebar({
       <div className="flex items-center gap-4 relative z-10">
         <button
           onClick={onClose}
-          className={`p-2 rounded-lg border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
+          className={`p-2 rounded-lg border-2 ${borderClass} ${isDark ? "hover:bg-white/5 hover:border-white/20" : "hover:bg-gray-100 hover:border-gray-400"} transition-all duration-200 active:scale-95`}
           title="Close sidebar"
         >
-          <PanelRightClose className="w-4 h-4 text-gray-400" />
+          <PanelRightClose className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
         </button>
         <div className="flex flex-col">
           <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${mutedTextClass} mb-1`}>Pipeline</span>
@@ -220,7 +220,7 @@ export function RightSidebar({
               </Button>
             </div>
             {!loading && (
-              <span className={`block mt-1 text-[10px] uppercase tracking-widest font-bold ${mutedTextClass} opacity-60`}>
+              <span className={`block mt-1 text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"}`}>
                 {detectedVideos.length} videos
               </span>
             )}
@@ -233,7 +233,7 @@ export function RightSidebar({
             <Button
               onClick={enableAutoApprove}
               disabled={autoApproveEnabled || savingAutoApprove || settingsLoading}
-              className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider border ${autoApproveEnabled ? "bg-emerald-600 hover:bg-emerald-600 text-white border-emerald-600" : "bg-transparent border-gray-500 text-gray-300 hover:bg-white/5 hover:border-gray-400"}`}
+              className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider border ${autoApproveEnabled ? "bg-emerald-600 hover:bg-emerald-600 text-white border-emerald-600" : isDark ? "bg-transparent border-gray-500 text-gray-300 hover:bg-white/5 hover:border-gray-400" : "bg-white border-gray-400 text-gray-700 hover:bg-gray-50 hover:border-gray-500"}`}
             >
               {settingsLoading ? "Checking settings..." : autoApproveEnabled ? "Auto-Approve Enabled" : savingAutoApprove ? "Enabling..." : "Enable Auto-Approve"}
             </Button>
@@ -243,7 +243,7 @@ export function RightSidebar({
             {loading || allUserVideosLoading ? (
               <div className="space-y-3">
                 {[1, 2].map(i => (
-                  <div key={i} className={`h-20 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
+                  <div key={i} className={`h-20 rounded-xl border ${borderClass} animate-pulse ${isDark ? "bg-white/5" : "bg-gray-200/50"}`} />
                 ))}
               </div>
             ) : detectedVideos.length > 0 ? (
@@ -253,12 +253,12 @@ export function RightSidebar({
                 return (
                   <div key={video.video_id} className={`p-3 rounded-xl border ${borderClass} ${glassBgClass}`}>
                     <div className="flex gap-3 mb-2">
-                      <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
+                      <div className={`w-16 aspect-video rounded-lg overflow-hidden ${isDark ? "bg-white/5 border border-white/5" : "bg-gray-100 border border-gray-200"} shrink-0`}>
                         {video?.thumbnail_url ? (
                           <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Play className="w-3 h-3 text-gray-600" />
+                            <Play className={`w-3 h-3 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
                           </div>
                         )}
                       </div>
@@ -274,7 +274,7 @@ export function RightSidebar({
                     <Button
                       onClick={() => preStartJob?.job_id && beginDetectedJob(preStartJob.job_id)}
                       disabled={!preStartJob?.job_id || Boolean(startingJobId)}
-                      className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider ${preStartJob?.job_id ? "bg-blue-600 hover:bg-blue-500 text-white" : "bg-transparent border border-gray-500 text-gray-400 hover:bg-transparent"}`}
+                      className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider ${preStartJob?.job_id ? "bg-blue-600 hover:bg-blue-500 text-white" : isDark ? "bg-transparent border border-gray-500 text-gray-400 hover:bg-transparent" : "bg-white border border-gray-400 text-gray-600 hover:bg-transparent"}`}
                     >
                       {thisJobStarting ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : null}
                       {thisJobStarting ? "Starting..." : preStartJob?.job_id ? "Begin Processing" : "No Pending Job"}
@@ -298,14 +298,14 @@ export function RightSidebar({
               <div className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.5)]" />
               Need Review
             </h4>
-            {!loading && <span className={`text-[10px] uppercase tracking-widest font-bold ${mutedTextClass} opacity-60`}>{needsReviewJobs.length} videos</span>}
+            {!loading && <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"}`}>{needsReviewJobs.length} videos</span>}
           </div>
 
           <div className="space-y-2">
             {loading ? (
               <div className="space-y-3">
                 {[1, 2].map(i => (
-                  <div key={i} className={`h-16 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
+                  <div key={i} className={`h-16 rounded-xl border ${borderClass} animate-pulse ${isDark ? "bg-white/5" : "bg-gray-200/50"}`} />
                 ))}
               </div>
             ) : needsReviewJobs.length > 0 ? (
@@ -353,12 +353,12 @@ export function RightSidebar({
                     className={`p-3 rounded-xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group ${isDark ? 'shadow-sm' : 'shadow-none'}`}
                   >
                     <div className="flex gap-3">
-                      <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
+                      <div className={`w-16 aspect-video rounded-lg overflow-hidden ${isDark ? "bg-white/5 border border-white/5" : "bg-gray-100 border border-gray-200"} shrink-0`}>
                         {video?.thumbnail_url ? (
                           <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Play className="w-3 h-3 text-gray-600" />
+                            <Play className={`w-3 h-3 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
                           </div>
                         )}
                       </div>
@@ -367,12 +367,12 @@ export function RightSidebar({
                           {video?.title || job.source_video_id}
                         </span>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={`text-[10px] ${mutedTextClass} opacity-60`}>
+                          <span className={`text-[10px] ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"}`}>
                             {job.target_languages?.join(' • ')}
                           </span>
                           {video?.duration && (
                             <>
-                              <span className="text-[10px] text-gray-700">•</span>
+                              <span className={`text-[10px] ${isDark ? "text-gray-700" : "text-gray-400"}`}>•</span>
                               <span className={`text-[9px] font-mono ${mutedTextClass} opacity-60`}>
                                 {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}
                               </span>
@@ -385,10 +385,10 @@ export function RightSidebar({
                 );
               })
             ) : (
-              <div className={`p-8 rounded-3xl border border-dashed ${borderClass} flex flex-col items-center justify-center text-center opacity-40`}>
+              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-[#2A2A2A]" : "border-gray-400"} flex flex-col items-center justify-center text-center ${isDark ? "opacity-40" : "opacity-70"}`}>
                 <p className={`text-[11px] font-bold uppercase tracking-widest ${mutedTextClass}`}>All caught up!</p>
-                <div className="mt-4 w-10 h-10 rounded-full border border-white/5 flex items-center justify-center bg-white/[0.02]">
-                  <Clock className="w-4 h-4" />
+                <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-300 bg-white/60"} flex items-center justify-center`}>
+                  <Clock className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
                 </div>
               </div>
             )}
@@ -402,14 +402,14 @@ export function RightSidebar({
               <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]" />
               Processing
             </h4>
-            {!loading && <span className={`text-[10px] uppercase tracking-widest font-bold ${mutedTextClass} opacity-60`}>{processingJobs.length} active</span>}
+            {!loading && <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"}`}>{processingJobs.length} active</span>}
           </div>
 
           <div className="space-y-2">
             {loading ? (
               <div className="space-y-3">
                 {[1, 2].map(i => (
-                  <div key={i} className={`h-20 rounded-2xl border ${borderClass} animate-pulse bg-white/5`} />
+                  <div key={i} className={`h-20 rounded-2xl border ${borderClass} animate-pulse ${isDark ? "bg-white/5" : "bg-gray-200/50"}`} />
                 ))}
               </div>
             ) : processingJobs.length > 0 ? (
@@ -455,12 +455,12 @@ export function RightSidebar({
                     className={`p-3 rounded-xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group ${isDark ? 'shadow-sm' : 'shadow-none'}`}
                   >
                     <div className="flex gap-3 mb-3">
-                      <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
+                      <div className={`w-16 aspect-video rounded-lg overflow-hidden ${isDark ? "bg-white/5 border border-white/5" : "bg-gray-100 border border-gray-200"} shrink-0`}>
                         {video?.thumbnail_url ? (
                           <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Clock className="w-3 h-3 text-gray-600" />
+                            <Clock className={`w-3 h-3 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
                           </div>
                         )}
                       </div>
@@ -468,7 +468,7 @@ export function RightSidebar({
                         <span className={`text-[12px] font-semibold truncate ${textClass} opacity-90`}>
                           {video?.title || job.source_video_id}
                         </span>
-                        <span className={`text-[10px] ${mutedTextClass} mt-0.5 opacity-60`}>
+                        <span className={`text-[10px] ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"} mt-0.5`}>
                           {new Date(job.created_at).toLocaleDateString()}
                         </span>
                       </div>
@@ -478,7 +478,7 @@ export function RightSidebar({
                         <span className={`text-[9px] font-bold uppercase tracking-tighter text-blue-400`}>
                           {job.status}
                         </span>
-                        <span className={`text-[10px] font-mono ${textClass} opacity-40`}>
+                        <span className={`text-[10px] font-mono ${isDark ? "text-white opacity-40" : "text-gray-600"}`}>
                           {job.progress}%
                         </span>
                       </div>
@@ -495,10 +495,10 @@ export function RightSidebar({
                 );
               })
             ) : (
-              <div className={`p-8 rounded-3xl border border-dashed ${borderClass} flex flex-col items-center justify-center text-center opacity-40`}>
+              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-[#2A2A2A]" : "border-gray-400"} flex flex-col items-center justify-center text-center ${isDark ? "opacity-40" : "opacity-70"}`}>
                 <p className={`text-[11px] font-bold uppercase tracking-widest ${mutedTextClass}`}>Quiet for now</p>
-                <div className="mt-4 w-10 h-10 rounded-full border border-white/5 flex items-center justify-center bg-white/[0.02]">
-                  <Play className="w-4 h-4" />
+                <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-300 bg-white/60"} flex items-center justify-center`}>
+                  <Play className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
                 </div>
               </div>
             )}

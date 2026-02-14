@@ -22,7 +22,7 @@ export function PipelineStepper({ stages, theme }: PipelineStepperProps) {
   return (
     <div className="relative">
       {/* Connection Line */}
-      <div className="absolute top-6 left-0 right-0 h-0.5 bg-gray-800">
+      <div className={`absolute top-6 left-0 right-0 h-0.5 ${isDark ? "bg-gray-800" : "bg-gray-300"}`}>
         <motion.div
           initial={{ width: 0 }}
           animate={{
@@ -45,17 +45,17 @@ export function PipelineStepper({ stages, theme }: PipelineStepperProps) {
           const isActive = stage.status === "active";
           const isFailed = stage.status === "failed";
 
-          let bgColor = "bg-gray-800";
-          let textColor = "text-gray-500";
-          let borderColor = "border-gray-700";
+          let bgColor = isDark ? "bg-gray-800" : "bg-gray-200";
+          let textColor = isDark ? "text-gray-500" : "text-gray-400";
+          let borderColor = isDark ? "border-gray-700" : "border-gray-300";
 
           if (isCompleted) {
             bgColor = "bg-green-500";
-            textColor = "text-green-500";
+            textColor = isDark ? "text-green-500" : "text-green-600";
             borderColor = "border-green-500";
           } else if (isActive) {
             bgColor = "bg-[#FFC107]";
-            textColor = "text-[#FFC107]";
+            textColor = isDark ? "text-[#FFC107]" : "text-amber-600";
             borderColor = "border-[#FFC107]";
           } else if (isFailed) {
             bgColor = "bg-red-500";

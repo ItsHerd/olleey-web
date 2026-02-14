@@ -75,14 +75,14 @@ export function VoicesView({ theme }: VoicesViewProps) {
               { icon: Globe, label: "Global Scope" },
               { icon: Sparkles, label: "Emotionally Aware" }
             ].map((item, idx) => (
-              <div key={idx} className={`p-4 rounded-2xl border ${borderClass} bg-white/5 flex flex-col items-center gap-3 backdrop-blur-sm`}>
+              <div key={idx} className={`p-4 rounded-2xl border ${borderClass} ${isDark ? "bg-white/5" : "bg-gray-50"} flex flex-col items-center gap-3 backdrop-blur-sm`}>
                 <item.icon className="w-5 h-5 text-[#FFC107]" />
                 <span className={`text-[9px] font-black uppercase tracking-widest ${mutedTextClass}`}>{item.label}</span>
               </div>
             ))}
           </div>
 
-          <div className={`mt-12 flex items-center gap-2 px-4 py-2 rounded-full border ${borderClass} bg-white/5`}>
+          <div className={`mt-12 flex items-center gap-2 px-4 py-2 rounded-full border ${borderClass} ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className={`text-[10px] font-black uppercase tracking-widest ${mutedTextClass}`}>Coming in Version 2.4</span>
           </div>

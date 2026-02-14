@@ -11,8 +11,8 @@ export function AccountView({ theme }: { theme: string }) {
     const isDark = theme === "dark";
     const textClass = isDark ? "text-white" : "text-gray-900";
     const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
-    const cardBgClass = isDark ? "bg-white/[0.03]" : "bg-white/40";
-    const borderClass = isDark ? "border-white/10" : "border-transparent";
+    const cardBgClass = isDark ? "bg-white/[0.03]" : "bg-white";
+    const borderClass = isDark ? "border-white/10" : "border-gray-200";
 
     const settings = [
         { icon: User, label: "Profile Information", desc: "Update your name and personal details" },

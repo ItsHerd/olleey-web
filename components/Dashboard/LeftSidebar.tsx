@@ -723,7 +723,7 @@ export function LeftSidebar({
                               className={cn("p-3 rounded-xl border transition-all cursor-pointer group shadow-sm", isDark ? "bg-white/[0.05] border-white/5" : "bg-white/50 border-gray-200")}
                             >
                               <div className="flex gap-3 mb-2.5">
-                                <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
+                                <div className={`w-16 aspect-video rounded-lg overflow-hidden ${isDark ? "bg-white/5 border border-white/5" : "bg-gray-100 border border-gray-200"} shrink-0`}>
                                   {video?.thumbnail_url ? (
                                     <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
                                   ) : (
@@ -768,7 +768,7 @@ export function LeftSidebar({
                                   </span>
                                 </div>
                                 {job.status !== 'completed' && job.status !== 'failed' && (
-                                  <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                  <div className={`w-full h-1 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-full overflow-hidden`}>
                                     <motion.div
                                       className="h-full bg-blue-500/50"
                                       initial={{ width: 0 }}

@@ -44,7 +44,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, ...props }, ref) => (
     <textarea
         className={cn(
-            "flex w-full rounded-md border-none bg-transparent px-3 py-2.5 text-base text-gray-100 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] resize-none scrollbar-thin scrollbar-thumb-[#444444] scrollbar-track-transparent hover:scrollbar-thumb-[#555555]",
+            "flex w-full rounded-md border-none bg-transparent px-3 py-2.5 text-base placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] resize-none scrollbar-thin scrollbar-thumb-[#444444] scrollbar-track-transparent hover:scrollbar-thumb-[#555555]",
             className
         )}
         ref={ref}
@@ -331,7 +331,7 @@ const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
                     <div
                         ref={ref}
                         className={cn(
-                            "rounded-2xl border border-[#444444] bg-[#141414] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300",
+                            "rounded-2xl border p-4 transition-all duration-300",
                             isLoading && "border-[#D97757]/70",
                             className
                         )}
@@ -441,9 +441,11 @@ interface PromptInputBoxProps {
     isLoading?: boolean;
     placeholder?: string;
     className?: string;
+    theme?: string;
 }
 export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref: React.Ref<HTMLDivElement>) => {
-    const { onSend = () => { }, isLoading = false, placeholder = "How can I help you today?", className } = props;
+    const { onSend = () => { }, isLoading = false, placeholder = "How can I help you today?", className, theme = "dark" } = props;
+    const isDark = theme === "dark";
     const [input, setInput] = React.useState("");
     const [files, setFiles] = React.useState<File[]>([]);
     const [filePreviews, setFilePreviews] = React.useState<{ [key: string]: string }>({});
@@ -562,7 +564,10 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                 isLoading={isLoading}
                 onSubmit={handleSubmit}
                 className={cn(
-                    "w-full bg-[#141414] border-white/10 shadow-2xl transition-all duration-300 ease-in-out",
+                    "w-full transition-all duration-300 ease-in-out",
+                    isDark
+                        ? "bg-[#141414] border-white/10 shadow-2xl"
+                        : "bg-white border-gray-300 shadow-lg",
                     isRecording && "border-[#D97757]/70",
                     className
                 )}
@@ -618,7 +623,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                                         ? "Create on canvas..."
                                         : placeholder
                         }
-                        className="text-xl placeholder:text-gray-600"
+                        className={`text-xl ${isDark ? "text-gray-100 placeholder:text-gray-600" : "text-gray-900 placeholder:text-gray-400"}`}
                     />
                 </div>
 
@@ -638,12 +643,12 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                         )}
                     >
                         <div className="flex items-center gap-2 mr-2">
-                            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 hover:bg-white/5 text-gray-400 text-sm transition-colors">
+                            <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${isDark ? "border-white/10 hover:bg-white/5 text-gray-400" : "border-gray-200 hover:bg-gray-50 text-gray-600"} text-sm transition-colors`}>
                                 <FolderOpen className="w-4 h-4" />
                                 olleey
                                 <ChevronDown className="w-3 h-3" />
                             </button>
-                            <button onClick={() => uploadInputRef.current?.click()} className="p-1.5 rounded-xl border border-white/10 hover:bg-white/5 text-gray-400 transition-colors">
+                            <button onClick={() => uploadInputRef.current?.click()} className={`p-1.5 rounded-xl border ${isDark ? "border-white/10 hover:bg-white/5 text-gray-400" : "border-gray-200 hover:bg-gray-50 text-gray-600"} transition-colors`}>
                                 <Plus className="w-4 h-4" />
                                 <input
                                     ref={uploadInputRef}
@@ -744,7 +749,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-white/5 text-gray-500 text-sm transition-colors">
+                        <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${isDark ? "hover:bg-white/5 text-gray-500" : "hover:bg-gray-100 text-gray-500"} text-sm transition-colors`}>
                             Sonnet 4.5
                             <ChevronDown className="w-3 h-3" />
                         </button>

@@ -67,7 +67,7 @@ export function JobCard({ job, onClick, theme, highlight }: JobCardProps) {
     ? "border-[#FFC107]/50 shadow-lg shadow-[#FFC107]/10"
     : highlight === "error"
       ? "border-red-500/50"
-      : isDark ? "border-white/10" : "border-transparent";
+      : isDark ? "border-white/10" : "border-gray-200";
 
   return (
     <motion.div
@@ -77,7 +77,7 @@ export function JobCard({ job, onClick, theme, highlight }: JobCardProps) {
       className={`${cardBgClass} rounded-lg border ${borderClass} overflow-hidden cursor-pointer transition-all ${isDark ? 'shadow-sm' : ''}`}
     >
       {/* Thumbnail & Overlay */}
-      <div className="relative aspect-video bg-gradient-to-br from-gray-800 to-gray-900">
+      <div className={`relative aspect-video ${isDark ? "bg-gradient-to-br from-gray-800 to-gray-900" : "bg-gradient-to-br from-gray-200 to-gray-300"}`}>
         {/* Placeholder thumbnail - replace with actual video thumbnail */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-16 h-16 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
