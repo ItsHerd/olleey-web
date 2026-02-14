@@ -9,7 +9,6 @@ import {
   Radio,
   Shield,
   ChevronRight,
-  Sparkles,
   Clock,
   ChevronLeft,
   Settings,
@@ -30,8 +29,7 @@ import {
   Video,
   Pause,
   X,
-  PanelLeftClose,
-  LogOut
+  PanelLeftClose
 } from "lucide-react";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { ViewType } from "./DashboardLayout";
@@ -45,7 +43,7 @@ import { useVideos } from "@/lib/useVideos";
 import { API_BASE_URL } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, getInitialsAvatar } from "@/lib/utils";
 import {
   Accordion,
   AccordionContent,
@@ -102,6 +100,7 @@ export function LeftSidebar({
   const [newLanguage, setNewLanguage] = React.useState("");
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [openSidebarSection, setOpenSidebarSection] = React.useState("channels");
 
   const { channels, loading: channelsLoading, refetch: refetchChannels } = useDashboardChannels({
     projectId: selectedProject?.id,
@@ -317,12 +316,22 @@ export function LeftSidebar({
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
   const glassBgClass = isDark ? "bg-white/[0.05]" : "bg-gray-100/50";
   const borderClass = isDark ? "border-white/10" : "border-gray-200";
+  const accountName =
+    user?.user_metadata?.name ||
+    user?.user_metadata?.full_name ||
+    user?.email?.split("@")[0] ||
+    "User";
+  const accountEmail = user?.email || "";
+  const accountAvatar =
+    user?.user_metadata?.avatar_url ||
+    user?.user_metadata?.picture ||
+    getInitialsAvatar(accountName);
 
   return (
     <div
       className={cn(
-        "w-80 h-full flex flex-col border-r shrink-0",
-        isDark ? "bg-[#09090b] border-white/5" : "bg-neutral-50 border-gray-200"
+        "w-88 h-full flex flex-col border shrink-0",
+        isDark ? "bg-[#09090b] border-white/10" : "bg-[#ECE9DA] border-gray-200"
       )}
     >
       <div className="flex flex-col h-full p-4 relative overflow-hidden">
@@ -520,18 +529,24 @@ export function LeftSidebar({
               )}
             </div>
           ) : (
-            <Accordion type="multiple" defaultValue={["channels", "runs"]} className="space-y-1">
+            <Accordion
+              type="single"
+              collapsible
+              value={openSidebarSection}
+              onValueChange={(value) => setOpenSidebarSection(value)}
+              className="space-y-1"
+            >
               <AccordionItem value="channels" className="border-none">
                 <AccordionTrigger
-                  className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
+                  className="text-xs font-bold hover:no-underline py-3.5 px-4 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
                 >
                   <div className="flex items-center gap-2">
                     <Radio className="w-3.5 h-3.5 text-primary" />
                     Channels
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pt-2">
-                  <div className="space-y-2">
+                <AccordionContent className="pt-3 px-1">
+                  <div className="space-y-3">
                     {connectionsLoading ? (
                       Array.from({ length: 2 }).map((_, i) => (
                         <div key={i} className={`h-12 rounded-lg border ${borderClass} animate-pulse bg-white/5`} />
@@ -692,7 +707,7 @@ export function LeftSidebar({
 
               <AccordionItem value="runs" className="border-none mt-1">
                 <AccordionTrigger
-                  className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
+                  className="text-xs font-bold hover:no-underline py-3.5 px-4 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
                   onClick={() => onViewChange("dashboard")}
                 >
                   <div className="flex items-center gap-2">
@@ -705,7 +720,7 @@ export function LeftSidebar({
                     )}
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pt-2">
+                <AccordionContent className="pt-3 px-1">
                   <div className="space-y-2.5">
                     {jobsLoading ? (
                       Array.from({ length: 3 }).map((_, i) => (
@@ -802,14 +817,14 @@ export function LeftSidebar({
               </AccordionItem>
 
               <AccordionItem value="distributions" className="border-none mt-1">
-                <AccordionTrigger className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5">
+                <AccordionTrigger className="text-xs font-bold hover:no-underline py-3.5 px-4 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5">
                   <div className="flex items-center gap-2">
                     <Share2 className="w-3.5 h-3.5 text-purple-500" />
                     Active Distributions
                   </div>
                 </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2 mt-2">
+                <AccordionContent className="pt-3 px-1">
+                  <div className="space-y-3">
                     {videosLoading ? (
                       Array.from({ length: 2 }).map((_, i) => (
                         <div key={i} className={`h-12 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
@@ -857,31 +872,31 @@ export function LeftSidebar({
         </div>
 
         <div className="mt-auto pt-6 border-t border-border/50 relative z-10 space-y-3 px-2">
-          <div className="p-3 rounded-md bg-background border border-border flex items-center gap-3 shadow-sm group cursor-pointer hover:border-primary/30 transition-all">
-            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-bold text-foreground">Olleey Pro</span>
-              <span className="text-[10px] text-muted-foreground">Premium Access</span>
-            </div>
-          </div>
-
-          <Button
-            variant="ghost"
-            onClick={() => {
-              const { signOut } = require("@/lib/AuthContext");
-              if (typeof window !== 'undefined') {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '/login';
-              }
-            }}
-            className="w-full justify-start gap-3 h-auto p-3 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+          <button
+            onClick={() => onViewChange("account")}
+            className={cn(
+              "w-full p-3 rounded-md border flex items-center gap-3 shadow-sm transition-all text-left",
+              currentView === "account"
+                ? "bg-primary/10 border-primary/30"
+                : "bg-background border-border hover:border-primary/30 hover:bg-muted/40"
+            )}
           >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="text-[11px] font-bold">Sign Out</span>
-          </Button>
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-muted shrink-0">
+              <img
+                src={accountAvatar}
+                alt={accountName}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] font-bold text-foreground truncate">{accountName}</span>
+              <span className="text-[10px] text-muted-foreground truncate">{accountEmail}</span>
+            </div>
+            <div className="ml-auto flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <span className="uppercase tracking-wider">Account</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </div>
+          </button>
         </div>
       </div>
 

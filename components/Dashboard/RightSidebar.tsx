@@ -38,7 +38,7 @@ export function RightSidebar({
   const { detectedUploadWindow } = useSettings();
   const userId = user?.id;
   const isDark = theme === "dark";
-  const bgClass = isDark ? "bg-[#0D0D0D]" : "bg-[#EBEBDC]";
+  const bgClass = isDark ? "bg-[#09090b]" : "bg-[#ECE9DA]";
   const borderClass = isDark ? "border-[#2A2A2A]" : "border-gray-300/50";
   const textClass = isDark ? "text-white" : "text-gray-900";
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-500";
@@ -92,7 +92,7 @@ export function RightSidebar({
   // If there's an auth error, show a message
   if (jobsError?.includes("access token") || videosError?.includes("access token")) {
     return (
-      <div className={`h-full ${bgClass} flex flex-col items-center justify-center p-6`}>
+      <div className={`h-full ${bgClass} border ${isDark ? "border-white/10" : "border-gray-200"} flex flex-col items-center justify-center p-6`}>
         <div className="text-center">
           <p className={`text-sm ${mutedTextClass} mb-4`}>Please log in to view status</p>
           <Button
@@ -183,7 +183,7 @@ export function RightSidebar({
   };
 
   return (
-    <div className={`h-full ${bgClass} flex flex-col p-6 space-y-6 overflow-hidden relative`}>
+    <div className={`h-full ${bgClass} flex flex-col p-6 space-y-6 overflow-hidden relative border ${isDark ? "border-white/10" : "border-gray-200"}`}>
       {/* Subtle Background Glow */}
       <div className="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
 

@@ -75,7 +75,7 @@ export default function DashboardLayout() {
           {leftSidebarOpen && (
             <motion.div
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
+              animate={{ width: 352, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
               className={`h-full border-r ${isDark ? "border-white/10" : "border-gray-200"}`}
@@ -137,10 +137,10 @@ export default function DashboardLayout() {
           {rightSidebarOpen && (
             <motion.div
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 380, opacity: 1 }}
+              animate={{ width: 420, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className={`border-l ${isDark ? "border-white/10" : "border-gray-200"}`}
+              className={`h-full border-l ${isDark ? "bg-[#09090b] border-white/10" : "bg-[#ECE9DA] border-gray-200"}`}
             >
               <RightSidebar
                 selectedItem={selectedItem}
