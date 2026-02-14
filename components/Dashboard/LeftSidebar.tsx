@@ -814,8 +814,8 @@ export function LeftSidebar({
                       Array.from({ length: 2 }).map((_, i) => (
                         <div key={i} className={`h-12 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
                       ))
-                    ) : videos.filter(v => v.status === 'published').slice(0, 5).length > 0 ? (
-                      videos.filter(v => v.status === 'published').slice(0, 5).map((video) => (
+                    ) : videos.filter(v => (v.status as string) === 'published').slice(0, 5).length > 0 ? (
+                      videos.filter(v => (v.status as string) === 'published').slice(0, 5).map((video) => (
                         <motion.div
                           key={video.video_id}
                           whileHover={{ x: 4 }}
