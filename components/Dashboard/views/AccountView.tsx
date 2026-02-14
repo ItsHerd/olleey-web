@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
-import { User, Mail, Shield, Zap, CreditCard } from "lucide-react";
+import { User, Mail, Shield, Zap, CreditCard, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export function AccountView({ theme }: { theme: string }) {
-    const { user } = useAuth();
+    const { user, signOut } = useAuth();
     const isDark = theme === "dark";
     const textClass = isDark ? "text-white" : "text-gray-900";
     const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
@@ -61,6 +63,26 @@ export function AccountView({ theme }: { theme: string }) {
                     </div>
                 ))}
             </div>
+
+            {/* Sign Out Section */}
+            <Card className={`mt-8 p-6 border ${borderClass}`}>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className={`font-semibold ${textClass} mb-1`}>Sign Out</h3>
+                        <p className={`text-sm ${mutedTextClass}`}>
+                            Sign out of your account on this device
+                        </p>
+                    </div>
+                    <Button
+                        variant="destructive"
+                        onClick={() => signOut()}
+                        className="gap-2"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                    </Button>
+                </div>
+            </Card>
         </div>
     );
 }

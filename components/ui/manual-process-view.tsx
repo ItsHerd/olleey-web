@@ -482,7 +482,7 @@ export function ManualProcessView({
                                 )}
                             >
                                 <div className={cn(
-                                    "w-8 h-8 rounded-lg flex items-center justify-center border-2 transition-all",
+                                    "w-8 h-8 rounded-md flex items-center justify-center border-2 transition-all",
                                     isActive ? "border-primary bg-primary/10 text-primary" :
                                         isCompleted ? "border-emerald-500 bg-emerald-500/10 text-emerald-500" :
                                             "border-border bg-transparent"
@@ -524,7 +524,7 @@ export function ManualProcessView({
                                 exit={{ opacity: 0, x: 20 }}
                                 className="space-y-4"
                             >
-                                <Card className="border bg-card shadow-sm rounded-lg">
+                                <Card className="border bg-card shadow-sm rounded-md">
                                     <CardContent className="p-3">
                                         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as SourceTab)} className="w-full">
                                             <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 h-10">
@@ -550,7 +550,7 @@ export function ManualProcessView({
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                 >
-                                    <Card className="border border-border bg-card shadow-sm rounded-xl overflow-hidden">
+                                    <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
                                         <CardContent className={cn("relative p-4 lg:p-5", compact && "p-4")}>
                                             <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
                                                 {activeTab === 'channel' && <Youtube className="w-24 h-24" />}
@@ -564,7 +564,7 @@ export function ManualProcessView({
                                                     <div className="space-y-3">
                                                         <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Source Repository</label>
                                                         <Select value={sourceChannelId} onValueChange={setSourceChannelId}>
-                                                            <SelectTrigger className="h-11 rounded-lg border-border bg-background text-xs font-medium focus:ring-primary/20">
+                                                            <SelectTrigger className="h-11 rounded-md border-border bg-background text-xs font-medium focus:ring-primary/20">
                                                                 <SelectValue placeholder="Select source hub..." />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -578,7 +578,7 @@ export function ManualProcessView({
                                                     </div>
 
                                                     {sourceChannelId && (
-                                                        <div className="border border-border rounded-lg overflow-hidden max-h-[320px] overflow-y-auto bg-background custom-scrollbar">
+                                                        <div className="border border-border rounded-md overflow-hidden max-h-[320px] overflow-y-auto bg-background custom-scrollbar">
                                                             {loadingVideos ? (
                                                                 <div className="p-24 flex flex-col items-center gap-4">
                                                                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -599,12 +599,12 @@ export function ManualProcessView({
                                                                                 setCustomTitle(video.title);
                                                                                 setCustomDescription(video.description || '');
                                                                             }}
-                                                                        className={cn(
+                                                                            className={cn(
                                                                                 "flex items-center gap-3 p-3 cursor-pointer transition-all duration-300 group/item",
                                                                                 selectedVideoId === video.video_id ? "bg-primary/5" : "hover:bg-muted/50"
                                                                             )}
                                                                         >
-                                                                            <div className="relative w-28 aspect-video rounded-md overflow-hidden shrink-0 border border-border group-hover/item:scale-[1.02] transition-transform">
+                                                                            <div className="relative w-28 aspect-video rounded-sm overflow-hidden shrink-0 border border-border group-hover/item:scale-[1.02] transition-transform">
                                                                                 {video.thumbnail_url && <img src={video.thumbnail_url} className="w-full h-full object-cover transition-all duration-700" alt="" />}
                                                                                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity">
                                                                                     <PlayCircle className="w-6 h-6 text-white" />
@@ -649,7 +649,7 @@ export function ManualProcessView({
                                                             placeholder="https://example.com/video.mp4 or YouTube URL..."
                                                             value={sourceVideoUrl}
                                                             onChange={(e) => setSourceVideoUrl(e.target.value)}
-                                                            className="h-11 rounded-lg border-border bg-background text-sm font-medium focus:ring-primary/20"
+                                                            className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20"
                                                         />
                                                     </div>
                                                     <div className="space-y-3">
@@ -658,7 +658,7 @@ export function ManualProcessView({
                                                             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Assign Origin Hub</label>
                                                         </div>
                                                         <Select value={sourceChannelId} onValueChange={setSourceChannelId}>
-                                                            <SelectTrigger className="h-11 rounded-lg border-border bg-background text-xs font-medium focus:ring-primary/20">
+                                                            <SelectTrigger className="h-11 rounded-md border-border bg-background text-xs font-medium focus:ring-primary/20">
                                                                 <SelectValue placeholder="Select associated channel..." />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -676,7 +676,7 @@ export function ManualProcessView({
                                             {activeTab === 'upload' && (
                                                 <div
                                                     className={cn(
-                                                        "border-2 border-dashed rounded-xl p-8 text-center transition-all group cursor-pointer relative overflow-hidden",
+                                                        "border-2 border-dashed rounded-lg p-8 text-center transition-all group cursor-pointer relative overflow-hidden",
                                                         uploadedFile ? "border-primary bg-primary/5" : "border-border bg-muted/20 hover:bg-muted/40 hover:border-primary/50"
                                                     )}
                                                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -706,7 +706,7 @@ export function ManualProcessView({
                                                                 animate={{ opacity: 1, scale: 1 }}
                                                                 className="space-y-4"
                                                             >
-                                                                <div className="p-4 bg-primary text-primary-foreground inline-flex rounded-lg">
+                                                                <div className="p-4 bg-primary text-primary-foreground inline-flex rounded-md">
                                                                     <FileVideo className="w-10 h-10" />
                                                                 </div>
                                                                 <div>
@@ -733,10 +733,10 @@ export function ManualProcessView({
                                                                 className="space-y-4 py-4"
                                                             >
                                                                 <div className="relative inline-block">
-                                                                    <div className="p-5 bg-muted inline-flex rounded-lg border border-border group-hover:scale-110 transition-all duration-500">
+                                                                    <div className="p-5 bg-muted inline-flex rounded-md border border-border group-hover:scale-110 transition-all duration-500">
                                                                         <UploadIcon className="w-10 h-10 text-muted-foreground group-hover:text-primary transition-colors" />
                                                                     </div>
-                                                                    <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-md flex items-center justify-center text-primary-foreground scale-0 group-hover:scale-100 transition-transform duration-500">
+                                                                    <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-sm flex items-center justify-center text-primary-foreground scale-0 group-hover:scale-100 transition-transform duration-500">
                                                                         <Plus className="w-5 h-5 stroke-[3px]" />
                                                                     </div>
                                                                 </div>
@@ -757,7 +757,7 @@ export function ManualProcessView({
                                                         <p className="text-xs text-muted-foreground/60">Select from your uploaded videos in storage</p>
                                                     </div>
 
-                                                    <div className="border border-border rounded-lg overflow-hidden max-h-[320px] overflow-y-auto bg-background custom-scrollbar">
+                                                    <div className="border border-border rounded-md overflow-hidden max-h-[320px] overflow-y-auto bg-background custom-scrollbar">
                                                         {loadingVideos ? (
                                                             <div className="p-24 flex flex-col items-center gap-4">
                                                                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -784,7 +784,7 @@ export function ManualProcessView({
                                                                             selectedVideoId === video.video_id ? "bg-primary/5" : "hover:bg-muted/50"
                                                                         )}
                                                                     >
-                                                                        <div className="relative w-28 aspect-video rounded-md overflow-hidden shrink-0 border border-border group-hover/item:scale-[1.02] transition-transform">
+                                                                        <div className="relative w-28 aspect-video rounded-sm overflow-hidden shrink-0 border border-border group-hover/item:scale-[1.02] transition-transform">
                                                                             {video.thumbnail_url && <img src={video.thumbnail_url} className="w-full h-full object-cover grayscale-[0.3] group-hover/item:grayscale-0 transition-all duration-700" alt="" />}
                                                                             <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity">
                                                                                 <PlayCircle className="w-6 h-6 text-white" />
@@ -825,63 +825,63 @@ export function ManualProcessView({
                             </motion.div>
                         )}
 
-                                {currentStep === 2 && (
-                                    <motion.div
-                                        key="step-2"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 20 }}
-                                        className="space-y-4"
-                                    >
-                                        <Card className="border border-border bg-card shadow-sm rounded-xl overflow-hidden">
-                                            <CardContent className={cn("grid grid-cols-1 md:grid-cols-2 gap-4 p-5 lg:p-6", compact && "p-4 gap-4")}>
-                                                <div className="space-y-4">
-                                                    <div className="flex items-center gap-3 mb-2">
-                                                        <Globe className="w-4 h-4 text-primary" />
-                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Source Linguistics</label>
-                                                    </div>
-                                                    <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
-                                                        <SelectTrigger className="h-11 rounded-lg border-border bg-background text-xs font-medium focus:ring-primary/20">
-                                                            <SelectValue placeholder="Auto-detect by neural engine" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {LANGUAGE_OPTIONS.map(l => (
-                                                                <SelectItem key={l.code} value={l.code}>
-                                                                    {l.flag} {l.name}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="space-y-4">
-                                                    <div className="flex items-center gap-3 mb-2">
-                                                        <Layers className="w-4 h-4 text-primary" />
-                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Public Registry Title</label>
-                                                    </div>
-                                                    <Input
-                                                        placeholder="Target publication title..."
-                                                        value={customTitle}
-                                                        onChange={(e) => setCustomTitle(e.target.value)}
-                                                        className="h-11 rounded-lg border-border bg-background text-sm font-medium focus:ring-primary/20"
-                                                    />
-                                                </div>
-
-                                            <div className="space-y-4 md:col-span-2">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <Sparkles className="w-4 h-4 text-primary" />
-                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Global Distribution Description</label>
-                                                </div>
-                                                <textarea
-                                                    rows={5}
-                                                    placeholder="Enter descriptive metadata for the global versions..."
-                                                    value={customDescription}
-                                                    onChange={(e) => setCustomDescription(e.target.value)}
-                                                    className="w-full bg-background border border-border text-foreground rounded-lg p-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none resize-none transition-all leading-relaxed"
-                                                />
+                        {currentStep === 2 && (
+                            <motion.div
+                                key="step-2"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                className="space-y-4"
+                            >
+                                <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
+                                    <CardContent className={cn("grid grid-cols-1 md:grid-cols-2 gap-4 p-5 lg:p-6", compact && "p-4 gap-4")}>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <Globe className="w-4 h-4 text-primary" />
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Source Linguistics</label>
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                    </motion.div>
+                                            <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
+                                                <SelectTrigger className="h-11 rounded-md border-border bg-background text-xs font-medium focus:ring-primary/20">
+                                                    <SelectValue placeholder="Auto-detect by neural engine" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {LANGUAGE_OPTIONS.map(l => (
+                                                        <SelectItem key={l.code} value={l.code}>
+                                                            {l.flag} {l.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <Layers className="w-4 h-4 text-primary" />
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Public Registry Title</label>
+                                            </div>
+                                            <Input
+                                                placeholder="Target publication title..."
+                                                value={customTitle}
+                                                onChange={(e) => setCustomTitle(e.target.value)}
+                                                className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-4 md:col-span-2">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <Sparkles className="w-4 h-4 text-primary" />
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Global Distribution Description</label>
+                                            </div>
+                                            <textarea
+                                                rows={5}
+                                                placeholder="Enter descriptive metadata for the global versions..."
+                                                value={customDescription}
+                                                onChange={(e) => setCustomDescription(e.target.value)}
+                                                className="w-full bg-background border border-border text-foreground rounded-md p-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none resize-none transition-all leading-relaxed"
+                                            />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
                         )}
 
                         {currentStep === 3 && (
@@ -892,7 +892,7 @@ export function ManualProcessView({
                                 exit={{ opacity: 0, x: 20 }}
                                 className="space-y-4"
                             >
-                                <Card className="border border-border bg-card shadow-sm rounded-xl overflow-hidden">
+                                <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
                                     <CardContent className={cn("space-y-4 p-5 lg:p-6", compact && "p-4")}>
                                         <div className="flex items-center justify-between mb-4">
                                             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Select Synchronization Nodes</label>
@@ -904,7 +904,7 @@ export function ManualProcessView({
                                                     key={c.id}
                                                     onClick={() => toggleTargetChannel(c.id)}
                                                     className={cn(
-                                                        "relative group/node flex flex-col p-4 rounded-lg border transition-all duration-500 cursor-pointer overflow-hidden",
+                                                        "relative group/node flex flex-col p-4 rounded-md border transition-all duration-500 cursor-pointer overflow-hidden",
                                                         selectedTargetChannels.includes(c.id)
                                                             ? "border-primary bg-primary/5 shadow-[0_0_20px_rgba(var(--primary),0.1)]"
                                                             : "border-border bg-muted/20 hover:bg-muted/40 hover:border-primary/50"
@@ -917,7 +917,7 @@ export function ManualProcessView({
                                                     <div className="flex items-center justify-between mb-8 relative z-10">
                                                         <div className="flex items-center gap-4">
                                                             <div className={cn(
-                                                            "w-10 h-10 rounded-lg flex items-center justify-center text-2xl transition-all",
+                                                                "w-10 h-10 rounded-md flex items-center justify-center text-2xl transition-all",
                                                                 selectedTargetChannels.includes(c.id) ? "bg-primary text-primary-foreground scale-110" : "bg-muted text-muted-foreground"
                                                             )}>
                                                                 {c.language_code ? getLanguageFlag(c.language_code) : '🌐'}
@@ -998,7 +998,7 @@ export function ManualProcessView({
                                                                         }
                                                                     }}
                                                                     className={cn(
-                                                                        "flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer",
+                                                                        "flex items-center gap-3 p-4 rounded-lg border transition-all cursor-pointer",
                                                                         selectedTargetChannels.includes(`lang_${lang.code}`)
                                                                             ? "border-primary bg-primary/10 shadow-[0_0_15px_rgba(var(--primary),0.1)]"
                                                                             : "border-border bg-muted/20 hover:bg-muted/40 hover:border-primary/50"
@@ -1040,7 +1040,7 @@ export function ManualProcessView({
                                 }
                             }}
                             className={cn(
-                                "flex items-center gap-2 h-10 px-6 rounded-lg font-bold uppercase tracking-widest text-[10px]",
+                                "flex items-center gap-2 h-10 px-6 rounded-md font-bold uppercase tracking-widest text-[10px]",
                                 currentStep === 3 ? "hidden" : "bg-primary text-primary-foreground hover:bg-primary/90"
                             )}
                         >
@@ -1052,7 +1052,7 @@ export function ManualProcessView({
 
                 {/* Right Column: EXECUTION COMMAND CENTER */}
                 <div className="lg:col-span-4 space-y-3 sticky top-4">
-                    <Card className="border border-border bg-card shadow-sm rounded-xl overflow-hidden">
+                    <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
                         <CardContent className={cn("p-5 relative", compact && "p-4")}>
                             <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
                                 <Cpu className="w-32 h-32" />
@@ -1067,7 +1067,7 @@ export function ManualProcessView({
 
                             <div className="space-y-4">
                                 {/* Cinematic Thumbnail Preview */}
-                                <div className="relative aspect-video rounded-lg border border-border overflow-hidden group bg-muted">
+                                <div className="relative aspect-video rounded-md border border-border overflow-hidden group bg-muted">
                                     {currentThumbnail ? (
                                         <>
                                             <img src={currentThumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[4000ms]" alt="Preview" />

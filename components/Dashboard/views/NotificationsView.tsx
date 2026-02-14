@@ -1,99 +1,201 @@
 "use client";
 
-import React from "react";
-import { Bell, Check, Info, AlertTriangle, Clock } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { AlertCircle, AlertTriangle, Bell, CheckCircle2, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { dashboardAPI, type ActivityItem } from "@/lib/api";
+import { useProject } from "@/lib/ProjectContext";
+import { useAuth } from "@/lib/AuthContext";
+import { useDashboardJobs } from "@/lib/useDashboardJobs";
+
+type NotificationType = "success" | "error" | "warning" | "info";
+type NotificationCategory = "job" | "channel" | "system";
+
+type NotificationItem = {
+  id: string;
+  type: NotificationType;
+  category: NotificationCategory;
+  title: string;
+  message: string;
+  timestamp: string;
+};
 
 export function NotificationsView({ theme }: { theme: string }) {
-    const isDark = theme === "dark";
-    const textClass = isDark ? "text-white" : "text-gray-900";
-    const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
-    const cardBgClass = isDark ? "bg-white/[0.03]" : "bg-gray-50";
-    const borderClass = isDark ? "border-white/10" : "border-gray-200";
+  const isDark = theme === "dark";
+  const textClass = isDark ? "text-white" : "text-gray-900";
+  const mutedTextClass = isDark ? "text-gray-500" : "text-gray-500";
+  const { selectedProject } = useProject();
+  const { user } = useAuth();
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
 
-    const notifications = [
-        {
-            id: 1,
-            type: "success",
-            title: "Video Dubbing Complete",
-            desc: "Your video 'Summer Highlights' has been successfully dubbed into Spanish and French.",
-            time: "2 hours ago",
-            icon: Check,
-            iconColor: "text-green-500",
-            iconBg: "bg-green-500/10"
-        },
-        {
-            id: 2,
-            type: "info",
-            title: "New Channel Connected",
-            desc: "Successfully linked '@tech_reviews' YouTube channel to your workspace.",
-            time: "5 hours ago",
-            icon: Info,
-            iconColor: "text-blue-500",
-            iconBg: "bg-blue-500/10"
-        },
-        {
-            id: 3,
-            type: "warning",
-            title: "Credit Balance Low",
-            desc: "You have less than 50 minutes of dubbing time remaining in your current plan.",
-            time: "Yesterday",
-            icon: AlertTriangle,
-            iconColor: "text-[#FFC107]",
-            iconBg: "bg-[#FFC107]/10"
-        },
-        {
-            id: 4,
-            type: "info",
-            title: "System Update",
-            desc: "We've added 5 new voice models for Japanese and Korean localizations.",
-            time: "2 days ago",
-            icon: Clock,
-            iconColor: "text-purple-500",
-            iconBg: "bg-purple-500/10"
-        }
-    ];
+  const { jobs, loading: loadingJobs } = useDashboardJobs({
+    projectId: selectedProject?.id,
+    user_id: user?.id,
+    enabled: !!user?.id,
+    limit: 50,
+  });
 
-    return (
-        <div className="p-8 max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-10">
-                <div>
-                    <h1 className={`text-3xl font-serif ${textClass} mb-2`}>Notifications</h1>
-                    <p className={mutedTextClass}>Stay updated with your pipeline activity and system alerts</p>
-                </div>
-                <button className={`text-sm font-semibold text-[#D97757] hover:underline`}>
-                    Mark all as read
-                </button>
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoadingActivities(true);
+        const data = await dashboardAPI.getActivity(selectedProject?.id, 50);
+        setActivities(Array.isArray(data) ? data : []);
+      } catch {
+        setActivities([]);
+      } finally {
+        setLoadingActivities(false);
+      }
+    };
+    load();
+  }, [selectedProject?.id]);
+
+  const notifications = useMemo<NotificationItem[]>(() => {
+    const items: NotificationItem[] = [];
+
+    for (const job of jobs || []) {
+      const jobAny = job as any;
+      if (job.status === "completed") {
+        items.push({
+          id: `job-${job.job_id}-completed`,
+          type: "success",
+          category: "job",
+          title: "Processing completed",
+          message: `Video ${job.source_video_id} is ready for review.`,
+          timestamp: jobAny.updated_at || job.created_at || new Date().toISOString(),
+        });
+      } else if (job.status === "failed") {
+        items.push({
+          id: `job-${job.job_id}-failed`,
+          type: "error",
+          category: "job",
+          title: "Processing failed",
+          message: `Video ${job.source_video_id} failed. ${jobAny.error_message || "Check pipeline details."}`,
+          timestamp: jobAny.updated_at || job.created_at || new Date().toISOString(),
+        });
+      } else if (job.status === "waiting_approval" && (job.progress || 0) === 0) {
+        items.push({
+          id: `job-${job.job_id}-detected`,
+          type: "info",
+          category: "channel",
+          title: "New upload detected",
+          message: `Video ${job.source_video_id} is waiting for start approval.`,
+          timestamp: jobAny.updated_at || job.created_at || new Date().toISOString(),
+        });
+      }
+    }
+
+    for (const activity of activities || []) {
+      if (!activity.message || activity.message === "Unknown Action") continue;
+
+      const type: NotificationType =
+        activity.icon === "alert" ? "warning" : activity.icon === "check" ? "success" : "info";
+      const category: NotificationCategory =
+        ["youtube", "upload", "channel"].includes(activity.icon) ? "channel" :
+          ["plus", "zap"].includes(activity.icon) ? "job" : "system";
+
+      items.push({
+        id: `activity-${activity.id}`,
+        type,
+        category,
+        title: activity.type || "System event",
+        message: activity.message,
+        timestamp: activity.timestamp || new Date().toISOString(),
+      });
+    }
+
+    items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return items.slice(0, 100);
+  }, [jobs, activities]);
+
+  const isLoading = loadingJobs || loadingActivities;
+  const unreadCount = notifications.filter((n) => !readIds.has(n.id)).length;
+
+  const formatTimeAgo = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  };
+
+  const iconForType = (type: NotificationType) => {
+    if (type === "success") return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
+    if (type === "error") return <AlertCircle className="w-4 h-4 text-red-500" />;
+    if (type === "warning") return <AlertTriangle className="w-4 h-4 text-amber-500" />;
+    return <Bell className="w-4 h-4 text-blue-500" />;
+  };
+
+  const markAsRead = (id: string) => setReadIds((prev) => new Set(prev).add(id));
+  const markAllAsRead = () => setReadIds(new Set(notifications.map((n) => n.id)));
+
+  return (
+    <div className={`h-full overflow-auto custom-scrollbar ${isDark ? "bg-[#0A0A0A]" : "bg-gray-50"}`}>
+      <div className="max-w-4xl mx-auto p-6 space-y-4">
+        <Card className="border-0 shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className={`text-xl ${textClass}`}>Notifications</CardTitle>
+              <CardDescription>
+                {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
+              </CardDescription>
             </div>
+            <Button variant="outline" size="sm" onClick={markAllAsRead} disabled={notifications.length === 0}>
+              Mark all as read
+            </Button>
+          </CardHeader>
+        </Card>
 
-            <div className="space-y-4">
-                {notifications.map((notif) => (
-                    <div
-                        key={notif.id}
-                        className={`p-5 rounded-2xl border ${borderClass} ${cardBgClass} flex gap-5 ${isDark ? "hover:border-white/20" : "hover:border-gray-300 hover:bg-white"} transition-all cursor-pointer group`}
-                    >
-                        <div className={`w-12 h-12 rounded-xl ${notif.iconBg} flex items-center justify-center shrink-0`}>
-                            <notif.icon className={`w-6 h-6 ${notif.iconColor}`} />
+        {isLoading ? (
+          <Card>
+            <CardContent className="p-10 flex items-center justify-center">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </CardContent>
+          </Card>
+        ) : notifications.length === 0 ? (
+          <Card>
+            <CardContent className="p-10 text-center">
+              <Bell className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+              <p className={`text-sm ${mutedTextClass}`}>No notifications yet.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          notifications.map((item) => {
+            const unread = !readIds.has(item.id);
+            return (
+              <Card
+                key={item.id}
+                className={`cursor-pointer ${unread ? "border-primary/40" : ""}`}
+                onClick={() => markAsRead(item.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5">{iconForType(item.type)}</div>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={`text-sm font-medium ${textClass}`}>{item.title}</p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant="secondary" className="capitalize">{item.category}</Badge>
+                          <span className={`text-xs ${mutedTextClass}`}>{formatTimeAgo(item.timestamp)}</span>
                         </div>
-                        <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                                <h3 className={`font-semibold ${textClass}`}>{notif.title}</h3>
-                                <span className={`text-xs ${mutedTextClass}`}>{notif.time}</span>
-                            </div>
-                            <p className={`text-sm ${mutedTextClass} leading-relaxed`}>{notif.desc}</p>
-                        </div>
+                      </div>
+                      <p className={`text-sm ${mutedTextClass}`}>{item.message}</p>
                     </div>
-                ))}
-            </div>
-
-            {notifications.length === 0 && (
-                <div className="py-20 text-center">
-                    <div className={`w-16 h-16 ${isDark ? "bg-white/5" : "bg-gray-100"} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                        <Bell className={`w-8 h-8 ${mutedTextClass}`} />
-                    </div>
-                    <h3 className={`text-lg font-semibold ${textClass}`}>No new notifications</h3>
-                    <p className={mutedTextClass}>We'll let you know when something important happens.</p>
-                </div>
-            )}
-        </div>
-    );
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
 }

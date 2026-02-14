@@ -103,19 +103,19 @@ export default function ChannelsPage() {
   const { selectedProject } = useProject();
   const { user, loading: authLoading } = useAuth();
   const userId = user?.id;
-  
+
   // Fetch channels from Supabase ONLY
-  const { 
-    channels: allChannels, 
-    loading: channelsLoading, 
+  const {
+    channels: allChannels,
+    loading: channelsLoading,
     error: channelsError,
-    refetch: refetchChannels 
+    refetch: refetchChannels
   } = useSupabaseChannels(
     userId,
     { project_id: selectedProject?.id },
     { enabled: !!userId && !authLoading }
   );
-  
+
   const isLoading = channelsLoading;
   const isDark = theme === "dark";
 
@@ -207,13 +207,13 @@ export default function ChannelsPage() {
     console.log('[ChannelsPage] Building table data from Supabase:', {
       supabaseChannels: allChannels?.length || 0
     });
-    
+
     const flat: any[] = [];
-    
+
     // Build table data directly from Supabase channels
     allChannels?.forEach(channel => {
       const isMaster = channel.is_master || false;
-      
+
       flat.push({
         id: channel.channel_id,
         type: isMaster ? "master" : "satellite",
@@ -240,7 +240,7 @@ export default function ChannelsPage() {
       }
       return true;
     });
-    
+
     console.log('[ChannelsPage] Table data built:', {
       totalItems: flat.length,
       filteredItems: filtered.length,
@@ -248,7 +248,7 @@ export default function ChannelsPage() {
       masters: flat.filter(i => i.type === "master").length,
       satellites: flat.filter(i => i.type === "satellite").length
     });
-    
+
     return filtered;
   }, [allChannels, channelFilter]);
 
@@ -281,7 +281,7 @@ export default function ChannelsPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`relative h-[340px] shrink-0 rounded-[2.5rem] overflow-hidden group ${isDark ? 'shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]' : 'border border-gray-100 bg-white'}`}
+          className={`relative h-[340px] shrink-0 rounded-3xl overflow-hidden group ${isDark ? 'shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]' : 'border border-gray-100 bg-white'}`}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-olleey-yellow/20 via-transparent to-transparent opacity-50 z-10 pointer-events-none" />
           <motion.img
@@ -297,10 +297,10 @@ export default function ChannelsPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
               <div className="space-y-4 max-w-2xl">
                 <div className="flex items-center gap-4">
-                  <div className="px-4 py-1.5 bg-olleey-yellow/10 border border-olleey-yellow/20 rounded-full">
+                  <div className="px-4 py-1.5 bg-olleey-yellow/10 border border-olleey-yellow/20 rounded-lg">
                     <span className="text-[9px] font-black text-olleey-yellow uppercase tracking-[0.3em]">Network Architecture</span>
                   </div>
-                  <div className={`flex items-center gap-2 px-4 py-1.5 ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-100 border-gray-200'} border rounded-full`}>
+                  <div className={`flex items-center gap-2 px-4 py-1.5 ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-100 border-gray-200'} border rounded-lg`}>
                     <Globe2 className={`w-3.5 h-3.5 ${textSecondaryClass}`} />
                     <span className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-[0.3em]`}>Global Grid v2.4</span>
                   </div>
@@ -315,14 +315,14 @@ export default function ChannelsPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4 min-w-[300px]">
-                <div className={`p-6 ${cardClass} backdrop-blur-3xl rounded-[2.2rem] flex flex-col justify-between`}>
+                <div className={`p-6 ${cardClass} backdrop-blur-3xl rounded-2xl flex flex-col justify-between`}>
                   <TrendingUp className="w-5 h-5 text-olleey-yellow mb-4" />
                   <div>
                     <span className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-[0.2em] block mb-1`}>Grid Load</span>
                     <span className={`text-2xl font-normal ${textClass} tracking-tighter`}>{graphStats.total_connections} Channels</span>
                   </div>
                 </div>
-                <div className={`p-6 ${cardClass} backdrop-blur-3xl rounded-[2.2rem] flex flex-col justify-between`}>
+                <div className={`p-6 ${cardClass} backdrop-blur-3xl rounded-2xl flex flex-col justify-between`}>
                   <ShieldCheck className="w-5 h-5 text-emerald-500 mb-4" />
                   <div>
                     <span className={`text-[9px] font-black ${textSecondaryClass} uppercase tracking-[0.2em] block mb-1`}>Signal Integrity</span>
@@ -336,7 +336,7 @@ export default function ChannelsPage() {
 
         {/* Application Toolbar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className={`flex items-center gap-3 p-1.5 ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-white border-gray-200'} border rounded-[1.5rem] backdrop-blur-xl`}>
+          <div className={`flex items-center gap-3 p-1.5 ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-white border-gray-200'} border rounded-2xl backdrop-blur-xl`}>
             <button
               onClick={() => setChannelFilter("all")}
               className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "all" ? "bg-olleey-yellow text-black" : `${textSecondaryClass} hover:${textClass}`}`}
@@ -345,13 +345,13 @@ export default function ChannelsPage() {
             </button>
             <button
               onClick={() => setChannelFilter("primary")}
-              className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "primary" ? "bg-olleey-yellow text-black" : `${textSecondaryClass} hover:${textClass}`}`}
+              className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "primary" ? "bg-olleey-yellow text-black" : `${textSecondaryClass} hover:${textClass}`}`}
             >
               Primary Channels
             </button>
             <button
               onClick={() => setChannelFilter("unassigned")}
-              className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "unassigned" ? "bg-olleey-yellow text-black" : `${textSecondaryClass} hover:${textClass}`}`}
+              className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${channelFilter === "unassigned" ? "bg-olleey-yellow text-black" : `${textSecondaryClass} hover:${textClass}`}`}
             >
               Unassigned Channels
             </button>
@@ -359,7 +359,7 @@ export default function ChannelsPage() {
 
           <Button
             onClick={handleAddChannel}
-            className={`h-14 px-10 ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-black text-white border-transparent'} border hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow font-black uppercase tracking-[0.2em] rounded-full transition-all group`}
+            className={`h-14 px-10 ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-black text-white border-transparent'} border hover:bg-olleey-yellow hover:text-black hover:border-olleey-yellow font-black uppercase tracking-[0.2em] rounded-xl transition-all group`}
           >
             <Plus className="w-4 h-4 mr-3 group-hover:rotate-90 transition-transform" />
             Add Channel
@@ -367,7 +367,7 @@ export default function ChannelsPage() {
         </div>
 
         {/* Network Table */}
-        <div className={`w-full ${isDark ? 'bg-[#0c0c0c]/40 border-white/10 shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]' : 'bg-white border-gray-200'} backdrop-blur-3xl border rounded-[2.5rem] overflow-hidden`}>
+        <div className={`w-full ${isDark ? 'bg-[#0c0c0c]/40 border-white/10 shadow-[0_64px_128px_-32px_rgba(0,0,0,0.8)]' : 'bg-white border-gray-200'} backdrop-blur-3xl border rounded-3xl overflow-hidden`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[1100px]">
               <thead>
@@ -401,7 +401,7 @@ export default function ChannelsPage() {
                               <img
                                 src={item.avatar || getInitialsAvatar(item.name || item.id)}
                                 alt={item.name}
-                                className={`relative w-14 h-14 rounded-2xl object-cover ${isDark ? 'border-white/10 shadow-2xl' : 'border-gray-200'} border grayscale group-hover:grayscale-0 transition-all duration-500`}
+                                className={`relative w-14 h-14 rounded-xl object-cover ${isDark ? 'border-white/10 shadow-2xl' : 'border-gray-200'} border grayscale group-hover:grayscale-0 transition-all duration-500`}
                               />
                               {isMaster && (
                                 <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-olleey-yellow rounded-full flex items-center justify-center border-2 border-black shadow-lg">
@@ -422,7 +422,7 @@ export default function ChannelsPage() {
                                 </div>
                               )}
                               {isMaster && item.is_primary && (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 bg-olleey-yellow/10 border border-olleey-yellow/20 rounded-full">
+                                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 bg-olleey-yellow/10 border border-olleey-yellow/20 rounded-md">
                                   <Shield className="w-2.5 h-2.5 text-olleey-yellow" />
                                   <span className="text-[9px] font-black text-olleey-yellow uppercase tracking-widest">Primary Command</span>
                                 </div>
@@ -432,7 +432,7 @@ export default function ChannelsPage() {
                         </td>
 
                         <td className="px-10 py-10">
-                          <div className={`inline-flex items-center px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${isMaster ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" : `${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-gray-100 border-gray-200 text-gray-500'}`}`}>
+                          <div className={`inline-flex items-center px-4 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-widest ${isMaster ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" : `${isDark ? 'bg-white/5 border-white/10 text-white/40' : 'bg-gray-100 border-gray-200 text-gray-500'}`}`}>
                             {isMaster ? <Cpu className="w-3 h-3 mr-2" /> : <Layers className="w-3 h-3 mr-2" />}
                             {isMaster ? "Command Node" : "Satellite"}
                           </div>
@@ -445,7 +445,7 @@ export default function ChannelsPage() {
                               <span className={`text-[11px] font-black uppercase tracking-[0.1em] ${statusConfig.color}`}>{statusConfig.label}</span>
                             </div>
                             {item.is_paused && (
-                              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full w-fit">
+                              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-md w-fit">
                                 <Pause className="w-2.5 h-2.5" />
                                 <span className="text-[9px] font-black uppercase tracking-widest">Protocol Stalled</span>
                               </div>
@@ -461,7 +461,7 @@ export default function ChannelsPage() {
                             <select
                               value={item.language_code || ""}
                               onChange={(e) => handleUpdateLanguage(item.id, e.target.value)}
-                              className={`w-full ${inputBgClass} rounded-2xl pl-12 pr-6 py-4 text-[11px] font-black uppercase tracking-widest ${isDark ? 'text-white/60' : 'text-gray-600'} focus:ring-0 focus:border-olleey-yellow/40 transition-all cursor-pointer appearance-none`}
+                              className={`w-full ${inputBgClass} rounded-xl pl-12 pr-6 py-4 text-[11px] font-black uppercase tracking-widest ${isDark ? 'text-white/60' : 'text-gray-600'} focus:ring-0 focus:border-olleey-yellow/40 transition-all cursor-pointer appearance-none`}
                             >
                               <option value="" className={isDark ? "bg-[#080808]" : "bg-white"}>Map...</option>
                               {LANGUAGE_OPTIONS.map(l => (
@@ -483,7 +483,7 @@ export default function ChannelsPage() {
                                 onClick={(e) => { e.stopPropagation(); handleSetPrimary(item.id, item.name); }}
                                 variant="ghost"
                                 size="icon"
-                                className={`w-11 h-11 rounded-[1.2rem] ${inputBgClass} ${textSecondaryClass} hover:text-olleey-yellow transition-all`}
+                                className={`w-11 h-11 rounded-lg ${inputBgClass} ${textSecondaryClass} hover:text-olleey-yellow transition-all`}
                               >
                                 <Star className="w-4 h-4" />
                               </Button>
@@ -494,7 +494,7 @@ export default function ChannelsPage() {
                                 onClick={(e) => { e.stopPropagation(); handleReconnect(item.id, item.name); }}
                                 variant="ghost"
                                 size="icon"
-                                className={`w-11 h-11 rounded-[1.2rem] ${inputBgClass} ${textSecondaryClass} hover:text-olleey-yellow transition-all ${reconnectingId === item.id ? 'animate-spin' : ''}`}
+                                className={`w-11 h-11 rounded-lg ${inputBgClass} ${textSecondaryClass} hover:text-olleey-yellow transition-all ${reconnectingId === item.id ? 'animate-spin' : ''}`}
                               >
                                 <RefreshCw className="w-4 h-4" />
                               </Button>
@@ -514,7 +514,7 @@ export default function ChannelsPage() {
                               }}
                               variant="ghost"
                               size="icon"
-                              className={`w-11 h-11 rounded-[1.2rem] ${inputBgClass} ${textSecondaryClass} hover:${item.is_paused ? 'text-emerald-500' : 'text-amber-500'} transition-all`}
+                              className={`w-11 h-11 rounded-lg ${inputBgClass} ${textSecondaryClass} hover:${item.is_paused ? 'text-emerald-500' : 'text-amber-500'} transition-all`}
                             >
                               {item.is_paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                             </Button>
@@ -523,7 +523,7 @@ export default function ChannelsPage() {
                               onClick={(e) => { e.stopPropagation(); handleRemoveChannel(item.id, item.name); }}
                               variant="ghost"
                               size="icon"
-                              className={`w-11 h-11 rounded-[1.2rem] ${inputBgClass} ${textSecondaryClass} hover:text-red-500 transition-all`}
+                              className={`w-11 h-11 rounded-lg ${inputBgClass} ${textSecondaryClass} hover:text-red-500 transition-all`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -539,7 +539,7 @@ export default function ChannelsPage() {
 
           {tableData.length === 0 && (
             <div className={`p-32 text-center flex flex-col items-center ${textClass}`}>
-              <div className={`w-24 h-24 ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-100 border-gray-200'} rounded-[2.5rem] flex items-center justify-center border mb-8 opacity-20`}>
+              <div className={`w-24 h-24 ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-100 border-gray-200'} rounded-3xl flex items-center justify-center border mb-8 opacity-20`}>
                 <Radio className="w-12 h-12" />
               </div>
               <h3 className="text-2xl font-normal mb-3 tracking-tighter">Zero active connections</h3>
@@ -548,7 +548,7 @@ export default function ChannelsPage() {
               </p>
               <Button
                 onClick={handleAddChannel}
-                className="h-14 px-12 bg-olleey-yellow text-black hover:opacity-90 font-black uppercase tracking-[0.2em] rounded-full transition-all"
+                className="h-14 px-12 bg-olleey-yellow text-black hover:opacity-90 font-black uppercase tracking-[0.2em] rounded-xl transition-all"
               >
                 Add a channel
               </Button>

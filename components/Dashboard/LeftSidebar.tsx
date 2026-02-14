@@ -30,7 +30,8 @@ import {
   Video,
   Pause,
   X,
-  PanelLeftClose
+  PanelLeftClose,
+  LogOut
 } from "lucide-react";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { ViewType } from "./DashboardLayout";
@@ -57,7 +58,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-  DropdownMenuLabel
+  DropdownMenuLabel,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -70,6 +74,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { channelsAPI, youtubeAPI, LanguageChannel, YouTubeConnection } from "@/lib/api";
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
 
 interface LeftSidebarProps {
   currentView: ViewType;
@@ -111,7 +116,7 @@ export function LeftSidebar({
     enabled: !!user?.id && !!user
   });
 
-  const { videos } = useVideos({
+  const { videos, loading: videosLoading } = useVideos({
     project_id: selectedProject?.id,
     user_id: user?.id,
   }, { enabled: !!user?.id && !!user });
@@ -169,6 +174,15 @@ export function LeftSidebar({
     }
   };
 
+  const handleChangeConnectionLanguage = async (connectionId: string, languageCode: string) => {
+    try {
+      await youtubeAPI.updateConnection(connectionId, { language_code: languageCode });
+      refetchConnections();
+    } catch (e) {
+      console.error("Failed to update connection language", e);
+    }
+  };
+
   const handleDeleteChannel = async (id: string) => {
     if (!confirm("Are you sure you want to remove this channel?")) return;
     try {
@@ -202,10 +216,33 @@ export function LeftSidebar({
   const handleSetPrimary = async (connectionId: string) => {
     try {
       await youtubeAPI.setPrimaryConnection(connectionId);
-      window.location.reload();
+      await refetchConnections();
     } catch (e) {
       console.error("Failed to set primary", e);
     }
+  };
+
+  const getConnectionId = (connection: YouTubeConnection) =>
+    connection.connection_id || (connection as any).id;
+
+  const isConnectionExpired = (connection: YouTubeConnection) => {
+    const rawExpiry =
+      (connection as any).token_expiry ||
+      (connection as any).token_expires_at ||
+      (connection as any).status?.token_expires_at;
+    if (!rawExpiry) return false;
+    const expiryMs = new Date(rawExpiry).getTime();
+    if (Number.isNaN(expiryMs)) return false;
+    return Date.now() > expiryMs;
+  };
+
+  const isWebhookExpired = (connection: YouTubeConnection) => {
+    if (connection.webhook_expired === true) return true;
+    const rawExpiry = connection.webhook_expires_at;
+    if (!rawExpiry) return false;
+    const expiryMs = new Date(rawExpiry).getTime();
+    if (Number.isNaN(expiryMs)) return false;
+    return Date.now() > expiryMs;
   };
 
   const handleConnectNewChannel = async () => {
@@ -308,7 +345,7 @@ export function LeftSidebar({
                 </h2>
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64 rounded-xl shadow-lg border p-1 z-[100]">
+            <DropdownMenuContent align="start" className="w-64 rounded-lg shadow-lg border p-1 z-[100]">
               <DropdownMenuLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 py-2 opacity-70">
                 Change Instance
               </DropdownMenuLabel>
@@ -316,7 +353,7 @@ export function LeftSidebar({
                 <DropdownMenuItem
                   onClick={() => setSelectedProject(null)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all",
                     selectedProject === null
                       ? (isDark ? 'bg-primary/10 text-primary' : 'bg-primary/5 text-primary font-bold')
                       : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-100/50')
@@ -332,7 +369,7 @@ export function LeftSidebar({
                     key={project.id}
                     onClick={() => setSelectedProject(project)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all",
                       selectedProject?.id === project.id
                         ? (isDark ? 'bg-primary/10 text-primary' : 'bg-primary/5 text-primary font-bold')
                         : (isDark ? 'text-white/60 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-100/50')
@@ -347,7 +384,7 @@ export function LeftSidebar({
               <DropdownMenuSeparator className="my-2" />
               <DropdownMenuItem
                 onClick={() => setIsCreateProjectModalOpen(true)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-primary hover:bg-primary/10 font-bold transition-all group/new"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-primary hover:bg-primary/10 font-bold transition-all group/new"
               >
                 <Plus className="w-4 h-4 group-hover/new:rotate-90 transition-transform" />
                 <span className="text-[10px] uppercase tracking-widest font-mono">Create New Instance</span>
@@ -380,7 +417,7 @@ export function LeftSidebar({
             placeholder="Search videos, channels, jobs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-11 h-10 border-border bg-muted/20 rounded-lg focus-visible:ring-primary/20"
+            className="pl-11 h-10 border-border bg-muted/20 rounded-md focus-visible:ring-primary/20"
           />
         </div>
 
@@ -402,7 +439,7 @@ export function LeftSidebar({
                         onViewChange("videos");
                       }}
                       className={cn(
-                        "w-full text-left p-2.5 rounded-lg border transition-all flex items-center gap-2.5",
+                        "w-full text-left p-2.5 rounded-md border transition-all flex items-center gap-2.5",
                         isDark ? "bg-white/[0.05] border-white/10 hover:border-white/20" : "bg-white border-gray-200 hover:border-gray-300"
                       )}
                     >
@@ -431,7 +468,7 @@ export function LeftSidebar({
                         key={job.job_id}
                         onClick={() => navigateFromJob(job)}
                         className={cn(
-                          "w-full text-left p-2.5 rounded-lg border transition-all flex items-center gap-2.5",
+                          "w-full text-left p-2.5 rounded-md border transition-all flex items-center gap-2.5",
                           isDark ? "bg-white/[0.05] border-white/10 hover:border-white/20" : "bg-white border-gray-200 hover:border-gray-300"
                         )}
                       >
@@ -477,272 +514,101 @@ export function LeftSidebar({
               )}
 
               {filteredVideos.length === 0 && filteredJobs.length === 0 && filteredChannels.length === 0 && (
-                <div className={`p-6 rounded-xl border border-dashed text-center ${borderClass}`}>
+                <div className={`p-6 rounded-lg border border-dashed text-center ${borderClass}`}>
                   <p className={`text-xs ${mutedTextClass}`}>No results for "{searchQuery}"</p>
                 </div>
               )}
             </div>
           ) : (
-          <Accordion type="multiple" defaultValue={["channels", "runs"]} className="space-y-1">
-            <AccordionItem value="channels" className="border-none">
-              <AccordionTrigger
-                className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
-              >
-                <div className="flex items-center gap-2">
-                  <Radio className="w-3.5 h-3.5 text-primary" />
-                  Channels
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pt-2">
-                <div className="space-y-2">
-                  {channelsLoading ? (
-                    Array.from({ length: 2 }).map((_, i) => (
-                      <div key={i} className={`h-12 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
-                    ))
-                  ) : channels.length > 0 ? (
-                    channels.map((channel) => (
-                      <motion.div
-                        key={channel.id}
-                        whileHover={{ x: 4 }}
-                        className={cn(
-                          "group w-full p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-default shadow-sm",
-                          isDark ? "bg-white/[0.05] border-white/5 hover:border-white/20" : "bg-white/50 border-gray-200 hover:border-gray-300"
-                        )}
-                      >
-                        <div className="flex items-center gap-3 w-full overflow-hidden">
-                          <div className="relative shrink-0">
-                            {channel.channel_avatar_url ? (
-                              <img src={channel.channel_avatar_url} className={`w-8 h-8 rounded-lg object-cover border ${isDark ? "border-white/10" : "border-gray-200"}`} alt="" />
-                            ) : (
-                              <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} border flex items-center justify-center`}>
-                                <User className="w-4 h-4 text-gray-600" />
-                              </div>
-                            )}
-                            <div className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2", isDark ? 'border-[#0A0A0A]' : 'border-white', channel.status?.status === 'active' ? 'bg-green-500' : 'bg-gray-500')} />
-                          </div>
-
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <span className={`text-[13px] font-medium ${textClass} truncate opacity-90 group-hover:opacity-100 transition-opacity leading-tight`}>
-                              {channel.channel_name}
-                            </span>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              {channel.language_name && (
-                                <span className={`text-[10px] ${mutedTextClass} opacity-70 truncate`}>
-                                  {channel.language_name}
-                                </span>
-                              )}
-                              {(channel.videos_count !== undefined || channel.language_name) && (
-                                <span className={`text-[10px] ${mutedTextClass} opacity-40`}>•</span>
-                              )}
-                              <span className={`text-[10px] ${mutedTextClass} opacity-70 whitespace-nowrap`}>
-                                {channel.videos_count || 0} videos
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} ${isDark ? "hover:border-white/20 hover:bg-white/10" : "hover:border-gray-300 hover:bg-gray-50"} transition-all shadow-sm`}>
-                              <MoreHorizontal className={`w-3.5 h-3.5 ${mutedTextClass}`} />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel>Channel Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleTogglePause(channel)}>
-                              {channel.is_paused ? <Play className="w-3.5 h-3.5 mr-2" /> : <Pause className="w-3.5 h-3.5 mr-2" />}
-                              {channel.is_paused ? "Resume Publication" : "Pause Publication"}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              setEditChannel(channel);
-                              setNewLanguage(channel.language_code || "");
-                            }}>
-                              <Edit className="w-3.5 h-3.5 mr-2" />
-                              Change Language
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => handleDeleteChannel(channel.channel_id || channel.id)}>
-                              <Trash className="w-3.5 h-3.5 mr-2" />
-                              Remove Channel
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className={`p-8 text-center rounded-xl border border-dashed ${borderClass}`}>
-                      <p className={`text-xs ${mutedTextClass}`}>No channels connected</p>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={handleConnectNewChannel}
-                    className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-xl border-2 border-dashed ${borderClass} hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all duration-200 bg-transparent group`}
-                  >
-                    <Plus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
-                    Connect New
-                  </button>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="runs" className="border-none mt-1">
-              <AccordionTrigger
-                className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
-                onClick={() => onViewChange("dashboard")}
-              >
-                <div className="flex items-center gap-2">
-                  <Play className="w-3.5 h-3.5 text-blue-500" />
-                  Pipeline Runs
-                  {activeJobsCount > 0 && (
-                    <Badge variant="secondary" className="ml-2 h-4 px-1 text-[9px] font-bold">
-                      {activeJobsCount}
-                    </Badge>
-                  )}
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pt-2">
-                <div className="space-y-2.5">
-                  {jobsLoading ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className={`h-16 rounded-2xl border ${borderClass} animate-pulse bg-white/5`} />
-                    ))
-                  ) : jobs.length > 0 ? (
-                    <>
-                    {jobs.slice(0, 5).map((job) => {
-                      const video = getJobVideo(job.source_video_id);
-                      return (
+            <Accordion type="multiple" defaultValue={["channels", "runs"]} className="space-y-1">
+              <AccordionItem value="channels" className="border-none">
+                <AccordionTrigger
+                  className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <Radio className="w-3.5 h-3.5 text-primary" />
+                    Channels
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+                  <div className="space-y-2">
+                    {connectionsLoading ? (
+                      Array.from({ length: 2 }).map((_, i) => (
+                        <div key={i} className={`h-12 rounded-lg border ${borderClass} animate-pulse bg-white/5`} />
+                      ))
+                    ) : connections.length > 0 ? (
+                      connections.map((connection) => (
                         <motion.div
-                          key={job.job_id}
-                          whileHover={{ x: 4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
-                          onClick={() => navigateFromJob(job)}
-                          className={cn("p-3 rounded-2xl border transition-all cursor-pointer group shadow-sm", isDark ? "bg-white/[0.05] border-white/5" : "bg-white/50 border-gray-200")}
+                          key={getConnectionId(connection)}
+                          whileHover={{ x: 4 }}
+                          className={cn(
+                            "group w-full p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-default shadow-sm",
+                            isDark ? "bg-white/[0.05] border-white/5 hover:border-white/20" : "bg-white/50 border-gray-200 hover:border-gray-300"
+                          )}
                         >
-                          <div className="flex gap-3 mb-2.5">
-                            <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
-                              {video?.thumbnail_url ? (
-                                <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
+                          <div className="flex items-center gap-3 w-full overflow-hidden">
+                            <div className="relative shrink-0">
+                              {connection.channel_avatar_url ? (
+                                <img src={connection.channel_avatar_url} className={`w-8 h-8 rounded-lg object-cover border ${isDark ? "border-white/10" : "border-gray-200"}`} alt="" />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <Play className="w-3 h-3 text-gray-600" />
+                                <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} border flex items-center justify-center`}>
+                                  <User className="w-4 h-4 text-gray-600" />
                                 </div>
                               )}
+                              <div className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2", isDark ? 'border-[#0A0A0A]' : 'border-white', connection.is_primary ? 'bg-green-500' : 'bg-gray-500')} />
                             </div>
+
                             <div className="flex flex-col min-w-0 flex-1">
-                              <span className={`text-[12px] font-semibold ${textClass} truncate opacity-90 group-hover:opacity-100`}>
-                                {video?.title || job.source_video_id}
+                              <span className={`text-[13px] font-medium ${textClass} truncate opacity-90 group-hover:opacity-100 transition-opacity leading-tight`}>
+                                {connection.youtube_channel_name || connection.channel_name}
                               </span>
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className={`text-[10px] ${mutedTextClass} opacity-60`}>
-                                  {job.target_languages?.join(' • ')}
-                                </span>
-                                {video?.duration && (
+                              <div className="flex items-center gap-1.5 mt-0.5 text-[10px]">
+                                {isConnectionExpired(connection) && (
                                   <>
-                                    <span className="text-[10px] text-gray-700">•</span>
-                                    <span className={`text-[9px] font-mono ${mutedTextClass} opacity-60`}>
-                                      {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}
+                                    <Badge variant="destructive" className="h-4 px-1.5 text-[9px] uppercase tracking-widest">
+                                      Expired
+                                    </Badge>
+                                    <span className={`${mutedTextClass} opacity-40`}>•</span>
+                                  </>
+                                )}
+                                {isWebhookExpired(connection) && (
+                                  <>
+                                    <Badge variant="outline" className="h-4 px-1.5 text-[9px] uppercase tracking-widest border-amber-500/50 text-amber-500">
+                                      Webhook Expired
+                                    </Badge>
+                                    <span className={`${mutedTextClass} opacity-40`}>•</span>
+                                  </>
+                                )}
+                                {connection.video_count !== undefined && (
+                                  <>
+                                    <span className={`${mutedTextClass} opacity-70 whitespace-nowrap`}>
+                                      {connection.video_count} videos
+                                    </span>
+                                    <span className={`${mutedTextClass} opacity-40`}>•</span>
+                                  </>
+                                )}
+                                <span className={`${mutedTextClass} opacity-60`}>
+                                  {connection.connection_type === 'master' ? 'Master' : 'Satellite'}
+                                </span>
+                                {connection.language_code && (
+                                  <>
+                                    <span className={`${mutedTextClass} opacity-40`}>•</span>
+                                    <span className={`${mutedTextClass} opacity-70 uppercase`}>
+                                      {connection.language_code}
+                                    </span>
+                                  </>
+                                )}
+                                {channels.filter(ch => ch.youtube_connection_id === connection.connection_id).length > 0 && (
+                                  <>
+                                    <span className={`${mutedTextClass} opacity-40`}>•</span>
+                                    <span className={`${mutedTextClass} opacity-70`}>
+                                      {channels.filter(ch => ch.youtube_connection_id === connection.connection_id).map(ch => ch.language_code).join(', ')}
                                     </span>
                                   </>
                                 )}
                               </div>
                             </div>
                           </div>
-
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className={`w-1 h-1 rounded-full ${job.status === 'completed' ? 'bg-green-500' :
-                                  job.status === 'failed' ? 'bg-red-500' :
-                                    'bg-blue-500 animate-pulse'
-                                  }`} />
-                                <span className={`text-[9px] ${mutedTextClass} font-bold uppercase tracking-widest opacity-60`}>
-                                  {job.status.replace('_', ' ')}
-                                </span>
-                              </div>
-                              <span className={`text-[9px] font-mono ${textClass} opacity-40`}>
-                                {job.progress}%
-                              </span>
-                            </div>
-                            {job.status !== 'completed' && job.status !== 'failed' && (
-                              <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                                <motion.div
-                                  className="h-full bg-blue-500/50"
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${job.progress}%` }}
-                                  transition={{ duration: 1 }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                    {jobs.length > 5 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onViewChange("runs")}
-                        className="w-full"
-                      >
-                        Show all
-                      </Button>
-                    )}
-                    </>
-                  ) : (
-                    <div className={`p-6 rounded-2xl border ${borderClass} border-dashed text-center opacity-60`}>
-                      <p className={`text-xs ${mutedTextClass}`}>No recent activity</p>
-                    </div>
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="distributions" className="border-none mt-1">
-              <AccordionTrigger className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5">
-                <div className="flex items-center gap-2">
-                  <Share2 className="w-3.5 h-3.5 text-purple-500" />
-                  Active Distributions
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-2 mt-2">
-                  {connectionsLoading ? (
-                    Array.from({ length: 2 }).map((_, i) => (
-                      <div key={i} className={`h-12 rounded-2xl border ${borderClass} animate-pulse bg-white/5`} />
-                    ))
-                  ) : connections.length > 0 ? (
-                    connections.map((connection) => (
-                      <motion.div
-                        key={connection.connection_id}
-                        whileHover={{ x: 4 }}
-                        className={cn("group w-full p-2.5 rounded-2xl border flex items-center justify-between transition-all cursor-default shadow-sm", isDark ? "bg-white/[0.05] border-white/5 hover:border-white/20" : "bg-white/50 border-gray-200 hover:border-gray-300")}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="relative">
-                            {connection.channel_avatar_url ? (
-                              <img src={connection.channel_avatar_url} className={`w-8 h-8 rounded-lg object-cover border ${isDark ? "border-white/10" : "border-gray-200"}`} alt="" />
-                            ) : (
-                              <div className={`w-8 h-8 rounded-lg ${isDark ? "bg-white/5 border-white/5" : "bg-gray-100 border-gray-200"} border flex items-center justify-center`}>
-                                <Globe className="w-4 h-4 text-gray-600" />
-                              </div>
-                            )}
-                            <div className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2", isDark ? 'border-[#0A0A0A]' : 'border-white', connection.is_primary ? 'bg-purple-500' : 'bg-gray-500')} />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className={`text-[13px] font-medium ${textClass} truncate max-w-[140px] opacity-90 group-hover:opacity-100 transition-opacity`}>
-                              {connection.youtube_channel_name}
-                            </span>
-                            <span className={`text-[10px] ${mutedTextClass} opacity-60`}>
-                              {connection.connection_type === 'master' ? 'Primary' : 'Satellite'} Node
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {connection.is_primary && (
-                            <div className={cn("px-2 py-0.5 rounded-md border flex items-center gap-1", isDark ? 'bg-purple-500/10 border-purple-500/20' : 'bg-purple-50 border-purple-500/10')}>
-                              <span className="text-[9px] font-mono text-purple-400">PRIMARY</span>
-                            </div>
-                          )}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} ${isDark ? "hover:border-white/20 hover:bg-white/10" : "hover:border-gray-300 hover:bg-gray-50"} transition-all shadow-sm`}>
@@ -750,45 +616,248 @@ export function LeftSidebar({
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuLabel>Distribution Actions</DropdownMenuLabel>
+                              <DropdownMenuLabel>Connection Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               {!connection.is_primary && (
-                                <DropdownMenuItem onClick={() => handleSetPrimary(connection.connection_id)}>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    const connectionId = getConnectionId(connection);
+                                    if (!connectionId) return;
+                                    handleSetPrimary(connectionId);
+                                  }}
+                                >
                                   <Star className="w-3.5 h-3.5 mr-2" />
-                                  Make Primary
+                                  Set as Primary
                                 </DropdownMenuItem>
                               )}
-                              <DropdownMenuItem onClick={() => {
-                                setEditConnection(connection);
-                                setNewLanguage(connection.language_code || "");
-                              }}>
-                                <Edit className="w-3.5 h-3.5 mr-2" />
-                                Change Language
-                              </DropdownMenuItem>
+                              <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                  <Globe className="w-3.5 h-3.5 mr-2" />
+                                  Change Language
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent className="max-h-[300px] overflow-y-auto">
+                                  {LANGUAGE_OPTIONS.map((lang) => (
+                                    <DropdownMenuItem
+                                      key={lang.code}
+                                      onClick={() => {
+                                        const connectionId = getConnectionId(connection);
+                                        if (!connectionId) return;
+                                        handleChangeConnectionLanguage(connectionId, lang.code);
+                                      }}
+                                      className={cn(
+                                        connection.language_code === lang.code && "bg-primary/10 font-semibold"
+                                      )}
+                                    >
+                                      <span className="mr-2">{lang.flag}</span>
+                                      <span>{lang.name}</span>
+                                      {connection.language_code === lang.code && (
+                                        <Check className="ml-auto w-3.5 h-3.5" />
+                                      )}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuSubContent>
+                              </DropdownMenuSub>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => handleDisconnect(connection.connection_id)}>
+                              <DropdownMenuItem
+                                className="text-red-500 focus:text-red-500"
+                                onClick={() => {
+                                  const connectionId = getConnectionId(connection);
+                                  if (!connectionId) return;
+                                  handleDisconnect(connectionId);
+                                }}
+                              >
                                 <Trash className="w-3.5 h-3.5 mr-2" />
                                 Disconnect
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className={`p-6 rounded-2xl border ${borderClass} border-dashed text-center opacity-60`}>
-                      <p className={`text-xs ${mutedTextClass}`}>No active distributions</p>
-                    </div>
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className={`p-8 text-center rounded-lg border border-dashed ${borderClass}`}>
+                        <p className={`text-xs ${mutedTextClass}`}>No channels connected</p>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={handleConnectNewChannel}
+                      className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-xl border-2 border-dashed ${borderClass} hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all duration-200 bg-transparent group`}
+                    >
+                      <Plus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
+                      Connect New
+                    </button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="runs" className="border-none mt-1">
+                <AccordionTrigger
+                  className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
+                  onClick={() => onViewChange("dashboard")}
+                >
+                  <div className="flex items-center gap-2">
+                    <Play className="w-3.5 h-3.5 text-blue-500" />
+                    Pipeline Runs
+                    {activeJobsCount > 0 && (
+                      <Badge variant="secondary" className="ml-2 h-4 px-1 text-[9px] font-bold">
+                        {activeJobsCount}
+                      </Badge>
+                    )}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+                  <div className="space-y-2.5">
+                    {jobsLoading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className={`h-16 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
+                      ))
+                    ) : jobs.length > 0 ? (
+                      <>
+                        {jobs.slice(0, 5).map((job) => {
+                          const video = getJobVideo(job.source_video_id);
+                          return (
+                            <motion.div
+                              key={job.job_id}
+                              whileHover={{ x: 4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
+                              onClick={() => navigateFromJob(job)}
+                              className={cn("p-3 rounded-xl border transition-all cursor-pointer group shadow-sm", isDark ? "bg-white/[0.05] border-white/5" : "bg-white/50 border-gray-200")}
+                            >
+                              <div className="flex gap-3 mb-2.5">
+                                <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
+                                  {video?.thumbnail_url ? (
+                                    <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <Play className="w-3 h-3 text-gray-600" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className={`text-[12px] font-semibold ${textClass} truncate opacity-90 group-hover:opacity-100`}>
+                                    {video?.title || job.source_video_id}
+                                  </span>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className={`text-[10px] ${mutedTextClass} opacity-60`}>
+                                      {job.target_languages?.join(' • ')}
+                                    </span>
+                                    {video?.duration && (
+                                      <>
+                                        <span className="text-[10px] text-gray-700">•</span>
+                                        <span className={`text-[9px] font-mono ${mutedTextClass} opacity-60`}>
+                                          {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-1 h-1 rounded-full ${job.status === 'completed' ? 'bg-green-500' :
+                                      job.status === 'failed' ? 'bg-red-500' :
+                                        'bg-blue-500 animate-pulse'
+                                      }`} />
+                                    <span className={`text-[9px] ${mutedTextClass} font-bold uppercase tracking-widest opacity-60`}>
+                                      {job.status.replace('_', ' ')}
+                                    </span>
+                                  </div>
+                                  <span className={`text-[9px] font-mono ${textClass} opacity-40`}>
+                                    {job.progress}%
+                                  </span>
+                                </div>
+                                {job.status !== 'completed' && job.status !== 'failed' && (
+                                  <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                    <motion.div
+                                      className="h-full bg-blue-500/50"
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${job.progress}%` }}
+                                      transition={{ duration: 1 }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                        {jobs.length > 5 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onViewChange("runs")}
+                            className="w-full"
+                          >
+                            Show all
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      <div className={`p-6 rounded-xl border ${borderClass} border-dashed text-center opacity-60`}>
+                        <p className={`text-xs ${mutedTextClass}`}>No recent activity</p>
+                      </div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="distributions" className="border-none mt-1">
+                <AccordionTrigger className="text-xs font-bold hover:no-underline py-2.5 px-3 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5">
+                  <div className="flex items-center gap-2">
+                    <Share2 className="w-3.5 h-3.5 text-purple-500" />
+                    Active Distributions
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2 mt-2">
+                    {videosLoading ? (
+                      Array.from({ length: 2 }).map((_, i) => (
+                        <div key={i} className={`h-12 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
+                      ))
+                    ) : videos.filter(v => v.status === 'published').slice(0, 5).length > 0 ? (
+                      videos.filter(v => v.status === 'published').slice(0, 5).map((video) => (
+                        <motion.div
+                          key={video.video_id}
+                          whileHover={{ x: 4 }}
+                          onClick={() => {
+                            onSelectItem({ type: "video", id: video.video_id, data: video });
+                            onViewChange("videos");
+                          }}
+                          className={cn("group w-full p-2.5 rounded-2xl border flex items-center gap-3 transition-all cursor-pointer shadow-sm", isDark ? "bg-white/[0.05] border-white/5 hover:border-white/20" : "bg-white/50 border-gray-200 hover:border-gray-300")}
+                        >
+                          <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
+                            {video.thumbnail_url ? (
+                              <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Video className="w-4 h-4 text-gray-600" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className={`text-[13px] font-medium ${textClass} truncate opacity-90 group-hover:opacity-100 transition-opacity leading-tight`}>
+                              {video.title}
+                            </span>
+                            <span className={`text-[10px] ${mutedTextClass} opacity-60`}>
+                              {video.published_at ? new Date(video.published_at).toLocaleDateString() : 'Recently published'}
+                            </span>
+                          </div>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className={`p-6 rounded-xl border ${borderClass} border-dashed text-center opacity-60`}>
+                        <p className={`text-xs ${mutedTextClass}`}>No published videos</p>
+                      </div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           )}
         </div>
 
         <div className="mt-auto pt-6 border-t border-border/50 relative z-10 space-y-3 px-2">
-          <div className="p-3 rounded-lg bg-background border border-border flex items-center gap-3 shadow-sm group cursor-pointer hover:border-primary/30 transition-all">
+          <div className="p-3 rounded-md bg-background border border-border flex items-center gap-3 shadow-sm group cursor-pointer hover:border-primary/30 transition-all">
             <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
             </div>
@@ -797,6 +866,22 @@ export function LeftSidebar({
               <span className="text-[10px] text-muted-foreground">Premium Access</span>
             </div>
           </div>
+
+          <Button
+            variant="ghost"
+            onClick={() => {
+              const { signOut } = require("@/lib/AuthContext");
+              if (typeof window !== 'undefined') {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/login';
+              }
+            }}
+            className="w-full justify-start gap-3 h-auto p-3 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="text-[11px] font-bold">Sign Out</span>
+          </Button>
         </div>
       </div>
 
@@ -818,31 +903,6 @@ export function LeftSidebar({
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditChannel(null)}>Cancel</Button>
             <Button onClick={handleUpdateChannelLanguage}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Connection Language Dialog */}
-      <Dialog open={!!editConnection} onOpenChange={(open) => !open && setEditConnection(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Distribution Language</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Label>Language Code (e.g. 'es', 'fr')</Label>
-            <Input
-              value={newLanguage}
-              onChange={(e) => setNewLanguage(e.target.value)}
-              placeholder="es"
-              className="mt-2"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditConnection(null)}>Cancel</Button>
-            <Button onClick={() => {
-              handleUpdateConnectionLanguage();
-              refetchConnections();
-            }}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

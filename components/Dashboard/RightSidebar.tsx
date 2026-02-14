@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Play, Clock, AlertCircle, PanelRightClose } from "lucide-react";
+import { ChevronRight, Play, Clock, PanelRightClose, Loader2, Rss } from "lucide-react";
 import { SelectedItem, ViewType } from "./DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
@@ -10,7 +10,9 @@ import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
 import { useVideos } from "@/lib/useVideos";
 import { useReview } from "@/lib/ReviewContext";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, jobsAPI, settingsAPI } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
+import { useSettings } from "@/lib/SettingsContext";
 
 interface RightSidebarProps {
   selectedItem: SelectedItem;
@@ -32,6 +34,8 @@ export function RightSidebar({
   const { user } = useAuth();
   const { selectedProject } = useProject();
   const { openReview } = useReview();
+  const { toast } = useToast();
+  const { detectedUploadWindow } = useSettings();
   const userId = user?.id;
   const isDark = theme === "dark";
   const bgClass = isDark ? "bg-[#0D0D0D]" : "bg-[#EBEBDC]";
@@ -40,16 +44,50 @@ export function RightSidebar({
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
   const glassBgClass = isDark ? "bg-white/[0.03]" : "bg-gray-100/30";
 
-  const { jobs, loading, error: jobsError } = useDashboardJobs({
+  const { jobs, loading, error: jobsError, refetch: refetchJobs } = useDashboardJobs({
     projectId: selectedProject?.id,
     user_id: userId,
     enabled: !!userId && !!user
   });
 
-  const { videos, error: videosError } = useVideos({
+  const { videos, error: videosError, refetch: refetchVideos } = useVideos({
     project_id: selectedProject?.id,
     user_id: userId,
   }, { enabled: !!userId && !!user });
+  const {
+    videos: allUserVideos,
+    loading: allUserVideosLoading,
+    refetch: refetchAllUserVideos
+  } = useVideos({
+    user_id: userId,
+  }, { enabled: !!userId && !!user });
+  const [autoApproveEnabled, setAutoApproveEnabled] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [savingAutoApprove, setSavingAutoApprove] = useState(false);
+  const [startingJobId, setStartingJobId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadSettings = async () => {
+      if (!userId || !user) return;
+      setSettingsLoading(true);
+      try {
+        const settings = await settingsAPI.getSettings();
+        if (mounted) {
+          setAutoApproveEnabled(Boolean(settings.auto_approve_jobs));
+        }
+      } catch {
+        // Sidebar still functions even if settings fail to load.
+      } finally {
+        if (mounted) setSettingsLoading(false);
+      }
+    };
+
+    loadSettings();
+    return () => {
+      mounted = false;
+    };
+  }, [userId, user]);
 
   // If there's an auth error, show a message
   if (jobsError?.includes("access token") || videosError?.includes("access token")) {
@@ -78,10 +116,71 @@ export function RightSidebar({
     return videos.find(v => v.video_id === videoId);
   };
 
-  const needsReviewJobs = jobs.filter(j => j.status === 'waiting_approval');
+  // Convert window string to milliseconds
+  const getWindowMs = () => {
+    switch (detectedUploadWindow) {
+      case "last_1_day":
+        return 1 * 24 * 60 * 60 * 1000;
+      case "last_31_days":
+        return 31 * 24 * 60 * 60 * 1000;
+      case "last_7_days":
+      default:
+        return 7 * 24 * 60 * 60 * 1000;
+    }
+  };
+
+  const windowMs = getWindowMs();
+
+  const detectedVideos = allUserVideos
+    .filter((video) => {
+      if (!video?.published_at) return false;
+      const publishedAt = new Date(video.published_at).getTime();
+      if (Number.isNaN(publishedAt)) return false;
+
+      const ageMs = Date.now() - publishedAt;
+      const inWindow = ageMs >= 0 && ageMs <= windowMs;
+      const isSourceVideo = !video.source_video_id || video.source_video_id === video.video_id;
+
+      return inWindow && isSourceVideo;
+    })
+    .sort((a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime());
+
+  const getPreStartJobForVideo = (videoId: string) =>
+    jobs.find((j) => j.source_video_id === videoId && j.status === "waiting_approval" && (j.progress || 0) === 0);
+
+  const needsReviewJobs = jobs.filter(j => j.status === 'waiting_approval' && (j.progress || 0) > 0);
   const processingJobs = jobs.filter(j =>
     ['pending', 'downloading', 'processing', 'uploading'].includes(j.status)
   );
+
+  const enableAutoApprove = async () => {
+    if (savingAutoApprove) return;
+    setSavingAutoApprove(true);
+    try {
+      await settingsAPI.updateSettings({ auto_approve_jobs: true });
+      setAutoApproveEnabled(true);
+      toast("Auto-approve enabled for new detected uploads", "success");
+    } catch (error: any) {
+      toast(error?.message || "Failed to enable auto-approve", "error");
+    } finally {
+      setSavingAutoApprove(false);
+    }
+  };
+
+  const beginDetectedJob = async (jobId: string) => {
+    if (startingJobId) return;
+    setStartingJobId(jobId);
+    try {
+      await jobsAPI.approveAndStart(jobId);
+      await Promise.all([refetchJobs(), refetchVideos(), refetchAllUserVideos()]);
+      toast("Processing started", "success");
+      onViewChange?.("processing");
+    } catch (error: any) {
+      toast(error?.message || "Failed to start processing", "error");
+    } finally {
+      setStartingJobId(null);
+    }
+  };
 
   return (
     <div className={`h-full ${bgClass} flex flex-col p-6 space-y-6 overflow-hidden relative`}>
@@ -104,6 +203,94 @@ export function RightSidebar({
       </div>
 
       <div className="flex-1 space-y-8 overflow-y-auto custom-scrollbar -mx-2 px-2 relative z-10">
+        {/* Newly detected uploads awaiting start */}
+        <div className="flex flex-col">
+          <div className="mb-4 px-2">
+            <div className="flex items-center justify-between">
+              <h4 className={`text-sm font-400 flex items-center gap-2 ${textClass} tracking-tight`}>
+                <Rss className="w-3.5 h-3.5 text-amber-400" />
+                Detected Uploads ({detectedUploadWindow === "last_1_day" ? "Last 1 Day" : detectedUploadWindow === "last_31_days" ? "Last 31 Days" : "Last 7 Days"})
+              </h4>
+              <Button
+                variant="outline"
+                onClick={() => onViewChange?.("detected_uploads")}
+                className={`h-7 px-2 text-[10px] font-bold uppercase tracking-wider ${isDark ? "bg-transparent border-white/20 text-white/80 hover:bg-white/10" : "bg-transparent border-gray-300 text-gray-700 hover:bg-gray-50"}`}
+              >
+                See All
+              </Button>
+            </div>
+            {!loading && (
+              <span className={`block mt-1 text-[10px] uppercase tracking-widest font-bold ${mutedTextClass} opacity-60`}>
+                {detectedVideos.length} videos
+              </span>
+            )}
+          </div>
+
+          <div className={`mb-3 p-3 rounded-xl border ${borderClass} ${glassBgClass}`}>
+            <p className={`text-[11px] ${mutedTextClass} mb-2`}>
+              New videos were detected from your connected channel.
+            </p>
+            <Button
+              onClick={enableAutoApprove}
+              disabled={autoApproveEnabled || savingAutoApprove || settingsLoading}
+              className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider border ${autoApproveEnabled ? "bg-emerald-600 hover:bg-emerald-600 text-white border-emerald-600" : "bg-transparent border-gray-500 text-gray-300 hover:bg-white/5 hover:border-gray-400"}`}
+            >
+              {settingsLoading ? "Checking settings..." : autoApproveEnabled ? "Auto-Approve Enabled" : savingAutoApprove ? "Enabling..." : "Enable Auto-Approve"}
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {loading || allUserVideosLoading ? (
+              <div className="space-y-3">
+                {[1, 2].map(i => (
+                  <div key={i} className={`h-20 rounded-xl border ${borderClass} animate-pulse bg-white/5`} />
+                ))}
+              </div>
+            ) : detectedVideos.length > 0 ? (
+              detectedVideos.map((video) => {
+                const preStartJob = getPreStartJobForVideo(video.video_id);
+                const thisJobStarting = preStartJob?.job_id ? startingJobId === preStartJob.job_id : false;
+                return (
+                  <div key={video.video_id} className={`p-3 rounded-xl border ${borderClass} ${glassBgClass}`}>
+                    <div className="flex gap-3 mb-2">
+                      <div className="w-16 aspect-video rounded-lg overflow-hidden bg-white/5 border border-white/5 shrink-0">
+                        {video?.thumbnail_url ? (
+                          <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Play className="w-3 h-3 text-gray-600" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-[12px] font-semibold truncate ${textClass}`}>
+                          {video?.title || video.video_id}
+                        </p>
+                        <p className={`text-[10px] ${mutedTextClass} truncate`}>
+                          {video?.channel_name || video?.channel_id || "Connected channel"}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => preStartJob?.job_id && beginDetectedJob(preStartJob.job_id)}
+                      disabled={!preStartJob?.job_id || Boolean(startingJobId)}
+                      className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider ${preStartJob?.job_id ? "bg-blue-600 hover:bg-blue-500 text-white" : "bg-transparent border border-gray-500 text-gray-400 hover:bg-transparent"}`}
+                    >
+                      {thisJobStarting ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : null}
+                      {thisJobStarting ? "Starting..." : preStartJob?.job_id ? "Begin Processing" : "No Pending Job"}
+                    </Button>
+                  </div>
+                );
+              })
+            ) : (
+              <div className={`p-6 rounded-2xl border border-dashed ${borderClass} flex flex-col items-center justify-center text-center opacity-50`}>
+                <p className={`text-[11px] font-bold uppercase tracking-widest ${mutedTextClass}`}>No new detections</p>
+              </div>
+            )}
+          </div>
+
+        </div>
+
         {/* Table for videos that need review */}
         <div className="flex flex-col">
           <div className="flex items-center justify-between mb-4 px-2">
@@ -335,4 +522,3 @@ export function RightSidebar({
     </div>
   );
 }
-

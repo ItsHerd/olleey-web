@@ -57,11 +57,20 @@ export interface RegisterData {
 // Dashboard Types
 export interface YouTubeConnection {
   connection_id: string;
+  id?: string;
   youtube_channel_id: string;
   youtube_channel_name: string;
   channel_avatar_url?: string;
   language_code?: string;
   language_name?: string;
+  channel_name?: string;
+  video_count?: number;
+  token_expiry?: string | null;
+  token_expires_at?: string | null;
+  webhook_subscription_id?: string | null;
+  webhook_expires_at?: string | null;
+  webhook_expired?: boolean;
+  webhook_subscription_status?: "active" | "expired" | "missing" | string;
   is_primary: boolean;
   connected_at: string;
   connection_type?: "master" | "satellite"; // Type of connection
@@ -85,6 +94,7 @@ export interface ChannelStatistics {
 export interface LanguageChannel {
   id: string;
   channel_id: string;
+  youtube_connection_id?: string;
   channel_name: string;
   channel_avatar_url?: string;
   language_code: string;
@@ -874,7 +884,7 @@ export const youtubeAPI = {
    * GET /youtube/connect/connections
    */
   listConnections: async (): Promise<YouTubeConnection[]> => {
-    const response = await authenticatedFetch(`${API_BASE_URL}/youtube/connect/connections`, {
+    const response = await authenticatedFetch(`${API_BASE_URL}/youtube/connections`, {
       method: "GET",
     });
 
@@ -902,7 +912,7 @@ export const youtubeAPI = {
     connection_type?: "master" | "satellite";
     unassigned_language_channels?: number;
   }> => {
-    const response = await authenticatedFetch(`${API_BASE_URL}/youtube/connect/connections/${connectionId}`, {
+    const response = await authenticatedFetch(`${API_BASE_URL}/youtube/connections/${connectionId}`, {
       method: "DELETE",
     });
 
@@ -1114,6 +1124,33 @@ export const videosAPI = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.detail || "Failed to get video");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Backfill recent uploads from connected channels into detected queue
+   * POST /videos/detected/sync-recent
+   */
+  syncRecentDetectedUploads: async (days: number, perChannelLimit: number = 20): Promise<{
+    status: string;
+    channels_scanned: number;
+    videos_seen: number;
+    videos_upserted: number;
+    jobs_created: number;
+    window_days: number;
+  }> => {
+    const params = new URLSearchParams();
+    params.append("days", String(days));
+    params.append("per_channel_limit", String(perChannelLimit));
+    const response = await authenticatedFetch(`${API_BASE_URL}/videos/detected/sync-recent?${params.toString()}`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to sync recent detected uploads");
     }
 
     return await response.json();
@@ -1627,6 +1664,23 @@ export const jobsAPI = {
   },
 
   /**
+   * Approve a webhook-detected job and start processing
+   * POST /jobs/{job_id}/approve-start
+   */
+  approveAndStart: async (jobId: string): Promise<{ status: string; message: string }> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/approve-start`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to approve and start job");
+    }
+
+    return await response.json();
+  },
+
+  /**
    * Cancel a job
    * DELETE /jobs/{job_id}
    */
@@ -2102,6 +2156,8 @@ export const jobsAPI = {
 export interface UserSettings {
   theme: "light" | "dark";
   timezone: string; // IANA timezone string, e.g. "America/Los_Angeles"
+  auto_approve_jobs: boolean;
+  detected_upload_window: "last_1_day" | "last_7_days" | "last_31_days";
   notifications: {
     email_notifications: boolean;
     distribution_updates: boolean;
