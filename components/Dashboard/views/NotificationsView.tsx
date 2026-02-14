@@ -22,10 +22,7 @@ type NotificationItem = {
   timestamp: string;
 };
 
-export function NotificationsView({ theme }: { theme: string }) {
-  const isDark = theme === "dark";
-  const textClass = isDark ? "text-white" : "text-gray-900";
-  const mutedTextClass = isDark ? "text-gray-500" : "text-gray-500";
+export function NotificationsView({ theme: _theme }: { theme: string }) {
   const { selectedProject } = useProject();
   const { user } = useAuth();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -138,62 +135,75 @@ export function NotificationsView({ theme }: { theme: string }) {
   const markAllAsRead = () => setReadIds(new Set(notifications.map((n) => n.id)));
 
   return (
-    <div className={`h-full overflow-auto custom-scrollbar ${isDark ? "bg-[#0A0A0A]" : "bg-gray-50"}`}>
-      <div className="max-w-4xl mx-auto p-6 space-y-4">
-        <Card className="border-0 shadow-none">
-          <CardHeader className="flex flex-row items-center justify-between">
+    <div className="h-full overflow-auto custom-scrollbar">
+      <div className="max-w-4xl mx-auto p-8 space-y-5">
+        <Card>
+          <CardHeader className="pb-4 flex flex-row items-start justify-between gap-4">
             <div>
-              <CardTitle className={`text-xl ${textClass}`}>Notifications</CardTitle>
+              <CardTitle className="text-xl">Notifications</CardTitle>
               <CardDescription>
-                {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
+                Activity updates from jobs, channels, and system events.
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={markAllAsRead} disabled={notifications.length === 0}>
-              Mark all as read
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant="secondary">
+                {unreadCount > 0 ? `${unreadCount} unread` : "All read"}
+              </Badge>
+              <Button variant="outline" size="sm" onClick={markAllAsRead} disabled={notifications.length === 0}>
+                Mark all as read
+              </Button>
+            </div>
           </CardHeader>
         </Card>
 
         {isLoading ? (
           <Card>
-            <CardContent className="p-10 flex items-center justify-center">
+            <CardContent className="p-12 flex items-center justify-center">
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </CardContent>
           </Card>
         ) : notifications.length === 0 ? (
           <Card>
-            <CardContent className="p-10 text-center">
+            <CardContent className="p-12 text-center">
               <Bell className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
-              <p className={`text-sm ${mutedTextClass}`}>No notifications yet.</p>
+              <p className="text-sm text-muted-foreground">No notifications yet.</p>
             </CardContent>
           </Card>
         ) : (
-          notifications.map((item) => {
-            const unread = !readIds.has(item.id);
-            return (
-              <Card
-                key={item.id}
-                className={`cursor-pointer ${unread ? "border-primary/40" : ""}`}
-                onClick={() => markAsRead(item.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5">{iconForType(item.type)}</div>
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className={`text-sm font-medium ${textClass}`}>{item.title}</p>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Badge variant="secondary" className="capitalize">{item.category}</Badge>
-                          <span className={`text-xs ${mutedTextClass}`}>{formatTimeAgo(item.timestamp)}</span>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Recent Activity</CardTitle>
+              <CardDescription>Click an item to mark it as read.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                {notifications.map((item) => {
+                  const unread = !readIds.has(item.id);
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => markAsRead(item.id)}
+                      className={`rounded-lg border p-4 cursor-pointer transition-colors ${unread ? "border-primary/40 bg-primary/5" : "hover:bg-muted/30"}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5">{iconForType(item.type)}</div>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium">{item.title}</p>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Badge variant="secondary" className="capitalize">{item.category}</Badge>
+                              <span className="text-xs text-muted-foreground">{formatTimeAgo(item.timestamp)}</span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{item.message}</p>
                         </div>
                       </div>
-                      <p className={`text-sm ${mutedTextClass}`}>{item.message}</p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

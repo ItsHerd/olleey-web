@@ -118,28 +118,29 @@ export function SettingsView({ theme }: { theme: string }) {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold mb-2">Settings</h1>
-        <p className="text-muted-foreground">Manage your account preferences and settings</p>
-      </div>
-
-      {/* Appearance */}
+    <div className="p-8 max-w-4xl mx-auto space-y-5">
       <Card>
-        <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-          <CardDescription>Customize how Olleey looks for you</CardDescription>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl">Settings</CardTitle>
+          <CardDescription>Manage appearance and notification preferences for your workspace.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Theme Toggle */}
-          <div className="flex items-center justify-between">
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Sun className="w-4 h-4 text-muted-foreground" />
+            Appearance
+          </CardTitle>
+          <CardDescription>Theme and language preferences.</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-3">
+          <div className="rounded-lg border p-4 flex items-center justify-between gap-4">
             <div className="space-y-0.5">
-              <Label className="text-base">Theme</Label>
-              <p className="text-sm text-muted-foreground">
-                Choose your preferred color scheme
-              </p>
+              <Label className="text-sm font-medium">Theme</Label>
+              <p className="text-sm text-muted-foreground">Choose your preferred color scheme.</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Button
                 variant={settings.theme === "light" ? "default" : "outline"}
                 size="sm"
@@ -161,20 +162,20 @@ export function SettingsView({ theme }: { theme: string }) {
             </div>
           </div>
 
-          {/* Language */}
-          <div className="flex items-center justify-between">
+          <div className="rounded-lg border p-4 flex items-center justify-between gap-4">
             <div className="space-y-0.5">
-              <Label className="text-base">Language</Label>
-              <p className="text-sm text-muted-foreground">
-                Select your preferred language
-              </p>
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <Globe className="w-4 h-4 text-muted-foreground" />
+                Language
+              </Label>
+              <p className="text-sm text-muted-foreground">Select your preferred language.</p>
             </div>
             <Select
               value={settings.language}
               onValueChange={handleLanguageChange}
               disabled={saving}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[190px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -189,20 +190,19 @@ export function SettingsView({ theme }: { theme: string }) {
         </CardContent>
       </Card>
 
-      {/* Notifications */}
       <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>Manage how you receive updates</CardDescription>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Bell className="w-4 h-4 text-muted-foreground" />
+            Notifications
+          </CardTitle>
+          <CardDescription>Control how updates are delivered.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Push Notifications */}
-          <div className="flex items-center justify-between">
+        <CardContent className="pt-0 space-y-3">
+          <div className="rounded-lg border p-4 flex items-center justify-between gap-4">
             <div className="space-y-0.5">
-              <Label className="text-base">Push Notifications</Label>
-              <p className="text-sm text-muted-foreground">
-                Receive notifications about job status updates
-              </p>
+              <Label className="text-sm font-medium">Push Notifications</Label>
+              <p className="text-sm text-muted-foreground">Receive updates about job status changes.</p>
             </div>
             <Switch
               checked={settings.notifications_enabled}
@@ -211,13 +211,10 @@ export function SettingsView({ theme }: { theme: string }) {
             />
           </div>
 
-          {/* Email Notifications */}
-          <div className="flex items-center justify-between">
+          <div className="rounded-lg border p-4 flex items-center justify-between gap-4">
             <div className="space-y-0.5">
-              <Label className="text-base">Email Notifications</Label>
-              <p className="text-sm text-muted-foreground">
-                Receive email updates about completed jobs
-              </p>
+              <Label className="text-sm font-medium">Email Notifications</Label>
+              <p className="text-sm text-muted-foreground">Receive email updates for completed jobs.</p>
             </div>
             <Switch
               checked={settings.email_notifications}
@@ -228,19 +225,28 @@ export function SettingsView({ theme }: { theme: string }) {
         </CardContent>
       </Card>
 
-      {/* Save Status */}
-      {saving && (
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          Saving changes...
-        </div>
-      )}
-      {saved && (
-        <div className="flex items-center justify-center gap-2 text-sm text-emerald-600">
-          <Check className="w-4 h-4" />
-          Changes saved
-        </div>
-      )}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Settings sync automatically.</p>
+            <div className="flex items-center gap-2 text-sm">
+              {saving && (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  <span className="text-muted-foreground">Saving...</span>
+                </>
+              )}
+              {!saving && saved && (
+                <>
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span className="text-emerald-600">Changes saved</span>
+                </>
+              )}
+              {!saving && !saved && <span className="text-muted-foreground">Ready</span>}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -31,7 +31,6 @@ import {
   X,
   PanelLeftClose
 } from "lucide-react";
-import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { ViewType } from "./DashboardLayout";
 import { CreateProjectModal } from "@/components/ui/create-project-modal";
 import { useAuth } from "@/lib/AuthContext";
@@ -124,29 +123,12 @@ export function LeftSidebar({
     enabled: !!user?.id && !!user
   });
 
-  const tabs = [
-    { title: "Home", icon: Home },
-    { title: "Messages", icon: Bell },
-    { type: "separator" as const },
-    { title: "Settings", icon: Settings },
-    { title: "Guardrails", icon: Shield },
+  const navItems: Array<{ label: string; icon: React.ComponentType<{ className?: string }>; view: ViewType }> = [
+    { label: "Home", icon: Home, view: "dashboard" },
+    { label: "Notifications", icon: Bell, view: "notifications" },
+    { label: "Settings", icon: Settings, view: "settings" },
+    { label: "Guardrails", icon: Shield, view: "guardrails" },
   ];
-
-  const getSelectedIndex = () => {
-    switch (currentView) {
-      case "dashboard": return 0;
-      case "notifications": return 1;
-      case "settings": return 3;
-      case "guardrails": return 4;
-      default: return null;
-    }
-  };
-
-  const handleTabChange = (index: number | null) => {
-    if (index === null) return;
-    const views: ViewType[] = ["dashboard", "notifications", "dashboard", "settings", "guardrails"];
-    onViewChange?.(views[index]);
-  };
 
   const handleUpdateChannelLanguage = async () => {
     if (!editChannel || !newLanguage) return;
@@ -409,24 +391,41 @@ export function LeftSidebar({
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="relative z-10 mb-6 px-2">
-          <ExpandableTabs
-            tabs={tabs}
-            selected={getSelectedIndex()}
-            activeColor="text-primary"
-            className="border-border bg-muted/30"
-            onChange={handleTabChange}
-          />
+        {/* Navigation */}
+        <div className="relative z-10 mb-4 px-2">
+          <div className={cn("rounded-xl border p-1.5", isDark ? "bg-white/[0.03] border-white/10" : "bg-white/60 border-gray-200")}>
+            <div className="grid grid-cols-4 gap-1">
+              {navItems.map((item) => {
+                const isActive = currentView === item.view;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.view}
+                    onClick={() => onViewChange(item.view)}
+                    title={item.label}
+                    className={cn(
+                      "h-11 rounded-md border flex flex-col items-center justify-center gap-0.5 transition-all",
+                      isActive
+                        ? "bg-primary/10 border-primary/30 text-primary"
+                        : "bg-transparent border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-[9px] leading-none font-medium">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="relative mb-6 z-10 px-2">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
           <Input
             placeholder="Search videos, channels, jobs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-11 h-10 border-border bg-muted/20 rounded-md focus-visible:ring-primary/20"
+            className="pl-12 h-10 border-border/70 bg-muted/20 rounded-lg focus-visible:ring-primary/20"
           />
         </div>
 
@@ -538,14 +537,19 @@ export function LeftSidebar({
             >
               <AccordionItem value="channels" className="border-none">
                 <AccordionTrigger
-                  className="text-xs font-bold hover:no-underline py-3.5 px-4 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
+                  className={cn(
+                    "text-xs font-bold hover:no-underline py-3 px-3.5 h-10 rounded-lg border transition-all [&>svg]:w-3.5 [&>svg]:h-3.5",
+                    openSidebarSection === "channels"
+                      ? "bg-primary/10 border-primary/30 text-foreground"
+                      : "bg-transparent border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                  )}
                 >
                   <div className="flex items-center gap-2">
                     <Radio className="w-3.5 h-3.5 text-primary" />
                     Channels
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pt-3 px-1">
+                <AccordionContent className="pt-3 ml-2 pl-3 border-l border-border/50">
                   <div className="space-y-3">
                     {connectionsLoading ? (
                       Array.from({ length: 2 }).map((_, i) => (
@@ -707,7 +711,12 @@ export function LeftSidebar({
 
               <AccordionItem value="runs" className="border-none mt-1">
                 <AccordionTrigger
-                  className="text-xs font-bold hover:no-underline py-3.5 px-4 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5"
+                  className={cn(
+                    "text-xs font-bold hover:no-underline py-3 px-3.5 h-10 rounded-lg border transition-all [&>svg]:w-3.5 [&>svg]:h-3.5",
+                    openSidebarSection === "runs"
+                      ? "bg-primary/10 border-primary/30 text-foreground"
+                      : "bg-transparent border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                  )}
                   onClick={() => onViewChange("dashboard")}
                 >
                   <div className="flex items-center gap-2">
@@ -720,7 +729,7 @@ export function LeftSidebar({
                     )}
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pt-3 px-1">
+                <AccordionContent className="pt-3 ml-2 pl-3 border-l border-border/50">
                   <div className="space-y-2.5">
                     {jobsLoading ? (
                       Array.from({ length: 3 }).map((_, i) => (
@@ -817,13 +826,20 @@ export function LeftSidebar({
               </AccordionItem>
 
               <AccordionItem value="distributions" className="border-none mt-1">
-                <AccordionTrigger className="text-xs font-bold hover:no-underline py-3.5 px-4 rounded-md border border-border bg-card hover:bg-muted/50 transition-all [&>svg]:w-3.5 [&>svg]:h-3.5">
+                <AccordionTrigger
+                  className={cn(
+                    "text-xs font-bold hover:no-underline py-3 px-3.5 h-10 rounded-lg border transition-all [&>svg]:w-3.5 [&>svg]:h-3.5",
+                    openSidebarSection === "distributions"
+                      ? "bg-primary/10 border-primary/30 text-foreground"
+                      : "bg-transparent border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                  )}
+                >
                   <div className="flex items-center gap-2">
                     <Share2 className="w-3.5 h-3.5 text-purple-500" />
                     Active Distributions
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pt-3 px-1">
+                <AccordionContent className="pt-3 ml-2 pl-3 border-l border-border/50">
                   <div className="space-y-3">
                     {videosLoading ? (
                       Array.from({ length: 2 }).map((_, i) => (
