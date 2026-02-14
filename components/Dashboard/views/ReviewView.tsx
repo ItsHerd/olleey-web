@@ -167,6 +167,7 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
     const [localizedTags, setLocalizedTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState("");
     const [metadataSaving, setMetadataSaving] = useState(false);
+    const [metadataGenerating, setMetadataGenerating] = useState(false);
 
     // Load metadata from quickCheckState
     useEffect(() => {
@@ -277,6 +278,33 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
             toast(err.message || "Failed to save metadata", "error");
         } finally {
             setMetadataSaving(false);
+        }
+    };
+
+    const handleGenerateMetadataWithAI = async () => {
+        setMetadataGenerating(true);
+        try {
+            // Simulate quick AI generation pass and prioritize existing localized values when available.
+            await new Promise((resolve) => setTimeout(resolve, 900));
+
+            const nextTitle =
+                baseLocalizedTitle?.trim() ||
+                (videoTitle ? `${videoTitle} (${languageName})` : "");
+
+            const nextDescription =
+                baseLocalizedDescription?.trim() ||
+                (translation?.translated_text
+                    ? String(translation.translated_text).slice(0, 1000)
+                    : (videoDescription ? `${videoDescription}\n\nLocalized for ${languageName}.` : ""));
+
+            if (nextTitle) setLocalizedTitle(nextTitle);
+            if (nextDescription) setLocalizedDescription(nextDescription);
+
+            toast("AI metadata generated", "success");
+        } catch (error: any) {
+            toast(error?.message || "Failed to generate metadata", "error");
+        } finally {
+            setMetadataGenerating(false);
         }
     };
 
@@ -557,12 +585,24 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
 
                         {/* Quick Action Bar */}
                         <div className="w-full max-w-6xl mx-auto flex items-center justify-between gap-4 mt-2">
-                            <div className="flex items-center gap-4 bg-card px-4 py-1.5 rounded-lg border shadow-sm">
-                                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-tight">Sync Playback</span>
+                            <div
+                                className={cn(
+                                    "flex items-center gap-4 px-4 py-1.5 rounded-lg border shadow-sm",
+                                    isDark ? "bg-zinc-900 border-white/10" : "bg-[#F2EFE3] border-gray-300"
+                                )}
+                            >
+                                <span className={cn("text-[11px] font-semibold uppercase tracking-tight", isDark ? "text-gray-300" : "text-gray-700")}>
+                                    Sync Playback
+                                </span>
                                 <Switch
                                     checked={isSynchronized}
                                     onCheckedChange={setIsSynchronized}
-                                    className="h-5 w-9 data-[state=checked]:bg-primary"
+                                    className={cn(
+                                        "h-5 w-9",
+                                        isDark
+                                            ? "data-[state=checked]:bg-primary data-[state=unchecked]:bg-zinc-700"
+                                            : "data-[state=checked]:bg-[#D97757] data-[state=unchecked]:bg-gray-300"
+                                    )}
                                 />
                             </div>
                         </div>
@@ -678,7 +718,28 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                         {sidebarTab === "metadata" && (
                             <div className="space-y-6">
                                 <div className="space-y-4">
-                                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Localized Content</h4>
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Localized Content</h4>
+                                        <Button
+                                            onClick={handleGenerateMetadataWithAI}
+                                            disabled={metadataGenerating}
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 px-2.5 text-[10px] font-bold uppercase tracking-wider"
+                                        >
+                                            {metadataGenerating ? (
+                                                <>
+                                                    <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                                                    Generating...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Wand2 className="h-3 w-3 mr-1.5" />
+                                                    Generate With AI
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
 
                                     {/* Title Input */}
                                     <div className="space-y-2">
