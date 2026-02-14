@@ -40,18 +40,18 @@ export function SettingsView({ theme }: { theme: string }) {
       try {
         const { data, error } = await supabase
           .from("users")
-          .select("settings")
+          .select("preferences")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
 
-        if (data?.settings) {
+        if (data?.preferences) {
           setSettings({
-            theme: data.settings.theme || theme,
-            language: data.settings.language || "en",
-            notifications_enabled: data.settings.notifications_enabled ?? true,
-            email_notifications: data.settings.email_notifications ?? true,
+            theme: data.preferences.theme || theme,
+            language: data.preferences.language || "en",
+            notifications_enabled: data.preferences.notifications_enabled ?? true,
+            email_notifications: data.preferences.email_notifications ?? true,
           });
         }
       } catch (error) {
@@ -74,7 +74,7 @@ export function SettingsView({ theme }: { theme: string }) {
 
       const { error } = await supabase
         .from("users")
-        .update({ settings: updatedSettings })
+        .update({ preferences: updatedSettings })
         .eq("user_id", user.id);
 
       if (error) throw error;
