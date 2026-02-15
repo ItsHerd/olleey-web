@@ -34,6 +34,12 @@ import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { YC_CEO_DEMO_VIDEO, YC_CEO_SPANISH_TRANSLATION } from "@/lib/mockDemoData";
 import { ViewType } from "../DashboardLayout";
 
+const MOCK_CHANNELS = [
+    { id: 'ch1', name: 'Olleey Main', handle: '@olleey', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=100&h=100&fit=crop' },
+    { id: 'ch2', name: 'Global Shorts', handle: '@global_shorts', icon: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=100&h=100&fit=crop' },
+    { id: 'ch3', name: 'Tech Reviews ES', handle: '@tech_es', icon: 'https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?w=100&h=100&fit=crop' },
+];
+
 interface ReviewViewProps {
     onViewChange?: (view: ViewType) => void;
     theme: string;
@@ -86,6 +92,9 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
     const [localizedTitle, setLocalizedTitle] = useState("");
     const [localizedDescription, setLocalizedDescription] = useState("");
     const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+    const [step, setStep] = useState<'review' | 'select_channel'>('review');
+    const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     // Fetch jobs to get target languages
     const { jobs: allJobs } = useDashboardJobs({ user_id: userId });
@@ -177,6 +186,15 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
         onViewChange?.("dashboard");
     };
 
+    const handleActionClick = () => {
+        if (step === 'review') {
+            setStep('select_channel');
+            scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            handleFinalize();
+        }
+    };
+
     if (!videoIdFromUrl && !quickCheckState.videoId) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-background">
@@ -193,7 +211,10 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
             <main className={cn("flex-1 overflow-hidden flex justify-center", isDark ? "bg-[#0A0A0A]" : "bg-muted/5")}>
                 <div className="w-full max-w-[1300px] flex h-full">
                     {/* Left Column: Metadata Editor */}
-                    <div className={cn("w-[380px] border-r flex flex-col overflow-y-auto custom-scrollbar", isDark ? "bg-[#141414] border-white/10" : "bg-card border-border")}>
+                    <div 
+                        ref={scrollContainerRef}
+                        className={cn("w-[380px] border-r flex flex-col overflow-y-auto custom-scrollbar", isDark ? "bg-[#141414] border-white/10" : "bg-card border-border")}
+                    >
                         <div className="flex-1 flex flex-col justify-center p-8 space-y-10 min-h-full">
                             <div className="flex items-center justify-between">
                                 <div className="space-y-1">
@@ -250,122 +271,201 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                 </DropdownMenu>
                             </div>
 
-                            {/* Metadata Section */}
-                            <section className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex flex-col">
-                                        <h3 className={cn("text-[10px] font-black uppercase tracking-widest", isDark ? "text-white/40" : "text-muted-foreground")}>Localized Metadata</h3>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Button 
-                                            variant="outline" 
-                                            size="sm" 
-                                            className={cn(
-                                                "h-7 text-[8px] font-black uppercase tracking-wider border-dashed px-2",
-                                                isDark 
-                                                    ? "bg-white/5 border-white/20 text-white hover:bg-white/10" 
-                                                    : "border-primary/20 text-primary hover:bg-primary/5"
-                                            )}
-                                            onClick={() => handleGenerateMetadataWithAI("title")}
-                                            disabled={isGeneratingAI}
-                                        >
-                                            <Sparkles className={cn("h-2.5 w-2.5 mr-1", isGeneratingAI && "animate-spin")} /> 
-                                            AI Variant
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className={cn(
-                                        "p-4 rounded-xl border transition-all",
-                                        isDark 
-                                            ? "bg-white/5 border-white/10 focus-within:bg-white/10 focus-within:ring-2 focus-within:ring-white/10" 
-                                            : "bg-muted/30 border-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary/20"
-                                    )}>
-                                        <label className={cn("text-[9px] font-black uppercase tracking-[0.2em] block mb-2", isDark ? "text-white/30" : "text-muted-foreground/50")}>Meta Title</label>
-                                        <textarea 
-                                            className={cn(
-                                                "w-full bg-transparent border-none focus:ring-0 text-base font-black resize-none outline-none leading-tight",
-                                                isDark ? "text-white placeholder:text-white/20" : "text-foreground placeholder:text-muted-foreground/20"
-                                            )} 
-                                            rows={1}
-                                            value={localizedTitle} 
-                                            onChange={(e) => setLocalizedTitle(e.target.value)} 
-                                            placeholder="Enter translated title..."
-                                        />
-                                        <div className={cn("flex justify-end pt-1.5 border-t", isDark ? "border-white/5" : "border-muted/10")}>
-                                            <span className={cn("text-[8px] font-bold font-mono", isDark ? "text-white/20" : "text-muted-foreground/40")}>{localizedTitle.length}/100</span>
-                                        </div>
-                                    </div>
-
-                                    <div className={cn(
-                                        "p-4 rounded-xl border transition-all",
-                                        isDark 
-                                            ? "bg-white/5 border-white/10 focus-within:bg-white/10 focus-within:ring-2 focus-within:ring-white/10" 
-                                            : "bg-muted/30 border-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary/20"
-                                    )}>
-                                        <label className={cn("text-[9px] font-black uppercase tracking-[0.2em] block mb-2", isDark ? "text-white/30" : "text-muted-foreground/50")}>Meta Description</label>
-                                        <textarea 
-                                            className={cn(
-                                                "w-full bg-transparent border-none focus:ring-0 text-[11px] font-medium resize-none outline-none leading-relaxed",
-                                                isDark ? "text-white/80 placeholder:text-white/20" : "text-foreground placeholder:text-muted-foreground/20"
-                                            )} 
-                                            rows={5}
-                                            value={localizedDescription} 
-                                            onChange={(e) => setLocalizedDescription(e.target.value)} 
-                                            placeholder="Enter translated description..."
-                                        />
-                                        <div className={cn("flex justify-end pt-1.5 border-t", isDark ? "border-white/5" : "border-muted/10")}>
-                                            <span className={cn("text-[8px] font-bold font-mono", isDark ? "text-white/20" : "text-muted-foreground/40")}>{localizedDescription.length}/5000</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* Thumbnail Selector Section */}
-                            <section className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex flex-col">
-                                        <h3 className={cn("text-[10px] font-black uppercase tracking-widest", isDark ? "text-white/40" : "text-muted-foreground")}>Localized Thumbnail</h3>
-                                        <p className={cn("text-[10px] font-bold", isDark ? "text-white/20" : "text-muted-foreground")}>Visual representation</p>
-                                    </div>
-                                    <Button 
-                                        size="sm"
-                                        variant="outline"
-                                        className={cn(
-                                            "h-7 font-black text-[8px] uppercase tracking-wider border-dashed px-2",
-                                            isDark 
-                                                ? "bg-white/5 border-white/20 text-white hover:bg-white/10" 
-                                                : "border-primary/20 text-primary hover:bg-primary/5"
-                                        )}
-                                        onClick={() => handleGenerateMetadataWithAI("thumbnail")}
-                                        disabled={isGeneratingAI}
+                            <AnimatePresence mode="wait">
+                                {step === 'review' ? (
+                                    <motion.div 
+                                        key="review-step"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.3, ease: "easeOut" }}
+                                        className="space-y-10"
                                     >
-                                        <Sparkles className={cn("h-2.5 w-2.5 mr-1", isGeneratingAI && "animate-spin")} />
-                                        AI Variant
-                                    </Button>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button className={cn("aspect-video border-2 rounded-xl relative overflow-hidden group shadow-lg", isDark ? "border-white" : "border-primary")}>
-                                        <img src={thumbnailUrl || "https://images.unsplash.com/photo-1620641788421-7a1c342f22c?auto=format&fit=crop&q=80&w=300&h=169"} alt="Main" className="w-full h-full object-cover" />
-                                        <div className={cn("absolute inset-0", isDark ? "bg-white/10" : "bg-primary/20")} />
-                                        <div className={cn("absolute top-2 right-2 p-1 rounded-full shadow-lg", isDark ? "bg-white text-black" : "bg-primary text-primary-foreground")}><CheckCircle2 className="h-2.5 w-2.5" /></div>
-                                        <div className="absolute bottom-2 left-2 px-1 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-[8px] font-black text-white uppercase tracking-wider">Primary</div>
-                                    </button>
-                                    
-                                    <button className={cn(
-                                        "aspect-video border border-dashed rounded-xl flex flex-col items-center justify-center gap-1 transition-all group overflow-hidden relative grayscale opacity-60 hover:opacity-100 hover:grayscale-0",
-                                        isDark ? "border-white/10 hover:bg-white/5" : "border-muted-foreground/20 hover:bg-muted/30"
-                                    )}>
-                                        <img src={thumbnailUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=300&h=169"} className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
-                                            <Plus className="h-4 w-4 text-white" />
-                                            <span className="text-[8px] font-black text-white uppercase tracking-widest mt-1">Upload</span>
+                                        {/* Metadata Section */}
+                                        <section className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex flex-col">
+                                                    <h3 className={cn("text-[10px] font-black uppercase tracking-widest", isDark ? "text-white/40" : "text-muted-foreground")}>Localized Metadata</h3>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className={cn(
+                                                            "h-7 text-[8px] font-black uppercase tracking-wider border-dashed px-2",
+                                                            isDark 
+                                                                ? "bg-white/5 border-white/20 text-white hover:bg-white/10" 
+                                                                : "border-primary/20 text-primary hover:bg-primary/5"
+                                                        )}
+                                                        onClick={() => handleGenerateMetadataWithAI("title")}
+                                                        disabled={isGeneratingAI}
+                                                    >
+                                                        <Sparkles className={cn("h-2.5 w-2.5 mr-1", isGeneratingAI && "animate-spin")} /> 
+                                                        AI Variant
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <div className={cn(
+                                                    "p-4 rounded-xl border transition-all",
+                                                    isDark 
+                                                        ? "bg-white/5 border-white/10 focus-within:bg-white/10 focus-within:ring-2 focus-within:ring-white/10" 
+                                                        : "bg-muted/30 border-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary/20"
+                                                )}>
+                                                    <label className={cn("text-[9px] font-black uppercase tracking-[0.2em] block mb-2", isDark ? "text-white/30" : "text-muted-foreground/50")}>Meta Title</label>
+                                                    <textarea 
+                                                        className={cn(
+                                                            "w-full bg-transparent border-none focus:ring-0 text-base font-black resize-none outline-none leading-tight",
+                                                            isDark ? "text-white placeholder:text-white/20" : "text-foreground placeholder:text-muted-foreground/20"
+                                                        )} 
+                                                        rows={1}
+                                                        value={localizedTitle} 
+                                                        onChange={(e) => setLocalizedTitle(e.target.value)} 
+                                                        placeholder="Enter translated title..."
+                                                    />
+                                                    <div className={cn("flex justify-end pt-1.5 border-t", isDark ? "border-white/5" : "border-muted/10")}>
+                                                        <span className={cn("text-[8px] font-bold font-mono", isDark ? "text-white/20" : "text-muted-foreground/40")}>{localizedTitle.length}/100</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className={cn(
+                                                    "p-4 rounded-xl border transition-all",
+                                                    isDark 
+                                                        ? "bg-white/5 border-white/10 focus-within:bg-white/10 focus-within:ring-2 focus-within:ring-white/10" 
+                                                        : "bg-muted/30 border-border focus-within:bg-card focus-within:ring-2 focus-within:ring-primary/20"
+                                                )}>
+                                                    <label className={cn("text-[9px] font-black uppercase tracking-[0.2em] block mb-2", isDark ? "text-white/30" : "text-muted-foreground/50")}>Meta Description</label>
+                                                    <textarea 
+                                                        className={cn(
+                                                            "w-full bg-transparent border-none focus:ring-0 text-[11px] font-medium resize-none outline-none leading-relaxed",
+                                                            isDark ? "text-white/80 placeholder:text-white/20" : "text-foreground placeholder:text-muted-foreground/20"
+                                                        )} 
+                                                        rows={5}
+                                                        value={localizedDescription} 
+                                                        onChange={(e) => setLocalizedDescription(e.target.value)} 
+                                                        placeholder="Enter translated description..."
+                                                    />
+                                                    <div className={cn("flex justify-end pt-1.5 border-t", isDark ? "border-white/5" : "border-muted/10")}>
+                                                        <span className={cn("text-[8px] font-bold font-mono", isDark ? "text-white/20" : "text-muted-foreground/40")}>{localizedDescription.length}/5000</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        {/* Thumbnail Selector Section */}
+                                        <section className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex flex-col">
+                                                    <h3 className={cn("text-[10px] font-black uppercase tracking-widest", isDark ? "text-white/40" : "text-muted-foreground")}>Localized Thumbnail</h3>
+                                                    <p className={cn("text-[10px] font-bold", isDark ? "text-white/20" : "text-muted-foreground")}>Visual representation</p>
+                                                </div>
+                                                <Button 
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "h-7 font-black text-[8px] uppercase tracking-wider border-dashed px-2",
+                                                        isDark 
+                                                            ? "bg-white/5 border-white/20 text-white hover:bg-white/10" 
+                                                            : "border-primary/20 text-primary hover:bg-primary/5"
+                                                    )}
+                                                    onClick={() => handleGenerateMetadataWithAI("thumbnail")}
+                                                    disabled={isGeneratingAI}
+                                                >
+                                                    <Sparkles className={cn("h-2.5 w-2.5 mr-1", isGeneratingAI && "animate-spin")} />
+                                                    AI Variant
+                                                </Button>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <button className={cn("aspect-video border-2 rounded-xl relative overflow-hidden group shadow-lg", isDark ? "border-white" : "border-primary")}>
+                                                    <img src={thumbnailUrl || "https://images.unsplash.com/photo-1620641788421-7a1c342f22c?auto=format&fit=crop&q=80&w=300&h=169"} alt="Main" className="w-full h-full object-cover" />
+                                                    <div className={cn("absolute inset-0", isDark ? "bg-white/10" : "bg-primary/20")} />
+                                                    <div className={cn("absolute top-2 right-2 p-1 rounded-full shadow-lg", isDark ? "bg-white text-black" : "bg-primary text-primary-foreground")}><CheckCircle2 className="h-2.5 w-2.5" /></div>
+                                                    <div className="absolute bottom-2 left-2 px-1 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-[8px] font-black text-white uppercase tracking-wider">Primary</div>
+                                                </button>
+                                                
+                                                <button className={cn(
+                                                    "aspect-video border border-dashed rounded-xl flex flex-col items-center justify-center gap-1 transition-all group overflow-hidden relative grayscale opacity-60 hover:opacity-100 hover:grayscale-0",
+                                                    isDark ? "border-white/10 hover:bg-white/5" : "border-muted-foreground/20 hover:bg-muted/30"
+                                                )}>
+                                                    <img src={thumbnailUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=300&h=169"} className="w-full h-full object-cover" />
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                                                        <Plus className="h-4 w-4 text-white" />
+                                                        <span className="text-[8px] font-black text-white uppercase tracking-widest mt-1">Upload</span>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                        </section>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div 
+                                        key="channel-step"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.3, ease: "easeOut" }}
+                                        className="space-y-6"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <button 
+                                                onClick={() => setStep('review')}
+                                                className={cn("p-2 rounded-xl border transition-all", isDark ? "bg-white/5 border-white/10 hover:bg-white/10 text-white" : "bg-muted border-border hover:bg-muted/80")}
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </button>
+                                            <div className="flex flex-col">
+                                                <h3 className={cn("text-[10px] font-black uppercase tracking-widest", isDark ? "text-white" : "text-muted-foreground")}>Select Channel</h3>
+                                                <p className={cn("text-[10px] font-bold", isDark ? "text-white/20" : "text-muted-foreground")}>Destination destination</p>
+                                            </div>
                                         </div>
-                                    </button>
-                                </div>
-                            </section>
+
+                                        <div className="space-y-2">
+                                            {MOCK_CHANNELS.map((channel) => (
+                                                <button
+                                                    key={channel.id}
+                                                    onClick={() => setSelectedChannel(channel.id)}
+                                                    className={cn(
+                                                        "w-full flex items-center gap-4 p-4 rounded-[20px] border transition-all text-left group",
+                                                        selectedChannel === channel.id
+                                                            ? (isDark ? "bg-white/10 border-white/20 ring-2 ring-white/10" : "bg-primary/5 border-primary ring-2 ring-primary/10")
+                                                            : (isDark ? "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10" : "bg-card border-border hover:bg-muted/50")
+                                                    )}
+                                                >
+                                                    <div className="relative">
+                                                        <img src={channel.icon} alt={channel.name} className="w-12 h-12 rounded-xl object-cover ring-2 ring-black/10 group-hover:scale-105 transition-transform" />
+                                                        <div className="absolute -bottom-1 -right-1 p-1 bg-red-600 rounded-lg shadow-lg">
+                                                            <Youtube className="w-2.5 h-2.5 text-white" />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex-1 flex flex-col">
+                                                        <span className={cn("font-black text-sm", isDark ? "text-white" : "text-foreground")}>{channel.name}</span>
+                                                        <span className={cn("text-[10px] font-bold opacity-40 uppercase tracking-tighter", isDark ? "text-white" : "text-muted-foreground")}>{channel.handle}</span>
+                                                    </div>
+                                                    <div className={cn(
+                                                        "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                                                        selectedChannel === channel.id
+                                                            ? (isDark ? "bg-white border-white" : "bg-primary border-primary")
+                                                            : (isDark ? "border-white/10" : "border-border")
+                                                    )}>
+                                                        {selectedChannel === channel.id && <CheckCircle2 className={cn("h-3.5 w-3.5", isDark ? "text-black" : "text-white")} />}
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                        
+                                        <div className={cn("p-6 rounded-3xl border border-dashed flex flex-col items-center gap-4 group cursor-pointer transition-all", isDark ? "border-white/10 hover:bg-white/5" : "border-border hover:bg-primary/5")}>
+                                            <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center transition-all group-hover:rotate-90", isDark ? "bg-white/5 text-white" : "bg-muted text-foreground")}>
+                                                <Plus className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span className={cn("text-[9px] font-black uppercase tracking-widest", isDark ? "text-white" : "text-foreground")}>Connect New Channel</span>
+                                                <span className={cn("text-[8px] font-bold opacity-30 uppercase tracking-tighter", isDark ? "text-white" : "text-muted-foreground")}>Add destination Hub</span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             <div className={cn("pt-6 border-t space-y-4 text-center", isDark ? "border-white/5" : "border-muted/10")}>
                                 <div className="flex flex-col items-center gap-1.5">
@@ -388,7 +488,7 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                     <h4 className={cn("text-[9px] font-black uppercase tracking-widest transition-colors", isDark ? "text-white/40" : "text-foreground")}>Quality Verified</h4>
                                 </div>
                                 <Button 
-                                    onClick={handleFinalize} 
+                                    onClick={handleActionClick} 
                                     className={cn(
                                         "w-full h-12 font-black text-xs transition-all gap-3 rounded-xl shadow-xl",
                                         isDark 
@@ -396,7 +496,11 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                             : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"
                                     )}
                                 >
-                                    <Upload className="h-4 w-4" /> Upload
+                                    {step === 'review' ? (
+                                        <>Select Channel <ChevronRight className="h-4 w-4" /></>
+                                    ) : (
+                                        <><Upload className="h-4 w-4" /> Upload</>
+                                    )}
                                 </Button>
                             </div>
                         </div>
