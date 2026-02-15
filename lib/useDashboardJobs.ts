@@ -8,7 +8,7 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
   const [jobs, setJobs] = useState<ProcessingJob[]>([]);
 
   // Real-time Supabase sync with limit support
-  const { jobs: supabaseJobs } = useSupabaseJobs(
+  const { jobs: supabaseJobs, loading: supabaseLoading, error: supabaseError, refetch: refetchSupabaseJobs } = useSupabaseJobs(
     user_id,
     { project_id: projectId, limit },
     { enabled: enabled && !!user_id }
@@ -23,34 +23,39 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
       projectId
     });
 
-    if (supabaseJobs.length > 0) {
-      // Supabase already returns data sorted and limited, just map it
-      const mapped: ProcessingJob[] = supabaseJobs.map(sj => ({
-        job_id: sj.job_id,
-        source_video_id: sj.source_video_id,
-        status: sj.status as JobStatus,
-        progress: sj.progress || (sj.status === 'completed' ? 100 : 0),
-        target_languages: sj.target_languages,
-        created_at: sj.created_at,
-        project_id: sj.project_id,
-      }));
+    // Supabase already returns data sorted and limited, just map it.
+    // Always sync local state to Supabase (including empty arrays) to avoid stale UI.
+    const mapped: ProcessingJob[] = supabaseJobs.map(sj => ({
+      job_id: sj.job_id,
+      source_video_id: sj.source_video_id,
+      status: sj.status as JobStatus,
+      progress: sj.progress || (sj.status === 'completed' ? 100 : 0),
+      target_languages: sj.target_languages,
+      created_at: sj.created_at,
+      project_id: sj.project_id,
+    }));
 
-      console.log('[useDashboardJobs] Mapped jobs:', mapped);
-      setJobs(mapped);
-    } else {
-      console.log('[useDashboardJobs] No Supabase jobs, keeping existing:', jobs.length);
-    }
+    console.log('[useDashboardJobs] Mapped jobs:', mapped);
+    setJobs(mapped);
   }, [supabaseJobs]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadJobs = useCallback(async () => {
-    // Only load from legacy API if enabled and no Supabase data is present
-    // This avoids unnecessary "Failed to fetch" errors when backend is down but Supabase works
-    if (!enabled || (supabaseJobs && supabaseJobs.length > 0)) {
-      console.log('[useDashboardJobs] Load skipped: enabled=' + enabled + ', supabaseJobs=' + (supabaseJobs?.length || 0));
+    if (!enabled) {
+      console.log('[useDashboardJobs] Load skipped: enabled=false');
       return;
+    }
+
+    // Primary refetch path: always refresh Supabase-backed jobs on demand.
+    if (user_id) {
+      try {
+        await refetchSupabaseJobs();
+        return;
+      } catch (supabaseErr) {
+        console.warn('[useDashboardJobs] Supabase refetch failed, falling back to legacy API', supabaseErr);
+      }
     }
 
     console.log('[useDashboardJobs] Loading jobs from legacy API...', { projectId, limit });
@@ -73,13 +78,8 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
       const data = await response.json();
       console.log('[useDashboardJobs] Legacy API jobs loaded:', { count: data.jobs?.length || 0 });
 
-      // Don't override Supabase data with legacy API data
-      if (supabaseJobs.length > 0) {
-        console.log('[useDashboardJobs] Supabase has data, skipping legacy API update');
-      } else {
-        setJobs(data.jobs || []);
-        setTotal(data.total || 0);
-      }
+      setJobs(data.jobs || []);
+      setTotal(data.total || 0);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load jobs";
       setError(errorMessage);
@@ -87,7 +87,7 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
     } finally {
       setLoading(false);
     }
-  }, [projectId, limit, enabled, supabaseJobs.length]);
+  }, [projectId, limit, enabled, user_id, refetchSupabaseJobs]);
 
   useEffect(() => {
     loadJobs();
@@ -96,8 +96,8 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
   return {
     jobs,
     total,
-    loading,
-    error,
+    loading: loading || (enabled && !!user_id && supabaseLoading),
+    error: error || supabaseError,
     refetch: loadJobs,
   };
 }

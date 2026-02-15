@@ -1475,7 +1475,7 @@ export interface CreateJobRequest {
   source_video_id: string;
   source_channel_id: string;
   target_languages: string[];
-  project_id: string;
+  project_id?: string;
   title?: string;
   description?: string;
   thumbnail_url?: string;

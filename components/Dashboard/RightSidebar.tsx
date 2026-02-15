@@ -5,14 +5,23 @@ import { motion } from "framer-motion";
 import { ChevronRight, Play, Clock, PanelRightClose, Loader2, Rss } from "lucide-react";
 import { SelectedItem, ViewType } from "./DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
 import { useVideos } from "@/lib/useVideos";
 import { useReview } from "@/lib/ReviewContext";
-import { API_BASE_URL, jobsAPI, settingsAPI } from "@/lib/api";
+import { API_BASE_URL, jobsAPI, settingsAPI, videosAPI } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useSettings } from "@/lib/SettingsContext";
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface RightSidebarProps {
   selectedItem: SelectedItem;
@@ -47,6 +56,7 @@ export function RightSidebar({
   const { jobs, loading, error: jobsError, refetch: refetchJobs } = useDashboardJobs({
     projectId: selectedProject?.id,
     user_id: userId,
+    limit: 1000,
     enabled: !!userId && !!user
   });
 
@@ -65,6 +75,12 @@ export function RightSidebar({
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [savingAutoApprove, setSavingAutoApprove] = useState(false);
   const [startingJobId, setStartingJobId] = useState<string | null>(null);
+  const [expandingVideoId, setExpandingVideoId] = useState<string | null>(null);
+  const [selectedLanguageByVideo, setSelectedLanguageByVideo] = useState<Record<string, string[]>>({});
+  const [creatingVideoId, setCreatingVideoId] = useState<string | null>(null);
+  const [dismissedDetectedVideoIds, setDismissedDetectedVideoIds] = useState<string[]>([]);
+  const [autoSyncAttempted, setAutoSyncAttempted] = useState(false);
+  const [autoSyncingDetected, setAutoSyncingDetected] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -128,6 +144,17 @@ export function RightSidebar({
         return 7 * 24 * 60 * 60 * 1000;
     }
   };
+  const getWindowDays = () => {
+    switch (detectedUploadWindow) {
+      case "last_1_day":
+        return 1;
+      case "last_31_days":
+        return 31;
+      case "last_7_days":
+      default:
+        return 7;
+    }
+  };
 
   const windowMs = getWindowMs();
 
@@ -140,17 +167,29 @@ export function RightSidebar({
       const ageMs = Date.now() - publishedAt;
       const inWindow = ageMs >= 0 && ageMs <= windowMs;
       const isSourceVideo = !video.source_video_id || video.source_video_id === video.video_id;
+      if (!inWindow || !isSourceVideo) return false;
 
-      return inWindow && isSourceVideo;
+      const videoJobs = jobs.filter((j) => j.source_video_id === video.video_id);
+      const activeJobs = videoJobs.filter((j) => !["cancelled", "failed"].includes(j.status));
+      const hasPreStartJob = activeJobs.some(
+        (j) => j.status === "waiting_approval" && Number(j.progress || 0) === 0
+      );
+      const hasAnyActiveJob = activeJobs.length > 0;
+      const shouldShow = !hasAnyActiveJob || hasPreStartJob;
+
+      return shouldShow && !dismissedDetectedVideoIds.includes(video.video_id);
     })
     .sort((a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime());
 
   const getPreStartJobForVideo = (videoId: string) =>
-    jobs.find((j) => j.source_video_id === videoId && j.status === "waiting_approval" && (j.progress || 0) === 0);
+    jobs.find((j) => j.source_video_id === videoId && j.status === "waiting_approval" && Number(j.progress || 0) === 0);
+
+  const getAnyActiveJobForVideo = (videoId: string) =>
+    jobs.find((j) => j.source_video_id === videoId && !["cancelled", "failed"].includes(j.status));
 
   const needsReviewJobs = jobs.filter(j => j.status === 'waiting_approval' && (j.progress || 0) > 0);
   const processingJobs = jobs.filter(j =>
-    ['pending', 'downloading', 'processing', 'uploading'].includes(j.status)
+    ['pending', 'downloading', 'processing', 'transcribing', 'translating', 'voice_cloning', 'dubbing', 'lip_sync', 'uploading'].includes(j.status)
   );
 
   const enableAutoApprove = async () => {
@@ -167,13 +206,21 @@ export function RightSidebar({
     }
   };
 
-  const beginDetectedJob = async (jobId: string) => {
+  const beginDetectedJob = async (videoId: string, jobId: string) => {
     if (startingJobId) return;
+    const existingJob = jobs.find((job) => job.job_id === jobId) || null;
     setStartingJobId(jobId);
     try {
       await jobsAPI.approveAndStart(jobId);
+      const startedJob = await jobsAPI
+        .getJobById(jobId)
+        .catch(() => (existingJob ? { ...existingJob, status: "pending" } : null));
       await Promise.all([refetchJobs(), refetchVideos(), refetchAllUserVideos()]);
+      setDismissedDetectedVideoIds((prev) => (prev.includes(videoId) ? prev : [...prev, videoId]));
       toast("Processing started", "success");
+      if (startedJob?.job_id) {
+        onSelectItem?.({ type: "job", id: startedJob.job_id, data: startedJob });
+      }
       onViewChange?.("processing");
     } catch (error: any) {
       toast(error?.message || "Failed to start processing", "error");
@@ -181,6 +228,100 @@ export function RightSidebar({
       setStartingJobId(null);
     }
   };
+
+  const createAndStartDetectedJob = async (video: any) => {
+    if (creatingVideoId) return;
+    const selectedLanguages = selectedLanguageByVideo[video.video_id]?.length
+      ? selectedLanguageByVideo[video.video_id]
+      : [];
+    const sourceChannelId = video.channel_id || video.source_channel_id;
+    const projectId = selectedProject?.id || video.project_id;
+
+    if (!sourceChannelId) {
+      toast("Missing channel context for this upload", "error");
+      return;
+    }
+    if (selectedLanguages.length === 0) {
+      toast("Select at least one target language", "error");
+      return;
+    }
+
+    setCreatingVideoId(video.video_id);
+    try {
+      const createPayload: any = {
+        source_video_id: video.video_id,
+        source_channel_id: sourceChannelId,
+        target_languages: selectedLanguages,
+        is_simulation: false,
+      };
+      if (projectId) {
+        createPayload.project_id = projectId;
+      }
+      const createdJob = await jobsAPI.createJob(createPayload);
+      await Promise.all([refetchJobs(), refetchVideos(), refetchAllUserVideos()]);
+      setDismissedDetectedVideoIds((prev) => (prev.includes(video.video_id) ? prev : [...prev, video.video_id]));
+      setExpandingVideoId(null);
+      const selectedLanguageNames = LANGUAGE_OPTIONS
+        .filter((lang) => selectedLanguages.includes(lang.code))
+        .map((lang) => lang.name);
+      toast(`Processing started for ${selectedLanguageNames.join(", ")}`, "success");
+      if (createdJob?.job_id) {
+        onSelectItem?.({ type: "job", id: createdJob.job_id, data: createdJob });
+      }
+      onViewChange?.("processing");
+    } catch (error: any) {
+      toast(error?.message || "Failed to create processing job", "error");
+    } finally {
+      setCreatingVideoId(null);
+    }
+  };
+
+  const toggleLanguageForVideo = (videoId: string, languageCode: string) => {
+    setSelectedLanguageByVideo((prev) => {
+      const current = prev[videoId] || [];
+      const exists = current.includes(languageCode);
+      const next = exists ? current.filter((c) => c !== languageCode) : [...current, languageCode];
+      return { ...prev, [videoId]: next };
+    });
+  };
+
+  const getSelectedLanguageNames = (videoId: string) => {
+    const selected = selectedLanguageByVideo[videoId] || [];
+    return LANGUAGE_OPTIONS
+      .filter((lang) => selected.includes(lang.code))
+      .map((lang) => lang.name);
+  };
+
+  const getJobLanguageNames = (codes?: string[]) => {
+    if (!Array.isArray(codes) || codes.length === 0) return ["Spanish"];
+    return codes.map((code) => LANGUAGE_OPTIONS.find((lang) => lang.code === code)?.name || code.toUpperCase());
+  };
+
+  useEffect(() => {
+    if (!userId || loading || allUserVideosLoading || autoSyncAttempted || autoSyncingDetected || detectedVideos.length > 0) return;
+
+    let cancelled = false;
+    const runAutoSync = async () => {
+      setAutoSyncAttempted(true);
+      setAutoSyncingDetected(true);
+      try {
+        const summary = await videosAPI.syncRecentDetectedUploads(getWindowDays(), 20);
+        await Promise.all([refetchJobs(), refetchVideos(), refetchAllUserVideos()]);
+        if (!cancelled && (summary.videos_seen > 0 || summary.jobs_created > 0)) {
+          toast(`Detected uploads synced: ${summary.videos_seen} found`, "success");
+        }
+      } catch {
+        // Silent fallback - user can still trigger sync from detected uploads view.
+      } finally {
+        if (!cancelled) setAutoSyncingDetected(false);
+      }
+    };
+
+    runAutoSync();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, loading, allUserVideosLoading, autoSyncAttempted, autoSyncingDetected, detectedVideos.length, refetchJobs, refetchVideos, refetchAllUserVideos, toast]);
 
   return (
     <div className={`h-full ${bgClass} flex flex-col p-6 space-y-6 overflow-hidden relative border ${isDark ? "border-white/10" : "border-gray-200"}`}>
@@ -249,10 +390,23 @@ export function RightSidebar({
             ) : detectedVideos.length > 0 ? (
               detectedVideos.map((video) => {
                 const preStartJob = getPreStartJobForVideo(video.video_id);
+                const hasAnyActiveJob = !!getAnyActiveJobForVideo(video.video_id);
+                const canCreate = !preStartJob?.job_id && !hasAnyActiveJob;
                 const thisJobStarting = preStartJob?.job_id ? startingJobId === preStartJob.job_id : false;
+                const thisJobCreating = creatingVideoId === video.video_id;
+                const isExpanded = expandingVideoId === video.video_id;
+                const selectedLanguages = selectedLanguageByVideo[video.video_id] || [];
                 return (
-                  <div key={video.video_id} className={`p-3 rounded-xl border ${borderClass} ${glassBgClass}`}>
-                    <div className="flex gap-3 mb-2">
+                  <div key={video.video_id} className={`relative p-3 rounded-xl border ${borderClass} ${glassBgClass}`}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(`https://www.youtube.com/watch?v=${video.video_id}`, "_blank", "noopener,noreferrer")}
+                      className={`absolute top-2 right-2 h-6 px-1 text-[10px] font-bold uppercase tracking-wider border-0 ${isDark ? "text-gray-300 hover:bg-transparent" : "text-gray-600 hover:bg-transparent"}`}
+                    >
+                      View
+                    </Button>
+                    <div className="flex gap-3 mb-2 pr-14">
                       <div className={`w-16 aspect-video rounded-lg overflow-hidden ${isDark ? "bg-white/5 border border-white/5" : "bg-gray-100 border border-gray-200"} shrink-0`}>
                         {video?.thumbnail_url ? (
                           <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
@@ -271,14 +425,94 @@ export function RightSidebar({
                         </p>
                       </div>
                     </div>
-                    <Button
-                      onClick={() => preStartJob?.job_id && beginDetectedJob(preStartJob.job_id)}
-                      disabled={!preStartJob?.job_id || Boolean(startingJobId)}
-                      className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider ${preStartJob?.job_id ? "bg-blue-600 hover:bg-blue-500 text-white" : isDark ? "bg-transparent border border-gray-500 text-gray-400 hover:bg-transparent" : "bg-white border border-gray-400 text-gray-600 hover:bg-transparent"}`}
-                    >
-                      {thisJobStarting ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : null}
-                      {thisJobStarting ? "Starting..." : preStartJob?.job_id ? "Begin Processing" : "No Pending Job"}
-                    </Button>
+                    <div className="space-y-2">
+                      {canCreate && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {getSelectedLanguageNames(video.video_id).map((name) => (
+                            <Badge key={name} variant="secondary" className="text-[10px] font-medium">
+                              {name}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      {preStartJob?.job_id && (
+                        <Button
+                          onClick={() => beginDetectedJob(video.video_id, preStartJob.job_id)}
+                          disabled={Boolean(startingJobId)}
+                          className="w-full h-8 text-[10px] font-bold uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white"
+                        >
+                          {thisJobStarting ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : null}
+                          {thisJobStarting ? "Starting..." : "Begin Processing"}
+                        </Button>
+                      )}
+
+                      {canCreate && !isExpanded && (
+                        <Button
+                          variant="outline"
+                          onClick={() => setExpandingVideoId(video.video_id)}
+                          className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider ${isDark ? "bg-transparent border-gray-500 text-gray-300 hover:bg-white/5" : "bg-transparent border-gray-400 text-gray-700 hover:bg-gray-50"}`}
+                        >
+                          Select Languages
+                        </Button>
+                      )}
+                    </div>
+                    {isExpanded && canCreate && (
+                      <div className={`mt-2 p-2 rounded-lg border ${borderClass} ${isDark ? "bg-white/[0.02]" : "bg-white/70"}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1">
+                            <div className="flex flex-col gap-1.5">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className="h-8 justify-between text-[11px] font-medium"
+                                  >
+                                    Select Languages
+                                    <span className="ml-2 text-[10px] text-muted-foreground">
+                                      {selectedLanguages.length}
+                                    </span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-56">
+                                  <DropdownMenuLabel>Target Languages</DropdownMenuLabel>
+                                  {LANGUAGE_OPTIONS.map((lang) => (
+                                    <DropdownMenuCheckboxItem
+                                      key={lang.code}
+                                      checked={selectedLanguages.includes(lang.code)}
+                                      onSelect={(e) => e.preventDefault()}
+                                      onCheckedChange={() => toggleLanguageForVideo(video.video_id, lang.code)}
+                                    >
+                                      {lang.flag} {lang.name}
+                                    </DropdownMenuCheckboxItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider"
+                              onClick={() => setExpandingVideoId(null)}
+                              disabled={thisJobCreating}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider"
+                              onClick={() => createAndStartDetectedJob(video)}
+                              disabled={thisJobCreating || selectedLanguages.length === 0}
+                            >
+                              {thisJobCreating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                              {thisJobCreating ? "Starting..." : "Start"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -415,6 +649,7 @@ export function RightSidebar({
             ) : processingJobs.length > 0 ? (
               processingJobs.map((job) => {
                 const video = getJobVideo(job.source_video_id);
+                const languageNames = getJobLanguageNames(job.target_languages);
                 return (
                   <motion.div
                     key={job.job_id}
@@ -471,6 +706,25 @@ export function RightSidebar({
                         <span className={`text-[10px] ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"} mt-0.5`}>
                           {new Date(job.created_at).toLocaleDateString()}
                         </span>
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {languageNames.slice(0, 3).map((name) => (
+                            <Badge
+                              key={`${job.job_id}-${name}`}
+                              variant="secondary"
+                              className={`text-[9px] px-1.5 py-0 h-4 font-medium ${isDark ? "bg-white/10 text-gray-200 hover:bg-white/15" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                            >
+                              {name}
+                            </Badge>
+                          ))}
+                          {languageNames.length > 3 && (
+                            <Badge
+                              variant="secondary"
+                              className={`text-[9px] px-1.5 py-0 h-4 font-medium ${isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-700"}`}
+                            >
+                              +{languageNames.length - 3}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="space-y-2">

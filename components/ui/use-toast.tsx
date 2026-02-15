@@ -1,95 +1,138 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { CheckCircle, AlertCircle, X, Rocket } from "lucide-react";
+import React, { createContext, useContext, useState, useCallback } from "react";
+import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 type ToastType = "success" | "error" | "info";
 
 interface Toast {
-    id: string;
-    message: string;
-    type: ToastType;
+  id: string;
+  message: string;
+  type: ToastType;
 }
 
 interface ToastContextType {
-    toast: (message: string, type?: ToastType) => void;
+  toast: (message: string, type?: ToastType) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-import { motion, AnimatePresence } from "framer-motion";
+const TOAST_DURATION_MS = 4500;
+const MAX_TOASTS = 4;
+
+const toastStyles: Record<
+  ToastType,
+  {
+    label: string;
+    container: string;
+    iconWrap: string;
+    progress: string;
+    Icon: React.ComponentType<{ className?: string }>;
+  }
+> = {
+  success: {
+    label: "Success",
+    container: "border-emerald-500/30 ring-1 ring-emerald-500/20",
+    iconWrap: "bg-emerald-500/15 text-emerald-500",
+    progress: "bg-emerald-500/90",
+    Icon: CheckCircle2,
+  },
+  error: {
+    label: "Error",
+    container: "border-red-500/30 ring-1 ring-red-500/20",
+    iconWrap: "bg-red-500/15 text-red-500",
+    progress: "bg-red-500/90",
+    Icon: AlertTriangle,
+  },
+  info: {
+    label: "Notice",
+    container: "border-blue-500/30 ring-1 ring-blue-500/20",
+    iconWrap: "bg-blue-500/15 text-blue-500",
+    progress: "bg-blue-500/90",
+    Icon: Info,
+  },
+};
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-    const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-    const toast = useCallback((message: string, type: ToastType = "info") => {
-        const id = Math.random().toString(36).substring(2, 9);
-        // Add new toast to the START of the array so they stack from top down nicely
-        setToasts((prev) => [{ id, message, type }, ...prev]);
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
-        // Auto dismiss
-        setTimeout(() => {
-            removeToast(id);
-        }, 4000);
-    }, []);
+  const toast = useCallback(
+    (message: string, type: ToastType = "info") => {
+      const id =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : Math.random().toString(36).substring(2, 11);
+      setToasts((prev) => [{ id, message, type }, ...prev].slice(0, MAX_TOASTS));
+      window.setTimeout(() => {
+        removeToast(id);
+      }, TOAST_DURATION_MS);
+    },
+    [removeToast]
+  );
 
-    const removeToast = (id: string) => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-    };
+  return (
+    <ToastContext.Provider value={{ toast }}>
+      {children}
+      <div className="pointer-events-none fixed right-3 top-3 z-[110] flex w-[min(420px,calc(100vw-1.5rem))] flex-col gap-2 sm:right-4 sm:top-4">
+        <AnimatePresence mode="popLayout">
+          {toasts.map((t) => {
+            const styles = toastStyles[t.type];
+            const Icon = styles.Icon;
+            return (
+              <motion.div
+                key={t.id}
+                layout
+                initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98, transition: { duration: 0.15 } }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className={`pointer-events-auto relative overflow-hidden rounded-xl border bg-background/95 text-foreground shadow-2xl backdrop-blur-md ${styles.container}`}
+              >
+                <div className="flex items-start gap-3 px-3 py-3.5">
+                  <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${styles.iconWrap}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
 
-    return (
-        <ToastContext.Provider value={{ toast }}>
-            {children}
-            <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none w-full max-w-sm items-end pr-4">
-                <AnimatePresence mode="popLayout">
-                    {toasts.map((t) => (
-                        <motion.div
-                            key={t.id}
-                            initial={{ opacity: 0, x: 20, scale: 0.9 }}
-                            animate={{ opacity: 1, x: 0, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                            layout
-                            className={`
-                                pointer-events-auto flex items-center gap-3 pl-4 pr-3 py-3 rounded-full shadow-2xl border backdrop-blur-xl
-                                ${t.type === "success"
-                                    ? "bg-zinc-950/80 text-white border-green-500/20 shadow-green-500/5 ring-1 ring-green-500/10"
-                                    : t.type === "error"
-                                        ? "bg-zinc-950/80 text-white border-red-500/20 shadow-red-500/5 ring-1 ring-red-500/10"
-                                        : "bg-zinc-950/80 text-white border-white/10 shadow-white/5 ring-1 ring-white/5"
-                                }
-                            `}
-                        >
-                            <div className={`
-                                flex items-center justify-center w-6 h-6 rounded-full 
-                                ${t.type === "success" ? "bg-green-500/10 text-green-400" :
-                                    t.type === "error" ? "bg-red-500/10 text-red-400" :
-                                        "bg-blue-500/10 text-blue-400"}
-                            `}>
-                                {t.type === "success" && <Rocket className="w-3.5 h-3.5" />}
-                                {t.type === "error" && <AlertCircle className="w-3.5 h-3.5" />}
-                                {t.type === "info" && <CheckCircle className="w-3.5 h-3.5" />}
-                            </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{styles.label}</p>
+                    <p className="mt-0.5 break-words text-sm font-medium leading-snug">{t.message}</p>
+                  </div>
 
-                            <p className="text-xs font-medium font-mono leading-tight tracking-wide">{t.message}</p>
+                  <button
+                    onClick={() => removeToast(t.id)}
+                    className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    aria-label="Dismiss notification"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
 
-                            <button
-                                onClick={() => removeToast(t.id)}
-                                className="ml-2 hover:bg-white/10 p-1.5 rounded-full text-white/40 hover:text-white transition-colors"
-                            >
-                                <X className="w-3.5 h-3.5" />
-                            </button>
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
-            </div>
-        </ToastContext.Provider>
-    );
+                <div className="h-1 w-full bg-muted/60">
+                  <motion.div
+                    className={`h-full ${styles.progress}`}
+                    initial={{ width: "100%" }}
+                    animate={{ width: "0%" }}
+                    transition={{ duration: TOAST_DURATION_MS / 1000, ease: "linear" }}
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+    </ToastContext.Provider>
+  );
 }
 
 export function useToast() {
-    const context = useContext(ToastContext);
-    if (context === undefined) {
-        throw new Error("useToast must be used within a ToastProvider");
-    }
-    return context;
+  const context = useContext(ToastContext);
+  if (context === undefined) {
+    throw new Error("useToast must be used within a ToastProvider");
+  }
+  return context;
 }

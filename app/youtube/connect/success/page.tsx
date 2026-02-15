@@ -6,6 +6,7 @@ import { Check, ArrowRight, Youtube, Layout } from "lucide-react";
 import { logger } from "@/lib/logger";
 import { useTheme } from "@/lib/useTheme";
 import { Button } from "@/components/ui/button";
+import { videosAPI } from "@/lib/api";
 
 function YouTubeConnectSuccessContent() {
   const router = useRouter();
@@ -38,6 +39,10 @@ function YouTubeConnectSuccessContent() {
 
     if (channelIdParam) setChannelId(channelIdParam);
     if (channelNameParam) setChannelName(decodeURIComponent(channelNameParam));
+
+    // Try to backfill recent uploads right after connection succeeds.
+    // Silent fallback: redirect should continue even if sync fails.
+    videosAPI.syncRecentDetectedUploads(7, 20).catch(() => {});
 
     // Redirect logic
     const redirectTo = searchParams.get("redirect_to") || "/app?page=Channels";
