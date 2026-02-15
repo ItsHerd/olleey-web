@@ -251,26 +251,12 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
 
     return (
         <div className="w-full h-full flex flex-col bg-background overflow-hidden relative" id="review-video-container">
-            <header className="flex h-14 items-center justify-between border-b px-6 bg-card shrink-0 z-50">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => onViewChange?.("dashboard")} className="h-8 w-8"><ChevronLeft className="h-4 w-4" /></Button>
-                    <div className="flex flex-col">
-                        <h2 className="text-sm font-bold truncate max-w-[300px]">{videoTitle || "Reviewing Video"}</h2>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Review & Finalize</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold gap-2"><Save className="h-3.5 w-3.5" /> Save as draft</Button>
-                    <div className="h-6 w-px bg-border mx-1" />
-                    <Button variant="secondary" size="sm" onClick={() => setComparisonMode(comparisonMode === "side-by-side" ? "toggle" : "side-by-side")} className="h-8 px-3 text-[11px] font-bold">
-                        {comparisonMode === "side-by-side" ? <Layout className="h-3.5 w-3.5 mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
-                        {comparisonMode === "side-by-side" ? "Stacked" : "Toggle"}
-                    </Button>
-                </div>
-            </header>
 
-            <div className="flex-1 flex overflow-hidden bg-muted/10 p-4 gap-4">
-                <aside className="w-[300px] bg-card rounded-[2rem] border border-border/40 p-6 space-y-4 overflow-y-auto custom-scrollbar shrink-0 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.1)]">
+            <div className="flex-1 flex overflow-hidden bg-muted/5 dark:bg-muted/20 p-6 gap-6">
+                <aside className={cn(
+                    "w-[300px] bg-card dark:bg-[#121212] rounded-[1.5rem] border border-border/40 dark:border-white/5 p-6 space-y-4 overflow-y-auto custom-scrollbar shrink-0 shadow-sm",
+                    "dark:shadow-[0_8px_40px_rgb(0,0,0,0.4)]"
+                )}>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Distribution</h3>
                         <div className="flex items-center gap-2">
@@ -281,17 +267,21 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                     <div className="space-y-3">
                         {(() => {
                             const currVideo = videos.find(v => v.video_id === videoIdFromUrl);
-                            const availableLangs = currVideo?.localizations ? Object.keys(currVideo.localizations) : (isDemoUser(userId) && videoIdFromUrl === "demo_yc_ceo_video_001" ? ["es"] : []);
+                            const availableLangs = Array.from(new Set([
+                                ...(currVideo?.localizations ? Object.keys(currVideo.localizations) : []),
+                                ...(languageCode ? [languageCode] : []),
+                                ...(isDemoUser(userId) && videoIdFromUrl === "demo_yc_ceo_video_001" ? ["es"] : [])
+                            ]));
                             return availableLangs.map((lang) => {
                                 const langOption = LANGUAGE_OPTIONS.find(l => l.code === lang);
                                 const selectedChannelId = channelMappings[lang] || "none";
                                 const isActive = lang === languageCode;
                                 return (
-                                    <div key={lang} onClick={() => handleSwitchLanguage(lang)} className={cn("p-4 rounded-2xl border transition-all cursor-pointer group relative", isActive ? "bg-background border-primary ring-1 ring-primary/10 shadow-lg" : "bg-background/40 border-transparent hover:border-muted-foreground/10")}>
+                                    <div key={lang} onClick={() => handleSwitchLanguage(lang)} className={cn("p-4 rounded-2xl border transition-all cursor-pointer group relative", isActive ? "bg-background dark:bg-primary/10 border-primary ring-1 ring-primary/10 dark:ring-primary/20 dark:shadow-lg" : "bg-background/40 dark:bg-white/5 border-transparent dark:border-white/5 hover:border-muted-foreground/10")}>
                                         {isActive && <div className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground rounded-full p-0.5 shadow-md"><CheckCircle2 className="h-3 w-3" /></div>}
                                         <div className="flex items-center gap-3">
                                             <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10 text-xl leading-none">{getLanguageFlag(lang)}</div>
-                                            <div className="flex-1 min-w-0"><p className="text-[12px] font-bold truncate">{langOption?.name || lang.toUpperCase()}</p><p className="text-[9px] text-muted-foreground uppercase opacity-60">Language Code: {lang}</p></div>
+                                            <div className="flex-1 min-w-0"><p className="text-[12px] font-bold truncate">{langOption?.name || lang.toUpperCase()}</p></div>
                                         </div>
                                         <div className="space-y-1.5 pt-1" onClick={(e) => e.stopPropagation()}>
                                             <p className="text-[9px] font-bold text-muted-foreground/50 uppercase">Target Channel</p>
@@ -310,10 +300,20 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                     </div>
                 </aside>
 
-                <main className="flex-1 overflow-y-auto custom-scrollbar bg-card rounded-[2rem] border border-border/40 p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)]">
-                    <div className="max-w-5xl mx-auto space-y-12 pb-24">
-                        <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md py-6 -mx-8 px-8 border-b mb-12">
-                            <div className="flex items-center justify-center gap-2">
+                <main className={cn(
+                    "flex-1 overflow-y-auto custom-scrollbar bg-card dark:bg-[#0A0A0A] rounded-[1.5rem] border border-border/40 dark:border-white/5 p-6 shadow-sm",
+                    "dark:shadow-[0_8px_40px_rgb(0,0,0,0.4)]"
+                )}>
+                    <div className="w-full space-y-6 pb-12">
+                        <div className="py-2 mb-6 flex items-center justify-between border-b border-border/10">
+                            <div className="flex items-center gap-4">
+                                <Button variant="ghost" size="sm" onClick={() => onViewChange?.("dashboard")} className="h-8 px-2 text-muted-foreground hover:text-black dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5 transition-all gap-1.5">
+                                    <ChevronLeft className="h-4 w-4" /> 
+                                    <span className="text-[11px] font-bold uppercase tracking-wider">Exit Review</span>
+                                </Button>
+                                <div className="h-4 w-px bg-border mx-2" />
+                            </div>
+                            <div className="flex items-center justify-center gap-2 flex-1">
                                 {[
                                     { id: 1, name: "Details" },
                                     { id: 2, name: "Video elements" },
@@ -335,30 +335,30 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
 
                         <div className="min-h-[60vh]">
                             {currentStep === 1 && (
-                                <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-12">
-                                    <div className="space-y-8">
+                                <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-8">
+                                    <div className="space-y-6">
                                         <div className="flex items-center justify-between">
                                             <h1 className="text-2xl font-bold">Details</h1>
-                                            <Button variant="secondary" size="sm" className="text-[11px] font-bold gap-2"><RefreshCw className="h-3.5 w-3.5" /> Reuse details</Button>
+                                            <Button variant="secondary" size="sm" className="text-[11px] font-bold gap-2 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white"><RefreshCw className="h-3.5 w-3.5" /> Reuse details</Button>
                                         </div>
-                                        <div className="space-y-6">
+                                        <div className="space-y-4">
                                             <div className="space-y-2 relative">
                                                 <div className="flex items-center gap-1">
                                                     <label className="text-[11px] font-bold uppercase text-muted-foreground tracking-tighter">Title (required)</label>
                                                     <HelpCircle className="h-3 w-3 text-muted-foreground/40" />
                                                 </div>
-                                                <div className="p-4 rounded-xl border-2 focus-within:border-primary transition-all bg-muted/5 min-h-[100px] flex flex-col">
+                                                 <div className="p-4 rounded-xl border-2 dark:border-white/10 focus-within:border-primary dark:focus-within:border-primary/50 transition-all bg-background dark:bg-white/5 min-h-[100px] flex flex-col">
                                                     <textarea className="w-full bg-transparent border-none focus:ring-0 text-lg font-medium resize-none flex-1 outline-none" value={localizedTitle} onChange={(e) => setLocalizedTitle(e.target.value)} placeholder="Enter a title"/>
                                                      <div className="flex justify-between items-center mt-2 pt-2 border-t border-muted/20">
-                                                         <Button 
-                                                            variant="outline" 
-                                                            size="sm" 
-                                                            className="h-7 text-[10px] font-bold gap-1.5"
-                                                            onClick={() => handleGenerateMetadataWithAI("title")}
-                                                            disabled={isGeneratingAI}
-                                                         >
-                                                            <Zap className={cn("h-3 w-3 fill-primary text-primary", isGeneratingAI && "animate-pulse")} /> Regenerate with AI
-                                                         </Button>
+                                                          <Button 
+                                                             variant="outline" 
+                                                             size="sm" 
+                                                             className="h-7 text-[10px] font-bold gap-1.5 dark:bg-white dark:text-black dark:border-none dark:hover:bg-white/90"
+                                                             onClick={() => handleGenerateMetadataWithAI("title")}
+                                                             disabled={isGeneratingAI}
+                                                          >
+                                                             <Zap className={cn("h-3 w-3 fill-current", isGeneratingAI && "animate-pulse")} /> Regenerate with AI
+                                                          </Button>
                                                          <span className="text-[10px] text-muted-foreground">{localizedTitle.length}/100</span>
                                                      </div>
                                                 </div>
@@ -368,18 +368,18 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                     <label className="text-[11px] font-bold uppercase text-muted-foreground tracking-tighter">Description</label>
                                                     <HelpCircle className="h-3 w-3 text-muted-foreground/40" />
                                                 </div>
-                                                <div className="p-4 rounded-xl border-2 focus-within:border-primary transition-all bg-muted/5 min-h-[160px] flex flex-col">
+                                                 <div className="p-4 rounded-xl border-2 dark:border-white/10 focus-within:border-primary dark:focus-within:border-primary/50 transition-all bg-background dark:bg-white/5 min-h-[160px] flex flex-col">
                                                     <textarea className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none flex-1 outline-none leading-relaxed" value={localizedDescription} onChange={(e) => setLocalizedDescription(e.target.value)} placeholder="Tell viewers about your video"/>
                                                      <div className="flex justify-between items-center mt-2 pt-2 border-t border-muted/20">
-                                                         <Button 
-                                                            variant="outline" 
-                                                            size="sm" 
-                                                            className="h-7 text-[10px] font-bold gap-1.5"
-                                                            onClick={() => handleGenerateMetadataWithAI("description")}
-                                                            disabled={isGeneratingAI}
-                                                         >
-                                                            <Zap className={cn("h-3 w-3 fill-primary text-primary", isGeneratingAI && "animate-pulse")} /> Regenerate with AI
-                                                         </Button>
+                                                          <Button 
+                                                             variant="outline" 
+                                                             size="sm" 
+                                                             className="h-7 text-[10px] font-bold gap-1.5 dark:bg-white dark:text-black dark:border-none dark:hover:bg-white/90"
+                                                             onClick={() => handleGenerateMetadataWithAI("description")}
+                                                             disabled={isGeneratingAI}
+                                                          >
+                                                             <Zap className={cn("h-3 w-3 fill-current", isGeneratingAI && "animate-pulse")} /> Regenerate with AI
+                                                          </Button>
                                                          <span className="text-[10px] text-muted-foreground">{localizedDescription.length}/5000</span>
                                                      </div>
                                                 </div>
@@ -398,14 +398,14 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                         <div className="absolute top-2 left-2 p-1 rounded-md bg-white/20 backdrop-blur-sm"><Sparkles className="h-3 w-3 text-white fill-white" /></div>
                                                     </button>
                                                     <button className="aspect-video border-2 border-transparent rounded-xl overflow-hidden hover:border-muted-foreground/20 transition-all opacity-60 hover:opacity-100"><img src={thumbnailUrl || DEMO_THUMBNAIL} className="w-full h-full object-cover grayscale" /></button>
-                                                     <button 
-                                                        className="aspect-video border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-muted/30 transition-all group"
-                                                        onClick={() => handleGenerateMetadataWithAI("thumbnail")}
-                                                        disabled={isGeneratingAI}
-                                                     >
-                                                         <Sparkles className={cn("h-4 w-4 text-primary fill-primary/20", isGeneratingAI && "animate-spin")} />
-                                                         <span className="text-[9px] font-bold text-primary">Regenerate with AI</span>
-                                                     </button>
+                                                      <button 
+                                                         className="aspect-video border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-muted/30 transition-all group dark:border-white/20 dark:bg-white/5 dark:hover:bg-white/10"
+                                                         onClick={() => handleGenerateMetadataWithAI("thumbnail")}
+                                                         disabled={isGeneratingAI}
+                                                      >
+                                                          <Sparkles className={cn("h-4 w-4 text-primary dark:text-white fill-primary/20", isGeneratingAI && "animate-spin")} />
+                                                          <span className="text-[9px] font-bold text-primary dark:text-white">Regenerate with AI</span>
+                                                      </button>
                                                 </div>
                                             </div>
                                             <div className="space-y-4 pt-4">
@@ -425,7 +425,7 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                     </div>
                                     <div className="space-y-6">
                                          <div className="sticky top-12 space-y-4">
-                                             <Card className="overflow-hidden border-none shadow-2xl bg-black group relative flex flex-col gap-px cursor-pointer" onClick={togglePlay}>
+                                             <Card className={cn("overflow-hidden border-none dark:shadow-2xl bg-black group relative flex flex-col gap-px cursor-pointer shadow-xl")} onClick={togglePlay}>
                                                   <div className="relative aspect-video bg-black border-b border-white/5">
                                                       <video ref={originalVideoRef} src={originalVideoUrl || undefined} className="w-full h-full" muted={originalMuted} onTimeUpdate={handleVideoTimeUpdate} />
                                                       <Badge className="absolute top-2 left-2 z-10 bg-white/10 backdrop-blur-md text-[9px] font-bold border-none uppercase tracking-widest px-1.5 h-4 text-white/70">Original (EN)</Badge>
@@ -435,18 +435,18 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                       <Badge className="absolute top-2 left-2 z-10 bg-primary/80 backdrop-blur-md text-[9px] font-bold border-none uppercase tracking-widest px-1.5 h-4">Localized ({languageCode?.toUpperCase() || "ES"})</Badge>
                                                   </div>
                                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                     <div className="w-12 h-12 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center shadow-lg">
+                                                     <div className="w-12 h-12 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center dark:shadow-[0_0_30px_rgb(var(--primary),0.4)]">
                                                          {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
                                                      </div>
                                                  </div>
                                              </Card>
-                                            <Card className="p-4 border shadow-sm space-y-4">
-                                                <div className="flex items-center justify-between"><h3 className="text-[11px] font-bold uppercase text-muted-foreground tracking-widest">Quality Score</h3><Badge variant="outline" className="text-emerald-500 border-emerald-500/20 bg-emerald-500/5 h-5 font-bold">Excellent</Badge></div>
-                                                <div className="space-y-3">
-                                                     <div className="flex items-center justify-between bg-muted/30 p-2 rounded-lg"><div className="flex items-center gap-2"><Activity className="h-3.5 w-3.5 text-blue-500" /><span className="text-[11px] font-bold">Lip Sync Accuracy</span></div><span className="text-[11px] font-bold text-blue-600">{lipSyncAccuracy}%</span></div>
-                                                     <div className="flex items-center justify-between bg-muted/30 p-2 rounded-lg"><div className="flex items-center gap-2"><Sparkles className="h-3.5 w-3.5 text-orange-500" /><span className="text-[11px] font-bold">Linguistic Tone match</span></div><span className="text-[11px] font-bold text-orange-600">92%</span></div>
-                                                     <div className="flex items-center justify-between bg-muted/30 p-2 rounded-lg"><div className="flex items-center gap-2"><Languages className="h-3.5 w-3.5 text-emerald-500" /><span className="text-[11px] font-bold">Translation Fidelity</span></div><span className="text-[11px] font-bold text-emerald-600">98%</span></div>
-                                                </div>
+                                             <Card className={cn("p-4 border dark:border-white/5 dark:bg-white/5 dark:shadow-none space-y-4 shadow-sm")}>
+                                                <div className="flex items-center justify-between"><h3 className="text-[11px] font-bold uppercase text-muted-foreground tracking-widest">Quality Score</h3><Badge variant="outline" className="text-emerald-500 border-emerald-500/20 bg-emerald-500/5 h-5 font-bold dark:border-white/20">Excellent</Badge></div>
+                                                 <div className="space-y-3">
+                                                      <div className="flex items-center justify-between bg-blue-500/5 dark:bg-muted/30 p-2.5 rounded-lg border border-blue-500/10 dark:border-transparent"><div className="flex items-center gap-2"><Activity className="h-3.5 w-3.5 text-blue-500" /><span className="text-[11px] font-bold">Lip Sync Accuracy</span></div><span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">{lipSyncAccuracy}%</span></div>
+                                                      <div className="flex items-center justify-between bg-orange-500/5 dark:bg-muted/30 p-2.5 rounded-lg border border-orange-500/10 dark:border-transparent"><div className="flex items-center gap-2"><Sparkles className="h-3.5 w-3.5 text-orange-500" /><span className="text-[11px] font-bold">Linguistic Tone match</span></div><span className="text-[11px] font-bold text-orange-600 dark:text-orange-400">92%</span></div>
+                                                      <div className="flex items-center justify-between bg-emerald-500/5 dark:bg-muted/30 p-2.5 rounded-lg border border-emerald-500/10 dark:border-transparent"><div className="flex items-center gap-2"><Languages className="h-3.5 w-3.5 text-emerald-500" /><span className="text-[11px] font-bold">Translation Fidelity</span></div><span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">98%</span></div>
+                                                 </div>
                                             </Card>
 
                                             <div className="space-y-4">
@@ -461,18 +461,18 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                 </div>
                             )}
                              {currentStep === 2 && (
-                                 <div className="space-y-8 max-w-4xl mx-auto">
+                                 <div className="space-y-6 max-w-4xl mx-auto">
                                      <div className="flex items-center justify-between mb-8">
                                          <div>
                                              <h1 className="text-2xl font-bold">Video elements</h1>
                                              <p className="text-sm text-muted-foreground mt-1">Enhance your video with interactive elements to engage your audience.</p>
                                          </div>
-                                         <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold gap-2"><Type className="h-3.5 w-3.5" /> Auto-sync captions</Button>
+                                          <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold gap-2 dark:border-white/20 dark:hover:bg-white/10 dark:text-white"><Type className="h-3.5 w-3.5" /> Auto-sync captions</Button>
                                      </div>
                                      
                                      <div className="space-y-4">
                                          {/* End Screen Box */}
-                                         <div className="flex items-center justify-between p-6 rounded-[1.5rem] border bg-card hover:border-primary/50 transition-all group shadow-sm">
+                                         <div className={cn("flex items-center justify-between p-5 rounded-[1.5rem] border dark:border-white/5 bg-card dark:bg-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all group dark:shadow-none shadow-sm")}>
                                              <div className="flex items-center gap-5">
                                                  <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/10 group-hover:bg-primary/10 transition-colors">
                                                      <MonitorPlay className="h-7 w-7 text-primary" />
@@ -482,14 +482,14 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                      <p className="text-[12px] text-muted-foreground mt-0.5">Promote related content at the end of your video</p>
                                                  </div>
                                              </div>
-                                             <div className="flex items-center gap-3">
-                                                 <Button variant="ghost" size="sm" className="font-bold text-[11px] h-9 px-4 hover:bg-muted/50 rounded-xl">Import from video</Button>
-                                                 <Button variant="outline" size="sm" className="font-bold text-[11px] h-9 px-6 border-2 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">Add</Button>
-                                             </div>
+                                              <div className="flex items-center gap-3">
+                                                  <Button variant="outline" size="sm" className="font-bold text-[11px] h-9 px-4 border-2 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white rounded-xl shadow-sm">Import from video</Button>
+                                                  <Button variant="outline" size="sm" className="font-bold text-[11px] h-9 px-6 border-2 dark:border-white/20 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all dark:text-white">Add</Button>
+                                              </div>
                                          </div>
 
                                          {/* Cards Box */}
-                                         <div className="flex items-center justify-between p-6 rounded-[1.5rem] border bg-card hover:border-primary/50 transition-all group shadow-sm">
+                                         <div className={cn("flex items-center justify-between p-5 rounded-[1.5rem] border dark:border-white/5 bg-card dark:bg-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all group dark:shadow-none shadow-sm")}>
                                              <div className="flex items-center gap-5">
                                                  <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/10 group-hover:bg-primary/10 transition-colors">
                                                      <Layout className="h-7 w-7 text-primary" />
@@ -499,11 +499,11 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                      <p className="text-[12px] text-muted-foreground mt-0.5">Promote related content during your video</p>
                                                  </div>
                                              </div>
-                                             <Button variant="outline" size="sm" className="font-bold text-[11px] h-9 px-8 border-2 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">Add</Button>
+                                             <Button variant="outline" size="sm" className="font-bold text-[11px] h-9 px-8 border-2 dark:border-white/20 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all dark:text-white">Add</Button>
                                          </div>
 
                                          {/* Quiz Box */}
-                                         <div className="flex items-center justify-between p-6 rounded-[1.5rem] border bg-card hover:border-primary/50 transition-all group shadow-sm border-dashed border-primary/30">
+                                         <div className={cn("flex items-center justify-between p-5 rounded-[1.5rem] border dark:border-white/5 bg-card dark:bg-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all group dark:shadow-none border-dashed border-primary/30 shadow-sm")}>
                                              <div className="flex items-center gap-5">
                                                  <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/10 group-hover:bg-primary/10 transition-colors">
                                                      <BrainCog className="h-7 w-7 text-primary" />
@@ -516,20 +516,20 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                      <p className="text-[12px] text-muted-foreground mt-0.5">Make your videos more interactive with quizzes</p>
                                                  </div>
                                              </div>
-                                             <Button variant="outline" size="sm" className="font-bold text-[11px] h-9 px-8 border-2 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">Add</Button>
+                                             <Button variant="outline" size="sm" className="font-bold text-[11px] h-9 px-8 border-2 dark:border-white/20 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all dark:text-white">Add</Button>
                                          </div>
                                      </div>
                                  </div>
                              )}
                             {currentStep === 3 && (
-                                <div className="space-y-8">
+                                <div className="space-y-8 shadow-sm">
                                     <div><h1 className="text-2xl font-bold">Initial check</h1><p className="text-sm text-muted-foreground mt-1">We finished checking your video for any issues.</p></div>
-                                    <div className="p-6 rounded-2xl border bg-emerald-500/5 border-emerald-500/20 flex items-start gap-4"><div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shrink-0"><CheckCircle2 className="h-6 w-6 text-white" /></div><div className="space-y-1"><h4 className="text-sm font-bold">Checks complete. No issues found.</h4><p className="text-xs text-muted-foreground">Ad suitability and copyright checks passed.</p></div></div>
-                                    <div className="space-y-6"><div className="space-y-2"><h3 className="text-sm font-bold">Copyright</h3><div className="flex items-center justify-between p-4 rounded-xl border bg-muted/20"><div className="flex items-center gap-3"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span className="text-xs">No copyright material detected</span></div><span className="text-[10px] font-bold text-emerald-500 uppercase">Passed</span></div></div></div>
+                                    <div className={cn("p-6 rounded-2xl border bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30 flex items-start gap-4", "shadow-sm")}><div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shrink-0"><CheckCircle2 className="h-6 w-6 text-white" /></div><div className="space-y-1"><h4 className="text-sm font-bold">Checks complete. No issues found.</h4><p className="text-xs text-muted-foreground">Ad suitability and copyright checks passed.</p></div></div>
+                                    <div className="space-y-6"><div className="space-y-2"><h3 className="text-sm font-bold">Copyright</h3><div className={cn("flex items-center justify-between p-4 rounded-xl border bg-muted/20 dark:bg-white/5 dark:border-white/5", "shadow-sm")}><div className="flex items-center gap-3"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span className="text-xs">No copyright material detected</span></div><span className="text-[10px] font-bold text-emerald-500 uppercase">Passed</span></div></div></div>
                                 </div>
                             )}
                              {currentStep === 4 && (
-                                 <div className="space-y-10 max-w-4xl mx-auto">
+                                 <div className="space-y-6 max-w-4xl mx-auto">
                                      <div className="flex flex-col gap-1">
                                          <h1 className="text-2xl font-bold">Visibility</h1>
                                          <p className="text-sm text-muted-foreground">Choose when to publish and who can see your video</p>
@@ -537,8 +537,8 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
 
                                      <div className="space-y-6">
                                          {/* Save or Publish Section */}
-                                         <Card className="rounded-[2rem] border overflow-hidden bg-card shadow-sm">
-                                             <div className="p-8 space-y-6">
+                                         <Card className={cn("rounded-[1.5rem] border dark:border-white/5 overflow-hidden bg-card dark:bg-white/5 dark:shadow-none shadow-sm")}>
+                                             <div className="p-6 space-y-4">
                                                  <div className="flex flex-col gap-1">
                                                      <h3 className="font-bold text-lg">Save or publish</h3>
                                                      <p className="text-sm text-muted-foreground">Make your video public, unlisted, or private</p>
@@ -555,12 +555,12 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                              onClick={() => { setVisibility(option.id as any); setIsScheduled(false); }}
                                                              className={cn(
                                                                  "p-4 rounded-[1.25rem] border-2 transition-all cursor-pointer flex items-start gap-4 hover:border-primary/30",
-                                                                 visibility === option.id && !isScheduled ? "bg-primary/5 border-primary shadow-sm" : "bg-muted/5 border-transparent"
+                                                                 visibility === option.id && !isScheduled ? "bg-primary/5 dark:bg-primary/10 border-primary dark:border-primary dark:shadow-none" : "bg-muted/5 dark:bg-white/5 border-transparent dark:border-white/5"
                                                              )}
                                                          >
                                                              <div className={cn(
                                                                  "p-2.5 rounded-xl border transition-colors",
-                                                                 visibility === option.id && !isScheduled ? "bg-primary/10 border-primary/20 text-primary" : "bg-card border-border text-muted-foreground"
+                                                                 visibility === option.id && !isScheduled ? "bg-primary/10 dark:bg-primary/20 border-primary/20 dark:border-primary/30 text-primary" : "bg-card dark:bg-[#121212] border-border dark:border-white/10 text-muted-foreground"
                                                              )}>
                                                                  <option.icon className="h-5 w-5" />
                                                              </div>
@@ -581,8 +581,8 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                          </Card>
 
                                          {/* Schedule Section */}
-                                         <Card className="rounded-[2rem] border overflow-hidden bg-card shadow-sm">
-                                             <div className="p-8 space-y-6">
+                                         <Card className={cn("rounded-[1.5rem] border dark:border-white/5 overflow-hidden bg-card dark:bg-white/5 dark:shadow-none shadow-sm")}>
+                                             <div className="p-6 space-y-4">
                                                  <div className="flex items-center justify-between">
                                                      <div className="flex flex-col gap-1">
                                                          <h3 className="font-bold text-lg">Schedule</h3>
@@ -648,35 +648,35 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                              </div>
 
                                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                 <div className="p-6 rounded-[2rem] border bg-[#F9FAFB] dark:bg-muted/5 hover:shadow-md transition-shadow">
-                                                     <div className="flex flex-col gap-4">
-                                                         <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500 w-fit">
-                                                             <ShieldAlert className="h-6 w-6" />
-                                                         </div>
-                                                         <div className="space-y-2">
-                                                             <h4 className="font-bold text-sm">Do kids appear in this video?</h4>
-                                                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                                                 Make sure you follow our policies to protect minors from harm, exploitation, bullying, and violations of labor law.
-                                                                 <span className="text-primary font-bold ml-1 hover:underline cursor-pointer">Learn more</span>
-                                                             </p>
-                                                         </div>
-                                                     </div>
-                                                 </div>
+                                                  <div className={cn("p-6 rounded-[1.5rem] border bg-card dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10 transition-all shadow-sm hover:shadow-md")}>
+                                                      <div className="flex flex-col gap-5">
+                                                          <div className="p-3.5 rounded-2xl bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 w-fit">
+                                                              <ShieldAlert className="h-6 w-6" />
+                                                          </div>
+                                                          <div className="space-y-2.5">
+                                                              <h4 className="font-bold text-sm dark:text-white">Do kids appear in this video?</h4>
+                                                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                                                  Make sure you follow our policies to protect minors from harm, exploitation, bullying, and violations of labor law.
+                                                                  <span className="text-primary dark:text-primary font-bold ml-1 hover:underline cursor-pointer">Learn more</span>
+                                                              </p>
+                                                          </div>
+                                                      </div>
+                                                  </div>
 
-                                                 <div className="p-6 rounded-[2rem] border bg-[#F9FAFB] dark:bg-muted/5 hover:shadow-md transition-shadow">
-                                                     <div className="flex flex-col gap-4">
-                                                         <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500 w-fit">
-                                                             <ShieldCheck className="h-6 w-6" />
-                                                         </div>
-                                                         <div className="space-y-2">
-                                                             <h4 className="font-bold text-sm">Looking for overall content guidance?</h4>
-                                                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                                                 Our Community Guidelines can help you avoid trouble and ensure that YouTube remains a safe and vibrant community.
-                                                                 <span className="text-primary font-bold ml-1 hover:underline cursor-pointer">Learn more</span>
-                                                             </p>
-                                                         </div>
-                                                     </div>
-                                                 </div>
+                                                  <div className={cn("p-6 rounded-[1.5rem] border bg-card dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10 transition-all shadow-sm hover:shadow-md")}>
+                                                      <div className="flex flex-col gap-5">
+                                                          <div className="p-3.5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 w-fit">
+                                                              <ShieldCheck className="h-6 w-6" />
+                                                          </div>
+                                                          <div className="space-y-2.5">
+                                                              <h4 className="font-bold text-sm dark:text-white">Looking for overall content guidance?</h4>
+                                                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                                                  Our Community Guidelines can help you avoid trouble and ensure that YouTube remains a safe and vibrant community.
+                                                                  <span className="text-primary dark:text-primary font-bold ml-1 hover:underline cursor-pointer">Learn more</span>
+                                                              </p>
+                                                          </div>
+                                                      </div>
+                                                  </div>
                                              </div>
                                          </div>
                                      </div>
@@ -684,7 +684,7 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                              )}
                         </div>
 
-                        <div className="pt-12 border-t flex items-center justify-between mt-12 mb-24">
+                        <div className="pt-8 border-t flex items-center justify-between mt-8 mb-12">
                             <div className="flex items-center gap-6">
                                 <div className="flex items-center gap-3">
                                     {[
@@ -708,7 +708,7 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                             initial={{ opacity: 0, scale: 0.9 }}
                                                             animate={{ opacity: 1, scale: 1 }}
                                                             exit={{ opacity: 0, scale: 0.9 }}
-                                                            className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 z-[60] w-max max-w-[240px] p-2.5 bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl text-[10px] text-white font-bold leading-relaxed whitespace-pre-line text-center"
+                                                            className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 z-[60] w-max max-w-[240px] p-2.5 bg-[#1e1e1e] border border-white/10 rounded-xl dark:shadow-2xl text-[10px] text-white font-bold leading-relaxed whitespace-pre-line text-center"
                                                         >
                                                             {check.text}
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-t-[#1e1e1e]" />
@@ -721,11 +721,24 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                     <span className="text-[11px] font-bold text-foreground/80 ml-1">Checks complete. No issues found.</span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                {currentStep > 1 && <Button variant="ghost" onClick={() => setCurrentStep(prev => prev - 1)} className="font-bold text-xs px-8">Back</Button>}
-                                {currentStep === 4 && <Button variant="outline" className="h-10 px-8 font-bold text-xs gap-2 border-2"><Eye className="h-4 w-4" /> Final Preview</Button>}
-                                <Button onClick={() => (currentStep < 4 ? setCurrentStep(prev => prev + 1) : handleFinalize())} className="h-10 px-12 font-bold text-xs bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all">{currentStep === 4 ? <div className="flex items-center gap-2"><Zap className="h-4 w-4" /> Finalize & Upload</div> : "Next"}</Button>
-                            </div>
+                             <div className="flex items-center gap-3">
+                                 <Button variant="outline" className="h-10 px-6 font-bold text-xs gap-2 dark:border-white/20 dark:hover:bg-white/10 dark:text-white" onClick={() => toast("Draft saved", "success")}>
+                                     <Save className="h-4 w-4" /> Save as draft
+                                 </Button>
+                                 <div className="w-px h-6 bg-border mx-1" />
+                                 {currentStep > 1 && <Button variant="ghost" onClick={() => setCurrentStep(prev => prev - 1)} className="font-bold text-xs px-8 dark:hover:bg-white/10 dark:text-white">Back</Button>}
+                                 {currentStep === 4 && <Button variant="outline" className="h-10 px-8 font-bold text-xs gap-2 border-2 dark:border-white/20 dark:hover:bg-white/10 dark:text-white"><Eye className="h-4 w-4" /> Final Preview</Button>}
+                                 <Button 
+                                     onClick={() => (currentStep < 4 ? setCurrentStep(prev => prev + 1) : handleFinalize())} 
+                                     className="h-10 px-12 font-bold text-xs bg-primary text-primary-foreground dark:shadow-[0_0_30px_rgb(var(--primary),0.3)] hover:bg-primary/90 dark:hover:bg-primary/90 hover:scale-[1.02] active:scale-95 transition-all outline-none"
+                                 >
+                                     {currentStep === 4 ? (
+                                         <div className="flex items-center gap-2 text-primary-foreground">
+                                             <Zap className="h-4 w-4 fill-current" /> Finalize & Upload
+                                         </div>
+                                     ) : "Next"}
+                                 </Button>
+                             </div>
                         </div>
                     </div>
                 </main>

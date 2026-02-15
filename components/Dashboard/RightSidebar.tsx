@@ -524,8 +524,8 @@ export function RightSidebar({
                 );
               })
             ) : (
-              <div className={`p-6 rounded-2xl border border-dashed ${borderClass} flex flex-col items-center justify-center text-center opacity-50`}>
-                <p className={`text-[11px] font-bold uppercase tracking-widest ${mutedTextClass}`}>No new detections</p>
+              <div className={`p-6 rounded-2xl border border-dashed ${isDark ? borderClass + " opacity-50" : "border-gray-400"} flex flex-col items-center justify-center text-center`}>
+                <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? mutedTextClass : "text-gray-600"}`}>No new detections</p>
               </div>
             )}
           </div>
@@ -626,10 +626,10 @@ export function RightSidebar({
                 );
               })
             ) : (
-              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-[#2A2A2A]" : "border-gray-400"} flex flex-col items-center justify-center text-center ${isDark ? "opacity-40" : "opacity-70"}`}>
-                <p className={`text-[11px] font-bold uppercase tracking-widest ${mutedTextClass}`}>All caught up!</p>
-                <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-300 bg-white/60"} flex items-center justify-center`}>
-                  <Clock className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
+              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-[#2A2A2A] opacity-40" : "border-gray-400"} flex flex-col items-center justify-center text-center`}>
+                <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? mutedTextClass : "text-gray-600"}`}>All caught up!</p>
+                <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-400 bg-white/60"} flex items-center justify-center`}>
+                  <Clock className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-500"}`} />
                 </div>
               </div>
             )}
@@ -756,10 +756,10 @@ export function RightSidebar({
                 );
               })
             ) : (
-              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-[#2A2A2A]" : "border-gray-400"} flex flex-col items-center justify-center text-center ${isDark ? "opacity-40" : "opacity-70"}`}>
-                <p className={`text-[11px] font-bold uppercase tracking-widest ${mutedTextClass}`}>Quiet for now</p>
-                <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-300 bg-white/60"} flex items-center justify-center`}>
-                  <Play className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
+              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-[#2A2A2A] opacity-40" : "border-gray-400"} flex flex-col items-center justify-center text-center`}>
+                <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? mutedTextClass : "text-gray-600"}`}>Quiet for now</p>
+                <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-400 bg-white/60"} flex items-center justify-center`}>
+                  <Play className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-500"}`} />
                 </div>
               </div>
             )}
@@ -772,7 +772,7 @@ export function RightSidebar({
         <Button
           variant="outline"
           onClick={() => onViewChange?.("manual_workflow")}
-          className={`w-full flex items-center justify-center gap-2 h-10 border-dashed ${isDark ? "border-[#2A2A2A] hover:border-white/40 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "border-gray-400/50 hover:border-gray-400 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900"} transition-all text-xs font-medium uppercase tracking-wider`}
+          className={`w-full flex items-center justify-center gap-2 h-10 border-dashed ${isDark ? "border-[#2A2A2A] hover:border-white/40 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "border-gray-400 hover:border-gray-500 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900"} transition-all text-xs font-medium uppercase tracking-wider`}
         >
           <div className={`w-4 h-4 rounded-full border ${isDark ? "border-white/30" : "border-gray-400"} flex items-center justify-center`}>
             <span className="text-[9px] leading-none">+</span>

@@ -287,7 +287,7 @@ export function LeftSidebar({
   const textClass = isDark ? "text-white" : "text-gray-900";
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
   const glassBgClass = isDark ? "bg-white/[0.05]" : "bg-gray-100/50";
-  const borderClass = isDark ? "border-white/10" : "border-gray-200";
+  const borderClass = isDark ? "border-white/10" : "border-gray-300";
   const sidebarBgClass = isDark ? "bg-[#111111]" : "bg-[#ECE9DA]";
   const accountName =
     user?.user_metadata?.name ||
@@ -661,7 +661,7 @@ export function LeftSidebar({
 
                     <button
                       onClick={handleConnectNewChannel}
-                      className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-xl border-2 border-dashed ${borderClass} hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all duration-200 bg-transparent group`}
+                      className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-xl border-2 border-dashed ${isDark ? borderClass : "border-gray-400/50"} hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all duration-200 bg-transparent group`}
                     >
                       <Plus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
                       Connect New
@@ -778,7 +778,7 @@ export function LeftSidebar({
                         )}
                       </>
                     ) : (
-                      <div className={`p-6 rounded-xl border ${borderClass} border-dashed text-center opacity-60`}>
+                      <div className={`p-6 rounded-xl border ${borderClass} border-dashed text-center ${isDark ? "opacity-60" : "opacity-80"}`}>
                         <p className={`text-xs ${mutedTextClass}`}>No recent activity</p>
                       </div>
                     )}
@@ -837,7 +837,7 @@ export function LeftSidebar({
                         </motion.div>
                       ))
                     ) : (
-                      <div className={`p-6 rounded-xl border ${borderClass} border-dashed text-center opacity-60`}>
+                      <div className={`p-6 rounded-xl border ${borderClass} border-dashed text-center ${isDark ? "opacity-60" : "opacity-80"}`}>
                         <p className={`text-xs ${mutedTextClass}`}>No published videos</p>
                       </div>
                     )}

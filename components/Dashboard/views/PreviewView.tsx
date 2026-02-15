@@ -283,11 +283,12 @@ export function PreviewView({ onViewChange, theme }: PreviewViewProps) {
                 <div className="flex items-center gap-4">
                     <Button
                         variant="ghost"
-                        size="icon"
+                        size="sm"
                         onClick={() => onViewChange?.("review")}
-                        className="rounded-xl w-9 h-9 hover:bg-muted transition-all"
+                        className="h-9 px-2 text-muted-foreground hover:text-black dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5 transition-all gap-2"
                     >
                         <ArrowLeft className="w-4 h-4" />
+                        <span className="text-[11px] font-bold uppercase tracking-wider">Exit Preview</span>
                     </Button>
                     <div>
                         <h1 className="text-lg font-bold tracking-tight truncate max-w-[180px] sm:max-w-md">
