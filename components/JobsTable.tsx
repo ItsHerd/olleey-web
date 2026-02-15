@@ -38,10 +38,11 @@ import {
     ExternalLink,
     Sparkles,
     Circle,
-    ArrowRight
+    ArrowRight,
+    X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Job, youtubeAPI, MasterNode, API_BASE_URL, Video } from "@/lib/api";
+import { Job, youtubeAPI, MasterNode, API_BASE_URL, Video, jobsAPI } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useVideos } from "@/lib/useVideos";
 import { getLanguageFlag, LANGUAGE_OPTIONS } from "@/lib/languages";
@@ -51,6 +52,7 @@ interface JobsTableProps {
     jobs: Job[];
     onViewWorkflow: (jobId: string) => void;
     onPreview: (job: Job) => void;
+    onCancel: (jobId: string) => void;
     projectId?: string;
     videos?: Video[];
 }
@@ -64,7 +66,7 @@ interface VideoGroup {
     status_counts: Record<string, number>;
 }
 
-export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId, videos: videosProp }: JobsTableProps) {
+export function JobsTable({ jobs, onViewWorkflow, onPreview, onCancel, projectId, videos: videosProp }: JobsTableProps) {
     const { theme } = useTheme();
     const router = useRouter();
     const { videos: fetchedVideos } = useVideos(
@@ -391,7 +393,7 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId, videos: 
                                     {/* Child Jobs Rows */}
                                     {isExpanded && (
                                         <AnimatePresence>
-                                            {group.jobs.map((job, jobIdx) => (
+                                            {group.jobs.map((job, jobIdx) =>
                                                 (job.target_languages || []).map((lang, langIdx) => {
                                                     const sourceLang = getSourceLanguage(group.source_video_id);
                                                     const statusConfig = getStatusConfig(job.status);
@@ -479,6 +481,26 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId, videos: 
                                                                     <Button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
+                                                                            onCancel(job.job_id);
+                                                                        }}
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className={`
+                                                                             h-11 w-11 rounded-xl transition-all text-red-500
+                                                                             ${isDark
+                                                                                ? "bg-white/5 hover:bg-red-500/10 border border-white/5"
+                                                                                : "bg-white hover:bg-red-50 border border-gray-200 shadow-md"
+                                                                            }
+                                                                         `}
+                                                                        title="Cancel Job"
+                                                                        disabled={['completed', 'failed', 'cancelled'].includes(job.status)}
+                                                                    >
+                                                                        <X className="w-4 h-4" />
+                                                                    </Button>
+
+                                                                    <Button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
                                                                             onViewWorkflow(job.job_id);
                                                                         }}
                                                                         variant="ghost"
@@ -521,7 +543,7 @@ export function JobsTable({ jobs, onViewWorkflow, onPreview, projectId, videos: 
                                                         </motion.tr>
                                                     );
                                                 })
-                                            ))}
+                                            )}
                                         </AnimatePresence>
                                     )}
                                 </Fragment>

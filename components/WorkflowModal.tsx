@@ -84,6 +84,7 @@ interface WorkflowModalProps {
     onReject?: (language: string) => void;
     onRetry?: () => void;
     onPreview?: () => void;
+    onCancel?: () => void;
 }
 
 // ------------------------------------------------------------------
@@ -321,7 +322,8 @@ export function WorkflowModal({
     onApprove,
     onReject,
     onRetry,
-    onPreview
+    onPreview,
+    onCancel
 }: WorkflowModalProps) {
     const { theme } = useTheme();
 
@@ -534,6 +536,15 @@ export function WorkflowModal({
                     </div>
 
                     <div className="flex items-center gap-4">
+                        {['processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending'].includes(jobStatus) && onCancel && (
+                            <Button
+                                variant="outline"
+                                onClick={onCancel}
+                                className="h-10 rounded-full border-red-500/20 hover:bg-red-500/10 text-red-500 text-[10px] font-black uppercase tracking-widest gap-2"
+                            >
+                                <X className="w-3.5 h-3.5" /> Terminate Job
+                            </Button>
+                        )}
                         <Button
                             variant="outline"
                             onClick={onRetry}

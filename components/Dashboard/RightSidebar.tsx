@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Play, Clock, PanelRightClose, Loader2, Rss, Bell } from "lucide-react";
+import { ChevronRight, Play, Clock, PanelRightClose, Loader2, Rss, Bell, X } from "lucide-react";
 import { SelectedItem, ViewType } from "./DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +81,7 @@ export function RightSidebar({
   const [dismissedDetectedVideoIds, setDismissedDetectedVideoIds] = useState<string[]>([]);
   const [autoSyncAttempted, setAutoSyncAttempted] = useState(false);
   const [autoSyncingDetected, setAutoSyncingDetected] = useState(false);
+  const [cancelledJobIds, setCancelledJobIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let mounted = true;
@@ -104,6 +105,23 @@ export function RightSidebar({
       mounted = false;
     };
   }, [userId, user]);
+
+  useEffect(() => {
+    const handleCancelled = (e: any) => {
+      const { jobId } = e.detail;
+      setCancelledJobIds(prev => new Set(prev).add(jobId));
+    };
+    const handleRefresh = async () => {
+      await refetchJobs();
+    };
+
+    window.addEventListener('olleey-job-cancelled', handleCancelled);
+    window.addEventListener('olleey-refresh', handleRefresh);
+    return () => {
+      window.removeEventListener('olleey-job-cancelled', handleCancelled);
+      window.removeEventListener('olleey-refresh', handleRefresh);
+    };
+  }, [refetchJobs]);
 
   // If there's an auth error, show a message
   if (jobsError?.includes("access token") || videosError?.includes("access token")) {
@@ -169,7 +187,7 @@ export function RightSidebar({
       const isSourceVideo = !video.source_video_id || video.source_video_id === video.video_id;
       if (!inWindow || !isSourceVideo) return false;
 
-      const videoJobs = jobs.filter((j) => j.source_video_id === video.video_id);
+      const videoJobs = jobs.filter((j) => !cancelledJobIds.has(j.job_id) && j.source_video_id === video.video_id);
       const activeJobs = videoJobs.filter((j) => !["cancelled", "failed"].includes(j.status));
       const hasPreStartJob = activeJobs.some(
         (j) => j.status === "waiting_approval" && Number(j.progress || 0) === 0
@@ -182,13 +200,35 @@ export function RightSidebar({
     .sort((a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime());
 
   const getPreStartJobForVideo = (videoId: string) =>
-    jobs.find((j) => j.source_video_id === videoId && j.status === "waiting_approval" && Number(j.progress || 0) === 0);
+    jobs.find((j) => !cancelledJobIds.has(j.job_id) && j.source_video_id === videoId && j.status === "waiting_approval" && Number(j.progress || 0) === 0);
 
   const getAnyActiveJobForVideo = (videoId: string) =>
-    jobs.find((j) => j.source_video_id === videoId && !["cancelled", "failed"].includes(j.status));
+    jobs.find((j) => !cancelledJobIds.has(j.job_id) && j.source_video_id === videoId && !["cancelled", "failed"].includes(j.status));
 
-  const needsReviewJobs = jobs.filter(j => j.status === 'waiting_approval' && (j.progress || 0) > 0);
+  const handleCancelJob = async (e: React.MouseEvent, jobId: string) => {
+    e.stopPropagation();
+    try {
+      // Optimistically mark as cancelled
+      setCancelledJobIds(prev => new Set(prev).add(jobId));
+      window.dispatchEvent(new CustomEvent('olleey-job-cancelled', { detail: { jobId } }));
+      
+      await jobsAPI.cancelJob(jobId);
+      toast("Job cancelled successfully", "success");
+      refetchJobs();
+    } catch (err: any) {
+      // Revert optimism on error
+      setCancelledJobIds(prev => {
+        const next = new Set(prev);
+        next.delete(jobId);
+        return next;
+      });
+      toast(err.message || "Failed to cancel job", "error");
+    }
+  };
+
+  const needsReviewJobs = jobs.filter(j => !cancelledJobIds.has(j.job_id) && j.status === 'waiting_approval' && (j.progress || 0) > 0);
   const processingJobs = jobs.filter(j =>
+    !cancelledJobIds.has(j.job_id) &&
     ['pending', 'downloading', 'processing', 'transcribing', 'translating', 'voice_cloning', 'dubbing', 'lip_sync', 'uploading'].includes(j.status)
   );
 
@@ -742,6 +782,15 @@ export function RightSidebar({
                         <span className={`text-[10px] font-mono ${isDark ? "text-white opacity-40" : "text-gray-600"}`}>
                           {job.progress}%
                         </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => handleCancelJob(e, job.job_id)}
+                          className="h-6 w-6 rounded-md text-red-500 hover:bg-red-500/10 hover:text-red-600 transition-colors"
+                          title="Cancel Job"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
                       <div className={`w-full h-1 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-full overflow-hidden`}>
                         <motion.div

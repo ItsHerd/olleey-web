@@ -79,6 +79,7 @@ export default function JobsPage() {
 
     const [selectedGraphJobId, setSelectedGraphJobId] = useState<string | null>(null);
     const [filter, setFilter] = useState<JobFilter>("all");
+    const [cancelledJobIds, setCancelledJobIds] = useState<Set<string>>(new Set());
     const { theme } = useTheme();
     const { toast } = useToast();
     const { openReview } = useReview();
@@ -137,35 +138,37 @@ export default function JobsPage() {
     const stats = useMemo(() => {
         const now = new Date();
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const filteredJobsForStats = jobs.filter(j => !cancelledJobIds.has(j.job_id));
 
-        const totalThisMonth = jobs.filter(job => new Date(job.created_at) >= firstDayOfMonth).length;
-        const processing = jobs.filter(job =>
+        const totalThisMonth = filteredJobsForStats.filter(job => new Date(job.created_at) >= firstDayOfMonth).length;
+        const processing = filteredJobsForStats.filter(job =>
             ['processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending'].includes(job.status)
         ).length;
-        const completed = jobs.filter(job =>
+        const completed = filteredJobsForStats.filter(job =>
             ['completed', 'ready'].includes(job.status)
         ).length;
-        const failed = jobs.filter(job => job.status === 'failed').length;
+        const failed = filteredJobsForStats.filter(job => job.status === 'failed').length;
 
         return { totalThisMonth, processing, completed, failed };
-    }, [jobs]);
+    }, [jobs, cancelledJobIds]);
 
     const filteredJobs = useMemo(() => {
+        const baseJobs = jobs.filter(j => !cancelledJobIds.has(j.job_id));
         switch (filter) {
             case "processing":
-                return jobs.filter(job =>
+                return baseJobs.filter(job =>
                     ['processing', 'downloading', 'transcribing', 'voice_cloning', 'lip_sync', 'pending'].includes(job.status)
                 );
             case "completed":
-                return jobs.filter(job => ['completed', 'ready'].includes(job.status));
+                return baseJobs.filter(job => ['completed', 'ready'].includes(job.status));
             case "failed":
-                return jobs.filter(job => job.status === 'failed');
+                return baseJobs.filter(job => job.status === 'failed');
             case "waiting":
-                return jobs.filter(job => job.status === 'waiting_approval');
+                return baseJobs.filter(job => job.status === 'waiting_approval');
             default:
-                return jobs;
+                return baseJobs;
         }
-    }, [jobs, filter]);
+    }, [jobs, filter, cancelledJobIds]);
 
     const handlePreview = (job: Job) => {
         if (!job) {
@@ -389,6 +392,22 @@ export default function JobsPage() {
                             projectId={selectedProject?.id}
                             onViewWorkflow={(jobId) => setSelectedGraphJobId(jobId)}
                             onPreview={handlePreview}
+                            onCancel={async (jobId) => {
+                                try {
+                                    setCancelledJobIds(prev => new Set(prev).add(jobId));
+                                    window.dispatchEvent(new CustomEvent('olleey-job-cancelled', { detail: { jobId } }));
+                                    await jobsAPI.cancelJob(jobId);
+                                    toast("Job cancelled successfully", "success");
+                                    refetchJobs();
+                                } catch (err: any) {
+                                    setCancelledJobIds(prev => {
+                                        const next = new Set(prev);
+                                        next.delete(jobId);
+                                        return next;
+                                    });
+                                    toast(err.message || "Failed to cancel job", "error");
+                                }
+                            }}
                         />
                     </div>
                 </motion.div>
@@ -436,6 +455,24 @@ export default function JobsPage() {
                         if (!selectedGraphJobId) return;
                         refetchJobs();
                         toast("Retrying production pipeline...", "info");
+                    }}
+                    onCancel={async () => {
+                        if (!selectedGraphJobId) return;
+                        try {
+                            setCancelledJobIds(prev => new Set(prev).add(selectedGraphJobId));
+                            window.dispatchEvent(new CustomEvent('olleey-job-cancelled', { detail: { jobId: selectedGraphJobId } }));
+                            await jobsAPI.cancelJob(selectedGraphJobId);
+                            toast("Job cancelled successfully", "success");
+                            refetchJobs();
+                            setSelectedGraphJobId(null);
+                        } catch (err: any) {
+                            setCancelledJobIds(prev => {
+                                const next = new Set(prev);
+                                next.delete(selectedGraphJobId);
+                                return next;
+                            });
+                            toast(err.message || "Failed to cancel job", "error");
+                        }
                     }}
                     onPreview={() => {
                         const job = jobs.find(j => j.job_id === selectedGraphJobId);

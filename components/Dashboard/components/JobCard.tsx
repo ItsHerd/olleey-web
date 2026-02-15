@@ -27,6 +27,7 @@ interface JobCardProps {
   onClick: () => void;
   theme: string;
   highlight?: "review" | "error";
+  onCancel?: () => void;
 }
 
 const statusConfig = {
@@ -39,7 +40,7 @@ const statusConfig = {
   failed: { label: "Failed", color: "text-red-500", icon: AlertCircle },
 };
 
-export function JobCard({ job, onClick, theme, highlight }: JobCardProps) {
+export function JobCard({ job, onClick, theme, highlight, onCancel }: JobCardProps) {
   const isDark = theme === "dark";
   const cardBgClass = isDark ? "bg-[#1A1A1A]" : "bg-white";
   const textClass = isDark ? "text-gray-300" : "text-gray-700";
@@ -132,7 +133,13 @@ export function JobCard({ job, onClick, theme, highlight }: JobCardProps) {
                 <Pause className="w-4 h-4 mr-2" />
                 Pause Job
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-500">
+              <DropdownMenuItem 
+                className="text-red-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancel?.();
+                }}
+              >
                 <X className="w-4 h-4 mr-2" />
                 Cancel Job
               </DropdownMenuItem>

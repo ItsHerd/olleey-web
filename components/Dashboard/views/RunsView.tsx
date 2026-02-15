@@ -21,8 +21,10 @@ import { useProject } from "@/lib/ProjectContext";
 import { useVideos } from "@/lib/useVideos";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { cn } from "@/lib/utils";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, jobsAPI } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
 import { ViewType } from "../DashboardLayout";
+import { X } from "lucide-react";
 
 interface RunsViewProps {
   theme: string;
@@ -35,7 +37,7 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
   const { selectedProject } = useProject();
   const userId = user?.id;
 
-  const { jobs, loading } = useDashboardJobs({
+  const { jobs, loading, refetch } = useDashboardJobs({
     projectId: selectedProject?.id,
     user_id: userId,
     limit: 1000,
@@ -49,6 +51,27 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [languageFilter, setLanguageFilter] = React.useState("all");
+  const [cancelledJobIds, setCancelledJobIds] = React.useState<Set<string>>(new Set());
+  const { toast } = useToast();
+
+  const handleCancelJob = async (e: React.MouseEvent, jobId: string) => {
+    e.stopPropagation();
+    try {
+      setCancelledJobIds(prev => new Set(prev).add(jobId));
+      window.dispatchEvent(new CustomEvent('olleey-job-cancelled', { detail: { jobId } }));
+      
+      await jobsAPI.cancelJob(jobId);
+      toast("Job cancelled successfully", "success");
+      refetch();
+    } catch (err: any) {
+      setCancelledJobIds(prev => {
+        const next = new Set(prev);
+        next.delete(jobId);
+        return next;
+      });
+      toast(err.message || "Failed to cancel job", "error");
+    }
+  };
 
   const getJobVideo = (videoId: string) => {
     return videos.find(v => v.video_id === videoId);
@@ -125,10 +148,11 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
 
       const matchesStatus = statusFilter === "all" || job.status === statusFilter;
       const matchesLanguage = languageFilter === "all" || (job.target_languages || []).includes(languageFilter);
+      const isCancelled = cancelledJobIds.has(job.job_id);
 
-      return matchesQuery && matchesStatus && matchesLanguage;
+      return matchesQuery && matchesStatus && matchesLanguage && !isCancelled;
     });
-  }, [jobs, searchQuery, statusFilter, languageFilter, videos]);
+  }, [jobs, searchQuery, statusFilter, languageFilter, videos, cancelledJobIds]);
 
   return (
     <div className={cn("p-8 max-w-7xl mx-auto space-y-6", theme === "dark" ? "text-white" : "text-gray-900")}>
@@ -210,6 +234,7 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
                   <TableHead>Status</TableHead>
                   <TableHead>Progress</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -274,8 +299,20 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                       <TableCell className="text-muted-foreground">
                         {new Date(job.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {!['completed', 'failed', 'cancelled'].includes(job.status) && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={(e) => handleCancelJob(e, job.job_id)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

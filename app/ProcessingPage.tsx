@@ -163,7 +163,16 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
     if (!jobIdFromUrl || cancelling) return;
 
     setCancelling(true);
+    
+    // Stop simulation if active
+    if (simulationIntervalRef.current) {
+      clearInterval(simulationIntervalRef.current);
+      simulationIntervalRef.current = null;
+    }
+    setSimulating(false);
+
     try {
+      window.dispatchEvent(new CustomEvent('olleey-job-cancelled', { detail: { jobId: jobIdFromUrl.toString() } }));
       await jobsAPI.cancelJob(jobIdFromUrl.toString());
       toast("Processing job canceled", "success");
       handleBack();

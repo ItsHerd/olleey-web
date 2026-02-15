@@ -24,6 +24,8 @@ import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
 import { cn } from "@/lib/utils";
+import { jobsAPI } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
 
 interface DashboardViewProps {
   onSelectJob: (item: SelectedItem) => void;
@@ -63,24 +65,50 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cancelledJobIds, setCancelledJobIds] = useState<Set<string>>(new Set());
 
   // Fetch jobs
-  const { jobs, loading } = useDashboardJobs({
+  const { jobs, loading, refetch } = useDashboardJobs({
     projectId: selectedProject?.id,
     user_id: userId,
     enabled: !!userId
   });
 
-  // Split jobs into active and needs review
+  const { toast } = useToast();
+
+  const handleCancelJob = async (jobId: string) => {
+    try {
+      // Optimistically mark as cancelled
+      setCancelledJobIds(prev => new Set(prev).add(jobId));
+      window.dispatchEvent(new CustomEvent('olleey-job-cancelled', { detail: { jobId } }));
+      
+      await jobsAPI.cancelJob(jobId);
+      toast("Job cancelled successfully", "success");
+      refetch();
+    } catch (err: any) {
+      // Revert optimism on error
+      setCancelledJobIds(prev => {
+        const next = new Set(prev);
+        next.delete(jobId);
+        return next;
+      });
+      toast(err.message || "Failed to cancel job", "error");
+    }
+  };
+
+  // Split jobs into active and needs review, filtering out optimistically cancelled once
   const activeJobs = jobs.filter(j =>
+    !cancelledJobIds.has(j.job_id) &&
     ['pending', 'downloading', 'processing', 'uploading'].includes(j.status)
   );
 
   const needsReviewJobs = jobs.filter(j =>
+    !cancelledJobIds.has(j.job_id) &&
     j.status === 'waiting_approval'
   );
 
   const completedRecentJobs = jobs.filter(j =>
+    !cancelledJobIds.has(j.job_id) &&
     j.status === 'completed'
   ).slice(0, 3);
 
@@ -209,6 +237,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                             onSelectJob({ type: "job", id: job.job_id, data: job })
                           }
                           theme={theme}
+                          onCancel={() => handleCancelJob(job.job_id)}
                         />
                       </motion.div>
                     ))}
@@ -246,6 +275,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                           }}
                           theme={theme}
                           highlight="review"
+                          onCancel={() => handleCancelJob(job.job_id)}
                         />
                       </motion.div>
                     ))}
@@ -274,6 +304,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                             onSelectJob({ type: "job", id: job.job_id, data: job })
                           }
                           theme={theme}
+                          onCancel={() => handleCancelJob(job.job_id)}
                         />
                       </motion.div>
                     ))}
