@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Play, Clock, PanelRightClose, Loader2, Rss, Bell, X } from "lucide-react";
 import { SelectedItem, ViewType } from "./DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
@@ -32,6 +33,14 @@ interface RightSidebarProps {
   onViewChange?: (view: any) => void;
   onSelectItem?: (item: SelectedItem) => void;
 }
+
+type ProcessingMode = "dubbing" | "lip_sync";
+const DETECTED_UPLOAD_PREFERENCES_KEY = "olleey_detected_upload_preferences";
+type StoredDetectedUploadPreferences = {
+  enabled: boolean;
+  languages: string[];
+  mode: ProcessingMode;
+};
 
 export function RightSidebar({
   selectedItem,
@@ -78,6 +87,9 @@ export function RightSidebar({
   const [startingJobId, setStartingJobId] = useState<string | null>(null);
   const [expandingVideoId, setExpandingVideoId] = useState<string | null>(null);
   const [selectedLanguageByVideo, setSelectedLanguageByVideo] = useState<Record<string, string[]>>({});
+  const [selectedModeByVideo, setSelectedModeByVideo] = useState<Record<string, ProcessingMode>>({});
+  const [rememberPreferences, setRememberPreferences] = useState(false);
+  const [savedPreferences, setSavedPreferences] = useState<{ languages: string[]; mode: ProcessingMode } | null>(null);
   const [creatingVideoId, setCreatingVideoId] = useState<string | null>(null);
   const [dismissedDetectedVideoIds, setDismissedDetectedVideoIds] = useState<string[]>([]);
   const [autoSyncAttempted, setAutoSyncAttempted] = useState(false);
@@ -307,9 +319,12 @@ export function RightSidebar({
 
   const createAndStartDetectedJob = async (video: any) => {
     if (creatingVideoId) return;
-    const selectedLanguages = selectedLanguageByVideo[video.video_id]?.length
-      ? selectedLanguageByVideo[video.video_id]
-      : [];
+    const selectedLanguages = selectedLanguageByVideo[video.video_id] || [];
+    const selectedMode = selectedModeByVideo[video.video_id] || "dubbing";
+    const lipSyncLanguages = selectedMode === "lip_sync" ? selectedLanguages : [];
+    const languageProcessingModes = Object.fromEntries(
+      selectedLanguages.map((code) => [code, selectedMode])
+    );
     const sourceChannelId = video.channel_id || video.source_channel_id;
     const projectId = selectedProject?.id || video.project_id;
 
@@ -328,6 +343,9 @@ export function RightSidebar({
         source_video_id: video.video_id,
         source_channel_id: sourceChannelId,
         target_languages: selectedLanguages,
+        include_lip_sync: lipSyncLanguages.length > 0,
+        language_processing_modes: languageProcessingModes,
+        lip_sync_languages: lipSyncLanguages,
         is_simulation: false,
       };
       if (projectId) {
@@ -337,10 +355,7 @@ export function RightSidebar({
       await Promise.all([refetchJobs(), refetchVideos(), refetchAllUserVideos()]);
       setDismissedDetectedVideoIds((prev) => (prev.includes(video.video_id) ? prev : [...prev, video.video_id]));
       setExpandingVideoId(null);
-      const selectedLanguageNames = LANGUAGE_OPTIONS
-        .filter((lang) => selectedLanguages.includes(lang.code))
-        .map((lang) => lang.name);
-      toast(`Processing started for ${selectedLanguageNames.join(", ")}`, "success");
+      toast(`Processing started for ${selectedLanguages.length} language${selectedLanguages.length === 1 ? "" : "s"}`, "success");
       if (createdJob?.job_id) {
         onSelectItem?.({ type: "job", id: createdJob.job_id, data: createdJob });
       }
@@ -352,26 +367,77 @@ export function RightSidebar({
     }
   };
 
-  const toggleLanguageForVideo = (videoId: string, languageCode: string) => {
+  const setLanguageSelectedForVideo = (videoId: string, languageCode: string, selected: boolean) => {
     setSelectedLanguageByVideo((prev) => {
       const current = prev[videoId] || [];
-      const exists = current.includes(languageCode);
-      const next = exists ? current.filter((c) => c !== languageCode) : [...current, languageCode];
-      return { ...prev, [videoId]: next };
+      if (!selected) {
+        return { ...prev, [videoId]: current.filter((code) => code !== languageCode) };
+      }
+      return {
+        ...prev,
+        [videoId]: current.includes(languageCode) ? current : [...current, languageCode],
+      };
     });
   };
 
-  const getSelectedLanguageNames = (videoId: string) => {
-    const selected = selectedLanguageByVideo[videoId] || [];
-    return LANGUAGE_OPTIONS
-      .filter((lang) => selected.includes(lang.code))
-      .map((lang) => lang.name);
+  const setModeForVideo = (videoId: string, mode: ProcessingMode) => {
+    setSelectedModeByVideo((prev) => ({ ...prev, [videoId]: mode }));
+  };
+
+  const saveDetectedUploadPreferences = (
+    enabled: boolean,
+    languages: string[],
+    mode: ProcessingMode
+  ) => {
+    if (typeof window === "undefined") return;
+    if (!enabled) {
+      window.localStorage.removeItem(DETECTED_UPLOAD_PREFERENCES_KEY);
+      setSavedPreferences(null);
+      return;
+    }
+    const payload: StoredDetectedUploadPreferences = {
+      enabled: true,
+      languages,
+      mode,
+    };
+    window.localStorage.setItem(DETECTED_UPLOAD_PREFERENCES_KEY, JSON.stringify(payload));
+    setSavedPreferences({ languages, mode });
+  };
+
+  const applySavedPreferencesToVideo = (videoId: string) => {
+    if (!rememberPreferences || !savedPreferences) return;
+    if (savedPreferences.languages.length > 0) {
+      setSelectedLanguageByVideo((prev) => {
+        if ((prev[videoId] || []).length > 0) return prev;
+        return { ...prev, [videoId]: savedPreferences.languages };
+      });
+    }
+    setSelectedModeByVideo((prev) => {
+      if (prev[videoId]) return prev;
+      return { ...prev, [videoId]: savedPreferences.mode };
+    });
+  };
+
+  const setRememberPreferencesForVideo = (videoId: string, checked: boolean) => {
+    setRememberPreferences(checked);
+    if (!checked) {
+      saveDetectedUploadPreferences(false, [], "dubbing");
+      return;
+    }
+    const languages = selectedLanguageByVideo[videoId] || [];
+    const mode = selectedModeByVideo[videoId] || "dubbing";
+    saveDetectedUploadPreferences(true, languages, mode);
+  };
+
+  const getSelectedLanguageCodes = (videoId: string) => {
+    return selectedLanguageByVideo[videoId] || [];
   };
 
   const getJobLanguageNames = (codes?: string[]) => {
     if (!Array.isArray(codes) || codes.length === 0) return ["Spanish"];
     return codes.map((code) => LANGUAGE_OPTIONS.find((lang) => lang.code === code)?.name || code.toUpperCase());
   };
+  const isSelectingDetectedLanguages = expandingVideoId !== null;
 
   useEffect(() => {
     if (!userId || loading || allUserVideosLoading || autoSyncAttempted || autoSyncingDetected || detectedVideos.length > 0) return;
@@ -398,6 +464,31 @@ export function RightSidebar({
       cancelled = true;
     };
   }, [userId, loading, allUserVideosLoading, autoSyncAttempted, autoSyncingDetected, detectedVideos.length, refetchJobs, refetchVideos, refetchAllUserVideos, toast]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(DETECTED_UPLOAD_PREFERENCES_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<StoredDetectedUploadPreferences>;
+      if (!parsed.enabled) return;
+      const languages = Array.isArray(parsed.languages)
+        ? parsed.languages.filter((code) => LANGUAGE_OPTIONS.some((lang) => lang.code === code))
+        : [];
+      const mode: ProcessingMode = parsed.mode === "lip_sync" ? "lip_sync" : "dubbing";
+      setRememberPreferences(true);
+      setSavedPreferences({ languages, mode });
+    } catch {
+      // Ignore malformed local preference state.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!rememberPreferences || !expandingVideoId) return;
+    const languages = selectedLanguageByVideo[expandingVideoId] || [];
+    const mode = selectedModeByVideo[expandingVideoId] || "dubbing";
+    saveDetectedUploadPreferences(true, languages, mode);
+  }, [rememberPreferences, expandingVideoId, selectedLanguageByVideo, selectedModeByVideo]);
 
   return (
     <div className={`h-full ${bgClass} flex flex-col p-6 space-y-6 overflow-hidden relative border ${isDark ? "border-white/5" : "border-gray-200/80"}`}>
@@ -431,7 +522,7 @@ export function RightSidebar({
         <div className="flex flex-col">
           <div className="mb-4 px-2">
             <div className="flex items-center justify-between">
-              <h4 className={`text-sm font-400 flex items-center gap-2 ${textClass} tracking-tight`}>
+              <h4 className={`text-base font-semibold flex items-center gap-2 ${textClass} tracking-tight`}>
                 <Rss className="w-3.5 h-3.5 text-amber-400" />
                 Detected Uploads ({detectedUploadWindow === "last_1_day" ? "Last 1 Day" : detectedUploadWindow === "last_31_days" ? "Last 31 Days" : "Last 7 Days"})
               </h4>
@@ -478,7 +569,8 @@ export function RightSidebar({
                 const thisJobStarting = preStartJob?.job_id ? startingJobId === preStartJob.job_id : false;
                 const thisJobCreating = creatingVideoId === video.video_id;
                 const isExpanded = expandingVideoId === video.video_id;
-                const selectedLanguages = selectedLanguageByVideo[video.video_id] || [];
+                const selectedLanguages = getSelectedLanguageCodes(video.video_id);
+                const selectedMode = selectedModeByVideo[video.video_id] || "dubbing";
                 return (
                   <div key={video.video_id} className={`relative p-3 rounded-xl border ${borderClass} ${glassBgClass}`}>
                     <Button
@@ -509,16 +601,6 @@ export function RightSidebar({
                       </div>
                     </div>
                     <div className="space-y-2">
-                      {canCreate && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {getSelectedLanguageNames(video.video_id).map((name) => (
-                            <Badge key={name} variant="secondary" className="text-[10px] font-medium">
-                              {name}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-
                       {preStartJob?.job_id && (
                         <Button
                           onClick={() => beginDetectedJob(video.video_id, preStartJob.job_id)}
@@ -533,28 +615,34 @@ export function RightSidebar({
                       {canCreate && !isExpanded && (
                         <Button
                           variant="outline"
-                          onClick={() => setExpandingVideoId(video.video_id)}
+                          onClick={() => {
+                            applySavedPreferencesToVideo(video.video_id);
+                            setExpandingVideoId(video.video_id);
+                          }}
                           className={`w-full h-8 text-[10px] font-bold uppercase tracking-wider ${isDark ? "bg-transparent border-gray-500 text-gray-300 hover:bg-white/5" : "bg-transparent border-gray-400 text-gray-700 hover:bg-gray-50"}`}
                         >
                           Select Languages
                         </Button>
                       )}
                     </div>
-                    {isExpanded && canCreate && (
-                      <div className={`mt-2 p-2 rounded-lg border ${borderClass} ${isDark ? "bg-white/[0.02]" : "bg-white/70"}`}>
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex-1">
-                            <div className="flex flex-col gap-1.5">
+                    <AnimatePresence initial={false}>
+                      {isExpanded && canCreate && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0, y: -6 }}
+                          animate={{ opacity: 1, height: "auto", y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -4 }}
+                          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                          className="overflow-hidden"
+                        >
+                          <div className={`mt-2 p-2 rounded-lg border ${borderClass} ${isDark ? "bg-white/[0.02]" : "bg-white/70"}`}>
+                            <div className="space-y-3">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button
                                     variant="outline"
-                                    className="h-8 justify-between text-[11px] font-medium"
+                                    className="h-8 justify-between text-[11px] font-medium w-full"
                                   >
                                     Select Languages
-                                    <span className="ml-2 text-[10px] text-muted-foreground">
-                                      {selectedLanguages.length}
-                                    </span>
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="start" className="w-56">
@@ -564,38 +652,85 @@ export function RightSidebar({
                                       key={lang.code}
                                       checked={selectedLanguages.includes(lang.code)}
                                       onSelect={(e) => e.preventDefault()}
-                                      onCheckedChange={() => toggleLanguageForVideo(video.video_id, lang.code)}
+                                      onCheckedChange={(checked) => setLanguageSelectedForVideo(video.video_id, lang.code, checked === true)}
                                     >
                                       {lang.flag} {lang.name}
                                     </DropdownMenuCheckboxItem>
                                   ))}
                                 </DropdownMenuContent>
                               </DropdownMenu>
+                              {selectedLanguages.length > 0 && (
+                                <div className={`space-y-2 rounded-md border ${borderClass} ${isDark ? "bg-white/[0.02]" : "bg-white/60"} p-2`}>
+                                  <div className="flex items-center justify-between">
+                                    <Badge variant="outline" className="h-5 text-[10px]">
+                                      {selectedLanguages.length} selected
+                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      <span className={`text-[10px] font-medium ${mutedTextClass}`}>Mode</span>
+                                      <div className="inline-flex rounded-md border border-border overflow-hidden">
+                                        <button
+                                          type="button"
+                                          className={`h-6 px-2 text-[9px] ${selectedMode === "dubbing" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+                                          onClick={() => setModeForVideo(video.video_id, "dubbing")}
+                                        >
+                                          Dubbing
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className={`h-6 px-2 text-[9px] border-l border-border ${selectedMode === "lip_sync" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+                                          onClick={() => setModeForVideo(video.video_id, "lip_sync")}
+                                        >
+                                          Lip-sync
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
+                                    {selectedLanguages.map((code) => {
+                                      const lang = LANGUAGE_OPTIONS.find((option) => option.code === code);
+                                      return (
+                                        <Badge key={code} variant="secondary" className="text-[9px]">
+                                          {lang?.flag} {lang?.name || code.toUpperCase()}
+                                        </Badge>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                              <label className={`flex items-center gap-2 text-[10px] ${mutedTextClass} cursor-pointer`}>
+                                <Checkbox
+                                  checked={rememberPreferences}
+                                  onCheckedChange={(checked) =>
+                                    setRememberPreferencesForVideo(video.video_id, checked === true)
+                                  }
+                                />
+                                Remember my preferences for future uploads
+                              </label>
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider"
+                                  onClick={() => setExpandingVideoId(null)}
+                                  disabled={thisJobCreating}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider"
+                                  onClick={() => createAndStartDetectedJob(video)}
+                                  disabled={thisJobCreating || selectedLanguages.length === 0}
+                                >
+                                  {thisJobCreating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                                  {thisJobCreating ? "Starting..." : "Start"}
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider"
-                              onClick={() => setExpandingVideoId(null)}
-                              disabled={thisJobCreating}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider"
-                              onClick={() => createAndStartDetectedJob(video)}
-                              disabled={thisJobCreating || selectedLanguages.length === 0}
-                            >
-                              {thisJobCreating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
-                              {thisJobCreating ? "Starting..." : "Start"}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               })
@@ -608,10 +743,12 @@ export function RightSidebar({
 
         </div>
 
+        {!isSelectingDetectedLanguages && (
+        <>
         {/* Table for videos that need review */}
         <div className="flex flex-col">
           <div className="flex items-center justify-between mb-4 px-2">
-            <h4 className={`text-sm font-400 flex items-center gap-2 ${textClass} tracking-tight`}>
+            <h4 className={`text-base font-semibold flex items-center gap-2 ${textClass} tracking-tight`}>
               <div className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.5)]" />
               Need Review
             </h4>
@@ -718,7 +855,7 @@ export function RightSidebar({
         {/* Table for jobs processing */}
         <div className="flex flex-col">
           <div className="flex items-center justify-between mb-4 px-2">
-            <h4 className={`text-sm font-bold flex items-center gap-2 ${textClass} tracking-tight`}>
+            <h4 className={`text-base font-semibold flex items-center gap-2 ${textClass} tracking-tight`}>
               <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]" />
               Processing
             </h4>
@@ -853,6 +990,8 @@ export function RightSidebar({
             )}
           </div>
         </div>
+        </>
+        )}
       </div>
 
       {/* Manual Workflow Button */}

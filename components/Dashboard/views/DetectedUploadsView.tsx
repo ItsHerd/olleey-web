@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/lib/AuthContext";
 import { useSettings } from "@/lib/SettingsContext";
 import { useVideos } from "@/lib/useVideos";
@@ -11,6 +12,7 @@ import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import { SelectedItem, ViewType } from "../DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
@@ -22,6 +24,14 @@ interface DetectedUploadsViewProps {
   onSelectItem?: (item: SelectedItem) => void;
 }
 
+type ProcessingMode = "dubbing" | "lip_sync";
+const DETECTED_UPLOAD_PREFERENCES_KEY = "olleey_detected_upload_preferences";
+type StoredDetectedUploadPreferences = {
+  enabled: boolean;
+  languages: string[];
+  mode: ProcessingMode;
+};
+
 export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: DetectedUploadsViewProps) {
   const { user } = useAuth();
   const { selectedProject } = useProject();
@@ -31,6 +41,9 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
   const [syncing, setSyncing] = useState(false);
   const [expandingVideoId, setExpandingVideoId] = useState<string | null>(null);
   const [selectedLanguageByVideo, setSelectedLanguageByVideo] = useState<Record<string, string[]>>({});
+  const [selectedModeByVideo, setSelectedModeByVideo] = useState<Record<string, ProcessingMode>>({});
+  const [rememberPreferences, setRememberPreferences] = useState(false);
+  const [savedPreferences, setSavedPreferences] = useState<{ languages: string[]; mode: ProcessingMode } | null>(null);
   const [creatingVideoId, setCreatingVideoId] = useState<string | null>(null);
   const [dismissedDetectedVideoIds, setDismissedDetectedVideoIds] = useState<string[]>([]);
   const [autoSyncAttempted, setAutoSyncAttempted] = useState(false);
@@ -134,6 +147,64 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
     return codes.map((code) => LANGUAGE_OPTIONS.find((lang) => lang.code === code)?.name || code.toUpperCase());
   };
 
+  const getSelectedLanguageCodes = (videoId: string) => {
+    return selectedLanguageByVideo[videoId] || [];
+  };
+
+  const saveDetectedUploadPreferences = (
+    enabled: boolean,
+    languages: string[],
+    mode: ProcessingMode
+  ) => {
+    if (typeof window === "undefined") return;
+    if (!enabled) {
+      window.localStorage.removeItem(DETECTED_UPLOAD_PREFERENCES_KEY);
+      setSavedPreferences(null);
+      return;
+    }
+    const payload: StoredDetectedUploadPreferences = {
+      enabled: true,
+      languages,
+      mode,
+    };
+    window.localStorage.setItem(DETECTED_UPLOAD_PREFERENCES_KEY, JSON.stringify(payload));
+    setSavedPreferences({ languages, mode });
+  };
+
+  const applySavedPreferencesToVideo = (videoId: string) => {
+    if (!rememberPreferences || !savedPreferences) return;
+    if (savedPreferences.languages.length > 0) {
+      setSelectedLanguageByVideo((prev) => {
+        if ((prev[videoId] || []).length > 0) return prev;
+        return { ...prev, [videoId]: savedPreferences.languages };
+      });
+    }
+    setSelectedModeByVideo((prev) => {
+      if (prev[videoId]) return prev;
+      return { ...prev, [videoId]: savedPreferences.mode };
+    });
+  };
+
+  const setRememberPreferencesForVideo = (videoId: string, checked: boolean) => {
+    setRememberPreferences(checked);
+    if (!checked) {
+      saveDetectedUploadPreferences(false, [], "dubbing");
+      return;
+    }
+    const languages = selectedLanguageByVideo[videoId] || [];
+    const mode = selectedModeByVideo[videoId] || "dubbing";
+    saveDetectedUploadPreferences(true, languages, mode);
+  };
+
+  const getSelectedLanguageLabels = (videoId: string) => {
+    const selectedLanguages = selectedLanguageByVideo[videoId] || [];
+    const mode = selectedModeByVideo[videoId] || "dubbing";
+    return selectedLanguages.map((code) => {
+      const languageName = LANGUAGE_OPTIONS.find((lang) => lang.code === code)?.name || code.toUpperCase();
+      return `${languageName} · ${mode === "lip_sync" ? "Lip-sync" : "Dubbing"}`;
+    });
+  };
+
   const handleBeginProcessing = async (videoId: string, jobId: string) => {
     if (!jobId || startingJobId) return;
     const existingJob = jobs.find((job) => job.job_id === jobId) || null;
@@ -158,9 +229,12 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
   };
 
   const handleCreateAndStart = async (video: any) => {
-    const selectedLanguages = selectedLanguageByVideo[video.video_id]?.length
-      ? selectedLanguageByVideo[video.video_id]
-      : [];
+    const selectedLanguages = selectedLanguageByVideo[video.video_id] || [];
+    const selectedMode = selectedModeByVideo[video.video_id] || "dubbing";
+    const lipSyncLanguages = selectedMode === "lip_sync" ? selectedLanguages : [];
+    const languageProcessingModes = Object.fromEntries(
+      selectedLanguages.map((code) => [code, selectedMode])
+    );
     const sourceChannelId = video.channel_id || video.source_channel_id;
     const projectId = selectedProject?.id || video.project_id;
 
@@ -179,6 +253,9 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
         source_video_id: video.video_id,
         source_channel_id: sourceChannelId,
         target_languages: selectedLanguages,
+        include_lip_sync: lipSyncLanguages.length > 0,
+        language_processing_modes: languageProcessingModes,
+        lip_sync_languages: lipSyncLanguages,
         is_simulation: false,
       };
       if (projectId) {
@@ -188,7 +265,7 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
       await Promise.all([refetchJobs(), refetchVideos()]);
       setDismissedDetectedVideoIds((prev) => (prev.includes(video.video_id) ? prev : [...prev, video.video_id]));
       setExpandingVideoId(null);
-      toast(`Processing started for ${selectedLanguages.map((l) => l.toUpperCase()).join(", ")}`, "success");
+      toast(`Processing started for ${selectedLanguages.length} language${selectedLanguages.length === 1 ? "" : "s"}`, "success");
       if (createdJob?.job_id) {
         onSelectItem?.({ type: "job", id: createdJob.job_id, data: createdJob });
       }
@@ -204,9 +281,15 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
     setSelectedLanguageByVideo((prev) => {
       const current = prev[videoId] || [];
       const exists = current.includes(languageCode);
-      const next = exists ? current.filter((c) => c !== languageCode) : [...current, languageCode];
-      return { ...prev, [videoId]: next };
+      return {
+        ...prev,
+        [videoId]: exists ? current.filter((code) => code !== languageCode) : [...current, languageCode],
+      };
     });
+  };
+
+  const setModeForVideo = (videoId: string, mode: ProcessingMode) => {
+    setSelectedModeByVideo((prev) => ({ ...prev, [videoId]: mode }));
   };
 
   const getWindowDays = () => {
@@ -245,6 +328,31 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
     handleSyncRecent({ silent: true });
   }, [userId, isLoading, syncing, autoSyncAttempted, detectedVideos.length]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(DETECTED_UPLOAD_PREFERENCES_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<StoredDetectedUploadPreferences>;
+      if (!parsed.enabled) return;
+      const languages = Array.isArray(parsed.languages)
+        ? parsed.languages.filter((code) => LANGUAGE_OPTIONS.some((lang) => lang.code === code))
+        : [];
+      const mode: ProcessingMode = parsed.mode === "lip_sync" ? "lip_sync" : "dubbing";
+      setRememberPreferences(true);
+      setSavedPreferences({ languages, mode });
+    } catch {
+      // Ignore malformed local preference state.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!rememberPreferences || !expandingVideoId) return;
+    const languages = selectedLanguageByVideo[expandingVideoId] || [];
+    const mode = selectedModeByVideo[expandingVideoId] || "dubbing";
+    saveDetectedUploadPreferences(true, languages, mode);
+  }, [rememberPreferences, expandingVideoId, selectedLanguageByVideo, selectedModeByVideo]);
+
   return (
     <div className={`h-full relative overflow-hidden ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
       <div className="h-full overflow-auto custom-scrollbar">
@@ -252,7 +360,7 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl tracking-tight">
+              <CardTitle className="flex items-center gap-2 text-2xl sm:text-3xl tracking-tight">
                 <Rss className="w-5 h-5" />
                 Detected Uploads
               </CardTitle>
@@ -311,10 +419,11 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
                   const isStarting = !!preStartJob?.job_id && startingJobId === preStartJob.job_id;
                   const isCreating = creatingVideoId === video.video_id;
                   const isExpanded = expandingVideoId === video.video_id;
-                  const selectedLanguages = selectedLanguageByVideo[video.video_id] || [];
-                  const selectedLanguageNames = getLanguageNames(selectedLanguages);
+                  const selectedLanguages = getSelectedLanguageCodes(video.video_id);
+                  const selectedMode = selectedModeByVideo[video.video_id] || "dubbing";
+                  const selectedLanguageLabels = getSelectedLanguageLabels(video.video_id);
                   const stateLanguageNames = getLanguageNames(state.job?.target_languages);
-                  const shownLanguageNames = stateLanguageNames.length > 0 ? stateLanguageNames : selectedLanguageNames;
+                  const shownLanguageNames = stateLanguageNames.length > 0 ? stateLanguageNames : selectedLanguageLabels;
 
                   const statusLabel =
                     state.type === "prestart"
@@ -421,7 +530,12 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
                                   return;
                                 }
                                 if (canCreate) {
-                                  setExpandingVideoId((prev) => (prev === video.video_id ? null : video.video_id));
+                                  if (expandingVideoId === video.video_id) {
+                                    setExpandingVideoId(null);
+                                    return;
+                                  }
+                                  applySavedPreferencesToVideo(video.video_id);
+                                  setExpandingVideoId(video.video_id);
                                 }
                               }}
                               disabled={(!canStart && !canCreate) || !!startingJobId || !!creatingVideoId}
@@ -432,46 +546,93 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
                           </div>
                         </TableCell>
                       </TableRow>
-                      {isExpanded && canCreate && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="bg-muted/20">
-                            <div className="flex items-center justify-between gap-3 py-3">
-                              <div className="flex-1">
-                                <div className="text-xs text-muted-foreground mb-2">Target languages:</div>
-                                <div className="flex flex-wrap gap-2">
-                                  {LANGUAGE_OPTIONS.map((lang) => {
-                                    const selected = selectedLanguages.includes(lang.code);
-                                    return (
-                                      <button
-                                        key={lang.code}
-                                        type="button"
-                                        onClick={() => toggleLanguageForVideo(video.video_id, lang.code)}
-                                        className={`h-7 px-2 rounded-md border text-[11px] ${selected ? "bg-primary/10 border-primary/40 text-foreground" : "bg-background border-border text-muted-foreground"}`}
-                                      >
-                                        {lang.flag} {lang.code.toUpperCase()}
-                                      </button>
-                                    );
-                                  })}
+                      <AnimatePresence initial={false}>
+                        {isExpanded && canCreate && (
+                          <TableRow>
+                            <TableCell colSpan={5} className="bg-muted/20 p-0">
+                              <motion.div
+                                initial={{ opacity: 0, height: 0, y: -6 }}
+                                animate={{ opacity: 1, height: "auto", y: 0 }}
+                                exit={{ opacity: 0, height: 0, y: -4 }}
+                                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                                className="overflow-hidden"
+                              >
+                                <div className="space-y-4 py-3 px-4">
+                                  <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                      <div className="text-xs text-muted-foreground">Target languages</div>
+                                      <Badge variant="outline" className="text-[10px] h-5">
+                                        {selectedLanguages.length} selected
+                                      </Badge>
+                                    </div>
+                                    <div className="rounded-lg border border-border bg-background/70 p-2 max-h-32 overflow-y-auto">
+                                      <div className="flex flex-wrap gap-2">
+                                        {LANGUAGE_OPTIONS.map((lang) => {
+                                          const selected = selectedLanguages.includes(lang.code);
+                                          return (
+                                            <button
+                                              key={lang.code}
+                                              type="button"
+                                              onClick={() => toggleLanguageForVideo(video.video_id, lang.code)}
+                                              className={`h-7 px-2 rounded-md border text-[11px] ${
+                                                selected ? "bg-primary/10 border-primary/40 text-foreground" : "bg-background border-border text-muted-foreground"
+                                              }`}
+                                            >
+                                              {lang.flag} {lang.code.toUpperCase()}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground">Mode</span>
+                                      <div className="inline-flex rounded-md border border-border overflow-hidden">
+                                        <button
+                                          type="button"
+                                          onClick={() => setModeForVideo(video.video_id, "dubbing")}
+                                          className={`h-7 px-3 text-[11px] ${selectedMode === "dubbing" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+                                        >
+                                          Dubbing
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setModeForVideo(video.video_id, "lip_sync")}
+                                          className={`h-7 px-3 text-[11px] border-l border-border ${selectedMode === "lip_sync" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+                                        >
+                                          Lip-sync (includes dubbing)
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                                      <Checkbox
+                                        checked={rememberPreferences}
+                                        onCheckedChange={(checked) =>
+                                          setRememberPreferencesForVideo(video.video_id, checked === true)
+                                        }
+                                      />
+                                      Remember my preferences for future uploads
+                                    </label>
+                                  </div>
+                                  <div className="flex items-center justify-end gap-2 pt-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setExpandingVideoId(null)}
+                                      disabled={isCreating}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button size="sm" onClick={() => handleCreateAndStart(video)} disabled={isCreating || selectedLanguages.length === 0}>
+                                      {isCreating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                                      {isCreating ? "Starting..." : "Start Processing"}
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setExpandingVideoId(null)}
-                                  disabled={isCreating}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button size="sm" onClick={() => handleCreateAndStart(video)} disabled={isCreating || selectedLanguages.length === 0}>
-                                  {isCreating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
-                                  {isCreating ? "Starting..." : "Start Processing"}
-                                </Button>
-                              </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
+                              </motion.div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </AnimatePresence>
                     </React.Fragment>
                   );
                 })}
