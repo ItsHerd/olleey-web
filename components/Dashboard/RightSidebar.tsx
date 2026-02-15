@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Play, Clock, PanelRightClose, Loader2, Rss } from "lucide-react";
+import { ChevronRight, Play, Clock, PanelRightClose, Loader2, Rss, Bell } from "lucide-react";
 import { SelectedItem, ViewType } from "./DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +47,7 @@ export function RightSidebar({
   const { detectedUploadWindow } = useSettings();
   const userId = user?.id;
   const isDark = theme === "dark";
-  const bgClass = isDark ? "bg-[#09090b]" : "bg-[#ECE9DA]";
+  const bgClass = isDark ? "bg-[#111111]" : "bg-[#ECE9DA]";
   const borderClass = isDark ? "border-[#2A2A2A]" : "border-gray-300/50";
   const textClass = isDark ? "text-white" : "text-gray-900";
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-500";
@@ -324,23 +324,30 @@ export function RightSidebar({
   }, [userId, loading, allUserVideosLoading, autoSyncAttempted, autoSyncingDetected, detectedVideos.length, refetchJobs, refetchVideos, refetchAllUserVideos, toast]);
 
   return (
-    <div className={`h-full ${bgClass} flex flex-col p-6 space-y-6 overflow-hidden relative border ${isDark ? "border-white/10" : "border-gray-200"}`}>
-      {/* Subtle Background Glow */}
-      <div className="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
-
+    <div className={`h-full ${bgClass} flex flex-col p-6 space-y-6 overflow-hidden relative border ${isDark ? "border-white/5" : "border-gray-200/80"}`}>
       {/* Header */}
-      <div className="flex items-center gap-4 relative z-10">
-        <button
-          onClick={onClose}
-          className={`p-2 rounded-lg border-2 ${borderClass} ${isDark ? "hover:bg-white/5 hover:border-white/20" : "hover:bg-gray-100 hover:border-gray-400"} transition-all duration-200 active:scale-95`}
-          title="Close sidebar"
-        >
-          <PanelRightClose className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
-        </button>
-        <div className="flex flex-col">
-          <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${mutedTextClass} mb-1`}>Pipeline</span>
-          <h3 className={`font-serif text-2xl ${textClass} tracking-tight`}>Live Status</h3>
+      <div className="flex items-start justify-between gap-4 relative z-10">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onClose}
+            className={`p-2 rounded-lg border-2 ${borderClass} ${isDark ? "hover:bg-white/5 hover:border-white/20" : "hover:bg-gray-100 hover:border-gray-400"} transition-all duration-200 active:scale-95`}
+            title="Close sidebar"
+          >
+            <PanelRightClose className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
+          </button>
+          <div className="flex flex-col">
+            <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${mutedTextClass} mb-1`}>Pipeline</span>
+            <h3 className={`font-serif text-2xl ${textClass} tracking-tight`}>Live Status</h3>
+          </div>
         </div>
+        <button
+          onClick={() => onViewChange?.("notifications")}
+          className={`p-2 rounded-lg border-2 ${borderClass} ${isDark ? "hover:bg-white/5 hover:border-white/20" : "hover:bg-gray-100 hover:border-gray-400"} transition-all duration-200 active:scale-95`}
+          title="Notifications"
+          aria-label="Open notifications"
+        >
+          <Bell className={`w-4 h-4 ${isDark ? "text-gray-300" : "text-gray-600"}`} />
+        </button>
       </div>
 
       <div className="flex-1 space-y-8 overflow-y-auto custom-scrollbar -mx-2 px-2 relative z-10">

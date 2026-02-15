@@ -247,15 +247,7 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
 
   return (
     <div className={`h-full relative overflow-hidden ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(to right, ${theme === "dark" ? "white" : "black"} 1px, transparent 1px), linear-gradient(to bottom, ${theme === "dark" ? "white" : "black"} 1px, transparent 1px)`,
-          backgroundSize: "40px 40px",
-        }}
-      />
-
-      <div className="h-full overflow-auto custom-scrollbar relative z-10">
+      <div className="h-full overflow-auto custom-scrollbar">
       <div className="max-w-6xl mx-auto p-6 space-y-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">

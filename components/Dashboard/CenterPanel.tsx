@@ -7,10 +7,9 @@ import { DashboardView } from "./views/DashboardView";
 import { VideosView } from "./views/VideosView";
 import { RunsView } from "./views/RunsView";
 import { VoicesView } from "./views/VoicesView";
-import { SettingsView } from "./views/SettingsView";
+import { PreferencesView } from "./views/PreferencesView";
 import { AccountView } from "./views/AccountView";
 import { NotificationsView } from "./views/NotificationsView";
-import { GuardrailsView } from "./views/GuardrailsView";
 import { SupportView } from "./views/SupportView";
 import { ManualWorkflowView } from "./views/ManualWorkflowView";
 import { ReviewView } from "./views/ReviewView";
@@ -59,14 +58,15 @@ export function CenterPanel({
         return <DashboardView onSelectJob={onSelectItem} theme={theme} onViewChange={onViewChange} />;
       case "voices":
         return <VoicesView theme={theme} />;
+      case "preferences":
       case "settings":
-        return <SettingsView theme={theme} />;
+        return <PreferencesView theme={theme} />;
       case "account":
         return <AccountView theme={theme} />;
       case "notifications":
         return <NotificationsView theme={theme} />;
       case "guardrails":
-        return <GuardrailsView theme={theme} />;
+        return <PreferencesView theme={theme} />;
       case "support":
         return <SupportView theme={theme} />;
       case "support":
@@ -104,7 +104,7 @@ export function CenterPanel({
       </AnimatePresence>
 
       <Dialog open={currentView === "processing"} onOpenChange={(open) => !open && handleCloseProcessingModal()}>
-        <DialogContent className="w-[min(980px,90vw)] max-w-[90vw] h-[80vh] max-h-[80vh] p-0 gap-0 overflow-hidden">
+        <DialogContent className="w-[min(980px,90vw)] max-w-[90vw] max-h-[80vh] p-0 gap-0 overflow-hidden">
           <DialogTitle className="sr-only">Processing Job</DialogTitle>
           <ProcessingPage
             selectedJob={selectedItem.type === "job" ? selectedItem.data : null}

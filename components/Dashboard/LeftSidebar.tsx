@@ -7,11 +7,10 @@ import {
   User,
   Plus,
   Radio,
-  Shield,
+  SlidersHorizontal,
   ChevronRight,
   Clock,
   ChevronLeft,
-  Settings,
   HelpCircle,
   Globe,
   Share2,
@@ -19,8 +18,6 @@ import {
   Moon,
   ChevronDown,
   Check,
-  Home,
-  Bell,
   MoreHorizontal,
   Trash,
   Edit,
@@ -122,13 +119,6 @@ export function LeftSidebar({
   const { connections, loading: connectionsLoading, refetch: refetchConnections } = useDashboardConnections({
     enabled: !!user?.id && !!user
   });
-
-  const navItems: Array<{ label: string; icon: React.ComponentType<{ className?: string }>; view: ViewType }> = [
-    { label: "Home", icon: Home, view: "dashboard" },
-    { label: "Notifications", icon: Bell, view: "notifications" },
-    { label: "Settings", icon: Settings, view: "settings" },
-    { label: "Guardrails", icon: Shield, view: "guardrails" },
-  ];
 
   const handleUpdateChannelLanguage = async () => {
     if (!editChannel || !newLanguage) return;
@@ -298,6 +288,7 @@ export function LeftSidebar({
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
   const glassBgClass = isDark ? "bg-white/[0.05]" : "bg-gray-100/50";
   const borderClass = isDark ? "border-white/10" : "border-gray-200";
+  const sidebarBgClass = isDark ? "bg-[#111111]" : "bg-[#ECE9DA]";
   const accountName =
     user?.user_metadata?.name ||
     user?.user_metadata?.full_name ||
@@ -312,14 +303,12 @@ export function LeftSidebar({
   return (
     <div
       className={cn(
-        "w-88 h-full flex flex-col border shrink-0",
-        isDark ? "bg-[#09090b] border-white/10" : "bg-[#ECE9DA] border-gray-200"
+        "w-[336px] h-full flex flex-col border shrink-0",
+        sidebarBgClass,
+        isDark ? "border-white/5" : "border-gray-200/80"
       )}
     >
       <div className="flex flex-col h-full p-4 relative overflow-hidden">
-        {/* Subtle Background Accent */}
-        <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none opacity-50" />
-
         {/* Header Profile */}
         <div className="flex items-center justify-between mb-8 relative z-10 px-2">
           <DropdownMenu>
@@ -389,34 +378,6 @@ export function LeftSidebar({
           >
             <PanelLeftClose className="w-4 h-4 text-gray-400" />
           </button>
-        </div>
-
-        {/* Navigation */}
-        <div className="relative z-10 mb-4 px-2">
-          <div className={cn("rounded-xl border p-1.5", isDark ? "bg-white/[0.03] border-white/10" : "bg-white/60 border-gray-200")}>
-            <div className="grid grid-cols-4 gap-1">
-              {navItems.map((item) => {
-                const isActive = currentView === item.view;
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.view}
-                    onClick={() => onViewChange(item.view)}
-                    title={item.label}
-                    className={cn(
-                      "h-11 rounded-md border flex flex-col items-center justify-center gap-0.5 transition-all",
-                      isActive
-                        ? "bg-primary/10 border-primary/30 text-primary"
-                        : "bg-transparent border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                    )}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-[9px] leading-none font-medium">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         <div className="relative mb-6 z-10 px-2">
@@ -887,7 +848,29 @@ export function LeftSidebar({
           )}
         </div>
 
-        <div className="mt-auto pt-6 border-t border-border/50 relative z-10 space-y-3 px-2">
+        <div className="mt-auto pt-6 relative z-10 space-y-3 px-2">
+          <button
+            onClick={() => onViewChange("preferences")}
+            className={cn(
+              "w-full p-3 rounded-md border flex items-center gap-3 shadow-sm transition-all text-left",
+              currentView === "preferences" || currentView === "settings" || currentView === "guardrails"
+                ? "bg-primary/10 border-primary/30"
+                : "bg-background border-border hover:border-primary/30 hover:bg-muted/40"
+            )}
+          >
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+              <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] font-bold text-foreground truncate">Preferences</span>
+              <span className="text-[10px] text-muted-foreground truncate">Settings and guardrails</span>
+            </div>
+            <div className="ml-auto flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <span className="uppercase tracking-wider">Open</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </div>
+          </button>
+
           <button
             onClick={() => onViewChange("account")}
             className={cn(

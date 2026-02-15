@@ -12,7 +12,7 @@ import { useProject } from "@/lib/ProjectContext";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { SettingsProvider } from "@/lib/SettingsContext";
 
-export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "settings" | "notifications" | "account" | "guardrails" | "support" | "manual_workflow" | "review" | "preview" | "processing" | "runs" | "detected_uploads";
+export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "preferences" | "settings" | "notifications" | "account" | "guardrails" | "support" | "manual_workflow" | "review" | "preview" | "processing" | "runs" | "detected_uploads";
 export type DetailViewType = "job-detail" | "video-detail" | "channel-detail" | null;
 
 export interface SelectedItem {
@@ -89,10 +89,10 @@ export default function DashboardLayout() {
           {leftSidebarOpen && (
             <motion.div
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 352, opacity: 1 }}
+              animate={{ width: 336, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className={`h-full border-r ${isDark ? "border-white/10" : "border-gray-200"}`}
+              className={`h-full border-r ${isDark ? "border-white/5" : "border-gray-200/80"}`}
             >
               <LeftSidebar
                 currentView={currentView}
@@ -116,7 +116,7 @@ export default function DashboardLayout() {
             <button
               onClick={() => setLeftSidebarOpen(true)}
               className={`absolute left-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-r-lg ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-[#EBEBDC] hover:bg-gray-200/50"
-                } border-r border-t border-b ${isDark ? "border-white/10" : "border-gray-200"} transition-all shadow-xl active:scale-95`}
+                } border-r border-t border-b ${isDark ? "border-white/5" : "border-gray-200/80"} transition-all shadow-xl active:scale-95`}
               title="Expand sidebar"
             >
               <PanelLeftOpen className="w-4 h-4 text-gray-400" />
@@ -138,7 +138,7 @@ export default function DashboardLayout() {
             <button
               onClick={() => setRightSidebarOpen(true)}
               className={`absolute right-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-l-lg ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-[#EBEBDC] hover:bg-gray-200/50"
-                } border-l border-t border-b ${isDark ? "border-white/10" : "border-gray-200"} transition-all shadow-xl active:scale-95`}
+                } border-l border-t border-b ${isDark ? "border-white/5" : "border-gray-200/80"} transition-all shadow-xl active:scale-95`}
               title="Show details"
             >
               <PanelRightOpen className="w-4 h-4 text-gray-400" />
@@ -151,10 +151,10 @@ export default function DashboardLayout() {
           {rightSidebarOpen && (
             <motion.div
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 420, opacity: 1 }}
+              animate={{ width: 396, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className={`h-full border-l ${isDark ? "bg-[#09090b] border-white/10" : "bg-[#ECE9DA] border-gray-200"}`}
+              className={`h-full border-l ${isDark ? "bg-[#111111] border-white/5" : "bg-[#ECE9DA] border-gray-200/80"}`}
             >
               <RightSidebar
                 selectedItem={selectedItem}

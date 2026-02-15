@@ -203,7 +203,7 @@ export default function PixelatedGlobe() {
                 <br />
                 <span className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4">share stories.</span>
               </h2>
-              <p className="text-sm lg:text-xl text-zinc-600 dark:zinc-400 max-w-2xl mx-auto leading-relaxed font-mono font-medium">
+              <p className="text-sm lg:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed font-mono font-medium">
                 Break every linguistic barrier.
                 <br />
                 Keep your voice. Scale your impact.

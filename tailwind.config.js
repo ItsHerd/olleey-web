@@ -1,4 +1,15 @@
 /** @type {import('tailwindcss').Config} */
+const oklchColor = (name, alphaName = `${name}-alpha`) => ({ opacityValue, opacityVariable } = {}) => {
+	const resolvedOpacity = opacityValue ?? opacityVariable;
+	if (resolvedOpacity !== undefined) {
+		if (typeof resolvedOpacity === 'string' && resolvedOpacity.includes('var(')) {
+			return `oklch(var(--${name}-channels) / calc(var(--${alphaName}, 1) * ${resolvedOpacity}))`;
+		}
+		return `oklch(var(--${name}-channels) / ${resolvedOpacity})`;
+	}
+	return `oklch(var(--${name}-channels) / var(--${alphaName}, 1))`;
+};
+
 module.exports = {
 	content: ["./app/**/*.{js,ts,jsx,tsx}", "./components/**/*.{js,ts,jsx,tsx}"],
 	darkMode: ['class', "class"],
@@ -133,45 +144,45 @@ module.exports = {
 					muted: '#9aa0a6',
 					accent: '#3ea6ff'
 				},
-				border: 'hsl(var(--border))',
-				input: 'hsl(var(--input))',
-				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
-				foreground: 'hsl(var(--foreground))',
+				border: oklchColor('border'),
+				input: oklchColor('input'),
+				ring: oklchColor('ring'),
+				background: oklchColor('background'),
+				foreground: oklchColor('foreground'),
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					DEFAULT: oklchColor('primary'),
+					foreground: oklchColor('primary-foreground')
 				},
 				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+					DEFAULT: oklchColor('secondary'),
+					foreground: oklchColor('secondary-foreground')
 				},
 				destructive: {
-					DEFAULT: 'hsl(var(--destructive))',
-					foreground: 'hsl(var(--destructive-foreground))'
+					DEFAULT: oklchColor('destructive'),
+					foreground: oklchColor('destructive-foreground')
 				},
 				muted: {
-					DEFAULT: 'hsl(var(--muted))',
-					foreground: 'hsl(var(--muted-foreground))'
+					DEFAULT: oklchColor('muted'),
+					foreground: oklchColor('muted-foreground')
 				},
 				accent: {
-					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
+					DEFAULT: oklchColor('accent'),
+					foreground: oklchColor('accent-foreground')
 				},
 				popover: {
-					DEFAULT: 'hsl(var(--popover))',
-					foreground: 'hsl(var(--popover-foreground))'
+					DEFAULT: oklchColor('popover'),
+					foreground: oklchColor('popover-foreground')
 				},
 				card: {
-					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
+					DEFAULT: oklchColor('card'),
+					foreground: oklchColor('card-foreground')
 				},
 				chart: {
-					'1': 'hsl(var(--chart-1))',
-					'2': 'hsl(var(--chart-2))',
-					'3': 'hsl(var(--chart-3))',
-					'4': 'hsl(var(--chart-4))',
-					'5': 'hsl(var(--chart-5))'
+					'1': oklchColor('chart-1'),
+					'2': oklchColor('chart-2'),
+					'3': oklchColor('chart-3'),
+					'4': oklchColor('chart-4'),
+					'5': oklchColor('chart-5')
 				}
 			},
 			borderRadius: {

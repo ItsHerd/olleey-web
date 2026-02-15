@@ -21,3 +21,4 @@ build/
 .wrangler
 .env
 *.tsbuildinfo
+*.tsbuildinfo

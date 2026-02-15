@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   ArrowLeft,
@@ -75,7 +75,11 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
   const [cancelling, setCancelling] = useState(false);
   const [loading, setLoading] = useState(!selectedJob && Boolean(jobIdFromUrl));
   const [error, setError] = useState<string | null>(null);
+  const [simulatedJob, setSimulatedJob] = useState<any | null>(null);
+  const [simulating, setSimulating] = useState(false);
+  const simulationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
+  const activeJob = simulatedJob || job;
 
   useEffect(() => {
     if (selectedJob) {
@@ -83,6 +87,24 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
       setLoading(false);
     }
   }, [selectedJob]);
+
+  useEffect(() => {
+    setSimulatedJob(null);
+    setSimulating(false);
+    if (simulationIntervalRef.current) {
+      clearInterval(simulationIntervalRef.current);
+      simulationIntervalRef.current = null;
+    }
+  }, [jobIdFromUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (simulationIntervalRef.current) {
+        clearInterval(simulationIntervalRef.current);
+        simulationIntervalRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!jobIdFromUrl) {
@@ -132,8 +154,8 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
       onViewChange("review");
       return;
     }
-    if (job?.source_video_id && job?.target_languages?.[0]) {
-      router.push(`/workflows/review/${job.source_video_id}?lang=${job.target_languages[0]}&job_id=${jobIdFromUrl}`);
+    if (activeJob?.source_video_id && activeJob?.target_languages?.[0]) {
+      router.push(`/workflows/review/${activeJob.source_video_id}?lang=${activeJob.target_languages[0]}&job_id=${jobIdFromUrl}`);
     }
   };
 
@@ -150,6 +172,64 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
     } finally {
       setCancelling(false);
     }
+  };
+
+  const handleSimulateProcessing = () => {
+    if (!activeJob || simulating) return;
+
+    if (simulationIntervalRef.current) {
+      clearInterval(simulationIntervalRef.current);
+      simulationIntervalRef.current = null;
+    }
+
+    const targetLanguages = Array.isArray(activeJob.target_languages) ? activeJob.target_languages : [];
+    let progress = Math.max(0, Math.min(100, Number(activeJob.progress) || 0));
+
+    setSimulatedJob(activeJob);
+    setSimulating(true);
+
+    simulationIntervalRef.current = setInterval(() => {
+      progress = Math.min(progress + 8, 100);
+
+      const stageIndex = Math.min(
+        Math.floor((progress / 100) * (PIPELINE_STAGES.length - 1)),
+        PIPELINE_STAGES.length - 1
+      );
+      const stageStatus = PIPELINE_STAGES[stageIndex]?.id || "processing";
+      const nextStatus = progress >= 100 ? "waiting_approval" : stageStatus;
+
+      setSimulatedJob((prev: any) => {
+        const source = prev || activeJob;
+        const workflowState = {
+          ...(source?.workflow_state || {}),
+          video_dubbing: { ...(source?.workflow_state?.video_dubbing || {}) },
+        };
+
+        targetLanguages.forEach((lang: string) => {
+          workflowState.video_dubbing[lang] = {
+            ...(workflowState.video_dubbing[lang] || {}),
+            status: nextStatus,
+            progress,
+          };
+        });
+
+        return {
+          ...source,
+          status: nextStatus,
+          progress,
+          workflow_state: workflowState,
+        };
+      });
+
+      if (progress >= 100) {
+        if (simulationIntervalRef.current) {
+          clearInterval(simulationIntervalRef.current);
+          simulationIntervalRef.current = null;
+        }
+        setSimulating(false);
+        toast("Simulation complete: ready for review", "success");
+      }
+    }, 850);
   };
 
   const getStageIndexFromStatus = (status?: string) => {
@@ -170,13 +250,18 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
     return statusToStage[status] ?? 0;
   };
 
-  const currentStageIndex = getStageIndexFromStatus(job?.status);
-  const isFailed = job?.status === "failed";
-  const isCompleted = job?.status === "completed" || job?.status === "waiting_approval";
+  const currentStageIndex = getStageIndexFromStatus(activeJob?.status);
+  const isFailed = activeJob?.status === "failed";
+  const isCompleted = activeJob?.status === "completed" || activeJob?.status === "waiting_approval";
   const totalProgress =
-    typeof job?.progress === "number"
-      ? job.progress
+    typeof activeJob?.progress === "number"
+      ? activeJob.progress
       : Math.round((Math.max(currentStageIndex, 0) / (PIPELINE_STAGES.length - 1)) * 100);
+
+  useEffect(() => {
+    if (!isModal || !activeJob || isFailed || isCompleted || simulating || simulatedJob) return;
+    handleSimulateProcessing();
+  }, [isModal, activeJob, isFailed, isCompleted, simulating, simulatedJob]);
 
   const getDisplayStatus = (status?: string) => {
     if (!status) return "Pending";
@@ -194,21 +279,21 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
   };
 
   const getLanguageProgress = (lang: string, status?: string) => {
-    const workflowProgress = job?.workflow_state?.video_dubbing?.[lang]?.progress;
+    const workflowProgress = activeJob?.workflow_state?.video_dubbing?.[lang]?.progress;
     if (typeof workflowProgress === "number") return Math.max(0, Math.min(100, workflowProgress));
 
     if (status === "waiting_approval" || status === "completed" || status === "live" || status === "published") {
       return 100;
     }
     if (status === "failed") return 0;
-    if (typeof job?.progress === "number") return Math.max(0, Math.min(99, job.progress));
+    if (typeof activeJob?.progress === "number") return Math.max(0, Math.min(99, activeJob.progress));
     return 0;
   };
 
-  const languageRows: LanguageRow[] = (Array.isArray(job?.target_languages) ? job.target_languages : []).map((lang: string) => {
+  const languageRows: LanguageRow[] = (Array.isArray(activeJob?.target_languages) ? activeJob.target_languages : []).map((lang: string) => {
     const localized = jobVideos.find((v) => v.language_code === lang);
-    const workflowStatus = job?.workflow_state?.video_dubbing?.[lang]?.status;
-    const status = localized?.status || workflowStatus || job?.status || "pending";
+    const workflowStatus = activeJob?.workflow_state?.video_dubbing?.[lang]?.status;
+    const status = localized?.status || workflowStatus || activeJob?.status || "pending";
     const progress = getLanguageProgress(lang, status);
     return {
       languageCode: lang,
@@ -234,7 +319,7 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
   const activeLanguageStage = activeLanguageStageIndex >= 0 ? PIPELINE_STAGES[activeLanguageStageIndex] : null;
   const ActiveLanguageStageIcon = activeLanguageStage?.icon;
 
-  if (loading && !job) {
+  if (loading && !activeJob) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -242,7 +327,7 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
     );
   }
 
-  if (!loading && !job && !jobIdFromUrl) {
+  if (!loading && !activeJob && !jobIdFromUrl) {
     return (
       <div className="w-full h-full flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
@@ -275,7 +360,7 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
   }
 
   return (
-    <div className={`w-full h-full overflow-y-auto custom-scrollbar ${isModal ? "p-4 sm:p-5" : "p-6"}`}>
+    <div className={`w-full ${isModal ? "max-h-[80vh]" : "h-full"} overflow-y-auto custom-scrollbar ${isModal ? "p-4 sm:p-5" : "p-6"}`}>
       <div className={`w-full ${isModal ? "max-w-none" : "max-w-4xl mx-auto"} space-y-4`}>
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={handleBack}>
@@ -285,9 +370,9 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
           <Badge variant="outline">Job: {jobIdFromUrl?.toString().slice(0, 8)}</Badge>
         </div>
 
-        <Card>
+        <Card className="border-none shadow-sm">
           <CardContent className={`${isModal ? "p-4 sm:p-5 space-y-5" : "p-6 space-y-6"}`}>
-            <section className="rounded-lg border bg-card/60 p-4 space-y-3">
+            <section className="rounded-lg bg-card/50 p-4 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -298,11 +383,11 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
                     ) : (
                       <Loader2 className="w-5 h-5 text-primary animate-spin" />
                     )}
-                    <h1 className="text-lg font-semibold">{job?.title || "Processing Video"}</h1>
+                    <h1 className="text-lg font-semibold">{activeJob?.title || "Processing Video"}</h1>
                   </div>
                   <p className="text-sm text-muted-foreground">Track job progress across all selected languages.</p>
                 </div>
-                <Badge variant={getStatusBadgeVariant(job?.status)}>{getDisplayStatus(job?.status || "processing")}</Badge>
+                <Badge variant={getStatusBadgeVariant(activeJob?.status)}>{getDisplayStatus(activeJob?.status || "processing")}</Badge>
               </div>
 
               <div className="space-y-2">
@@ -314,10 +399,10 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
               </div>
             </section>
 
-            <section className="rounded-lg border bg-card/60 p-4 space-y-3">
+            <section className="rounded-lg bg-card/50 p-4 space-y-3">
               <p className="text-sm font-medium">Language Status</p>
               <div className="grid gap-3 md:grid-cols-2">
-                <div className={`rounded-md border bg-background/70 ${isModal ? "max-h-[320px] overflow-auto" : "overflow-hidden"}`}>
+                <div className={`rounded-md bg-background/70 ${isModal ? "max-h-[320px] overflow-auto" : "overflow-hidden"}`}>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -353,7 +438,7 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
                   </Table>
                 </div>
 
-                <div className="rounded-md border bg-background/70 p-4 space-y-4 min-h-[220px]">
+                <div className="rounded-md bg-background/70 p-4 space-y-4 min-h-[220px]">
                   {!activeLanguageRow ? (
                     <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
                       Select a language to view details.
@@ -378,7 +463,7 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
                       <div className="space-y-2">
                         <p className="text-xs uppercase tracking-wide text-muted-foreground">Pipeline Stage</p>
                         {activeLanguageStage ? (
-                          <div className="rounded-md border bg-background/80 px-3 py-2.5 flex items-center justify-between">
+                          <div className="rounded-md bg-background/80 px-3 py-2.5 flex items-center justify-between">
                             <span className="flex items-center gap-2 text-sm font-medium">
                               {ActiveLanguageStageIcon ? <ActiveLanguageStageIcon className="w-4 h-4 text-primary" /> : null}
                               {activeLanguageStage.label}
@@ -388,7 +473,7 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
                             </span>
                           </div>
                         ) : (
-                          <div className="rounded-md border bg-background/80 px-3 py-2.5 text-sm text-destructive">
+                          <div className="rounded-md bg-background/80 px-3 py-2.5 text-sm text-destructive">
                             Failed
                           </div>
                         )}
@@ -407,14 +492,14 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
               </div>
             </section>
 
-            <div className="border-t pt-4 flex gap-2">
+            <div className="pt-2 flex flex-wrap justify-end gap-2">
               {!isCompleted && !isFailed && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="destructive"
                       disabled={!jobIdFromUrl || cancelling}
-                      className="flex-1"
+                      className="min-w-[150px]"
                     >
                       {cancelling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       {cancelling ? "Cancelling..." : "Cancel Processing"}
@@ -441,12 +526,12 @@ export default function ProcessingPage({ selectedJob, onViewChange, isModal = fa
                 </AlertDialog>
               )}
               {isCompleted && (
-                <Button onClick={handleGoToReview} className="flex-1">
+                <Button onClick={handleGoToReview} className="min-w-[150px]">
                   <Eye className="w-4 h-4 mr-2" />
                   Go To Review
                 </Button>
               )}
-              <Button variant={isCompleted ? "outline" : "default"} onClick={handleBack} className="flex-1">
+              <Button variant={isCompleted ? "outline" : "default"} onClick={handleBack} className="min-w-[150px]">
                 Back To Dashboard
               </Button>
             </div>

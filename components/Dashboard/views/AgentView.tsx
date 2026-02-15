@@ -4,18 +4,24 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
-  Send,
   ChevronRight,
+  ChevronDown,
   Loader2,
   Video,
   Languages,
   Eye,
   Plus,
-  ChevronDown,
   ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Script from "next/script";
 
 import { PromptInputBox } from "../components/PromptInputBox";
 import { youtubeAPI } from "@/lib/api";
@@ -32,7 +38,17 @@ interface Message {
   timestamp: Date;
 }
 
+interface RecentChat {
+  id: string;
+  title: string;
+  snippet: string;
+  prompt: string;
+  updatedAt: number;
+}
+
 import Image from "next/image";
+
+const RECENT_CHATS_STORAGE_KEY = "olleey_recent_chats";
 
 const OlleeyLogo = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
   <div className={`relative w-12 h-12 ${className}`}>
@@ -66,6 +82,8 @@ const quickActions = [
 export function AgentView({ theme, onViewChange }: AgentViewProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [recentChats, setRecentChats] = useState<RecentChat[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isDark = theme === "dark";
@@ -79,13 +97,63 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(RECENT_CHATS_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as RecentChat[];
+      if (Array.isArray(parsed)) {
+        setRecentChats(parsed.slice(0, 8));
+      }
+    } catch {
+      // Ignore malformed local storage and fallback to empty list.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(RECENT_CHATS_STORAGE_KEY, JSON.stringify(recentChats));
+  }, [recentChats]);
+
+  const pushRecentChat = (input: string) => {
+    const prompt = input.trim();
+    if (!prompt) return;
+    const title = prompt.length > 46 ? `${prompt.slice(0, 46)}...` : prompt;
+    const snippet = prompt.length > 84 ? `${prompt.slice(0, 84)}...` : prompt;
+    const entry: RecentChat = {
+      id: Date.now().toString(),
+      title,
+      snippet,
+      prompt,
+      updatedAt: Date.now(),
+    };
+    setRecentChats((prev) => {
+      const deduped = prev.filter((chat) => chat.prompt.toLowerCase() !== prompt.toLowerCase());
+      return [entry, ...deduped].slice(0, 8);
+    });
+  };
+
+  const formatRecentTime = (updatedAt: number) => {
+    const diff = Date.now() - updatedAt;
+    const minutes = Math.floor(diff / (1000 * 60));
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
   const handleSend = async (content: string) => {
-    if (!content.trim()) return;
+    const trimmed = content.trim();
+    if (!trimmed) return;
+    pushRecentChat(trimmed);
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: content,
+      content: trimmed,
       timestamp: new Date(),
     };
 
@@ -115,21 +183,172 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
     }
   };
 
+  const handleSubmitDraft = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const next = draft.trim();
+    if (!next || isTyping) return;
+    setDraft("");
+    await handleSend(next);
+  };
+
   return (
     <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
-      {/* Grid Background */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(to right, ${isDark ? 'white' : 'black'} 1px, transparent 1px), linear-gradient(to bottom, ${isDark ? 'white' : 'black'} 1px, transparent 1px)`,
-          backgroundSize: '40px 40px'
-        }}
-      />
+      {messages.length === 0 ? (
+        <div className="h-full overflow-y-auto custom-scrollbar p-6 sm:p-10">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-5xl mx-auto min-h-full flex flex-col justify-center py-10"
+          >
+            <div>
+              <div className="mb-8">
+                <Script
+                  src="https://unpkg.com/@lottiefiles/lottie-player@2.0.12/dist/lottie-player.js"
+                  strategy="afterInteractive"
+                />
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 shrink-0">
+                    {React.createElement("lottie-player", {
+                      src: "/lotties/bubble-main-scene.json",
+                      autoplay: true,
+                      loop: true,
+                      style: {
+                        width: "64px",
+                        height: "64px",
+                        pointerEvents: "none",
+                      },
+                    })}
+                  </div>
+                  <h1 className={`text-4xl sm:text-6xl leading-tight tracking-tight ${textClass}`}>
+                    Let&apos;s share stories
+                  </h1>
+                </div>
+              </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-8 z-10 custom-scrollbar">
-        {messages.length > 0 && (
-          <div className="max-w-4xl mx-auto space-y-10 pt-12">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {quickActions.map((action, idx) => {
+                  const Icon = action.icon;
+                  return (
+                    <motion.button
+                      key={idx}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.08 }}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.99 }}
+                      onClick={() => handleQuickAction(action)}
+                      className={`${cardBgClass} border ${borderClass} rounded-xl p-5 text-left transition-all ${shadowClass} ${isDark ? "hover:bg-[#171717]" : "hover:bg-white"} group`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className={`text-xl font-semibold tracking-tight ${textClass}`}>{action.title}</h3>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? "bg-white/10" : "bg-black/5"}`}>
+                          <Icon className={`w-4 h-4 ${isDark ? "text-gray-300" : "text-gray-700"}`} />
+                        </div>
+                      </div>
+                      <p className={`mt-2 text-sm leading-relaxed ${textSecondaryClass}`}>{action.description}</p>
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={async () => {
+                  try {
+                    const { auth_url } = await youtubeAPI.initiateConnection();
+                    window.location.href = auth_url;
+                  } catch (error) {
+                    console.error("Failed to initiate YouTube connection:", error);
+                  }
+                }}
+                className={`mb-5 inline-flex w-fit items-center gap-2 text-sm ${isDark ? "text-gray-400 hover:text-gray-200" : "text-gray-600 hover:text-gray-900"} transition-colors`}
+              >
+                Connect your channels to Olleey
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <form
+                onSubmit={handleSubmitDraft}
+                className={`${cardBgClass} border ${borderClass} rounded-2xl p-4 sm:p-5 ${shadowClass}`}
+              >
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      void handleSubmitDraft(e);
+                    }
+                  }}
+                  placeholder="How can I help you today?"
+                  className={`w-full resize-none bg-transparent outline-none border-0 text-base sm:text-lg min-h-[72px] ${isDark ? "text-white placeholder:text-gray-500" : "text-gray-900 placeholder:text-gray-500"}`}
+                />
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
+                    <span className={`text-xs px-2.5 py-1 rounded-md border ${isDark ? "border-white/10 bg-white/5 text-gray-300" : "border-black/10 bg-black/5 text-gray-700"}`}>
+                      Olleey Assistant
+                    </span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className={`h-8 px-2.5 gap-1.5 text-xs border ${isDark ? "border-white/10 hover:bg-white/5 text-gray-300" : "border-black/10 hover:bg-black/5 text-gray-700"}`}
+                        >
+                          Recent chats
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-72 max-h-72 overflow-y-auto">
+                        <DropdownMenuLabel>Recent Chats</DropdownMenuLabel>
+                        {recentChats.length === 0 ? (
+                          <div className="px-2 py-3 text-xs text-muted-foreground">
+                            No recent chats yet.
+                          </div>
+                        ) : (
+                          recentChats.map((chat) => (
+                            <DropdownMenuItem
+                              key={chat.id}
+                              onSelect={() => setDraft(chat.prompt)}
+                              className="py-2"
+                            >
+                              <div className="flex flex-col gap-0.5 w-full">
+                                <span className="text-xs font-medium truncate">{chat.title}</span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {formatRecentTime(chat.updatedAt)}
+                                </span>
+                              </div>
+                            </DropdownMenuItem>
+                          ))
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className={`h-8 w-8 ${isDark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-500 hover:text-gray-900 hover:bg-black/5"}`}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={!draft.trim() || isTyping}
+                    className="h-9 w-9 rounded-full"
+                  >
+                    {isTyping ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      ) : (
+        <>
+          <div className="flex-1 overflow-y-auto p-8 z-10 custom-scrollbar">
+            <div className="max-w-4xl mx-auto space-y-10 pt-12">
             <AnimatePresence>
               {messages.map((message) => (
                 <motion.div
@@ -185,93 +404,19 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
 
             <div ref={messagesEndRef} />
           </div>
-        )}
-      </div>
-
-      {/* Input Area */}
-      <div className="p-8 pb-6 z-20">
-        <div className="max-w-4xl mx-auto">
-          {messages.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="pb-12"
-            >
-              <div className="mb-6 px-4">
-                <OlleeyLogo className="w-10 h-10" isDark={isDark} />
-                <h1 className={`text-2xl font-serif mb-4 ${textClass} tracking-tight`}>Let's knock something off your list</h1>
-              </div>
-
-              {/* Connect Tools Banner */}
-              <motion.div
-                whileHover={{ scale: 1.005 }}
-                onClick={async () => {
-                  try {
-                    const { auth_url } = await youtubeAPI.initiateConnection();
-                    window.location.href = auth_url;
-                  } catch (error) {
-                    console.error("Failed to initiate YouTube connection:", error);
-                  }
-                }}
-                className={`${cardBgClass} border ${borderClass} rounded-xl p-4 mb-4 cursor-pointer flex items-center justify-between group ${isDark ? 'shadow-xl' : 'shadow-none'} transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'}`}
-              >
-                <div className="flex items-center gap-4">
-                  <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>Connect your channels to Olleey</span>
-                  <div className="flex items-center -space-x-1">
-
-                    <div className={`w-8 h-8 rounded-lg bg-red-500/20 border ${isDark ? "border-white/10" : "border-black/5"} flex items-center justify-center overflow-hidden`}>
-                      <img src="https://cdn-icons-png.flaticon.com/512/174/174883.png" className="w-5 h-5" />
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className={`w-5 h-5 ${isDark ? "text-gray-600 group-hover:text-gray-400" : "text-gray-400 group-hover:text-gray-600"} transition-colors`} />
-              </motion.div>
-
-              {/* Quick Actions */}
-              <div className="px-4">
-                <div className="flex items-center gap-2 mb-6">
-                  <Sparkles className={`w-4 h-4 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
-                  <span className={`text-xs font-medium ${isDark ? "text-gray-500" : "text-gray-500"} uppercase tracking-wider`}>Pick a task, any task</span>
-                  <span className={`ml-auto text-xs ${isDark ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-900"} cursor-pointer transition-colors`}>+ Customize with plugins</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {quickActions.map((action, idx) => {
-                    const Icon = action.icon;
-                    return (
-                      <motion.button
-                        key={idx}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                        whileHover={{ scale: 1.02, backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)" }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleQuickAction(action)}
-                        className={`${cardBgClass} border ${borderClass} rounded-lg p-4 text-left transition-all flex flex-col h-full ${isDark ? 'shadow-lg' : 'shadow-none'} group`}
-                      >
-                        <div className={`w-8 h-8 rounded-lg ${isDark ? 'bg-white/5 border-white/5 group-hover:border-white/10 group-hover:bg-white/10' : 'bg-black/5 border-black/5 group-hover:border-black/10 group-hover:bg-black/10'} flex items-center justify-center mb-3 transition-colors`}>
-                          <Icon className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-                        </div>
-                        <div className={`font-semibold ${textClass} text-sm mb-0.5`}>{action.title}</div>
-                        <div className={`text-xs ${textSecondaryClass}`}>
-                          {action.description}
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          <PromptInputBox
-            onSend={handleSend}
-            isLoading={isTyping}
-            placeholder="How can I help you today?"
-            theme={theme}
-          />
-        </div>
-      </div>
+          </div>
+          <div className="p-8 pb-6 z-20">
+            <div className="max-w-4xl mx-auto">
+              <PromptInputBox
+                onSend={handleSend}
+                isLoading={isTyping}
+                placeholder="How can I help you today?"
+                theme={theme}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
-
