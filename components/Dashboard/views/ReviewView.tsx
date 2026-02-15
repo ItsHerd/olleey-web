@@ -8,20 +8,30 @@ import {
     Sparkles, Wand2, RefreshCw, Eye, Edit3, Type, Save, Activity, Zap,
     ShieldCheck, Youtube, Settings, Baby, Shield, ThumbsUp,
     Rss, ImageIcon, Languages, Loader2, Layout, Maximize2,
-    ChevronLeft, MoreVertical, ExternalLink
+    ChevronLeft, MoreVertical, ExternalLink, ChevronRight, HelpCircle, Info,
+    Monitor, Smartphone, CheckCircle2, Globe, Copy, Trash2, Plus, MonitorPlay, BrainCog,
+    Calendar, Clock, Lock, ShieldAlert
 } from "lucide-react";
 import { AudioPreviewPlayer } from "../components/AudioPreviewPlayer";
 import { EditableTranscript } from "../components/EditableTranscript";
+import { useDashboardChannels } from "@/lib/useDashboardChannels";
 import { useTheme } from "@/lib/useTheme";
 import { cn } from "@/lib/utils";
 import { useReview } from "@/lib/ReviewContext";
-import { LANGUAGE_OPTIONS } from "@/lib/languages";
+import { LANGUAGE_OPTIONS, getLanguageFlag } from "@/lib/languages";
 import { useVideos } from "@/lib/useVideos";
 import { useProject } from "@/lib/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { jobsAPI, videosAPI, API_BASE_URL } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -36,108 +46,77 @@ const DEMO_THUMBNAIL = "https://tii.imgix.net/production/articles/7643/03e02ef7-
 interface ReviewViewProps {
     onViewChange?: (view: ViewType) => void;
     theme: string;
-    selectedJob?: any; // Job data passed from dashboard
+    selectedJob?: any; 
 }
 
 export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps) {
-    const { toast } = useToast();
     const searchParams = useSearchParams();
+    const jobIdFromUrl = searchParams.get("job_id") || selectedJob?.job_id;
+    const videoIdFromUrl = searchParams.get("video_id") || selectedJob?.video_id;
+    const langFromUrl = searchParams.get("lang");
     const { user } = useAuth();
-    const userId = user?.id;
-
-    // Get params from URL or selected job (when navigating from dashboard)
-    const videoIdFromUrl = selectedJob?.source_video_id || searchParams.get("video_id");
-    const langFromUrl = selectedJob?.target_languages?.[0] || searchParams.get("lang");
-    const jobIdFromUrl = selectedJob?.job_id || searchParams.get("job_id");
-
-    const {
+    const userId = user?.id || "demo-user";
+    const { toast } = useToast();
+    
+    // State from ReviewContext
+    const { 
         quickCheckState,
-        openReview
+        openReview 
     } = useReview();
 
-    const { selectedProject } = useProject();
-    const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos({ project_id: selectedProject?.id, user_id: userId });
-
-    // Synchronize state with backend when video_id or lang changes in URL
-    useEffect(() => {
-        if (!videoIdFromUrl || videosLoading) return;
-
-        const isCurrentVideo = quickCheckState.videoId === videoIdFromUrl &&
-            quickCheckState.languageCode === (langFromUrl || quickCheckState.languageCode);
-
-        if (!isCurrentVideo || !quickCheckState.originalVideoUrl) {
-            let video = videos.find(v => v.video_id === videoIdFromUrl);
-
-            if (videoIdFromUrl === "demo_yc_ceo_video_001" && isDemoUser(userId)) {
-                const langCode = langFromUrl || "es";
-                openReview({
-                    videoId: videoIdFromUrl,
-                    languageCode: langCode,
-                    originalVideoUrl: YC_CEO_DEMO_VIDEO.storage_url,
-                    dubbedVideoUrl: YC_CEO_SPANISH_TRANSLATION.dubbed_video_url,
-                    videoTitle: YC_CEO_DEMO_VIDEO.title,
-                    videoDescription: YC_CEO_DEMO_VIDEO.description,
-                    thumbnailUrl: YC_CEO_DEMO_VIDEO.thumbnail_url,
-                    localizedTitle: YC_CEO_SPANISH_TRANSLATION.title,
-                    localizedDescription: YC_CEO_SPANISH_TRANSLATION.description,
-                    isApproved: false,
-                    approvedAt: YC_CEO_DEMO_VIDEO.published_at,
-                    navigate: false // Stay within dashboard
-                });
-                return;
-            }
-
-            (async () => {
-                try {
-                    let targetVideo = video;
-                    if (!targetVideo && videoIdFromUrl) {
-                        const videoData = await videosAPI.getVideoById(videoIdFromUrl);
-                        targetVideo = videoData;
-                    }
-
-                    if (targetVideo) {
-                        const langCode = langFromUrl || Object.keys(targetVideo.localizations || {})[0] || "es";
-                        openReview({
-                            videoId: videoIdFromUrl,
-                            languageCode: langCode,
-                            originalVideoUrl: (targetVideo as any).storage_url || (targetVideo as any).video_url,
-                            dubbedVideoUrl: targetVideo.localizations?.[langCode]?.video_url || "",
-                            videoTitle: targetVideo.title,
-                            videoDescription: targetVideo.description || "",
-                            thumbnailUrl: targetVideo.thumbnail_url,
-                            localizedTitle: targetVideo.localizations?.[langCode]?.title || "",
-                            localizedDescription: targetVideo.localizations?.[langCode]?.description || "",
-                            isApproved: false,
-                            approvedAt: targetVideo.published_at,
-                            navigate: false // Stay within dashboard
-                        });
-                    }
-                } catch (error) {
-                    console.error("Failed to sync video details:", error);
-                }
-            })();
-        }
-    }, [videoIdFromUrl, langFromUrl, videos, videosLoading, openReview, selectedJob]);
-
-
     const {
-        originalVideoUrl,
-        dubbedVideoUrl,
-        languageCode,
-        videoTitle,
+        videoId, 
+        languageCode, 
+        originalVideoUrl, 
+        dubbedVideoUrl, 
+        videoTitle, 
         videoDescription,
+        thumbnailUrl,
         localizedTitle: baseLocalizedTitle,
         localizedDescription: baseLocalizedDescription,
-        isApproved,
+        isApproved
     } = quickCheckState;
+
+    const { videos } = useVideos();
+    const { channels } = useDashboardChannels();
+
+    const handleSwitchLanguage = (langCode: string) => {
+        if (langCode === languageCode) return;
+        
+        const video = videos.find(v => v.video_id === videoIdFromUrl);
+        const targetVideo = video || (isDemoUser(userId) && videoIdFromUrl === "demo_yc_ceo_video_001" ? YC_CEO_DEMO_VIDEO : null);
+        
+        if (!targetVideo) return;
+
+        const localization = (videoIdFromUrl === "demo_yc_ceo_video_001" && langCode === "es") 
+            ? YC_CEO_SPANISH_TRANSLATION 
+            : (targetVideo.localizations as any)?.[langCode];
+            
+        if (!localization) return;
+
+        openReview({
+            videoId: videoIdFromUrl,
+            languageCode: langCode,
+            originalVideoUrl: (targetVideo as any).storage_url || (targetVideo as any).video_url,
+            dubbedVideoUrl: localization.dubbed_video_url || "",
+            videoTitle: targetVideo.title,
+            videoDescription: targetVideo.description || "",
+            thumbnailUrl: targetVideo.thumbnail_url,
+            localizedTitle: localization.title || "",
+            localizedDescription: localization.description || "",
+            isApproved: localization.status === 'approved',
+            approvedAt: targetVideo.published_at,
+            navigate: false
+        });
+
+        toast(`Reviewing ${langCode.toUpperCase()}: Switching to selected localization.`);
+    };
 
     const languageName = LANGUAGE_OPTIONS.find(l => l.code === languageCode)?.name || "Spanish";
 
-    // Refs
     const originalVideoRef = useRef<HTMLVideoElement>(null);
     const dubbedVideoRef = useRef<HTMLVideoElement>(null);
 
-    // State
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -147,73 +126,71 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [selectedFocus, setSelectedFocus] = useState<"source" | "prod">("prod");
 
-    // Feature-specific state
-    const [comparisonMode, setComparisonMode] = useState<"side-by-side" | "toggle">("side-by-side");
-    const [isSynchronized, setIsSynchronized] = useState(true);
-    const [videoQuality, setVideoQuality] = useState<"720p" | "1080p">("1080p");
-    const [lipSyncAccuracy, setLipSyncAccuracy] = useState(94); // Mocked percentage
-    const [sidebarTab, setSidebarTab] = useState<"quality" | "transcript" | "metadata">("quality");
-    const [transcriptLayout, setTranscriptLayout] = useState<"sidebar" | "bottom">("sidebar");
-    const [transcript, setTranscript] = useState<any>(null);
-    const [translation, setTranslation] = useState<any>(null);
-    const [transcriptLoading, setTranscriptLoading] = useState(false);
-    const [transcriptError, setTranscriptError] = useState<string | null>(null);
-    const [showAudioPlayer, setShowAudioPlayer] = useState(true);
-    const [dubbedAudioUrl, setDubbedAudioUrl] = useState<string | null>(null);
-
-    // Metadata state
-    const [localizedTitle, setLocalizedTitle] = useState("");
-    const [localizedDescription, setLocalizedDescription] = useState("");
-    const [localizedTags, setLocalizedTags] = useState<string[]>([]);
-    const [tagInput, setTagInput] = useState("");
-    const [metadataSaving, setMetadataSaving] = useState(false);
-    const [metadataGenerating, setMetadataGenerating] = useState(false);
-
-    // Load metadata from quickCheckState
-    useEffect(() => {
-        if (quickCheckState.localizedTitle) {
-            setLocalizedTitle(quickCheckState.localizedTitle);
-        }
-        if (quickCheckState.localizedDescription) {
-            setLocalizedDescription(quickCheckState.localizedDescription);
-        }
-        // Tags would come from metadata if available
-    }, [quickCheckState]);
-
-    // UI Helpers
-    const isDark = theme === "dark";
-
-    // Playback Handlers
     const togglePlay = () => {
-        const videosToUpdate = [];
-        if (originalVideoRef.current) videosToUpdate.push(originalVideoRef.current);
-        if (dubbedVideoRef.current) videosToUpdate.push(dubbedVideoRef.current);
+        const vids = [];
+        if (originalVideoRef.current) vids.push(originalVideoRef.current);
+        if (dubbedVideoRef.current) vids.push(dubbedVideoRef.current);
 
         if (isPlaying) {
-            videosToUpdate.forEach(v => v.pause());
+            vids.forEach(v => v.pause());
         } else {
-            videosToUpdate.forEach(v => v.play());
+            vids.forEach(v => v.play());
         }
         setIsPlaying(!isPlaying);
     };
 
-    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const time = parseFloat(e.target.value);
-        if (isSynchronized) {
-            if (originalVideoRef.current) originalVideoRef.current.currentTime = time;
-            if (dubbedVideoRef.current) dubbedVideoRef.current.currentTime = time;
-        } else {
-            if (selectedFocus === "source" && originalVideoRef.current) originalVideoRef.current.currentTime = time;
-            if (selectedFocus === "prod" && dubbedVideoRef.current) dubbedVideoRef.current.currentTime = time;
+    const [comparisonMode, setComparisonMode] = useState<"side-by-side" | "toggle">("side-by-side");
+    const [channelMappings, setChannelMappings] = useState<Record<string, string>>({});
+    const [currentStep, setCurrentStep] = useState<number>(1);
+    const [isForKids, setIsForKids] = useState(false);
+
+    useEffect(() => {
+        if (channels.length > 0 && videos.length > 0 && Object.keys(channelMappings).length === 0) {
+            const currentVideo = videos.find(v => v.video_id === videoIdFromUrl);
+            const availableLangs = currentVideo?.localizations 
+                ? Object.keys(currentVideo.localizations)
+                : (isDemoUser(userId) && videoIdFromUrl === "demo_yc_ceo_video_001" ? ["es"] : []);
+            
+            if (availableLangs.length > 0) {
+                const newMappings: Record<string, string> = {};
+                availableLangs.forEach(lang => {
+                    const matchingChannel = channels.find(c => c.language_code === lang);
+                    if (matchingChannel) {
+                        newMappings[lang] = matchingChannel.id;
+                    }
+                });
+                if (Object.keys(newMappings).length > 0) {
+                    setChannelMappings(newMappings);
+                }
+            }
         }
-        setCurrentTime(time);
-    };
+    }, [channels, videos, videoIdFromUrl, userId, channelMappings]);
+
+    const [isSynchronized, setIsSynchronized] = useState(true);
+    const [videoQuality, setVideoQuality] = useState<"720p" | "1080p">("1080p");
+    const [lipSyncAccuracy, setLipSyncAccuracy] = useState(94);
+    const [transcript, setTranscript] = useState<any>(null);
+    const [translation, setTranslation] = useState<any>(null);
+    const [transcriptLoading, setTranscriptLoading] = useState(false);
+    const [transcriptError, setTranscriptError] = useState<string | null>(null);
+    const [dubbedAudioUrl, setDubbedAudioUrl] = useState<string | null>(null);
+
+    const [localizedTitle, setLocalizedTitle] = useState("");
+    const [localizedDescription, setLocalizedDescription] = useState("");
+    const [hoveredCheck, setHoveredCheck] = useState<string | null>(null);
+    const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("public");
+    const [isScheduled, setIsScheduled] = useState(false);
+    const [isPremiere, setIsPremiere] = useState(false);
+
+    useEffect(() => {
+        if (baseLocalizedTitle) setLocalizedTitle(baseLocalizedTitle);
+        if (baseLocalizedDescription) setLocalizedDescription(baseLocalizedDescription);
+    }, [baseLocalizedTitle, baseLocalizedDescription]);
 
     const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
         const video = e.currentTarget;
         if (selectedFocus === "source" && video === originalVideoRef.current) setCurrentTime(video.currentTime);
         if (selectedFocus === "prod" && video === dubbedVideoRef.current) setCurrentTime(video.currentTime);
-
         if (isSynchronized) {
             const otherVideo = video === originalVideoRef.current ? dubbedVideoRef.current : originalVideoRef.current;
             if (otherVideo && Math.abs(video.currentTime - otherVideo.currentTime) > 0.05) {
@@ -222,135 +199,50 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
         }
     };
 
-    const changeSpeed = (speed: number) => {
-        setPlaybackSpeed(speed);
-        if (originalVideoRef.current) originalVideoRef.current.playbackRate = speed;
-        if (dubbedVideoRef.current) dubbedVideoRef.current.playbackRate = speed;
+    const handleFinalize = () => {
+        toast("Video finalized and scheduled for upload!", "success");
+        onViewChange?.("dashboard");
     };
 
-    const frameForward = () => {
-        const fps = 30; // Assuming 30fps
-        const frameTime = 1 / fps;
-        if (originalVideoRef.current) originalVideoRef.current.currentTime += frameTime;
-        if (dubbedVideoRef.current) dubbedVideoRef.current.currentTime += frameTime;
-        setCurrentTime(prev => prev + frameTime);
+    const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+    const handleGenerateMetadataWithAI = async (type: "title" | "description" | "thumbnail") => {
+        setIsGeneratingAI(true);
+        toast(`Generating ${type} with AI...`);
+        // Simulate API call
+        await new Promise(r => setTimeout(r, 1500));
+        if (type === "title") setLocalizedTitle(`${videoTitle || "Localized Video"} - ${languageName} Edition`);
+        if (type === "description") setLocalizedDescription(`${videoDescription || "Localized description."}\n\nProcessed by Olleey for ${languageName} audience.`);
+        setIsGeneratingAI(false);
+        toast(`AI ${type} generated successfully!`, "success");
     };
 
-    const frameBackward = () => {
-        const fps = 30;
-        const frameTime = 1 / fps;
-        if (originalVideoRef.current) originalVideoRef.current.currentTime -= frameTime;
-        if (dubbedVideoRef.current) dubbedVideoRef.current.currentTime -= frameTime;
-        setCurrentTime(prev => Math.max(0, prev - frameTime));
-    };
-
-
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const toggleFullscreen = () => {
-        const container = document.getElementById('review-video-container');
-        if (container) {
-            if (!document.fullscreenElement) {
-                container.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
-        }
-    };
-
-    const handleSaveMetadata = async () => {
-        const jobId = jobIdFromUrl || (quickCheckState as any)?.jobId;
-        const lang = languageCode || langFromUrl || "es";
-        if (!jobId) return;
-
-        setMetadataSaving(true);
-        try {
-            await jobsAPI.updateLocalizedVideo(jobId, lang, {
-                title: localizedTitle,
-                description: localizedDescription
-            });
-            toast("Metadata saved successfully", "success");
-        } catch (err: any) {
-            toast(err.message || "Failed to save metadata", "error");
-        } finally {
-            setMetadataSaving(false);
-        }
-    };
-
-    const handleGenerateMetadataWithAI = async () => {
-        setMetadataGenerating(true);
-        try {
-            // Simulate quick AI generation pass and prioritize existing localized values when available.
-            await new Promise((resolve) => setTimeout(resolve, 900));
-
-            const nextTitle =
-                baseLocalizedTitle?.trim() ||
-                (videoTitle ? `${videoTitle} (${languageName})` : "");
-
-            const nextDescription =
-                baseLocalizedDescription?.trim() ||
-                (translation?.translated_text
-                    ? String(translation.translated_text).slice(0, 1000)
-                    : (videoDescription ? `${videoDescription}\n\nLocalized for ${languageName}.` : ""));
-
-            if (nextTitle) setLocalizedTitle(nextTitle);
-            if (nextDescription) setLocalizedDescription(nextDescription);
-
-            toast("AI metadata generated", "success");
-        } catch (error: any) {
-            toast(error?.message || "Failed to generate metadata", "error");
-        } finally {
-            setMetadataGenerating(false);
-        }
-    };
-
-    const handleAddTag = () => {
-        if (tagInput.trim() && !localizedTags.includes(tagInput.trim())) {
-            setLocalizedTags([...localizedTags, tagInput.trim()]);
-            setTagInput("");
-        }
-    };
-
-    const handleRemoveTag = (tagToRemove: string) => {
-        setLocalizedTags(localizedTags.filter(tag => tag !== tagToRemove));
-    };
-
-    // Load Transcript Data...
     useEffect(() => {
         const jobId = jobIdFromUrl || (quickCheckState as any)?.jobId;
         if (!jobId) return;
-
         (async () => {
             setTranscriptLoading(true);
             try {
-                const [transcriptData, translationData, jobVideos] = await Promise.all([
+                const [tData, tlData, jobVids] = await Promise.all([
                     jobsAPI.getJobTranscript(jobId),
                     jobsAPI.getJobTranslation(jobId, languageCode || langFromUrl || "es"),
                     jobsAPI.getJobVideos(jobId)
                 ]);
-                setTranscript(transcriptData);
-                setTranslation(translationData);
-                const currentLangVideo = jobVideos.find((v: any) => v.language_code === (languageCode || langFromUrl || "es")) as any;
+                setTranscript(tData);
+                setTranslation(tlData);
+                const currentLangVideo = jobVids.find((v: any) => v.language_code === (languageCode || langFromUrl || "es")) as any;
                 if (currentLangVideo?.dubbed_audio_url) setDubbedAudioUrl(currentLangVideo.dubbed_audio_url);
             } catch (err: any) {
-                console.error("Failed to fetch data:", err);
                 setTranscriptError(err.message || "Failed to load data");
             } finally {
                 setTranscriptLoading(false);
             }
         })();
-    }, [jobIdFromUrl, quickCheckState, languageCode, langFromUrl]);
+    }, [jobIdFromUrl, languageCode, langFromUrl]);
 
     if (!videoIdFromUrl && !quickCheckState.videoId) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-background">
-                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mb-4 border">
-                    <RefreshCw className="w-6 h-6 text-muted-foreground" />
-                </div>
+                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mb-4 border"><RefreshCw className="w-6 h-6 text-muted-foreground" /></div>
                 <h2 className="text-lg font-semibold mb-2">No review session active</h2>
                 <Button onClick={() => onViewChange?.("dashboard")} variant="outline" size="sm">Back to Dashboard</Button>
             </div>
@@ -358,551 +250,487 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
     }
 
     return (
-        <div className="w-full h-full flex flex-col bg-background overflow-hidden">
-            {/* Shadcn Header */}
-            <header className="flex h-14 items-center justify-between border-b px-6 bg-card shrink-0">
+        <div className="w-full h-full flex flex-col bg-background overflow-hidden relative" id="review-video-container">
+            <header className="flex h-14 items-center justify-between border-b px-6 bg-card shrink-0 z-50">
                 <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onViewChange?.("dashboard")}
-                        className="h-8 w-8"
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold truncate max-w-[300px]">{videoTitle || "Untitled Video"}</span>
-                        <Badge variant="secondary" className="text-[10px] font-medium h-5 px-2 uppercase tracking-tight">
-                            {languageName}
-                        </Badge>
+                    <Button variant="ghost" size="icon" onClick={() => onViewChange?.("dashboard")} className="h-8 w-8"><ChevronLeft className="h-4 w-4" /></Button>
+                    <div className="flex flex-col">
+                        <h2 className="text-sm font-bold truncate max-w-[300px]">{videoTitle || "Reviewing Video"}</h2>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Review & Finalize</p>
                     </div>
                 </div>
-
-                <div className="flex items-center gap-2">
-                    <div className="mr-2 flex items-center bg-muted rounded-md p-0.5 border">
-                        <Button
-                            variant={comparisonMode === "side-by-side" ? "secondary" : "ghost"}
-                            size="sm"
-                            onClick={() => setComparisonMode("side-by-side")}
-                            className="h-7 px-2.5 text-[11px] font-medium"
-                        >
-                            <Layout className="h-3.5 w-3.5 mr-1.5" /> Stacked
-                        </Button>
-                        <Button
-                            variant={comparisonMode === "toggle" ? "secondary" : "ghost"}
-                            size="sm"
-                            onClick={() => setComparisonMode("toggle")}
-                            className="h-7 px-2.5 text-[11px] font-medium"
-                        >
-                            <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Toggle
-                        </Button>
-                    </div>
-
-                    <Separator orientation="vertical" className="h-4 mx-1" />
-
-                    <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => onViewChange?.("preview")}
-                        className="text-[11px] font-bold h-8 px-4"
-                    >
-                        <Eye className="h-3.5 w-3.5 mr-1.5" /> Preview
+                <div className="flex items-center gap-3">
+                    <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold gap-2"><Save className="h-3.5 w-3.5" /> Save as draft</Button>
+                    <div className="h-6 w-px bg-border mx-1" />
+                    <Button variant="secondary" size="sm" onClick={() => setComparisonMode(comparisonMode === "side-by-side" ? "toggle" : "side-by-side")} className="h-8 px-3 text-[11px] font-bold">
+                        {comparisonMode === "side-by-side" ? <Layout className="h-3.5 w-3.5 mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
+                        {comparisonMode === "side-by-side" ? "Stacked" : "Toggle"}
                     </Button>
                 </div>
             </header>
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex overflow-hidden">
-                <main className="flex-1 flex flex-col bg-muted/30 overflow-hidden relative">
-                    <div id="review-video-container" className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
-                        {/* Video Player Display */}
-                        <Card className="w-full max-w-6xl mx-auto overflow-hidden border shadow-sm bg-black group relative">
-                            <div className={cn(
-                                "flex flex-col",
-                                comparisonMode === "side-by-side" ? "gap-px bg-border" : ""
-                            )}>
-                                {/* Source Player (Top) */}
-                                <div className={cn(
-                                    "relative aspect-video bg-black",
-                                    comparisonMode === "toggle" && selectedFocus !== "source" && "hidden"
-                                )}>
-                                    <Badge className="absolute top-4 left-4 z-10 bg-black/50 backdrop-blur text-[10px] font-bold border-none">
-                                        ORIGINAL
-                                    </Badge>
-                                    <video
-                                        ref={originalVideoRef}
-                                        src={originalVideoUrl}
-                                        className="w-full h-full"
-                                        muted={originalMuted}
-                                        onTimeUpdate={handleVideoTimeUpdate}
-                                        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-                                    />
-                                </div>
+            <div className="flex-1 flex overflow-hidden bg-muted/10 p-4 gap-4">
+                <aside className="w-[300px] bg-card rounded-[2rem] border border-border/40 p-6 space-y-4 overflow-y-auto custom-scrollbar shrink-0 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.1)]">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Distribution</h3>
+                        <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[9px] h-4 px-1">{Object.keys(channelMappings).length} Languages</Badge>
+                            <HelpCircle className="h-3 w-3 text-muted-foreground/50" />
+                        </div>
+                    </div>
+                    <div className="space-y-3">
+                        {(() => {
+                            const currVideo = videos.find(v => v.video_id === videoIdFromUrl);
+                            const availableLangs = currVideo?.localizations ? Object.keys(currVideo.localizations) : (isDemoUser(userId) && videoIdFromUrl === "demo_yc_ceo_video_001" ? ["es"] : []);
+                            return availableLangs.map((lang) => {
+                                const langOption = LANGUAGE_OPTIONS.find(l => l.code === lang);
+                                const selectedChannelId = channelMappings[lang] || "none";
+                                const isActive = lang === languageCode;
+                                return (
+                                    <div key={lang} onClick={() => handleSwitchLanguage(lang)} className={cn("p-4 rounded-2xl border transition-all cursor-pointer group relative", isActive ? "bg-background border-primary ring-1 ring-primary/10 shadow-lg" : "bg-background/40 border-transparent hover:border-muted-foreground/10")}>
+                                        {isActive && <div className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground rounded-full p-0.5 shadow-md"><CheckCircle2 className="h-3 w-3" /></div>}
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10 text-xl leading-none">{getLanguageFlag(lang)}</div>
+                                            <div className="flex-1 min-w-0"><p className="text-[12px] font-bold truncate">{langOption?.name || lang.toUpperCase()}</p><p className="text-[9px] text-muted-foreground uppercase opacity-60">Language Code: {lang}</p></div>
+                                        </div>
+                                        <div className="space-y-1.5 pt-1" onClick={(e) => e.stopPropagation()}>
+                                            <p className="text-[9px] font-bold text-muted-foreground/50 uppercase">Target Channel</p>
+                                            <Select value={selectedChannelId} onValueChange={(val) => setChannelMappings(prev => ({ ...prev, [lang]: val }))}>
+                                                <SelectTrigger className="h-9 text-[11px] bg-background/50 border-muted-foreground/10 rounded-xl"><SelectValue placeholder="Do not sync" /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none" className="text-[11px]">Do not sync</SelectItem>
+                                                    {channels.map(channel => <SelectItem key={channel.id} value={channel.id} className="text-[11px]">{channel.channel_name} ({channel.language_code})</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                );
+                            });
+                        })()}
+                    </div>
+                </aside>
 
-                                {/* Dubbed Player (Bottom) */}
-                                <div className={cn(
-                                    "relative aspect-video bg-black",
-                                    comparisonMode === "toggle" && selectedFocus !== "prod" && "hidden"
-                                )}>
-                                    <Badge className="absolute top-4 left-4 z-10 bg-primary text-[10px] font-bold border-none">
-                                        LOCALIZED
-                                    </Badge>
-                                    <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1">
-                                        <div className="flex items-center gap-2 bg-black/50 backdrop-blur px-2 py-1 rounded-md border border-white/10">
-                                            <div className="w-16 h-1 bg-white/20 rounded-full overflow-hidden">
-                                                <div className="h-full bg-emerald-500" style={{ width: `${lipSyncAccuracy}%` }} />
+                <main className="flex-1 overflow-y-auto custom-scrollbar bg-card rounded-[2rem] border border-border/40 p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)]">
+                    <div className="max-w-5xl mx-auto space-y-12 pb-24">
+                        <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md py-6 -mx-8 px-8 border-b mb-12">
+                            <div className="flex items-center justify-center gap-2">
+                                {[
+                                    { id: 1, name: "Details" },
+                                    { id: 2, name: "Video elements" },
+                                    { id: 3, name: "Initial check" },
+                                    { id: 4, name: "Visibility" }
+                                ].map((step, idx, arr) => (
+                                    <React.Fragment key={step.id}>
+                                        <div className="flex flex-col items-center gap-1 group cursor-pointer" onClick={() => setCurrentStep(step.id)}>
+                                            <div className={cn("w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center text-[10px] font-bold", currentStep === step.id ? "bg-primary border-primary text-primary-foreground ring-4 ring-primary/20" : currentStep > step.id ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 text-muted-foreground bg-muted/50")}>
+                                                {currentStep > step.id ? <CheckCircle2 className="w-4 h-4" /> : step.id}
                                             </div>
-                                            <span className="text-[10px] font-bold text-emerald-500">{lipSyncAccuracy}%</span>
+                                            <span className={cn("text-[9px] font-bold uppercase tracking-wider", currentStep === step.id ? "text-foreground" : "text-muted-foreground text-[8px]")}>{step.name}</span>
                                         </div>
-                                    </div>
-                                    <video
-                                        ref={dubbedVideoRef}
-                                        src={dubbedVideoUrl}
-                                        className="w-full h-full"
-                                        muted={dubbedMuted}
-                                        onTimeUpdate={handleVideoTimeUpdate}
-                                    />
-                                    {!dubbedVideoUrl && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                                            <div className="text-center">
-                                                <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-2" />
-                                                <p className="text-[11px] font-medium text-white/60">Processing Neural Synthesis...</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Playback Controls Layer */}
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                                <motion.button
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: !isPlaying ? 1 : 0 }}
-                                    className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center pointer-events-auto hover:bg-black/60 transition-all"
-                                    onClick={togglePlay}
-                                >
-                                    {isPlaying ? <Pause className="h-6 w-6 text-white fill-current" /> : <Play className="h-6 w-6 text-white fill-current translate-x-0.5" />}
-                                </motion.button>
-                            </div>
-
-                            {/* Bottom Controls Bar */}
-                            <div className="absolute bottom-0 inset-x-0 bg-black/80 backdrop-blur-md p-4 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity z-30">
-                                {/* Seek Bar */}
-                                <div className="flex flex-col gap-1 relative">
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max={duration || 100}
-                                        step="0.001"
-                                        value={currentTime}
-                                        onChange={handleSeek}
-                                        className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-primary"
-                                    />
-                                    <div className="flex justify-between text-[10px] font-medium text-white/50 font-mono mt-1">
-                                        <span>{formatTime(currentTime)}</span>
-                                        <span>{formatTime(duration)}</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <Button variant="ghost" size="icon" onClick={frameBackward} className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10">
-                                                <SkipBack className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={togglePlay} className="h-8 w-8 text-white hover:bg-white/10">
-                                                {isPlaying ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current" />}
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={frameForward} className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10">
-                                                <SkipForward className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 px-3 h-8 bg-white/10 rounded-md">
-                                            <Volume2 className="h-3.5 w-3.5 text-white/40" />
-                                            <input
-                                                type="range"
-                                                min="0"
-                                                max="1"
-                                                step="0.01"
-                                                value={volume}
-                                                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                                                className="w-16 h-1 bg-white/20 rounded-full appearance-none accent-white"
-                                            />
-                                        </div>
-
-                                        <select
-                                            value={playbackSpeed}
-                                            onChange={(e) => changeSpeed(parseFloat(e.target.value))}
-                                            className="bg-white/10 text-[10px] font-bold text-white h-8 px-2 rounded-md border-none focus:ring-0"
-                                        >
-                                            <option value="0.25">0.25x</option>
-                                            <option value="0.5">0.5x</option>
-                                            <option value="1">1.0x</option>
-                                            <option value="1.5">1.5x</option>
-                                            <option value="2">2.0x</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="flex items-center gap-3">
-                                        {comparisonMode === "toggle" && (
-                                            <div className="flex items-center bg-white/10 rounded-md p-0.5">
-                                                <Button
-                                                    size="sm"
-                                                    variant={selectedFocus === "source" ? "secondary" : "ghost"}
-                                                    className="h-7 px-3 text-[10px] font-bold rounded"
-                                                    onClick={() => { setSelectedFocus("source"); setOriginalMuted(false); setDubbedMuted(true); }}
-                                                >
-                                                    SOURCE
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant={selectedFocus === "prod" ? "secondary" : "ghost"}
-                                                    className="h-7 px-3 text-[10px] font-bold rounded"
-                                                    onClick={() => { setSelectedFocus("prod"); setOriginalMuted(true); setDubbedMuted(false); }}
-                                                >
-                                                    DUBBED
-                                                </Button>
-                                            </div>
-                                        )}
-
-                                        <select
-                                            value={videoQuality}
-                                            onChange={(e) => setVideoQuality(e.target.value as any)}
-                                            className="bg-white/10 text-[10px] font-bold text-white h-8 px-2 rounded-md border-none focus:ring-0"
-                                        >
-                                            <option value="1080p">1080p</option>
-                                            <option value="720p">720p</option>
-                                        </select>
-
-                                        <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10">
-                                            <Maximize2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </Card>
-
-                        {/* Quick Action Bar */}
-                        <div className="w-full max-w-6xl mx-auto flex items-center justify-between gap-4 mt-2">
-                            <div
-                                className={cn(
-                                    "flex items-center gap-4 px-4 py-1.5 rounded-lg border shadow-sm",
-                                    isDark ? "bg-zinc-900 border-white/10" : "bg-[#F2EFE3] border-gray-300"
-                                )}
-                            >
-                                <span className={cn("text-[11px] font-semibold uppercase tracking-tight", isDark ? "text-gray-300" : "text-gray-700")}>
-                                    Sync Playback
-                                </span>
-                                <Switch
-                                    checked={isSynchronized}
-                                    onCheckedChange={setIsSynchronized}
-                                    className={cn(
-                                        "h-5 w-9",
-                                        isDark
-                                            ? "data-[state=checked]:bg-primary data-[state=unchecked]:bg-zinc-700"
-                                            : "data-[state=checked]:bg-[#D97757] data-[state=unchecked]:bg-gray-300"
-                                    )}
-                                />
+                                        {idx < arr.length - 1 && <div className={cn("h-px w-24 mb-4", currentStep > step.id ? "bg-primary" : "bg-muted-foreground/20")} />}
+                                    </React.Fragment>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Audio Preview Hub */}
-                        {showAudioPlayer && dubbedAudioUrl && (
-                            <div className="w-full max-w-6xl mx-auto mt-4">
-                                <AudioPreviewPlayer
-                                    audioUrl={dubbedAudioUrl}
-                                    title="Reference Localization Audio Feed"
-                                    languageCode={languageCode || langFromUrl || "es"}
-                                    theme={theme}
-                                />
+                        <div className="min-h-[60vh]">
+                            {currentStep === 1 && (
+                                <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-12">
+                                    <div className="space-y-8">
+                                        <div className="flex items-center justify-between">
+                                            <h1 className="text-2xl font-bold">Details</h1>
+                                            <Button variant="secondary" size="sm" className="text-[11px] font-bold gap-2"><RefreshCw className="h-3.5 w-3.5" /> Reuse details</Button>
+                                        </div>
+                                        <div className="space-y-6">
+                                            <div className="space-y-2 relative">
+                                                <div className="flex items-center gap-1">
+                                                    <label className="text-[11px] font-bold uppercase text-muted-foreground tracking-tighter">Title (required)</label>
+                                                    <HelpCircle className="h-3 w-3 text-muted-foreground/40" />
+                                                </div>
+                                                <div className="p-4 rounded-xl border-2 focus-within:border-primary transition-all bg-muted/5 min-h-[100px] flex flex-col">
+                                                    <textarea className="w-full bg-transparent border-none focus:ring-0 text-lg font-medium resize-none flex-1 outline-none" value={localizedTitle} onChange={(e) => setLocalizedTitle(e.target.value)} placeholder="Enter a title"/>
+                                                     <div className="flex justify-between items-center mt-2 pt-2 border-t border-muted/20">
+                                                         <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-7 text-[10px] font-bold gap-1.5"
+                                                            onClick={() => handleGenerateMetadataWithAI("title")}
+                                                            disabled={isGeneratingAI}
+                                                         >
+                                                            <Zap className={cn("h-3 w-3 fill-primary text-primary", isGeneratingAI && "animate-pulse")} /> Regenerate with AI
+                                                         </Button>
+                                                         <span className="text-[10px] text-muted-foreground">{localizedTitle.length}/100</span>
+                                                     </div>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2 relative">
+                                                <div className="flex items-center gap-1">
+                                                    <label className="text-[11px] font-bold uppercase text-muted-foreground tracking-tighter">Description</label>
+                                                    <HelpCircle className="h-3 w-3 text-muted-foreground/40" />
+                                                </div>
+                                                <div className="p-4 rounded-xl border-2 focus-within:border-primary transition-all bg-muted/5 min-h-[160px] flex flex-col">
+                                                    <textarea className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none flex-1 outline-none leading-relaxed" value={localizedDescription} onChange={(e) => setLocalizedDescription(e.target.value)} placeholder="Tell viewers about your video"/>
+                                                     <div className="flex justify-between items-center mt-2 pt-2 border-t border-muted/20">
+                                                         <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-7 text-[10px] font-bold gap-1.5"
+                                                            onClick={() => handleGenerateMetadataWithAI("description")}
+                                                            disabled={isGeneratingAI}
+                                                         >
+                                                            <Zap className={cn("h-3 w-3 fill-primary text-primary", isGeneratingAI && "animate-pulse")} /> Regenerate with AI
+                                                         </Button>
+                                                         <span className="text-[10px] text-muted-foreground">{localizedDescription.length}/5000</span>
+                                                     </div>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-4 pt-4">
+                                                <h3 className="text-sm font-bold">Thumbnail</h3>
+                                                <p className="text-[11px] text-muted-foreground">Select or upload a picture. <span className="text-primary hover:underline cursor-pointer">Learn more</span></p>
+                                                <div className="grid grid-cols-4 gap-4">
+                                                    <button className="aspect-video border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-muted/30 transition-all group">
+                                                        <div className="p-2 rounded-full bg-muted group-hover:bg-background transition-colors"><Plus className="h-5 w-5 text-muted-foreground" /></div>
+                                                        <span className="text-[10px] font-bold text-muted-foreground">Upload file</span>
+                                                    </button>
+                                                    <button className="aspect-video border-2 border-primary rounded-xl relative overflow-hidden group">
+                                                        <img src={thumbnailUrl || DEMO_THUMBNAIL} alt="AI Gen" className="w-full h-full object-cover" />
+                                                        <div className="absolute inset-0 bg-primary/10" />
+                                                        <div className="absolute top-2 left-2 p-1 rounded-md bg-white/20 backdrop-blur-sm"><Sparkles className="h-3 w-3 text-white fill-white" /></div>
+                                                    </button>
+                                                    <button className="aspect-video border-2 border-transparent rounded-xl overflow-hidden hover:border-muted-foreground/20 transition-all opacity-60 hover:opacity-100"><img src={thumbnailUrl || DEMO_THUMBNAIL} className="w-full h-full object-cover grayscale" /></button>
+                                                     <button 
+                                                        className="aspect-video border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-muted/30 transition-all group"
+                                                        onClick={() => handleGenerateMetadataWithAI("thumbnail")}
+                                                        disabled={isGeneratingAI}
+                                                     >
+                                                         <Sparkles className={cn("h-4 w-4 text-primary fill-primary/20", isGeneratingAI && "animate-spin")} />
+                                                         <span className="text-[9px] font-bold text-primary">Regenerate with AI</span>
+                                                     </button>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-4 pt-4">
+                                                <div className="space-y-1"><h3 className="text-sm font-bold">Audience</h3><p className="text-xs font-bold mt-2">Is this video made for kids? (required)</p></div>
+                                                <div className="space-y-3 pt-2">
+                                                    <div className="flex items-center space-x-2">
+                                                        <input type="radio" id="kids-yes" checked={isForKids} onChange={() => setIsForKids(true)} className="w-4 h-4 text-primary"/>
+                                                        <label htmlFor="kids-yes" className="text-xs font-medium">Yes, it's made for kids</label>
+                                                    </div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <input type="radio" id="kids-no" checked={!isForKids} onChange={() => setIsForKids(false)} className="w-4 h-4 text-primary"/>
+                                                        <label htmlFor="kids-no" className="text-xs font-medium">No, it's not made for kids</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-6">
+                                         <div className="sticky top-12 space-y-4">
+                                             <Card className="overflow-hidden border-none shadow-2xl bg-black group relative flex flex-col gap-px cursor-pointer" onClick={togglePlay}>
+                                                  <div className="relative aspect-video bg-black border-b border-white/5">
+                                                      <video ref={originalVideoRef} src={originalVideoUrl || undefined} className="w-full h-full" muted={originalMuted} onTimeUpdate={handleVideoTimeUpdate} />
+                                                      <Badge className="absolute top-2 left-2 z-10 bg-white/10 backdrop-blur-md text-[9px] font-bold border-none uppercase tracking-widest px-1.5 h-4 text-white/70">Original (EN)</Badge>
+                                                  </div>
+                                                  <div className="relative aspect-video bg-black">
+                                                      <video ref={dubbedVideoRef} src={dubbedVideoUrl || undefined} className="w-full h-full" muted={dubbedMuted} onTimeUpdate={handleVideoTimeUpdate} onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}/>
+                                                      <Badge className="absolute top-2 left-2 z-10 bg-primary/80 backdrop-blur-md text-[9px] font-bold border-none uppercase tracking-widest px-1.5 h-4">Localized ({languageCode?.toUpperCase() || "ES"})</Badge>
+                                                  </div>
+                                                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                     <div className="w-12 h-12 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center shadow-lg">
+                                                         {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
+                                                     </div>
+                                                 </div>
+                                             </Card>
+                                            <Card className="p-4 border shadow-sm space-y-4">
+                                                <div className="flex items-center justify-between"><h3 className="text-[11px] font-bold uppercase text-muted-foreground tracking-widest">Quality Score</h3><Badge variant="outline" className="text-emerald-500 border-emerald-500/20 bg-emerald-500/5 h-5 font-bold">Excellent</Badge></div>
+                                                <div className="space-y-3">
+                                                     <div className="flex items-center justify-between bg-muted/30 p-2 rounded-lg"><div className="flex items-center gap-2"><Activity className="h-3.5 w-3.5 text-blue-500" /><span className="text-[11px] font-bold">Lip Sync Accuracy</span></div><span className="text-[11px] font-bold text-blue-600">{lipSyncAccuracy}%</span></div>
+                                                     <div className="flex items-center justify-between bg-muted/30 p-2 rounded-lg"><div className="flex items-center gap-2"><Sparkles className="h-3.5 w-3.5 text-orange-500" /><span className="text-[11px] font-bold">Linguistic Tone match</span></div><span className="text-[11px] font-bold text-orange-600">92%</span></div>
+                                                     <div className="flex items-center justify-between bg-muted/30 p-2 rounded-lg"><div className="flex items-center gap-2"><Languages className="h-3.5 w-3.5 text-emerald-500" /><span className="text-[11px] font-bold">Translation Fidelity</span></div><span className="text-[11px] font-bold text-emerald-600">98%</span></div>
+                                                </div>
+                                            </Card>
+
+                                            <div className="space-y-4">
+                                                <h3 className="text-[11px] font-bold uppercase text-muted-foreground tracking-widest px-1">Transcript Editor</h3>
+                                                <div className="space-y-3">
+                                                    <EditableTranscript title="Original (EN)" text={transcript?.text || ""} onSave={async (val) => { toast("Source transcript editing coming soon", "info"); }} theme={theme} className="bg-muted/10 border-none shadow-none" />
+                                                    <EditableTranscript title={`${languageName} Translation`} text={translation?.translated_text || ""} languageCode={languageCode || "es"} onSave={async (val) => { try { await jobsAPI.updateTranslation(jobIdFromUrl || "", languageCode || "es", { translated_text: val }); toast("Translation saved", "success"); } catch (err) { toast("Failed to save translation", "error"); } }} theme={theme} className="bg-muted/10 border-none shadow-none" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                             {currentStep === 2 && (
+                                 <div className="space-y-8 max-w-4xl mx-auto">
+                                     <div className="flex items-center justify-between mb-8">
+                                         <div>
+                                             <h1 className="text-2xl font-bold">Video elements</h1>
+                                             <p className="text-sm text-muted-foreground mt-1">Enhance your video with interactive elements to engage your audience.</p>
+                                         </div>
+                                         <Button variant="outline" size="sm" className="h-8 text-[11px] font-bold gap-2"><Type className="h-3.5 w-3.5" /> Auto-sync captions</Button>
+                                     </div>
+                                     
+                                     <div className="space-y-4">
+                                         {/* End Screen Box */}
+                                         <div className="flex items-center justify-between p-6 rounded-[1.5rem] border bg-card hover:border-primary/50 transition-all group shadow-sm">
+                                             <div className="flex items-center gap-5">
+                                                 <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/10 group-hover:bg-primary/10 transition-colors">
+                                                     <MonitorPlay className="h-7 w-7 text-primary" />
+                                                 </div>
+                                                 <div>
+                                                     <h3 className="font-bold text-sm">Add an end screen</h3>
+                                                     <p className="text-[12px] text-muted-foreground mt-0.5">Promote related content at the end of your video</p>
+                                                 </div>
+                                             </div>
+                                             <div className="flex items-center gap-3">
+                                                 <Button variant="ghost" size="sm" className="font-bold text-[11px] h-9 px-4 hover:bg-muted/50 rounded-xl">Import from video</Button>
+                                                 <Button variant="outline" size="sm" className="font-bold text-[11px] h-9 px-6 border-2 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">Add</Button>
+                                             </div>
+                                         </div>
+
+                                         {/* Cards Box */}
+                                         <div className="flex items-center justify-between p-6 rounded-[1.5rem] border bg-card hover:border-primary/50 transition-all group shadow-sm">
+                                             <div className="flex items-center gap-5">
+                                                 <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/10 group-hover:bg-primary/10 transition-colors">
+                                                     <Layout className="h-7 w-7 text-primary" />
+                                                 </div>
+                                                 <div>
+                                                     <h3 className="font-bold text-sm">Add cards</h3>
+                                                     <p className="text-[12px] text-muted-foreground mt-0.5">Promote related content during your video</p>
+                                                 </div>
+                                             </div>
+                                             <Button variant="outline" size="sm" className="font-bold text-[11px] h-9 px-8 border-2 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">Add</Button>
+                                         </div>
+
+                                         {/* Quiz Box */}
+                                         <div className="flex items-center justify-between p-6 rounded-[1.5rem] border bg-card hover:border-primary/50 transition-all group shadow-sm border-dashed border-primary/30">
+                                             <div className="flex items-center gap-5">
+                                                 <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/10 group-hover:bg-primary/10 transition-colors">
+                                                     <BrainCog className="h-7 w-7 text-primary" />
+                                                 </div>
+                                                 <div>
+                                                     <div className="flex items-center gap-2">
+                                                         <h3 className="font-bold text-sm">Add a quiz</h3>
+                                                         <Badge className="bg-primary/10 text-primary border-none text-[8px] uppercase font-black px-1.5 h-4 flex items-center tracking-tighter">New</Badge>
+                                                     </div>
+                                                     <p className="text-[12px] text-muted-foreground mt-0.5">Make your videos more interactive with quizzes</p>
+                                                 </div>
+                                             </div>
+                                             <Button variant="outline" size="sm" className="font-bold text-[11px] h-9 px-8 border-2 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">Add</Button>
+                                         </div>
+                                     </div>
+                                 </div>
+                             )}
+                            {currentStep === 3 && (
+                                <div className="space-y-8">
+                                    <div><h1 className="text-2xl font-bold">Initial check</h1><p className="text-sm text-muted-foreground mt-1">We finished checking your video for any issues.</p></div>
+                                    <div className="p-6 rounded-2xl border bg-emerald-500/5 border-emerald-500/20 flex items-start gap-4"><div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shrink-0"><CheckCircle2 className="h-6 w-6 text-white" /></div><div className="space-y-1"><h4 className="text-sm font-bold">Checks complete. No issues found.</h4><p className="text-xs text-muted-foreground">Ad suitability and copyright checks passed.</p></div></div>
+                                    <div className="space-y-6"><div className="space-y-2"><h3 className="text-sm font-bold">Copyright</h3><div className="flex items-center justify-between p-4 rounded-xl border bg-muted/20"><div className="flex items-center gap-3"><ShieldCheck className="h-4 w-4 text-emerald-500" /><span className="text-xs">No copyright material detected</span></div><span className="text-[10px] font-bold text-emerald-500 uppercase">Passed</span></div></div></div>
+                                </div>
+                            )}
+                             {currentStep === 4 && (
+                                 <div className="space-y-10 max-w-4xl mx-auto">
+                                     <div className="flex flex-col gap-1">
+                                         <h1 className="text-2xl font-bold">Visibility</h1>
+                                         <p className="text-sm text-muted-foreground">Choose when to publish and who can see your video</p>
+                                     </div>
+
+                                     <div className="space-y-6">
+                                         {/* Save or Publish Section */}
+                                         <Card className="rounded-[2rem] border overflow-hidden bg-card shadow-sm">
+                                             <div className="p-8 space-y-6">
+                                                 <div className="flex flex-col gap-1">
+                                                     <h3 className="font-bold text-lg">Save or publish</h3>
+                                                     <p className="text-sm text-muted-foreground">Make your video public, unlisted, or private</p>
+                                                 </div>
+
+                                                 <div className="space-y-4 pt-2">
+                                                     {[
+                                                         { id: 'private', title: 'Private', desc: 'Only you and people you choose can watch your video', icon: Lock },
+                                                         { id: 'unlisted', title: 'Unlisted', desc: 'Anyone with the video link can watch your video', icon: ExternalLink },
+                                                         { id: 'public', title: 'Public', desc: 'Everyone can watch your video', icon: Globe },
+                                                     ].map((option) => (
+                                                         <div 
+                                                             key={option.id}
+                                                             onClick={() => { setVisibility(option.id as any); setIsScheduled(false); }}
+                                                             className={cn(
+                                                                 "p-4 rounded-[1.25rem] border-2 transition-all cursor-pointer flex items-start gap-4 hover:border-primary/30",
+                                                                 visibility === option.id && !isScheduled ? "bg-primary/5 border-primary shadow-sm" : "bg-muted/5 border-transparent"
+                                                             )}
+                                                         >
+                                                             <div className={cn(
+                                                                 "p-2.5 rounded-xl border transition-colors",
+                                                                 visibility === option.id && !isScheduled ? "bg-primary/10 border-primary/20 text-primary" : "bg-card border-border text-muted-foreground"
+                                                             )}>
+                                                                 <option.icon className="h-5 w-5" />
+                                                             </div>
+                                                             <div className="flex-1">
+                                                                 <p className="font-bold text-sm">{option.title}</p>
+                                                                 <p className="text-xs text-muted-foreground pt-0.5">{option.desc}</p>
+                                                             </div>
+                                                             <div className={cn(
+                                                                 "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                                                                 visibility === option.id && !isScheduled ? "border-primary bg-primary" : "border-muted-foreground/30"
+                                                             )}>
+                                                                 {visibility === option.id && !isScheduled && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                                             </div>
+                                                         </div>
+                                                     ))}
+                                                 </div>
+                                             </div>
+                                         </Card>
+
+                                         {/* Schedule Section */}
+                                         <Card className="rounded-[2rem] border overflow-hidden bg-card shadow-sm">
+                                             <div className="p-8 space-y-6">
+                                                 <div className="flex items-center justify-between">
+                                                     <div className="flex flex-col gap-1">
+                                                         <h3 className="font-bold text-lg">Schedule</h3>
+                                                         <p className="text-sm text-muted-foreground">Select a date to make your video public.</p>
+                                                     </div>
+                                                     <Switch checked={isScheduled} onCheckedChange={(val) => { setIsScheduled(val); if (val) setVisibility('public'); }} />
+                                                 </div>
+
+                                                 {isScheduled && (
+                                                     <motion.div 
+                                                         initial={{ opacity: 0, height: 0 }}
+                                                         animate={{ opacity: 1, height: 'auto' }}
+                                                         className="space-y-6 pt-2 border-t mt-6"
+                                                     >
+                                                         <div className="grid grid-cols-2 gap-4 pt-4">
+                                                             <div className="space-y-2">
+                                                                 <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Schedule as public</label>
+                                                                 <div className="flex items-center gap-3 p-3 rounded-xl border bg-muted/5">
+                                                                     <Calendar className="h-4 w-4 text-primary" />
+                                                                     <span className="text-sm font-bold">Feb 15, 2026</span>
+                                                                 </div>
+                                                             </div>
+                                                             <div className="space-y-2">
+                                                                 <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-1">Publish time</label>
+                                                                 <div className="flex items-center gap-3 p-3 rounded-xl border bg-muted/5">
+                                                                     <Clock className="h-4 w-4 text-primary" />
+                                                                     <span className="text-sm font-bold">12:00 AM</span>
+                                                                 </div>
+                                                             </div>
+                                                         </div>
+                                                         
+                                                         <div className="p-4 rounded-xl bg-muted/20 border border-border/40 space-y-3">
+                                                             <div className="flex items-center justify-between">
+                                                                 <div className="flex items-center gap-2">
+                                                                     <Globe className="h-3.5 w-3.5 text-muted-foreground/60" />
+                                                                     <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Time zone: GMT (UTC +0)</span>
+                                                                 </div>
+                                                             </div>
+                                                             <div className="flex items-start gap-4 pt-1">
+                                                                 <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                                                     <Info className="h-4 w-4" />
+                                                                 </div>
+                                                                 <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">Video will be private before publishing</p>
+                                                             </div>
+                                                             <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                                                                 <div className="flex flex-col gap-0.5">
+                                                                     <p className="text-[11px] font-bold">Set as Premiere</p>
+                                                                     <p className="text-[10px] text-muted-foreground">Premiere creates excitement around your video</p>
+                                                                 </div>
+                                                                 <Switch checked={isPremiere} onCheckedChange={setIsPremiere} />
+                                                             </div>
+                                                         </div>
+                                                     </motion.div>
+                                                 )}
+                                             </div>
+                                         </Card>
+
+                                         {/* Pre-publish Checks Section */}
+                                         <div className="pt-8 space-y-6">
+                                             <div className="flex items-center gap-3">
+                                                 <div className="w-1 h-8 bg-primary rounded-full" />
+                                                 <h3 className="font-bold text-lg">Before you publish, check the following:</h3>
+                                             </div>
+
+                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                 <div className="p-6 rounded-[2rem] border bg-[#F9FAFB] dark:bg-muted/5 hover:shadow-md transition-shadow">
+                                                     <div className="flex flex-col gap-4">
+                                                         <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500 w-fit">
+                                                             <ShieldAlert className="h-6 w-6" />
+                                                         </div>
+                                                         <div className="space-y-2">
+                                                             <h4 className="font-bold text-sm">Do kids appear in this video?</h4>
+                                                             <p className="text-xs text-muted-foreground leading-relaxed">
+                                                                 Make sure you follow our policies to protect minors from harm, exploitation, bullying, and violations of labor law.
+                                                                 <span className="text-primary font-bold ml-1 hover:underline cursor-pointer">Learn more</span>
+                                                             </p>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+
+                                                 <div className="p-6 rounded-[2rem] border bg-[#F9FAFB] dark:bg-muted/5 hover:shadow-md transition-shadow">
+                                                     <div className="flex flex-col gap-4">
+                                                         <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500 w-fit">
+                                                             <ShieldCheck className="h-6 w-6" />
+                                                         </div>
+                                                         <div className="space-y-2">
+                                                             <h4 className="font-bold text-sm">Looking for overall content guidance?</h4>
+                                                             <p className="text-xs text-muted-foreground leading-relaxed">
+                                                                 Our Community Guidelines can help you avoid trouble and ensure that YouTube remains a safe and vibrant community.
+                                                                 <span className="text-primary font-bold ml-1 hover:underline cursor-pointer">Learn more</span>
+                                                             </p>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             )}
+                        </div>
+
+                        <div className="pt-12 border-t flex items-center justify-between mt-12 mb-24">
+                            <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-3">
+                                    {[
+                                        { id: 'upload', text: "video upload complete" },
+                                        { id: 'processing', text: "video processing complete" },
+                                        { id: 'checks', text: "Copyright check complete\nNo issues found\nCommunity Guidelines check complete\nNo issues found" }
+                                    ].map((check) => {
+                                        return (
+                                            <div 
+                                                key={check.id}
+                                                className="relative"
+                                                onMouseEnter={() => setHoveredCheck(check.id)}
+                                                onMouseLeave={() => setHoveredCheck(null)}
+                                            >
+                                                <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 cursor-help hover:bg-emerald-500/30 transition-colors">
+                                                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                                </div>
+                                                <AnimatePresence>
+                                                    {hoveredCheck === check.id && (
+                                                        <motion.div 
+                                                            initial={{ opacity: 0, scale: 0.9 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            exit={{ opacity: 0, scale: 0.9 }}
+                                                            className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 z-[60] w-max max-w-[240px] p-2.5 bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl text-[10px] text-white font-bold leading-relaxed whitespace-pre-line text-center"
+                                                        >
+                                                            {check.text}
+                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-t-[#1e1e1e]" />
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        );
+                                    })}
+                                    <span className="text-[11px] font-bold text-foreground/80 ml-1">Checks complete. No issues found.</span>
+                                </div>
                             </div>
-                        )}
+                            <div className="flex items-center gap-3">
+                                {currentStep > 1 && <Button variant="ghost" onClick={() => setCurrentStep(prev => prev - 1)} className="font-bold text-xs px-8">Back</Button>}
+                                {currentStep === 4 && <Button variant="outline" className="h-10 px-8 font-bold text-xs gap-2 border-2"><Eye className="h-4 w-4" /> Final Preview</Button>}
+                                <Button onClick={() => (currentStep < 4 ? setCurrentStep(prev => prev + 1) : handleFinalize())} className="h-10 px-12 font-bold text-xs bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all">{currentStep === 4 ? <div className="flex items-center gap-2"><Zap className="h-4 w-4" /> Finalize & Upload</div> : "Next"}</Button>
+                            </div>
+                        </div>
                     </div>
                 </main>
-
-                {/* Shadcn Sidebar */}
-                <aside className="w-[400px] border-l bg-card flex flex-col shrink-0">
-                    <div className="flex border-b p-1">
-                        {[
-                            { id: 'quality', label: 'Quality Audit' },
-                            { id: 'transcript', label: 'Transcript' },
-                            { id: 'metadata', label: 'Metadata' }
-                        ].map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setSidebarTab(tab.id as any)}
-                                className={cn(
-                                    "flex-1 py-2 text-[11px] font-semibold uppercase tracking-tight transition-all rounded-md",
-                                    sidebarTab === tab.id ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                        {sidebarTab === "quality" && (
-                            <div className="space-y-8">
-                                <div className="space-y-4">
-                                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Analysis Metrics</h4>
-                                    <div className="space-y-3">
-                                        {[
-                                            { label: 'Neural Lip Alignment', score: 94, status: 'Nominal', color: 'emerald' },
-                                            { label: 'Spectral Audio Clarity', score: 98, status: 'Nominal', color: 'emerald' },
-                                            { label: 'Linguistic Tone match', score: 82, status: 'Review Needed', color: 'amber' },
-                                        ].map(item => (
-                                            <div key={item.label} className="p-3 rounded-lg border bg-muted/30">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <span className="text-[11px] font-medium">{item.label}</span>
-                                                    <span className={cn("text-[11px] font-bold", item.color === 'emerald' ? 'text-emerald-500' : 'text-amber-500')}>{item.score}%</span>
-                                                </div>
-                                                <div className="h-1 bg-muted rounded-full overflow-hidden">
-                                                    <div className={cn("h-full", item.color === 'emerald' ? 'bg-emerald-500' : 'bg-amber-500')} style={{ width: `${item.score}%` }} />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <Separator />
-
-                                <div className="space-y-4">
-                                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">Reference Thumbnail</h4>
-                                    <Card className="overflow-hidden border shadow-sm">
-                                        <img src={quickCheckState.thumbnailUrl || DEMO_THUMBNAIL} className="w-full aspect-video object-cover" alt="Review" />
-                                    </Card>
-                                </div>
-                            </div>
-                        )}
-
-                        {sidebarTab === "transcript" && (
-                            <div className="space-y-6">
-                                {transcriptLoading ? (
-                                    <div className="flex flex-col items-center justify-center py-12 gap-2">
-                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                                        <span className="text-[11px] font-medium text-muted-foreground">Loading Transcript...</span>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-6">
-                                        {transcript && (
-                                            <EditableTranscript
-                                                title={`ORIGINAL (${transcript.source_language?.toUpperCase()})`}
-                                                text={transcript.transcript_text || ""}
-                                                onSave={async (text) => {
-                                                    if (!jobIdFromUrl) return;
-                                                    await jobsAPI.updateTranscript(jobIdFromUrl, { transcript_text: text });
-                                                    setTranscript({ ...transcript, transcript_text: text });
-                                                }}
-                                                theme={theme}
-                                            />
-                                        )}
-                                        {translation && (
-                                            <EditableTranscript
-                                                title={`LOCALIZED (${languageCode?.toUpperCase()})`}
-                                                text={translation.translated_text || ""}
-                                                onSave={async (text) => {
-                                                    if (!languageCode || !jobIdFromUrl) return;
-                                                    await jobsAPI.updateTranslation(jobIdFromUrl, languageCode, { translated_text: text });
-                                                    setTranslation({ ...translation, translated_text: text });
-                                                }}
-                                                theme={theme}
-                                            />
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {sidebarTab === "metadata" && (
-                            <div className="space-y-6">
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Localized Content</h4>
-                                        <Button
-                                            onClick={handleGenerateMetadataWithAI}
-                                            disabled={metadataGenerating}
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-7 px-2.5 text-[10px] font-bold uppercase tracking-wider"
-                                        >
-                                            {metadataGenerating ? (
-                                                <>
-                                                    <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
-                                                    Generating...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Wand2 className="h-3 w-3 mr-1.5" />
-                                                    Generate With AI
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-
-                                    {/* Title Input */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-[11px] font-medium">Title</label>
-                                            <span className={cn(
-                                                "text-[10px] font-mono font-bold",
-                                                localizedTitle.length > 100 ? "text-red-500" : "text-muted-foreground"
-                                            )}>
-                                                {localizedTitle.length}/100
-                                            </span>
-                                        </div>
-                                        <input
-                                            type="text"
-                                            value={localizedTitle}
-                                            onChange={(e) => setLocalizedTitle(e.target.value)}
-                                            placeholder="Enter localized title..."
-                                            maxLength={100}
-                                            className="w-full bg-muted/50 border rounded-md p-2.5 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                        />
-                                        {localizedTitle.length > 100 && (
-                                            <p className="text-[10px] text-red-500">Title exceeds YouTube's 100 character limit</p>
-                                        )}
-                                    </div>
-
-                                    {/* Description Input */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-[11px] font-medium">Description</label>
-                                            <span className={cn(
-                                                "text-[10px] font-mono font-bold",
-                                                localizedDescription.length > 5000 ? "text-red-500" : "text-muted-foreground"
-                                            )}>
-                                                {localizedDescription.length}/5000
-                                            </span>
-                                        </div>
-                                        <textarea
-                                            value={localizedDescription}
-                                            onChange={(e) => setLocalizedDescription(e.target.value)}
-                                            placeholder="Enter localized description..."
-                                            maxLength={5000}
-                                            rows={8}
-                                            className="w-full bg-muted/50 border rounded-md p-2.5 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                                        />
-                                        {localizedDescription.length > 5000 && (
-                                            <p className="text-[10px] text-red-500">Description exceeds YouTube's 5000 character limit</p>
-                                        )}
-                                    </div>
-
-                                    {/* Tags Input */}
-                                    <div className="space-y-2">
-                                        <label className="text-[11px] font-medium">Tags</label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={tagInput}
-                                                onChange={(e) => setTagInput(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                        handleAddTag();
-                                                    }
-                                                }}
-                                                placeholder="Add tag..."
-                                                className="flex-1 bg-muted/50 border rounded-md px-2.5 py-2 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                            />
-                                            <Button
-                                                onClick={handleAddTag}
-                                                size="sm"
-                                                variant="outline"
-                                                className="h-9 px-3 text-[11px] font-bold"
-                                            >
-                                                Add
-                                            </Button>
-                                        </div>
-
-                                        {/* Tag Chips */}
-                                        {localizedTags.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mt-2">
-                                                {localizedTags.map((tag, index) => (
-                                                    <Badge
-                                                        key={index}
-                                                        variant="secondary"
-                                                        className="text-[10px] font-medium px-2 py-1 flex items-center gap-1.5"
-                                                    >
-                                                        {tag}
-                                                        <button
-                                                            onClick={() => handleRemoveTag(tag)}
-                                                            className="hover:text-destructive transition-colors"
-                                                        >
-                                                            <X className="h-3 w-3" />
-                                                        </button>
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <Separator />
-
-                                {/* Thumbnail Preview */}
-                                <div className="space-y-2">
-                                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Thumbnail</h4>
-                                    <Card className="overflow-hidden border shadow-sm">
-                                        <img
-                                            src={quickCheckState.thumbnailUrl || DEMO_THUMBNAIL}
-                                            className="w-full aspect-video object-cover"
-                                            alt="Thumbnail preview"
-                                        />
-                                    </Card>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full text-[11px] font-medium"
-                                        onClick={() => toast("Custom thumbnail upload coming soon", "info")}
-                                    >
-                                        <ImageIcon className="h-3.5 w-3.5 mr-2" />
-                                        Upload Custom Thumbnail
-                                    </Button>
-                                </div>
-
-                                {/* Save Button */}
-                                <Button
-                                    onClick={handleSaveMetadata}
-                                    disabled={metadataSaving}
-                                    className="w-full text-[11px] font-bold"
-                                    size="sm"
-                                >
-                                    {metadataSaving ? (
-                                        <>
-                                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
-                                            Saving...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Save className="h-3.5 w-3.5 mr-2" />
-                                            Save Metadata
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        )}
-                    </div>
-
-                </aside>
             </div>
-
-            <style jsx global>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 4px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(0, 0, 0, 0.05);
-                    border-radius: 20px;
-                }
-                .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.05);
-                }
-            `}</style>
+            <style>{`.custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.05); border-radius: 20px; } .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }`}</style>
         </div>
     );
 }

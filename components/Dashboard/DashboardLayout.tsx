@@ -36,6 +36,20 @@ export default function DashboardLayout() {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
 
+  // Auto-collapse sidebars on review view
+  const prevViewRef = React.useRef<ViewType>(currentView);
+  React.useEffect(() => {
+    if (currentView === "review") {
+      setLeftSidebarOpen(false);
+      setRightSidebarOpen(false);
+    } else if (prevViewRef.current === "review") {
+      // Restore sidebars when leaving review mode
+      setLeftSidebarOpen(true);
+      setRightSidebarOpen(true);
+    }
+    prevViewRef.current = currentView;
+  }, [currentView]);
+
   // Fetch active jobs for badge count
   const { jobs } = useDashboardJobs({
     projectId: selectedProject?.id,
