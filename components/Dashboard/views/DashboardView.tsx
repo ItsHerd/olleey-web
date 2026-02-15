@@ -26,6 +26,9 @@ import { useProject } from "@/lib/ProjectContext";
 import { cn } from "@/lib/utils";
 import { jobsAPI } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
+import { useReview } from "@/lib/ReviewContext";
+import { useVideos } from "@/lib/useVideos";
+import { isDemoUser, YC_CEO_DEMO_VIDEO, YC_CEO_SPANISH_TRANSLATION } from "@/lib/mockDemoData";
 
 interface DashboardViewProps {
   onSelectJob: (item: SelectedItem) => void;
@@ -62,6 +65,8 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
   const { selectedProject } = useProject();
   const userId = user?.id;
   const isDark = theme === "dark";
+  const { openReview } = useReview();
+  const { videos } = useVideos();
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -94,6 +99,41 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
       });
       toast(err.message || "Failed to cancel job", "error");
     }
+  };
+
+  const handleReview = (job: any, langCode: string) => {
+    // Set selected item first
+    onSelectJob({ type: "job", id: job.job_id, data: job });
+
+    const video = videos.find(v => v.video_id === job.source_video_id);
+    const targetVideo = video || (isDemoUser(userId || "demo") && job.source_video_id === "demo_yc_ceo_video_001" ? YC_CEO_DEMO_VIDEO : null);
+    
+    if (!targetVideo) {
+      toast("Source video not found for this job", "error");
+      return;
+    }
+
+    const localization = (job.source_video_id === "demo_yc_ceo_video_001" && langCode === "es") 
+        ? YC_CEO_SPANISH_TRANSLATION 
+        : (targetVideo.localizations as any)?.[langCode];
+
+    openReview({
+      videoId: job.source_video_id,
+      languageCode: langCode,
+      jobId: job.job_id,
+      originalVideoUrl: (targetVideo as any).storage_url || (targetVideo as any).video_url,
+      dubbedVideoUrl: localization?.dubbed_video_url || "",
+      videoTitle: targetVideo.title,
+      videoDescription: targetVideo.description || "",
+      thumbnailUrl: targetVideo.thumbnail_url,
+      localizedTitle: localization?.title || "",
+      localizedDescription: localization?.description || "",
+      isApproved: localization?.status === 'approved',
+      approvedAt: targetVideo.published_at,
+      navigate: false
+    });
+
+    onViewChange?.("review");
   };
 
   // Split jobs into active and needs review, filtering out optimistically cancelled once
@@ -238,6 +278,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                           }
                           theme={theme}
                           onCancel={() => handleCancelJob(job.job_id)}
+                          onSelectLanguage={(lang) => handleReview(job, lang)}
                         />
                       </motion.div>
                     ))}
@@ -267,8 +308,10 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                           job={job}
                           onClick={() => {
                             onSelectJob({ type: "job", id: job.job_id, data: job });
+                            // Now we prefer language-specific review
+                            // but keep this for backwards compatibility
                             if (job.status === 'waiting_approval') {
-                              onViewChange?.("review");
+                              handleReview(job, job.target_languages[0] || "es");
                             } else {
                               onViewChange?.("dashboard");
                             }
@@ -276,6 +319,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                           theme={theme}
                           highlight="review"
                           onCancel={() => handleCancelJob(job.job_id)}
+                          onSelectLanguage={(lang) => handleReview(job, lang)}
                         />
                       </motion.div>
                     ))}
@@ -305,6 +349,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                           }
                           theme={theme}
                           onCancel={() => handleCancelJob(job.job_id)}
+                          onSelectLanguage={(lang) => handleReview(job, lang)}
                         />
                       </motion.div>
                     ))}

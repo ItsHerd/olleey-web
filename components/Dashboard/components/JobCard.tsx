@@ -14,6 +14,7 @@ import {
   Loader2
 } from "lucide-react";
 import { ProcessingJob } from "@/lib/api";
+import { getLanguageFlag } from "@/lib/languages";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ interface JobCardProps {
   theme: string;
   highlight?: "review" | "error";
   onCancel?: () => void;
+  onSelectLanguage?: (lang: string) => void;
 }
 
 const statusConfig = {
@@ -40,7 +42,7 @@ const statusConfig = {
   failed: { label: "Failed", color: "text-red-500", icon: AlertCircle },
 };
 
-export function JobCard({ job, onClick, theme, highlight, onCancel }: JobCardProps) {
+export function JobCard({ job, onClick, theme, highlight, onCancel, onSelectLanguage }: JobCardProps) {
   const isDark = theme === "dark";
   const cardBgClass = isDark ? "bg-[#1A1A1A]" : "bg-white";
   const textClass = isDark ? "text-gray-300" : "text-gray-700";
@@ -147,8 +149,29 @@ export function JobCard({ job, onClick, theme, highlight, onCancel }: JobCardPro
           </DropdownMenu>
         </div>
 
+        {/* Language Selection for Review */}
+        {job.status === 'waiting_approval' && (
+          <div className="mt-3 flex flex-wrap gap-1.5 pt-3 border-t border-dashed border-border/50">
+            {job.target_languages.map(lang => (
+              <Button
+                key={lang}
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectLanguage?.(lang);
+                }}
+                className={`h-7 px-2.5 text-[10px] font-bold gap-1.5 rounded-lg transition-all active:scale-95 ${isDark ? 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-primary/50' : 'bg-gray-50 border-gray-200 hover:bg-white hover:border-primary/50'}`}
+              >
+                <span className="text-xs leading-none">{getLanguageFlag(lang)}</span>
+                {lang.toUpperCase()}
+              </Button>
+            ))}
+          </div>
+        )}
+
         {/* Time Info */}
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="flex items-center gap-2 text-xs text-gray-500 mt-3">
           <Clock className="w-3 h-3" />
           <span>{new Date(job.created_at).toLocaleString()}</span>
         </div>

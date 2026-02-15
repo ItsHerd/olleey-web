@@ -14,7 +14,8 @@ import { useReview } from "@/lib/ReviewContext";
 import { API_BASE_URL, jobsAPI, settingsAPI, videosAPI } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useSettings } from "@/lib/SettingsContext";
-import { LANGUAGE_OPTIONS } from "@/lib/languages";
+import { LANGUAGE_OPTIONS, getLanguageFlag } from "@/lib/languages";
+import { isDemoUser, YC_CEO_DEMO_VIDEO, YC_CEO_SPANISH_TRANSLATION } from "@/lib/mockDemoData";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -82,6 +83,41 @@ export function RightSidebar({
   const [autoSyncAttempted, setAutoSyncAttempted] = useState(false);
   const [autoSyncingDetected, setAutoSyncingDetected] = useState(false);
   const [cancelledJobIds, setCancelledJobIds] = useState<Set<string>>(new Set());
+
+  const handleReview = (job: any, langCode: string) => {
+    // Set selected item first
+    onSelectItem?.({ type: "job", id: job.job_id, data: job });
+
+    const video = videos.find(v => v.video_id === job.source_video_id);
+    const targetVideo = video || (isDemoUser(userId || "demo") && job.source_video_id === "demo_yc_ceo_video_001" ? YC_CEO_DEMO_VIDEO : null);
+    
+    if (!targetVideo) {
+      toast("Source video not found for this job", "error");
+      return;
+    }
+
+    const localization = (job.source_video_id === "demo_yc_ceo_video_001" && langCode === "es") 
+        ? YC_CEO_SPANISH_TRANSLATION 
+        : (targetVideo.localizations as any)?.[langCode];
+
+    openReview({
+      videoId: job.source_video_id,
+      languageCode: langCode,
+      jobId: job.job_id,
+      originalVideoUrl: (targetVideo as any).storage_url || (targetVideo as any).video_url,
+      dubbedVideoUrl: localization?.dubbed_video_url || "",
+      videoTitle: targetVideo.title,
+      videoDescription: targetVideo.description || "",
+      thumbnailUrl: targetVideo.thumbnail_url,
+      localizedTitle: localization?.title || "",
+      localizedDescription: localization?.description || "",
+      isApproved: localization?.status === 'approved',
+      approvedAt: targetVideo.published_at,
+      navigate: false
+    });
+
+    onViewChange?.("review");
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -564,7 +600,7 @@ export function RightSidebar({
                 );
               })
             ) : (
-              <div className={`p-6 rounded-2xl border border-dashed ${isDark ? borderClass + " opacity-50" : "border-gray-400"} flex flex-col items-center justify-center text-center`}>
+              <div className={`p-6 rounded-2xl border border-dashed ${isDark ? "border-white/20 bg-white/[0.02]" : "border-gray-300 bg-gray-50/50"} flex flex-col items-center justify-center text-center`}>
                 <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? mutedTextClass : "text-gray-600"}`}>No new detections</p>
               </div>
             )}
@@ -647,18 +683,21 @@ export function RightSidebar({
                         <span className={`text-[12px] font-semibold truncate ${textClass} opacity-90 group-hover:opacity-100`}>
                           {video?.title || job.source_video_id}
                         </span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={`text-[10px] ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"}`}>
-                            {job.target_languages?.join(' • ')}
-                          </span>
-                          {video?.duration && (
-                            <>
-                              <span className={`text-[10px] ${isDark ? "text-gray-700" : "text-gray-400"}`}>•</span>
-                              <span className={`text-[9px] font-mono ${mutedTextClass} opacity-60`}>
-                                {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}
-                              </span>
-                            </>
-                          )}
+                        
+                        <div className="flex flex-wrap gap-1 mt-1.5 pb-1">
+                          {job.target_languages?.map(lang => (
+                            <button
+                              key={lang}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReview(job, lang);
+                              }}
+                              className={`h-5 px-1.5 flex items-center gap-1 rounded-md text-[9px] font-bold transition-all hover:ring-1 hover:ring-primary/50 active:scale-95 ${isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-white"}`}
+                            >
+                              <span>{getLanguageFlag(lang)}</span>
+                              {lang.toUpperCase()}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -666,7 +705,7 @@ export function RightSidebar({
                 );
               })
             ) : (
-              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-[#2A2A2A] opacity-40" : "border-gray-400"} flex flex-col items-center justify-center text-center`}>
+              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-white/10 bg-white/[0.02]" : "border-gray-300 bg-gray-50/50"} flex flex-col items-center justify-center text-center`}>
                 <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? mutedTextClass : "text-gray-600"}`}>All caught up!</p>
                 <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-400 bg-white/60"} flex items-center justify-center`}>
                   <Clock className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-500"}`} />
@@ -805,7 +844,7 @@ export function RightSidebar({
                 );
               })
             ) : (
-              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-[#2A2A2A] opacity-40" : "border-gray-400"} flex flex-col items-center justify-center text-center`}>
+              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-white/10 bg-white/[0.02]" : "border-gray-300 bg-gray-50/50"} flex flex-col items-center justify-center text-center`}>
                 <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? mutedTextClass : "text-gray-600"}`}>Quiet for now</p>
                 <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-400 bg-white/60"} flex items-center justify-center`}>
                   <Play className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-500"}`} />
