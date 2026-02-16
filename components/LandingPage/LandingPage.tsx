@@ -36,15 +36,14 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
                 onAuthenticated={onNavigation}
             />
 
-            <PixelatedGlobe />
-
-            <div className="relative z-20 -mt-[100vh] pt-10">
+            <div className="relative z-20 pt-10">
                 <VideoDubbingShowcase />
 
                 <GlobalLifecycle />
                 <FAQ />
             </div>
 
+            <PixelatedGlobe />
             <Footer onGetStarted={() => router.push("/register")} />
         </div>
     );

@@ -135,7 +135,9 @@ export default function VideoDubbingShowcase() {
 
   return (
     <>
-      <section id="product" className="pt-24 pb-8 bg-white dark:bg-black border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300">
+      <FeaturesSectionWithBentoGrid />
+
+      <section id="showcase" className="pt-24 pb-8 bg-white dark:bg-black border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300">
 
         <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] relative z-10">
           <div className="text-center mb-16">
@@ -234,7 +236,6 @@ export default function VideoDubbingShowcase() {
         </div>
       </section>
 
-      <FeaturesSectionWithBentoGrid />
     </>
   );
 }

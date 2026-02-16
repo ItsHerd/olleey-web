@@ -178,7 +178,7 @@ export default function PixelatedGlobe() {
   }, [isMobile]);
 
   return (
-    <div ref={containerRef} className="relative h-[400vh] z-0 bg-white dark:bg-black transition-colors duration-300">
+    <div ref={containerRef} className="relative h-[200vh] z-0 bg-white dark:bg-black transition-colors duration-300">
       {/* Sticky container for the globe */}
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden pointer-events-none">
         <motion.div
@@ -214,7 +214,7 @@ export default function PixelatedGlobe() {
       </div>
 
       {/* Spacer for scroll assembly effect */}
-      <div className="h-[300vh]" />
+      <div className="h-[100vh]" />
     </div>
   );
 }
