@@ -1,129 +1,126 @@
 "use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Globe, Zap, Languages, CheckCircle2, Rocket } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import { CheckCircle2, Globe2, Languages, Rocket, ShieldCheck } from "lucide-react";
 
 const steps = [
-    {
-        title: "When you publish your video on the web",
-        description: "Zero-latency master detection across YouTube, RSS, and storage buckets the moment you upload.",
-        icon: Globe,
-        color: "text-blue-500",
-        delay: 0.1
-    },
-    {
-        title: "Olleey rebuilds for every language",
-        description: "Simultaneous neural voice cloning and regenerative lip-syncing spin up in parallel for every region.",
-        icon: Languages,
-        color: "text-purple-500",
-        delay: 0.2
-    },
-    {
-        title: "It ensures authentic and quality videos",
-        description: "Preserving 1:1 vocal identity and emotive nuances so your identity remains native globally.",
-        icon: Zap,
-        color: "text-olleey-yellow",
-        delay: 0.3
-    },
-    {
-        title: "Olleey deploys dubbed videos to other channels",
-        description: "Direct-to-platform distribution via YouTube MLA tracks or regional satellite channels.",
-        icon: Rocket,
-        color: "text-orange-500",
-        delay: 0.4
-    },
-    {
-        title: "You reach the world hands free.",
-        description: "The result: a frictionless global release, every time. Pure automation from end to end.",
-        icon: CheckCircle2,
-        color: "text-green-500",
-        delay: 0.5
-    }
+  {
+    id: "01",
+    title: "Detect New Uploads",
+    description:
+      "Olleey watches your connected channel and detects newly published videos automatically.",
+    icon: Globe2,
+  },
+  {
+    id: "02",
+    title: "Choose Languages & Mode",
+    description:
+      "Select one or multiple target languages and choose dubbing or lip-sync before processing starts.",
+    icon: Languages,
+  },
+  {
+    id: "03",
+    title: "Process With Guardrails",
+    description:
+      "Transcription, translation, dubbing, and quality checks run in one pipeline with your guardrails applied.",
+    icon: ShieldCheck,
+  },
+  {
+    id: "04",
+    title: "Review & Approve",
+    description:
+      "Review localized metadata, thumbnails, and final output. Approve when it matches your quality bar.",
+    icon: CheckCircle2,
+  },
+  {
+    id: "05",
+    title: "Publish Globally",
+    description:
+      "Send approved versions to your selected channels as drafts or ready-to-publish releases.",
+    icon: Rocket,
+  },
 ];
 
 export const GlobalLifecycle = () => {
-    return (
-        <section id="distribution" className="py-32 bg-[#FAFAFA] dark:bg-black border-t border-black/10 dark:border-white/10 relative z-10 overflow-hidden transition-colors duration-300">
+  return (
+    <section
+      id="distribution"
+      className="py-24 lg:py-28 bg-[#FAFAFA] dark:bg-black border-t border-black/10 dark:border-white/10 relative z-10 overflow-hidden transition-colors duration-300"
+    >
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] relative z-10">
+        <div className="mb-14 lg:mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45 }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-green-600 dark:bg-green-400 animate-pulse" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-black/70 dark:text-white/70">
+              The Workflow
+            </span>
+          </motion.div>
 
-            <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px] relative z-10">
-                {/* Header Text */}
-                <div className="mb-24 relative border-l-2 border-black/20 dark:border-white/20 pl-8 transition-colors duration-300">
-                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white dark:bg-black border-2 border-black/20 dark:border-white/20 transition-colors duration-300" />
-                    <div className="absolute -left-[5px] bottom-0 w-2 h-2 rounded-full bg-black/20 dark:bg-white/20 transition-colors duration-300" />
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="mt-5 text-4xl md:text-6xl leading-[1.05] tracking-tight text-black dark:text-white"
+          >
+            How It Works
+          </motion.h2>
 
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                        className="inline-flex items-center gap-2 px-3 py-1 border border-black/30 dark:border-white/30 mb-6 bg-black/5 dark:bg-black transition-colors duration-300 rounded-full"
-                    >
-                        <span className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white animate-pulse transition-colors duration-300" />
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-black dark:text-white transition-colors duration-300">The Workflow</span>
-                    </motion.div>
-                    <motion.h2
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="text-[40px] md:text-[60px] leading-[1.1] font-normal tracking-tight text-black dark:text-white font-mono uppercase transition-colors duration-300"
-                    >
-                        How it <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-cyan-600 dark:from-green-400 dark:via-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent transition-colors duration-300">works</span>.
-                    </motion.h2>
-                </div>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mt-4 max-w-3xl text-sm md:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed"
+          >
+            A simple five-step system from upload detection to global publishing, built for speed,
+            quality, and control.
+          </motion.p>
+        </div>
 
-                {/* Steps Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative">
+        <div className="relative">
+          <div className="hidden xl:block absolute top-7 left-12 right-12 h-px border-t border-dashed border-black/20 dark:border-white/20 pointer-events-none" />
 
-                    {/* Connecting Line (Desktop) */}
-                    <div className="hidden md:block absolute top-[40px] left-0 right-0 h-px bg-black/20 dark:bg-white/20 -z-10 border-t border-dashed border-black/40 dark:border-white/40 opacity-50 transition-colors duration-300" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <motion.article
+                  key={step.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.45, delay: 0.06 * index }}
+                  className="relative rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-950/60 p-5 lg:p-6"
+                >
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-full text-[10px] font-mono tracking-[0.18em] uppercase border border-black/20 dark:border-white/20 text-black/70 dark:text-white/70">
+                      {step.id}
+                    </span>
+                    <div className="w-9 h-9 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center justify-center">
+                      <Icon className="w-4 h-4 text-black/70 dark:text-white/80" />
+                    </div>
+                  </div>
 
-                    {steps.map((step, idx) => {
-                        const Icon = step.icon;
-                        return (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: step.delay }}
-                                className="relative group"
-                            >
-                                {/* Step Indicator */}
-                                <div className="mb-8 relative z-10">
-                                    <div className="w-20 h-20 bg-white dark:bg-black border border-black/20 dark:border-white/20 flex items-center justify-center transition-all duration-300 group-hover:border-black dark:group-hover:border-white group-hover:bg-black/5 dark:group-hover:bg-white/10 relative overflow-hidden rounded-full md:rounded-none">
-                                        <div className="absolute top-0 right-0 p-1">
-                                            <div className="w-1.5 h-1.5 border border-black/40 dark:border-white/40 transition-colors duration-300" />
-                                        </div>
-                                        <div className="absolute bottom-0 left-0 p-1">
-                                            <div className="w-1.5 h-1.5 border border-black/40 dark:border-white/40 bg-black/10 dark:bg-white/10 transition-colors duration-300" />
-                                        </div>
-
-                                        <Icon className="w-8 h-8 text-black/60 dark:text-white/60 group-hover:text-black dark:group-hover:text-white transition-colors duration-300 stroke-[1.5]" />
-                                    </div>
-                                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-black border border-black/20 dark:border-white/20 flex items-center justify-center text-[10px] font-mono text-black/50 dark:text-white/50 group-hover:text-black dark:group-hover:text-white group-hover:border-black dark:group-hover:border-white transition-all z-20 rounded-full md:rounded-none">
-                                        0{idx + 1}
-                                    </div>
-                                </div>
-
-                                {/* Content */}
-                                <div className="border-l border-black/10 dark:border-white/10 pl-6 group-hover:border-black/40 dark:group-hover:border-white/40 transition-colors duration-300">
-                                    <h3 className="text-sm font-bold text-black dark:text-white mb-3 font-mono uppercase tracking-wider group-hover:text-black dark:group-hover:text-white transition-colors duration-300">
-                                        {step.title}
-                                    </h3>
-                                    <p className="text-neutral-600 dark:text-gray-500 text-xs leading-relaxed font-mono transition-colors duration-300">
-                                        {step.description}
-                                    </p>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                </div>
-
-                {/* Bottom Call to Action Hint - Technical */}
-
-            </div>
-        </section>
-    );
+                  <h3 className="text-lg font-semibold text-black dark:text-white leading-snug">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                    {step.description}
+                  </p>
+                </motion.article>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 };

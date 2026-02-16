@@ -82,7 +82,7 @@ export default function ContactPage() {
                                     </div>
                                     <div className="flex items-center gap-4 text-black/60 dark:text-white/60 transition-colors duration-300">
                                         <span className="w-20 uppercase tracking-widest">HQ</span>
-                                        <span className="text-black dark:text-white transition-colors duration-300">San Francisco, CA</span>
+                                        <span className="text-black dark:text-white transition-colors duration-300">Seattle, WA</span>
                                     </div>
                                 </div>
                             </div>

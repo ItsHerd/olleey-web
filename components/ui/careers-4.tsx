@@ -29,7 +29,7 @@ export const Careers4 = ({
         },
         {
           title: "UI/UX Designer",
-          location: "San Francisco",
+          location: "Seattle",
           url: "#",
         },
         {
