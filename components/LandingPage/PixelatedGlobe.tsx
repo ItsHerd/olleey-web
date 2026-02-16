@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 
 interface Point {
@@ -178,7 +179,7 @@ export default function PixelatedGlobe() {
   }, [isMobile]);
 
   return (
-    <div ref={containerRef} className="relative h-[200vh] z-0 bg-white dark:bg-black transition-colors duration-300">
+    <div ref={containerRef} className="relative h-[200vh] z-0 bg-[#FAFAFA] dark:bg-black transition-colors duration-300">
       {/* Sticky container for the globe */}
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden pointer-events-none">
         <motion.div
@@ -208,6 +209,14 @@ export default function PixelatedGlobe() {
                 <br />
                 Keep your voice. Scale your impact.
               </p>
+              <div className="mt-8">
+                <Link
+                  href="/mission"
+                  className="inline-flex items-center px-6 py-3 border border-zinc-300 dark:border-zinc-700 rounded-full text-sm font-mono uppercase tracking-wider text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+                >
+                  Our mission
+                </Link>
+              </div>
             </motion.div>
           </div>
         </motion.div>

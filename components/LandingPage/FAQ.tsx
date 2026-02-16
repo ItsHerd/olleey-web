@@ -35,7 +35,7 @@ export default function FAQ() {
     ]
 
     return (
-        <section className="bg-white dark:bg-black py-24 md:py-32 border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300" id="faq">
+        <section className="bg-[#FAFAFA] dark:bg-black py-24 md:py-32 border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300" id="faq">
             {/* Background Grid - Light Mode */}
             <div className="absolute inset-0 z-0 opacity-5 dark:opacity-0 transition-opacity duration-300"
                 style={{

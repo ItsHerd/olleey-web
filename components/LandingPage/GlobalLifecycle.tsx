@@ -44,7 +44,7 @@ const steps = [
 
 export const GlobalLifecycle = () => {
     return (
-        <section id="distribution" className="py-32 bg-white dark:bg-black border-t border-black/10 dark:border-white/10 relative z-10 overflow-hidden transition-colors duration-300">
+        <section id="distribution" className="py-32 bg-[#FAFAFA] dark:bg-black border-t border-black/10 dark:border-white/10 relative z-10 overflow-hidden transition-colors duration-300">
 
             <div className="max-w-[1920px] mx-auto px-5 md:px-12 lg:px-[90px] relative z-10">
                 {/* Header Text */}

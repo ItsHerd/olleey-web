@@ -137,7 +137,7 @@ export default function VideoDubbingShowcase() {
     <>
       <FeaturesSectionWithBentoGrid />
 
-      <section id="showcase" className="pt-24 pb-8 bg-white dark:bg-black border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300">
+      <section id="showcase" className="pt-24 pb-8 bg-[#FAFAFA] dark:bg-black border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300">
 
         <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] relative z-10">
           <div className="text-center mb-16">
@@ -219,20 +219,6 @@ export default function VideoDubbingShowcase() {
             </div>
           </div>
 
-          <div className="mt-20 border-t border-black/10 dark:border-white/10 pt-8 flex justify-between items-center opacity-50 transition-colors duration-300">
-            <div className="font-mono text-[9px] text-black/60 dark:text-white/60 transition-colors duration-300">
-              [ LOCALIZATION_METRICS ] BR_98.4% SYNC_PRECISE LATENCY_FIXED
-            </div>
-            <div className="flex gap-4">
-              <div className="w-24 h-1 bg-black/10 dark:bg-white/10 overflow-hidden transition-colors duration-300">
-                <motion.div
-                  animate={{ x: ["-100%", "100%"] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="w-full h-full bg-black/40 dark:bg-white/40"
-                />
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

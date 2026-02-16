@@ -52,7 +52,7 @@ export function FeaturesSectionWithBentoGrid() {
       className="relative z-20 pt-4 pb-16 lg:pb-24 max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px]"
     >
 
-      <div className="mt-0 space-y-6">
+      <div className="mt-0 space-y-10 lg:space-y-14">
         {workflowRows.map((row, index) => (
           <div
             key={row.title}
@@ -92,7 +92,7 @@ function StageTextCard({ row }: { row: WorkflowRow }) {
   const Icon = row.icon;
   return (
     <div className="h-full rounded-xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-neutral-950/50 p-6 lg:p-8 flex flex-col justify-center">
-      <h5 className="text-2xl lg:text-3xl tracking-tight text-black dark:text-white">{row.title}</h5>
+      <h5 className="text-3xl lg:text-5xl leading-tight tracking-tight text-black dark:text-white">{row.title}</h5>
       <p className="mt-3 text-sm lg:text-base text-neutral-600 dark:text-neutral-300 max-w-xl">{row.description}</p>
     </div>
   );

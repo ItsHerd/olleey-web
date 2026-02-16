@@ -20,12 +20,13 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
         { label: 'Home', href: '#' },
         { label: 'Workflows', href: "#distribution" },
         { label: 'Product', href: '#product' },
+        { label: 'Mission', href: '/mission' },
         { label: 'FAQ', href: '#faq' },
     ];
 
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white font-sans selection:bg-black/10 dark:selection:bg-white/20 selection:text-black dark:selection:text-white transition-colors duration-300">
+        <div className="min-h-screen bg-[#FAFAFA] dark:bg-black text-black dark:text-white font-sans selection:bg-black/10 dark:selection:bg-white/20 selection:text-black dark:selection:text-white transition-colors duration-300">
             <SEO
                 title="Olleey | Translate & Distribute Your Content Globally"
                 description="The ultimate AI-powered workflow for creators. Build automated pipelines that translate and distribute your content to 10+ languages instantly."

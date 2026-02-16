@@ -32,6 +32,7 @@ export default function HeroAscii({
   const [internalShowAuth, setInternalShowAuth] = useState(false);
   const [internalAuthMode, setInternalAuthMode] = useState<'login' | 'register'>('login');
   const [showDemo, setShowDemo] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, setTheme } = useThemeContext();
 
   const showAuth = externalShowAuth ?? internalShowAuth;
@@ -119,6 +120,17 @@ export default function HeroAscii({
     };
   }, []);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [mobileMenuOpen]);
+
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#FAFAFA] dark:bg-black transition-colors duration-300">
@@ -127,8 +139,8 @@ export default function HeroAscii({
         <div className="max-w-7xl mx-auto pointer-events-auto">
           <div className="flex items-center justify-between">
             {/* Left: Logo Island */}
-            <Link href="/" className="flex items-center gap-3 group bg-white/80 dark:bg-black/80 backdrop-blur-md border border-zinc-200 dark:border-white/10 rounded-full pl-2 pr-6 py-2 transition-all hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-white/5">
-              <div className="relative w-10 h-10 transition-transform group-hover:scale-110">
+            <Link href="/" className="flex items-center group bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-2 transition-all hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-white/5">
+              <div className="relative w-12 h-12 lg:w-14 lg:h-14 transition-transform group-hover:scale-110">
                 <Image
                   src="/translogo.png"
                   alt="Olleey Logo"
@@ -136,13 +148,10 @@ export default function HeroAscii({
                   className="object-contain transition-all duration-300"
                 />
               </div>
-              <span className="text-black dark:text-white text-xl font-medium tracking-tight group-hover:text-black/80 dark:group-hover:text-white/90 transition-colors">
-                olleey.com
-              </span>
             </Link>
 
             {/* Center: Nav Links Island */}
-            <div className="hidden lg:flex items-center gap-1 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-zinc-200 dark:border-white/10 rounded-full p-1.5 shadow-sm">
+            <div className="hidden lg:flex items-center gap-1 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-1.5 shadow-sm">
               {navLinks?.map((link) => (
                 <a
                   key={link.label}
@@ -161,7 +170,7 @@ export default function HeroAscii({
             </div>
 
             {/* Right: Actions Island */}
-            <div className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-zinc-200 dark:border-white/10 rounded-full p-2 pl-4 shadow-sm">
+            <div className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-2 pl-4 shadow-sm">
 
               <button
                 onClick={() => {
@@ -175,6 +184,7 @@ export default function HeroAscii({
               <button
                 onClick={() => {
                   router.push('/register');
+                  setMobileMenuOpen(false);
                 }}
                 className="px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-bold rounded-full transition-all hover:opacity-90 hover:shadow-lg"
               >
@@ -182,14 +192,76 @@ export default function HeroAscii({
               </button>
 
               {/* Mobile Menu Button */}
-              <button className="lg:hidden flex flex-col gap-1.5 p-2" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-                {/* Reusing mobile menu button area for toggle on mobile for simplicity or just keep hamburger */}
-                <div className="w-5 h-0.5 bg-black dark:bg-white rounded-full transition-colors"></div>
-                <div className="w-4 h-0.5 bg-black/60 dark:bg-white/60 rounded-full transition-colors"></div>
-                <div className="w-5 h-0.5 bg-black dark:bg-white rounded-full transition-colors"></div>
+              <button
+                className="lg:hidden p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={mobileMenuOpen}
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-5 h-5 text-black dark:text-white" />
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    <div className="w-5 h-0.5 bg-black dark:bg-white rounded-full transition-colors"></div>
+                    <div className="w-4 h-0.5 bg-black/60 dark:bg-white/60 rounded-full transition-colors"></div>
+                    <div className="w-5 h-0.5 bg-black dark:bg-white rounded-full transition-colors"></div>
+                  </div>
+                )}
               </button>
             </div>
           </div>
+
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="lg:hidden mt-3 rounded-2xl bg-white/90 dark:bg-black/90 backdrop-blur-md p-3 shadow-lg"
+              >
+                <div className="flex flex-col gap-1">
+                  {navLinks?.map((link) => (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      onClick={(e) => {
+                        if (link.label === 'Home') {
+                          e.preventDefault();
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                        setMobileMenuOpen(false);
+                      }}
+                      className="px-3 py-2 rounded-lg text-sm font-medium text-black/80 dark:text-white/80 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+
+                <div className="mt-3 pt-3 flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setTheme(theme === 'dark' ? 'light' : 'dark');
+                    }}
+                    className="inline-flex items-center justify-center w-10 h-10 rounded-full text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    aria-label="Toggle theme"
+                  >
+                    {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={() => {
+                      router.push('/login');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                  >
+                    Log in
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -438,30 +510,6 @@ export default function HeroAscii({
               )}
             </AnimatePresence>
 
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Footer */}
-      <div className="absolute left-0 right-0 z-20 border-t border-black/20 dark:border-white/20 bg-white/40 dark:bg-black/40 backdrop-blur-sm transition-colors duration-300" style={{ bottom: '5vh' }}>
-        <div className="container mx-auto px-4 lg:px-8 py-2 lg:py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3 lg:gap-6 text-[8px] lg:text-[9px] font-mono text-black/50 dark:text-white/50 transition-colors duration-300">
-            <span className="hidden lg:inline">Live</span>
-            <span className="lg:hidden">Live</span>
-            <div className="hidden lg:flex gap-1">
-              {[12, 8, 14, 6, 10, 16, 5, 11].map((height, i) => (
-                <div key={i} className="w-1 h-3 bg-black/30 dark:bg-white/30" style={{ height: `${height}px` }}></div>
-              ))}
-            </div>
-            <span>V1.0.0</span>
-          </div>
-
-          <div className="flex items-center gap-2 lg:gap-4 text-[8px] lg:text-[9px] font-mono text-black/50 dark:text-white/50 transition-colors duration-300">
-            <div className="flex gap-1">
-              <div className="w-1 h-1 bg-black/60 dark:bg-white/60 rounded-full animate-pulse"></div>
-              <div className="w-1 h-1 bg-black/40 dark:bg-white/40 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-1 h-1 bg-black/20 dark:bg-white/20 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-            </div>
           </div>
         </div>
       </div>
