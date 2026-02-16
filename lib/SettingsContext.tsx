@@ -9,7 +9,9 @@ interface SettingsContextValue {
     settings: UserSettings | null;
     loading: boolean;
     error: string | null;
+    autoApproveJobs: boolean;
     detectedUploadWindow: DetectedUploadWindow;
+    updateAutoApproveJobs: (enabled: boolean) => Promise<void>;
     updateDetectedUploadWindow: (window: DetectedUploadWindow) => Promise<void>;
     refetch: () => Promise<void>;
 }
@@ -67,11 +69,25 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         }
     };
 
+    const updateAutoApproveJobs = async (enabled: boolean) => {
+        try {
+            const updatedSettings = await settingsAPI.updateSettings({
+                auto_approve_jobs: enabled,
+            });
+            setSettings(updatedSettings);
+        } catch (err: any) {
+            console.error("Failed to update auto-approve setting:", err);
+            throw err;
+        }
+    };
+
     const value: SettingsContextValue = {
         settings,
         loading,
         error,
+        autoApproveJobs: Boolean(settings?.auto_approve_jobs),
         detectedUploadWindow: settings?.detected_upload_window || "last_7_days",
+        updateAutoApproveJobs,
         updateDetectedUploadWindow,
         refetch: loadSettings,
     };

@@ -5,24 +5,25 @@ import {
   Bell,
   Check,
   CheckCircle,
-  Clock3,
   Globe,
   Info,
   Loader2,
-  Moon,
-  PlayCircle,
   Rss,
   Shield,
   Sun,
-  Workflow,
   AlertTriangle,
+  Rocket,
+  FileCheck2,
+  Send,
+  RefreshCw,
+  Workflow,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { LottieThemeToggle } from "@/components/ui/lottie-theme-toggle";
 import { useTheme } from "@/lib/useTheme";
 import { useAuth } from "@/lib/AuthContext";
@@ -37,15 +38,32 @@ interface UserSettings {
   language: string;
   notifications_enabled: boolean;
   email_notifications: boolean;
+  workflow_automation: {
+    require_review_approval: boolean;
+    require_publish_approval: boolean;
+    auto_retry_failed_jobs: boolean;
+  };
+  quality_thresholds: {
+    auto_approve_by_quality: boolean;
+    translation_accuracy_min: number;
+    content_safety_min: number;
+    brand_consistency_min: number;
+    compliance_min: number;
+  };
 }
 
-type Guardrail = {
-  title: string;
-  description: string;
-  status: "active";
-  stat: string;
-  icon: React.ComponentType<{ className?: string }>;
-  group: "workflow" | "quality";
+const DEFAULT_WORKFLOW_AUTOMATION = {
+  require_review_approval: true,
+  require_publish_approval: true,
+  auto_retry_failed_jobs: true,
+};
+
+const DEFAULT_QUALITY_THRESHOLDS = {
+  auto_approve_by_quality: false,
+  translation_accuracy_min: 90,
+  content_safety_min: 98,
+  brand_consistency_min: 95,
+  compliance_min: 97,
 };
 
 interface PreferencesViewProps {
@@ -59,7 +77,13 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
   const { setTheme } = useTheme();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { detectedUploadWindow, updateDetectedUploadWindow, loading: settingsContextLoading } = useSettings();
+  const {
+    autoApproveJobs,
+    detectedUploadWindow,
+    updateAutoApproveJobs,
+    updateDetectedUploadWindow,
+    loading: settingsContextLoading
+  } = useSettings();
 
   const [activeCategory, setActiveCategory] = useState<PreferenceCategory>("appearance");
   const [settings, setSettings] = useState<UserSettings>({
@@ -67,11 +91,14 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
     language: "en",
     notifications_enabled: true,
     email_notifications: true,
+    workflow_automation: DEFAULT_WORKFLOW_AUTOMATION,
+    quality_thresholds: DEFAULT_QUALITY_THRESHOLDS,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [updatingWindow, setUpdatingWindow] = useState(false);
+  const [updatingAutoApprove, setUpdatingAutoApprove] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -87,11 +114,20 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
         if (error) throw error;
 
         if (data?.preferences) {
+          const preferences = data.preferences || {};
           setSettings({
-            theme: data.preferences.theme || theme,
-            language: data.preferences.language || "en",
-            notifications_enabled: data.preferences.notifications_enabled ?? true,
-            email_notifications: data.preferences.email_notifications ?? true,
+            theme: preferences.theme || theme,
+            language: preferences.language || "en",
+            notifications_enabled: preferences.notifications_enabled ?? true,
+            email_notifications: preferences.email_notifications ?? true,
+            workflow_automation: {
+              ...DEFAULT_WORKFLOW_AUTOMATION,
+              ...(preferences.workflow_automation || {}),
+            },
+            quality_thresholds: {
+              ...DEFAULT_QUALITY_THRESHOLDS,
+              ...(preferences.quality_thresholds || {}),
+            },
           });
         }
       } catch (error) {
@@ -136,6 +172,8 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
     setUpdatingWindow(true);
     try {
       await updateDetectedUploadWindow(newWindow);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1800);
       toast("Upload detection window updated", "success");
     } catch (error: any) {
       toast(error?.message || "Failed to update window", "error");
@@ -144,85 +182,75 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
     }
   };
 
-  const detectedUploadWindowLabel =
-    detectedUploadWindow === "last_1_day"
-      ? "Last 1 day"
-      : detectedUploadWindow === "last_31_days"
-        ? "Last 31 days"
-        : "Last 7 days";
+  const handleAutoApproveChange = async (enabled: boolean) => {
+    setUpdatingAutoApprove(true);
+    try {
+      await updateAutoApproveJobs(enabled);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1800);
+      toast(enabled ? "Auto-approve enabled" : "Manual approval required", "success");
+    } catch (error: any) {
+      toast(error?.message || "Failed to update auto-approve", "error");
+    } finally {
+      setUpdatingAutoApprove(false);
+    }
+  };
 
-  const guardrails: Guardrail[] = useMemo(
+  const updateWorkflowAutomation = async (
+    key: keyof UserSettings["workflow_automation"],
+    value: boolean
+  ) => {
+    await saveSettings({
+      workflow_automation: {
+        ...settings.workflow_automation,
+        [key]: value,
+      },
+    });
+  };
+
+  const updateQualityThreshold = async (
+    key: keyof UserSettings["quality_thresholds"],
+    value: boolean | number
+  ) => {
+    await saveSettings({
+      quality_thresholds: {
+        ...settings.quality_thresholds,
+        [key]: value,
+      },
+    });
+  };
+
+  const clampPercent = (value: number) => Math.min(100, Math.max(0, value));
+
+  const qualityGuardrails = useMemo(
     () => [
-      {
-        title: "Detected Upload Window",
-        description: "Only surfaces newly detected master-channel uploads inside the selected time window.",
-        status: "active",
-        icon: Rss,
-        stat: detectedUploadWindowLabel,
-        group: "workflow"
-      },
-      {
-        title: "Pre-Processing Approval Gate",
-        description: "Webhook-detected videos can be held before compute starts, so teams can approve or defer processing.",
-        status: "active",
-        icon: Clock3,
-        stat: "Approval required",
-        group: "workflow"
-      },
-      {
-        title: "Manual Start Control",
-        description: "Operators can trigger processing explicitly with Begin Processing when the video is ready.",
-        status: "active",
-        icon: PlayCircle,
-        stat: "Operator controlled",
-        group: "workflow"
-      },
-      {
-        title: "Auto-Approve Policy",
-        description: "Optional automation that auto-starts new detected uploads when enabled in workspace settings.",
-        status: "active",
-        icon: Workflow,
-        stat: "Workspace setting",
-        group: "workflow"
-      },
       {
         title: "Content Safety",
         description: "Automatically detect and flag inappropriate, sensitive, or high-risk content using neural-linguistic analysis.",
-        status: "active",
         icon: Shield,
-        stat: "99.9% filtered",
-        group: "quality"
+        key: "content_safety_min" as const,
       },
       {
         title: "Translation Accuracy",
         description: "Neural verification engine ensuring translations maintain semantic integrity and original intent.",
-        status: "active",
         icon: CheckCircle,
-        stat: "BLEU 0.94",
-        group: "quality"
+        key: "translation_accuracy_min" as const,
       },
       {
         title: "Brand Consistency",
         description: "Ensures specialized terminology, brand names, and slogans remain consistent across target markets.",
-        status: "active",
         icon: AlertTriangle,
-        stat: "324 terms synced",
-        group: "quality"
+        key: "brand_consistency_min" as const,
       },
       {
         title: "Compliance Checks",
         description: "Automated verification against regional broadcast regulations and content policies.",
-        status: "active",
         icon: Info,
-        stat: "ISO 27001 ready",
-        group: "quality"
+        key: "compliance_min" as const,
       },
     ],
-    [detectedUploadWindowLabel]
+    []
   );
-
-  const workflowGuardrails = guardrails.filter((g) => g.group === "workflow");
-  const qualityGuardrails = guardrails.filter((g) => g.group === "quality");
 
   const categories: Array<{ id: PreferenceCategory; label: string; description: string; icon: React.ComponentType<{ className?: string }> }> = [
     { id: "appearance", label: "Appearance", description: "Theme and language", icon: Sun },
@@ -375,39 +403,123 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
                   <CardDescription>Detection, approval, and processing flow for incoming uploads.</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0 space-y-3">
-                  {workflowGuardrails.map((guardrail) => {
-                    const Icon = guardrail.icon;
-                    return (
-                      <div key={guardrail.title} className={`rounded-lg border p-4 ${blockSurfaceClass}`}>
-                        <div className="flex items-start gap-3">
-                          <Icon className="w-4 h-4 text-muted-foreground mt-0.5" />
-                          <div className="space-y-1 w-full">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium">{guardrail.title}</p>
-                              <Badge variant="secondary">{guardrail.status}</Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{guardrail.description}</p>
-                            <p className="text-xs text-muted-foreground">{guardrail.stat}</p>
-                            {guardrail.title === "Detected Upload Window" && (
-                              <div className="pt-2">
-                                <select
-                                  value={detectedUploadWindow}
-                                  onChange={(e) => handleWindowChange(e.target.value as "last_1_day" | "last_7_days" | "last_31_days")}
-                                  disabled={settingsContextLoading || updatingWindow}
-                                  className="h-8 rounded-md border bg-background px-2 text-xs disabled:opacity-50"
-                                  aria-label="Detected upload window"
-                                >
-                                  <option value="last_1_day">Last 1 day</option>
-                                  <option value="last_7_days">Last 7 days</option>
-                                  <option value="last_31_days">Last 31 days</option>
-                                </select>
-                              </div>
-                            )}
-                          </div>
+                  <div className={`rounded-lg border p-4 ${blockSurfaceClass}`}>
+                    <div className="flex items-start gap-3">
+                      <Rss className="w-4 h-4 text-muted-foreground mt-0.5" />
+                      <div className="space-y-2 w-full">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">Detected Upload Window</p>
+                          <Badge variant="secondary">active</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Only surface master-channel uploads published inside the selected time range.
+                        </p>
+                        <select
+                          value={detectedUploadWindow}
+                          onChange={(e) => handleWindowChange(e.target.value as "last_1_day" | "last_7_days" | "last_31_days")}
+                          disabled={settingsContextLoading || updatingWindow}
+                          className="h-8 rounded-md border bg-background px-2 text-xs disabled:opacity-50"
+                          aria-label="Detected upload window"
+                        >
+                          <option value="last_1_day">Last 1 day</option>
+                          <option value="last_7_days">Last 7 days</option>
+                          <option value="last_31_days">Last 31 days</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`rounded-lg border p-4 ${blockSurfaceClass}`}>
+                    <div className="flex items-start gap-3">
+                      <Rocket className="w-4 h-4 text-muted-foreground mt-0.5" />
+                      <div className="space-y-2 w-full">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">Start Processing Approval</p>
+                          <Badge variant="secondary">{autoApproveJobs ? "auto" : "manual"}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Require explicit approval before processing starts for each detected upload.
+                        </p>
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs text-muted-foreground">Manual gate before processing</p>
+                          <Switch
+                            checked={!autoApproveJobs}
+                            onCheckedChange={(enabled) => handleAutoApproveChange(!enabled)}
+                            disabled={settingsContextLoading || updatingAutoApprove}
+                          />
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
+
+                  <div className={`rounded-lg border p-4 ${blockSurfaceClass}`}>
+                    <div className="flex items-start gap-3">
+                      <FileCheck2 className="w-4 h-4 text-muted-foreground mt-0.5" />
+                      <div className="space-y-2 w-full">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">Review Approval</p>
+                          <Badge variant="secondary">{settings.workflow_automation.require_review_approval ? "required" : "auto"}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Hold completed localizations in review until a reviewer approves.
+                        </p>
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs text-muted-foreground">Require review sign-off</p>
+                          <Switch
+                            checked={settings.workflow_automation.require_review_approval}
+                            onCheckedChange={(enabled) => updateWorkflowAutomation("require_review_approval", enabled)}
+                            disabled={saving}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`rounded-lg border p-4 ${blockSurfaceClass}`}>
+                    <div className="flex items-start gap-3">
+                      <Send className="w-4 h-4 text-muted-foreground mt-0.5" />
+                      <div className="space-y-2 w-full">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">Publishing Approval</p>
+                          <Badge variant="secondary">{settings.workflow_automation.require_publish_approval ? "required" : "auto"}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Require final approval before posting to destination channels.
+                        </p>
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs text-muted-foreground">Require publish sign-off</p>
+                          <Switch
+                            checked={settings.workflow_automation.require_publish_approval}
+                            onCheckedChange={(enabled) => updateWorkflowAutomation("require_publish_approval", enabled)}
+                            disabled={saving}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`rounded-lg border p-4 ${blockSurfaceClass}`}>
+                    <div className="flex items-start gap-3">
+                      <RefreshCw className="w-4 h-4 text-muted-foreground mt-0.5" />
+                      <div className="space-y-2 w-full">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">Auto Retry Failed Jobs</p>
+                          <Badge variant="secondary">{settings.workflow_automation.auto_retry_failed_jobs ? "enabled" : "disabled"}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Retry transient processing failures automatically before moving a job to failed.
+                        </p>
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs text-muted-foreground">Retry on transient errors</p>
+                          <Switch
+                            checked={settings.workflow_automation.auto_retry_failed_jobs}
+                            onCheckedChange={(enabled) => updateWorkflowAutomation("auto_retry_failed_jobs", enabled)}
+                            disabled={saving}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -416,23 +528,57 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
               <Card className={cardSurfaceClass}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">Quality & Compliance</CardTitle>
-                  <CardDescription>Translation quality, terminology consistency, and regulatory checks.</CardDescription>
+                  <CardDescription>Set quality thresholds used for automated approvals.</CardDescription>
                 </CardHeader>
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 space-y-3">
+                  <div className={`rounded-lg border p-4 ${blockSurfaceClass}`}>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Auto-Approve by Quality</p>
+                        <p className="text-sm text-muted-foreground">
+                          Skip manual review when all thresholds below pass for a localized output.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={settings.quality_thresholds.auto_approve_by_quality}
+                        onCheckedChange={(enabled) => updateQualityThreshold("auto_approve_by_quality", enabled)}
+                        disabled={saving}
+                      />
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {qualityGuardrails.map((guardrail) => {
                       const Icon = guardrail.icon;
+                      const threshold = settings.quality_thresholds[guardrail.key];
                       return (
                         <div key={guardrail.title} className={`rounded-lg border p-4 ${blockSurfaceClass}`}>
                           <div className="flex items-start gap-3">
                             <Icon className="w-4 h-4 text-muted-foreground mt-0.5" />
-                            <div className="space-y-1">
+                            <div className="space-y-2 w-full">
                               <div className="flex items-center gap-2">
                                 <p className="text-sm font-medium">{guardrail.title}</p>
-                                <Badge variant="secondary">{guardrail.status}</Badge>
+                                <Badge variant="secondary">active</Badge>
                               </div>
                               <p className="text-sm text-muted-foreground">{guardrail.description}</p>
-                              <p className="text-xs text-muted-foreground">{guardrail.stat}</p>
+                              <div className="flex items-center gap-2">
+                                <Label className="text-xs text-muted-foreground min-w-0">Auto-approve threshold</Label>
+                                <div className="relative w-20">
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    max={100}
+                                    value={threshold}
+                                    onChange={(e) => {
+                                      const nextValue = clampPercent(Number(e.target.value || 0));
+                                      updateQualityThreshold(guardrail.key, nextValue);
+                                    }}
+                                    className="h-8 pr-6 text-xs"
+                                    disabled={saving}
+                                  />
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -448,19 +594,19 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">Preferences sync automatically.</p>
                   <div className="flex items-center gap-2 text-sm">
-                    {(saving || updatingWindow) && (
+                    {(saving || updatingWindow || updatingAutoApprove) && (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                         <span className="text-muted-foreground">Saving...</span>
                       </>
                     )}
-                    {!saving && !updatingWindow && saved && (
+                    {!saving && !updatingWindow && !updatingAutoApprove && saved && (
                       <>
                         <Check className="w-4 h-4 text-emerald-600" />
                         <span className="text-emerald-600">Changes saved</span>
                       </>
                     )}
-                    {!saving && !updatingWindow && !saved && <span className="text-muted-foreground">Ready</span>}
+                    {!saving && !updatingWindow && !updatingAutoApprove && !saved && <span className="text-muted-foreground">Ready</span>}
                   </div>
                 </div>
               </CardContent>
