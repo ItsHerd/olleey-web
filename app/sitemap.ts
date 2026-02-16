@@ -2,37 +2,38 @@ import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const baseUrl = 'https://olleey.com';
+    const lastModified = new Date('2026-02-16T00:00:00.000Z');
 
     return [
         {
             url: baseUrl,
-            lastModified: new Date(),
-            changeFrequency: 'monthly',
+            lastModified,
+            changeFrequency: 'weekly',
             priority: 1,
         },
         {
-            url: `${baseUrl}/register`,
-            lastModified: new Date(),
+            url: `${baseUrl}/mission`,
+            lastModified,
             changeFrequency: 'monthly',
-            priority: 0.8,
+            priority: 0.9,
         },
         {
-            url: `${baseUrl}/app`,
-            lastModified: new Date(),
-            changeFrequency: 'daily',
-            priority: 0.7,
+            url: `${baseUrl}/contact`,
+            lastModified,
+            changeFrequency: 'yearly',
+            priority: 0.6,
         },
         {
             url: `${baseUrl}/privacy`,
-            lastModified: new Date(),
+            lastModified,
             changeFrequency: 'yearly',
-            priority: 0.3,
+            priority: 0.5,
         },
         {
             url: `${baseUrl}/terms`,
-            lastModified: new Date(),
+            lastModified,
             changeFrequency: 'yearly',
-            priority: 0.3,
+            priority: 0.5,
         },
     ];
 }

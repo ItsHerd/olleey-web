@@ -1,116 +1,259 @@
 "use client";
 
-import React from 'react';
-import Navbar from "@/components/ui/navbar";
-import Footer from "@/components/LandingPage/Footer";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { Database, Eye, Globe2, Lock, Moon, ShieldCheck, Sun } from "lucide-react";
 
-export default function PrivacyPolicy() {
-    const navLinks = [
-        { label: 'HOME', href: '/' },
-        { label: 'WORKFLOWS', href: "/#workflows" },
-        { label: 'PRODUCT', href: '/#product' },
-        { label: 'PRICING', href: '/#pricing' },
-    ];
+import Footer from "@/components/LandingPage/Footer";
+import { useThemeContext } from "@/lib/ThemeContext";
 
-    return (
-        <div className="min-h-screen bg-black font-sans text-white relative flex flex-col">
-            {/* Background Grid */}
-             <div className="absolute inset-0 z-0 opacity-20 pointer-events-none fixed" 
-                style={{ 
-                    backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
-                }} 
-            />
+const summaryCards = [
+  {
+    title: "What We Collect",
+    description: "Account details, workspace settings, uploaded media, and service usage events needed to operate Olleey.",
+    icon: Database,
+  },
+  {
+    title: "How We Use It",
+    description: "To run localization workflows, improve reliability, provide support, and meet legal and security obligations.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Who Can Access",
+    description: "Only authorized staff and vetted processors supporting core features like storage, auth, and integrations.",
+    icon: Eye,
+  },
+  {
+    title: "Your Controls",
+    description: "You can request data access, correction, or deletion by contacting us at privacy@olleey.com.",
+    icon: Lock,
+  },
+];
 
-            <Navbar
-                navLinks={navLinks}
-                onSignIn={() => {}} 
-                onSignUp={() => {}} 
-            />
+const policySections = [
+  {
+    id: "scope",
+    title: "1. Scope",
+    paragraphs: [
+      "This Privacy Policy explains how Olleey collects, uses, stores, and shares information when you use our platform and related services.",
+      "By accessing Olleey, you agree to this policy and to the processing practices described below.",
+    ],
+  },
+  {
+    id: "data-collected",
+    title: "2. Information We Collect",
+    bullets: [
+      "Account information: name, email, authentication identifiers, and workspace membership.",
+      "Platform content: uploaded videos, audio tracks, transcripts, metadata, and generated localized assets.",
+      "Operational data: logs, processing status, device/browser information, and usage analytics.",
+      "Billing and transaction metadata handled through payment partners (we do not store full card numbers).",
+    ],
+  },
+  {
+    id: "usage",
+    title: "3. How We Use Information",
+    bullets: [
+      "Deliver localization features including translation, dubbing, lip-sync, review, and publishing workflows.",
+      "Maintain account security, prevent abuse, and detect incidents.",
+      "Support customer operations and troubleshoot service issues.",
+      "Comply with legal requirements and enforce platform terms.",
+    ],
+  },
+  {
+    id: "sharing",
+    title: "4. Data Sharing and Processors",
+    paragraphs: [
+      "We share data with service providers only when needed to operate the platform. Providers are contractually required to protect your information.",
+    ],
+    bullets: [
+      "Infrastructure and storage providers.",
+      "Authentication and identity providers.",
+      "AI/media processing integrations used in your workflow.",
+      "Analytics and observability tools for service quality.",
+    ],
+  },
+  {
+    id: "retention",
+    title: "5. Retention and Security",
+    paragraphs: [
+      "We retain information for as long as needed to provide services, meet legal obligations, resolve disputes, and enforce agreements.",
+      "We apply technical and organizational safeguards appropriate to the sensitivity of the data we process.",
+    ],
+  },
+  {
+    id: "rights",
+    title: "6. Your Rights",
+    paragraphs: [
+      "Depending on your location, you may have rights to access, correct, export, restrict, or delete personal data. You may also object to certain processing.",
+      "To exercise rights requests, email privacy@olleey.com. We may need to verify your identity before fulfilling requests.",
+    ],
+  },
+  {
+    id: "transfers",
+    title: "7. International Transfers",
+    paragraphs: [
+      "If data is transferred across regions, we use appropriate safeguards required by applicable law.",
+    ],
+  },
+  {
+    id: "updates",
+    title: "8. Policy Updates",
+    paragraphs: [
+      "We may update this policy to reflect product, legal, or operational changes. The latest version will always be published on this page.",
+    ],
+  },
+];
 
-            <main className="flex-grow flex justify-center pt-32 pb-32 px-6 relative z-10">
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-4xl"
-                >
-                    <div className="border border-white/10 bg-black/80 backdrop-blur-md p-10 md:p-16 relative overflow-hidden group">
-                         {/* Technical markers */}
-                        <div className="absolute top-0 left-0 p-2 border-b border-r border-white/20 w-8 h-8" />
-                        <div className="absolute top-0 right-0 p-2 border-b border-l border-white/20 w-8 h-8" />
-                        <div className="absolute bottom-0 left-0 p-2 border-t border-r border-white/20 w-8 h-8" />
-                        <div className="absolute bottom-0 right-0 p-2 border-t border-l border-white/20 w-8 h-8" />
+export default function PrivacyPolicyPage() {
+  const router = useRouter();
+  const { theme, setTheme } = useThemeContext();
 
-                        <div className="inline-flex items-center gap-3 px-4 py-1 border border-white/30 mb-8 bg-black">
-                            <span className="w-1.5 h-1.5 bg-white animate-pulse" />
-                            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white">SYS.LEGAL.PRIVACY</span>
-                        </div>
+  return (
+    <main className="min-h-screen bg-[#FAFAFA] dark:bg-black text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.06] dark:opacity-[0.1] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:24px_24px]" />
 
-                        <header className="mb-12 border-b border-white/10 pb-8">
-                            <h1 className="text-3xl md:text-5xl font-mono uppercase tracking-tight mb-4">Privacy Policy</h1>
-                            <div className="flex flex-col gap-1 font-mono text-xs text-white/50">
-                                <p>LAST_UPDATED: 2026.01.23</p>
-                                <p>EFFECTIVE: 2026.01.23</p>
-                            </div>
-                        </header>
+      <header className="sticky top-0 z-30 p-4 lg:p-6 transition-colors duration-300">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full">
+            <div className="relative m-1 w-12 h-12 lg:w-14 lg:h-14 p-1.5 rounded-xl overflow-hidden border border-white/20 bg-black/90">
+              <Image src="/favicon/android-chrome-192x192.png" alt="Olleey Logo" fill className="object-contain" />
+            </div>
+            <span className="mr-3 text-base lg:text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+              olleey
+            </span>
+          </Link>
 
-                        <div className="space-y-12 font-mono text-sm leading-relaxed text-white/80">
-                            {/* Content Sections */}
-                            <section>
-                                <h2 className="text-lg font-bold text-white uppercase tracking-widest mb-4 border-l-2 border-white pl-4">1. Introduction</h2>
-                                <p className="mb-4">
-                                    Welcome to Olleey ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains in detail how we collect, use, disclose, and safeguard your information when you use our AI-powered video localization and dubbing platform.
-                                </p>
-                                <p>
-                                    By accessing or using Olleey, you acknowledge that you have read, understood, and agree to be bound by this Privacy Policy.
-                                </p>
-                            </section>
+          <nav className="hidden lg:flex items-center gap-1 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-1.5 shadow-sm">
+            <Link href="/" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
+              Home
+            </Link>
+            <Link href="/#distribution" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
+              Workflows
+            </Link>
+            <Link href="/#product" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
+              Product
+            </Link>
+            <Link href="/mission" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
+              Mission
+            </Link>
+            <Link href="/#faq" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
+              FAQ
+            </Link>
+          </nav>
 
-                            <section>
-                                <h2 className="text-lg font-bold text-white uppercase tracking-widest mb-4 border-l-2 border-white pl-4">2. Information Collection</h2>
-                                <p className="mb-4">We collect several types of information from and about users:</p>
-                                <ul className="list-disc pl-5 space-y-2 text-white/60">
-                                    <li><strong className="text-white">Account Info:</strong> Name, email, password (encrypted).</li>
-                                    <li><strong className="text-white">Contact Info:</strong> Email for notifications.</li>
-                                    <li><strong className="text-white">Payment Info:</strong> Processed securely by third-party providers.</li>
-                                    <li><strong className="text-white">Media Data:</strong> Uploaded videos, audio files, transcripts.</li>
-                                </ul>
-                            </section>
-
-                            <section>
-                                <h2 className="text-lg font-bold text-white uppercase tracking-widest mb-4 border-l-2 border-white pl-4">3. Data Usage</h2>
-                                <p className="mb-4">Your data is used to:</p>
-                                <ul className="list-disc pl-5 space-y-2 text-white/60">
-                                    <li>Provide and manage AI dubbing services.</li>
-                                    <li>Process transactions and manage accounts.</li>
-                                    <li>Improve AI models and system performance.</li>
-                                    <li>Comply with legal obligations.</li>
-                                </ul>
-                            </section>
-
-                            <section>
-                                <h2 className="text-lg font-bold text-white uppercase tracking-widest mb-4 border-l-2 border-white pl-4">4. Third-Party Services</h2>
-                                <p className="mb-4">We integrate with trusted providers:</p>
-                                <ul className="list-disc pl-5 space-y-2 text-white/60">
-                                    <li>Google (OAuth, YouTube API)</li>
-                                    <li>ElevenLabs (Voice Synthesis)</li>
-                                    <li>SyncLabs (Lip Sync)</li>
-                                </ul>
-                            </section>
-                            
-                            <section className="bg-white/5 p-6 border border-white/10">
-                                <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-2">Contact Us</h2>
-                                <p className="mb-2">For privacy inquiries:</p>
-                                <a href="mailto:privacy@olleey.com" className="text-white underline hover:text-white/80">privacy@olleey.com</a>
-                            </section>
-                        </div>
-                    </div>
-                </motion.div>
-            </main>
-
-            <Footer />
+          <div className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-2 pl-4 shadow-sm">
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Moon className="w-4 h-4 text-white" /> : <Sun className="w-4 h-4 text-black" />}
+            </button>
+            <button
+              onClick={() => router.push("/register")}
+              className="px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-bold rounded-full transition-all hover:opacity-90"
+            >
+              Get Started
+            </button>
+          </div>
         </div>
-    );
+      </header>
+
+      <section className="relative z-10 max-w-6xl mx-auto px-6 lg:px-16 pt-10 pb-8">
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+          <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400 mb-4">
+            Legal
+          </p>
+          <h1 className="text-4xl md:text-6xl leading-[0.95] tracking-tight text-zinc-900 dark:text-zinc-100">
+            Privacy Policy
+          </h1>
+          <p className="mt-4 text-base md:text-lg text-zinc-600 dark:text-zinc-300 max-w-3xl">
+            This policy explains what information we process, why we process it, and how you can manage your data when using Olleey.
+          </p>
+          <div className="mt-5 inline-flex items-center gap-3 rounded-full border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-zinc-950/60 px-4 py-2 text-xs text-zinc-600 dark:text-zinc-300">
+            <Globe2 className="w-3.5 h-3.5" />
+            <span>Last updated: February 16, 2026</span>
+          </div>
+        </motion.div>
+      </section>
+
+      <section className="relative z-10 max-w-6xl mx-auto px-6 lg:px-16 pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {summaryCards.map((card, index) => {
+            const Icon = card.icon;
+            return (
+              <motion.article
+                key={card.title}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: index * 0.05 }}
+                className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white/75 dark:bg-zinc-950/60 p-5"
+              >
+                <div className="w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center mb-3">
+                  <Icon className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
+                </div>
+                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">{card.title}</h2>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{card.description}</p>
+              </motion.article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="relative z-10 max-w-6xl mx-auto px-6 lg:px-16 pb-14">
+        <div className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white/75 dark:bg-zinc-950/60 p-6 md:p-8 lg:p-10 space-y-8">
+          {policySections.map((section, index) => (
+            <motion.article
+              id={section.id}
+              key={section.id}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.35, delay: index * 0.03 }}
+              className="border-b border-zinc-200 dark:border-white/10 last:border-b-0 pb-7 last:pb-0"
+            >
+              <h3 className="text-xl md:text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                {section.title}
+              </h3>
+
+              {section.paragraphs && (
+                <div className="mt-3 space-y-3">
+                  {section.paragraphs.map((text) => (
+                    <p key={text} className="text-sm md:text-base leading-relaxed text-zinc-700 dark:text-zinc-300">
+                      {text}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {section.bullets && (
+                <ul className="mt-3 space-y-2 text-sm md:text-base text-zinc-700 dark:text-zinc-300">
+                  {section.bullets.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <span className="mt-[7px] inline-block h-1.5 w-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </motion.article>
+          ))}
+
+          <div className="rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-50/80 dark:bg-zinc-900/60 px-5 py-4">
+            <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              Privacy requests and questions:{" "}
+              <a href="mailto:privacy@olleey.com" className="font-medium underline underline-offset-2 hover:opacity-80">
+                privacy@olleey.com
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </main>
+  );
 }

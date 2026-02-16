@@ -15,10 +15,66 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://olleey.com";
+
 export const metadata: Metadata = {
-  title: "Olleey | AI-Powered Global Content Automation",
-  description: "Clone your voice, translate your videos, and reach a global audience with automated content workflows.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Olleey | AI-Powered Global Content Automation",
+    template: "%s | Olleey",
+  },
+  description:
+    "Clone your voice, translate your videos, and reach a global audience with automated content workflows.",
+  applicationName: "Olleey",
+  keywords: [
+    "AI video translation",
+    "YouTube dubbing",
+    "multilingual video localization",
+    "lip sync AI",
+    "content automation",
+  ],
+  authors: [{ name: "Olleey" }],
+  creator: "Olleey",
+  publisher: "Olleey",
+  category: "technology",
   manifest: "/favicon/site.webmanifest",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+  openGraph: {
+    type: "website",
+    siteName: "Olleey",
+    title: "Olleey | AI-Powered Global Content Automation",
+    description:
+      "Automate multilingual video workflows with translation, dubbing, review guardrails, and publishing.",
+    images: [
+      {
+        url: "/favicon/android-chrome-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "Olleey logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Olleey | AI-Powered Global Content Automation",
+    description:
+      "Automate multilingual video workflows with translation, dubbing, review guardrails, and publishing.",
+    images: ["/favicon/android-chrome-512x512.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon/favicon.ico" },

@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 import { ArrowRight, Globe2, Languages, Moon, ShieldCheck, Sparkles, Sun, Users, Handshake, TrendingUp } from "lucide-react";
 import { useThemeContext } from "@/lib/ThemeContext";
 import Footer from "@/components/LandingPage/Footer";
-import { SEO } from "@/components/SEO";
 
 const principles = [
   {
@@ -80,11 +79,6 @@ export default function MissionPage() {
 
   return (
     <main className="min-h-screen bg-[#FAFAFA] dark:bg-black text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
-      <SEO
-        title="Olleey Mission | Build Global Stories In Your Own Voice"
-        description="Learn why Olleey exists and how we are building the fastest path to high-quality global publishing."
-      />
-
       <div className="absolute inset-0 pointer-events-none opacity-[0.06] dark:opacity-[0.1] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:24px_24px]" />
 
       <header className="sticky top-0 z-30 p-4 lg:p-6 transition-colors duration-300">
