@@ -50,14 +50,14 @@ export function FeaturesSectionWithBentoGrid() {
   return (
     <section
       id="workflow-stages"
-      className="relative z-20 pt-4 pb-16 lg:pb-24 max-w-[1600px] mx-auto px-6 md:px-12 lg:px-[90px]"
+      className="relative z-20 pt-4 pb-14 md:pb-16 lg:pb-24 max-w-[1600px] mx-auto px-5 sm:px-6 md:px-12 lg:px-[90px]"
     >
 
-      <div className="mt-0 space-y-10 lg:space-y-14">
+      <div className="mt-0 space-y-8 md:space-y-10 lg:space-y-14">
         {workflowRows.map((row, index) => (
           <div
             key={row.title}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-stretch"
           >
             {row.textOnLeft ? (
               <>
@@ -87,8 +87,8 @@ export function FeaturesSectionWithBentoGrid() {
 
 function StageTextCard({ row }: { row: WorkflowRow }) {
   return (
-    <div className="h-full rounded-xl border border-black/10 dark:border-white/10 bg-transparent p-6 lg:p-8 flex flex-col justify-center">
-      <h5 className="text-3xl lg:text-5xl leading-tight tracking-tight text-black dark:text-white">{row.title}</h5>
+    <div className="h-full rounded-xl border border-black/10 dark:border-white/10 bg-transparent p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
+      <h5 className="text-2xl sm:text-3xl lg:text-5xl leading-tight tracking-tight text-black dark:text-white">{row.title}</h5>
       <p className="mt-3 text-sm lg:text-base text-neutral-700 dark:text-neutral-200 max-w-xl">{row.description}</p>
     </div>
   );
@@ -109,13 +109,13 @@ function StageVideoCard({
 
   return (
     <div
-      className="relative w-full min-h-[340px] lg:min-h-[460px] self-center overflow-hidden rounded-xl border border-black/10 dark:border-white/10 bg-cover bg-center group p-4 lg:p-5"
+      className="relative w-full min-h-[260px] sm:min-h-[300px] md:min-h-[340px] lg:min-h-[380px] xl:min-h-[440px] self-center overflow-hidden rounded-xl border border-black/10 dark:border-white/10 bg-cover bg-center group p-3 sm:p-4 lg:p-5"
       style={{ backgroundImage: `url(${STAGE_CARD_BG_URL})` }}
     >
       <div className="absolute inset-0 bg-black/20 dark:bg-black/45" />
 
       <div className="relative z-20 mx-auto w-full max-w-[900px]">
-        <div className="rounded-[1.1rem] border border-black/40 bg-zinc-900 p-2.5 lg:p-3 shadow-[0_26px_50px_rgba(0,0,0,0.35)]">
+        <div className="rounded-[1rem] sm:rounded-[1.1rem] border border-black/40 bg-zinc-900 p-2 sm:p-2.5 lg:p-3 shadow-[0_26px_50px_rgba(0,0,0,0.35)]">
           <div className="h-8 rounded-t-[0.7rem] bg-zinc-800 flex items-center gap-1.5 px-3 border-b border-black/30">
             <span className="w-2 h-2 rounded-full bg-red-400/80" />
             <span className="w-2 h-2 rounded-full bg-yellow-400/80" />

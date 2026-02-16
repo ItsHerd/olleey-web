@@ -137,7 +137,7 @@ export default function VideoDubbingShowcase() {
     <>
       <FeaturesSectionWithBentoGrid />
 
-      <section id="showcase" className="pt-24 pb-8 bg-[#FAFAFA] dark:bg-black border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300">
+      <section id="showcase" className="pt-20 md:pt-24 pb-8 bg-[#FAFAFA] dark:bg-black border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300">
 
         <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] relative z-10">
           <div className="text-center mb-16">
@@ -162,7 +162,7 @@ export default function VideoDubbingShowcase() {
             </motion.p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-8 mb-12">
             <VideoPlayer
               src="https://olleey-videos.s3.us-west-1.amazonaws.com/en.mp4"
               label="SOURCE_EN"
@@ -207,7 +207,7 @@ export default function VideoDubbingShowcase() {
               </button>
             </div>
 
-            <div className="flex gap-12 font-mono text-[10px] text-black/40 dark:text-white/40 uppercase tracking-widest">
+            <div className="flex flex-wrap justify-center gap-6 sm:gap-10 font-mono text-[10px] text-black/40 dark:text-white/40 uppercase tracking-widest">
               <div className="flex items-center gap-2">
                 <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", activeAudio === "en" ? "bg-green-600 dark:bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)]" : "bg-black/20 dark:bg-white/20")} />
                 <span className={cn("transition-colors", activeAudio === "en" ? "text-black dark:text-white" : "text-black/40 dark:text-white/40")}>Audio EN (Active)</span>

@@ -94,11 +94,6 @@ export default function HeroAscii({
   };
 
   useEffect(() => {
-    // Force light theme on landing page
-    setTheme('light');
-  }, [setTheme]);
-
-  useEffect(() => {
     const embedScript = document.createElement('script');
     embedScript.type = 'text/javascript';
     embedScript.textContent = `
@@ -136,18 +131,21 @@ export default function HeroAscii({
     <main className="relative min-h-screen overflow-hidden bg-[#FAFAFA] dark:bg-black transition-colors duration-300">
       {/* Top Header - Seamless with Hero */}
       <div className="absolute top-0 left-0 right-0 z-20 p-4 lg:p-6 transition-colors duration-300 pointer-events-none">
-        <div className="max-w-7xl mx-auto pointer-events-auto">
+        <div className="max-w-[1600px] mx-auto pointer-events-auto">
           <div className="flex items-center justify-between">
             {/* Left: Logo Island */}
-            <Link href="/" className="flex items-center group bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-2 transition-all hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-white/5">
-              <div className="relative w-12 h-12 lg:w-14 lg:h-14 transition-transform group-hover:scale-110">
+            <Link href="/" className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full">
+              <div className="relative m-1 w-12 h-12 lg:w-14 lg:h-14 p-1.5 rounded-xl overflow-hidden border border-white/20 bg-black/90">
                 <Image
-                  src="/translogo.png"
+                  src="/favicon/android-chrome-192x192.png"
                   alt="Olleey Logo"
                   fill
                   className="object-contain transition-all duration-300"
                 />
               </div>
+              <span className="mr-3 text-base lg:text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                olleey
+              </span>
             </Link>
 
             {/* Center: Nav Links Island */}
@@ -171,6 +169,13 @@ export default function HeroAscii({
 
             {/* Right: Actions Island */}
             <div className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-2 pl-4 shadow-sm">
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="hidden lg:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                aria-label="Toggle theme"
+              >
+                {theme === 'dark' ? <Moon className="w-4 h-4 text-white" /> : <Sun className="w-4 h-4 text-black" />}
+              </button>
 
               <button
                 onClick={() => {
@@ -265,8 +270,8 @@ export default function HeroAscii({
         </div>
       </div>
 
-      <div className="relative z-10 flex h-screen items-center">
-        <div className="container mx-auto px-6 lg:px-16">
+      <div className="relative z-10 flex min-h-[100svh] items-center pt-28 pb-14 sm:pt-32 lg:pt-36 lg:pb-20">
+        <div className="container mx-auto px-6 sm:px-8 lg:px-16">
           <div className="relative">
 
             <AnimatePresence mode="wait">
@@ -467,13 +472,13 @@ export default function HeroAscii({
                   transition={{ duration: 0.4, ease: "easeOut" }}
                   className="w-full"
                 >
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 xl:gap-16 items-center">
                     {/* Left side: Typography & CTA */}
-                    <div className="max-w-xl">
-                      <h1 className="text-6xl lg:text-[96px] font-normal tracking-[-0.05em] leading-[0.9] text-zinc-900 dark:text-zinc-50 mb-10 font-sans">
+                    <div className="max-w-xl lg:max-w-2xl">
+                      <h1 className="text-[2.6rem] leading-[0.9] sm:text-6xl md:text-7xl lg:text-[5.2rem] xl:text-[6rem] font-normal tracking-[-0.05em] text-zinc-900 dark:text-zinc-50 mb-7 sm:mb-8 lg:mb-10 font-sans">
                         Expand your reach <br /> in your own voice
                       </h1>
-                      <p className="text-xl lg:text-2xl text-zinc-500 dark:text-zinc-400 mb-12 leading-relaxed font-sans max-w-sm">
+                      <p className="text-base sm:text-lg lg:text-2xl text-zinc-500 dark:text-zinc-400 mb-8 sm:mb-10 lg:mb-12 leading-relaxed font-sans max-w-[34rem]">
                         In a world moving faster than ever, Olleey turns global distribution into clarity your team can act on.
                       </p>
                       <div className="flex flex-wrap gap-4">

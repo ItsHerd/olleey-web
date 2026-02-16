@@ -179,16 +179,16 @@ export default function PixelatedGlobe() {
   }, [isMobile]);
 
   return (
-    <div ref={containerRef} className="relative h-[200vh] z-0 bg-[#FAFAFA] dark:bg-black transition-colors duration-300">
+    <div ref={containerRef} className="relative h-[165vh] sm:h-[180vh] lg:h-[200vh] z-0 bg-[#FAFAFA] dark:bg-black transition-colors duration-300">
       {/* Sticky container for the globe */}
-      <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden pointer-events-none">
+      <div className="sticky top-0 h-[100svh] w-full flex items-center justify-center overflow-hidden pointer-events-none">
         <motion.div
           style={{ opacity, scale }}
-          className="relative w-full h-full max-w-[1200px] flex items-center justify-center"
+          className="relative w-full h-full max-w-[1200px] flex items-center justify-center px-2"
         >
           <canvas
             ref={canvasRef}
-            className="w-full h-full max-w-[1000px] max-h-[1000px]"
+            className="w-full h-full max-w-[980px] max-h-[980px]"
           />
 
           {/* Text Content Overlay */}
@@ -223,7 +223,7 @@ export default function PixelatedGlobe() {
       </div>
 
       {/* Spacer for scroll assembly effect */}
-      <div className="h-[100vh]" />
+      <div className="h-[70vh] sm:h-[90vh] lg:h-[100vh]" />
     </div>
   );
 }

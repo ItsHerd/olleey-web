@@ -12,7 +12,7 @@ const oklchColor = (name, alphaName = `${name}-alpha`) => ({ opacityValue, opaci
 
 module.exports = {
 	content: ["./app/**/*.{js,ts,jsx,tsx}", "./components/**/*.{js,ts,jsx,tsx}"],
-	darkMode: ['class', "class"],
+	darkMode: "class",
 	theme: {
 		extend: {
 			fontFamily: {

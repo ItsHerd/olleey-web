@@ -88,14 +88,22 @@ export default function MissionPage() {
       <div className="absolute inset-0 pointer-events-none opacity-[0.06] dark:opacity-[0.1] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:24px_24px]" />
 
       <header className="sticky top-0 z-30 p-4 lg:p-6 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center group bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-2 transition-all hover:scale-[1.02] hover:shadow-lg"
+            className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full"
           >
-            <div className="relative w-12 h-12 lg:w-14 lg:h-14 transition-transform group-hover:scale-110">
-              <Image src="/translogo.png" alt="Olleey Logo" fill className="object-contain" />
+            <div className="relative m-1 w-12 h-12 lg:w-14 lg:h-14 p-1.5 rounded-xl overflow-hidden border border-white/20 bg-black/90">
+              <Image
+                src="/favicon/android-chrome-192x192.png"
+                alt="Olleey Logo"
+                fill
+                className="object-contain"
+              />
             </div>
+            <span className="mr-3 text-base lg:text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+              olleey
+            </span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-1.5 shadow-sm">
