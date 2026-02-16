@@ -93,6 +93,11 @@ export default function HeroAscii({
   };
 
   useEffect(() => {
+    // Force light theme on landing page
+    setTheme('light');
+  }, [setTheme]);
+
+  useEffect(() => {
     const embedScript = document.createElement('script');
     embedScript.type = 'text/javascript';
     embedScript.textContent = `
@@ -118,26 +123,26 @@ export default function HeroAscii({
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#FAFAFA] dark:bg-black transition-colors duration-300">
       {/* Top Header - Seamless with Hero */}
-      <div className="absolute top-0 left-0 right-0 z-20 bg-white/90 dark:bg-black/90 backdrop-blur-sm border-b border-zinc-100 dark:border-white/10 p-4 lg:p-6 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto">
+      <div className="absolute top-0 left-0 right-0 z-20 p-4 lg:p-6 transition-colors duration-300 pointer-events-none">
+        <div className="max-w-7xl mx-auto pointer-events-auto">
           <div className="flex items-center justify-between">
-            {/* Left: Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-white/10 dark:border-white/20 p-2 transition-transform group-hover:scale-110">
+            {/* Left: Logo Island */}
+            <Link href="/" className="flex items-center gap-3 group bg-white/80 dark:bg-black/80 backdrop-blur-md border border-zinc-200 dark:border-white/10 rounded-full pl-2 pr-6 py-2 transition-all hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-white/5">
+              <div className="relative w-10 h-10 transition-transform group-hover:scale-110">
                 <Image
-                  src="/logo-transparent.png"
+                  src="/translogo.png"
                   alt="Olleey Logo"
                   fill
                   className="object-contain transition-all duration-300"
                 />
               </div>
-              <span className="text-black dark:text-white text-2xl lg:text-2xl font-300 group-hover:text-black/70 dark:group-hover:text-white/80 transition-colors">
+              <span className="text-black dark:text-white text-xl font-medium tracking-tight group-hover:text-black/80 dark:group-hover:text-white/90 transition-colors">
                 olleey.com
               </span>
             </Link>
 
-            {/* Center: Nav Links - Subtle Pill Style */}
-            <div className="hidden lg:flex items-center gap-1 bg-zinc-50 dark:bg-white/[0.05] rounded-full p-1 transition-colors duration-300">
+            {/* Center: Nav Links Island */}
+            <div className="hidden lg:flex items-center gap-1 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-zinc-200 dark:border-white/10 rounded-full p-1.5 shadow-sm">
               {navLinks?.map((link) => (
                 <a
                   key={link.label}
@@ -148,32 +153,21 @@ export default function HeroAscii({
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                   }}
-                  className="px-4 py-2 text-30 text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all tracking-normal rounded-full cursor-pointer"
+                  className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition-all rounded-full cursor-pointer"
                 >
                   {link.label}
                 </a>
               ))}
             </div>
 
-            {/* Right: Actions */}
-            <div className="flex items-center gap-4">
-              {/* Theme Toggle */}
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors hidden lg:flex items-center justify-center w-8 h-8"
-                aria-label="Toggle theme"
-              >
-                {theme === 'dark' ?
-                  <Moon className="w-4 h-4 text-white" /> :
-                  <Sun className="w-4 h-4 text-black" />
-                }
-              </button>
+            {/* Right: Actions Island */}
+            <div className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-zinc-200 dark:border-white/10 rounded-full p-2 pl-4 shadow-sm">
 
               <button
                 onClick={() => {
                   router.push('/login');
                 }}
-                className="hidden lg:block text-sm font-mono text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors tracking-normal"
+                className="hidden lg:block px-4 py-2 text-sm font-medium text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors"
               >
                 Log in
               </button>
@@ -182,7 +176,7 @@ export default function HeroAscii({
                 onClick={() => {
                   router.push('/register');
                 }}
-                className="px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-mono font-bold tracking-normal rounded-full transition-all hover:bg-black/90 dark:hover:bg-white/90 hover:shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+                className="px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-bold rounded-full transition-all hover:opacity-90 hover:shadow-lg"
               >
                 Get Started
               </button>
@@ -422,19 +416,21 @@ export default function HeroAscii({
 
                     {/* Right side: Product Screenshot */}
                     <motion.div
-                      initial={{ opacity: 0, x: 110, scale: 0.98 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      transition={{ duration: 0.7, delay: 0.35 }}
-                      className="relative h-[560px] w-full hidden lg:flex lg:justify-end"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                      className="hidden lg:block absolute -top-[5%] right-[calc(50%-50vw)] h-[650px] w-[55vw] z-0 pointer-events-none"
                     >
-                      <div className="relative h-full w-full max-w-[760px] rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 shadow-2xl overflow-hidden">
+                      <div className="relative h-full w-full bg-white dark:bg-zinc-900 border-y border-l border-zinc-200 dark:border-zinc-800 rounded-l-[2rem] shadow-2xl overflow-hidden ml-auto">
                         <Image
                           src="/herodashboard.png"
                           alt="Olleey dashboard screenshot"
                           fill
-                          className="object-cover rounded-[1.3rem]"
+                          className="object-cover object-left"
                           priority
                         />
+                         {/* Inner shadow for depth */}
+                        <div className="absolute inset-0 shadow-[inset_10px_0_20px_-10px_rgba(0,0,0,0.1)] dark:shadow-[inset_10px_0_20px_-10px_rgba(255,255,255,0.05)] pointer-events-none" />
                       </div>
                     </motion.div>
                   </div>
