@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { type Video } from "./api";
 import { useSupabaseVideos } from "./useSupabase";
 import { useAuth } from "./AuthContext";
+import { isDemoUser, YC_CEO_DEMO_VIDEO } from "./mockDemoData";
 
 /**
  * React hook for fetching and managing video data from Supabase
@@ -77,12 +78,28 @@ export function useVideos(
         language_code: sv.language_code,
       }));
 
+      const withDemoSeed = (() => {
+        if (!isDemoUser(resolvedUserId || undefined)) return mapped;
+        const hasDemoVideo = mapped.some(v => v.video_id === YC_CEO_DEMO_VIDEO.video_id);
+        if (hasDemoVideo) return mapped;
+        const seededPublishedAt = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+        return [
+          {
+            ...(YC_CEO_DEMO_VIDEO as any),
+            published_at: seededPublishedAt,
+            created_at: seededPublishedAt,
+            updated_at: seededPublishedAt,
+          } as Video,
+          ...mapped,
+        ];
+      })();
+
       console.log('[useVideos] Setting videos:', {
-        count: mapped.length,
-        firstVideo: mapped[0]?.video_id
+        count: withDemoSeed.length,
+        firstVideo: withDemoSeed[0]?.video_id
       });
 
-      setVideos(mapped);
+      setVideos(withDemoSeed);
       setError(null);
     } else if (!supabaseLoading) {
       // Only clear videos if loading is complete and we have no results

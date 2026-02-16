@@ -40,6 +40,7 @@ import { API_BASE_URL } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn, getInitialsAvatar } from "@/lib/utils";
+import { resolveClientUserId } from "@/lib/user";
 import {
   Accordion,
   AccordionContent,
@@ -88,6 +89,7 @@ export function LeftSidebar({
   onClose
 }: LeftSidebarProps) {
   const { user } = useAuth();
+  const userId = resolveClientUserId(user?.id);
   const { projects, selectedProject, setSelectedProject } = useProject();
   const isDark = theme === "dark";
 
@@ -100,24 +102,24 @@ export function LeftSidebar({
 
   const { channels, loading: channelsLoading, refetch: refetchChannels } = useDashboardChannels({
     projectId: selectedProject?.id,
-    user_id: user?.id,
-    enabled: !!user?.id && !!user
+    user_id: userId,
+    enabled: !!userId
   });
 
   const { jobs, loading: jobsLoading } = useDashboardJobs({
     projectId: selectedProject?.id,
-    user_id: user?.id,
+    user_id: userId,
     limit: 10,
-    enabled: !!user?.id && !!user
+    enabled: !!userId
   });
 
   const { videos, loading: videosLoading } = useVideos({
     project_id: selectedProject?.id,
-    user_id: user?.id,
-  }, { enabled: !!user?.id && !!user });
+    user_id: userId,
+  }, { enabled: !!userId });
 
   const { connections, loading: connectionsLoading, refetch: refetchConnections } = useDashboardConnections({
-    enabled: !!user?.id && !!user
+    enabled: !!userId
   });
 
   const handleUpdateChannelLanguage = async () => {

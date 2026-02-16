@@ -32,6 +32,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useReview } from "@/lib/ReviewContext";
 import { getFakeLocalizedText } from "@/lib/languages";
 import { motion, AnimatePresence } from "framer-motion";
+import { resolveClientUserId } from "@/lib/user";
 
 type JobFilter = "all" | "processing" | "completed" | "failed" | "waiting";
 
@@ -62,7 +63,7 @@ export default function JobsPage() {
     const router = useRouter();
     const { selectedProject } = useProject();
     const { user, loading: authLoading } = useAuth();
-    const userId = user?.id;
+    const userId = resolveClientUserId(user?.id);
 
     // Fetch videos and jobs from Supabase
     const { videos } = useVideos({ user_id: userId }, { enabled: !!userId && !authLoading });

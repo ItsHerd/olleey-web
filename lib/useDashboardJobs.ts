@@ -33,6 +33,8 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
       target_languages: sj.target_languages,
       created_at: sj.created_at,
       project_id: sj.project_id,
+      current_stage: (sj as any).current_stage,
+      workflow_state: (sj as any).workflow_state,
     }));
 
     console.log('[useDashboardJobs] Mapped jobs:', mapped);

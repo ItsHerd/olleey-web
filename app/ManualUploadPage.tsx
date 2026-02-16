@@ -12,6 +12,7 @@ import { useVideos } from "@/lib/useVideos";
 import { useSupabaseChannels } from "@/lib/useSupabase";
 import { Loader2, Zap, LayoutGrid, Rocket } from "lucide-react";
 import { motion } from "framer-motion";
+import { resolveClientUserId } from "@/lib/user";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -45,7 +46,7 @@ export default function ManualUploadPage({ channelGraph: initialChannelGraph }: 
     const { theme } = useTheme();
     const { selectedProject } = useProject();
     const { user, loading: authLoading } = useAuth();
-    const userId = user?.id;
+    const userId = resolveClientUserId(user?.id);
     
     // Fetch data from Supabase ONLY
     const { refetch: refetchVideos } = useVideos({ 

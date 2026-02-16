@@ -1,5 +1,6 @@
 import { LocalizationStatus, JobStatus, VideoType, VideoStatus, ChannelStatus as ChannelStatusEnum } from "./schema";
 import { supabase } from "./supabase";
+import { resolveClientUserId } from "./user";
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -149,6 +150,8 @@ export interface ProcessingJob {
   target_languages: string[];
   created_at: string;
   project_id?: string;
+  current_stage?: string;
+  workflow_state?: any;
 }
 
 // Note: LanguageChannel interface is defined above with full details
@@ -1165,19 +1168,22 @@ export const authenticatedFetch = async (
   options: RequestInit = {}
 ): Promise<Response> => {
   const token = tokenStorage.getAccessToken();
+  const devUserId = resolveClientUserId(null);
+  const useDevUserOverride = process.env.NODE_ENV !== "production" && !!devUserId;
 
-  if (!token) {
+  const headers = new Headers(options.headers || {});
+  if (useDevUserOverride) {
+    // Development override: force API calls to run as a chosen user ID.
+    headers.set("x-dev-user-id", devUserId);
+  } else if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  } else {
     return new Response(JSON.stringify({ detail: "No access token available" }), {
       status: 401,
       statusText: "Unauthorized",
       headers: { "Content-Type": "application/json" }
     });
   }
-
-  const headers = {
-    ...options.headers,
-    Authorization: `Bearer ${token}`,
-  };
 
   try {
     const response = await fetch(url, {
@@ -1186,7 +1192,7 @@ export const authenticatedFetch = async (
     });
 
     // If token expired, try to refresh
-    if (response.status === 401) {
+    if (response.status === 401 && token && !useDevUserOverride) {
       try {
         await authAPI.refresh();
         // Retry the request with new token
@@ -1667,9 +1673,15 @@ export const jobsAPI = {
    * Approve a webhook-detected job and start processing
    * POST /jobs/{job_id}/approve-start
    */
-  approveAndStart: async (jobId: string): Promise<{ status: string; message: string }> => {
+  approveAndStart: async (jobId: string, options?: { simulate?: boolean }): Promise<{ status: string; message: string }> => {
     const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/approve-start`, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        simulate: options?.simulate ?? true,
+      }),
     });
 
     if (!response.ok) {
@@ -1735,13 +1747,21 @@ export const jobsAPI = {
    * Save job as draft
    * POST /jobs/{job_id}/save-draft
    */
-  saveDraft: async (jobId: string, languageCode: string): Promise<{ message: string }> => {
+  saveDraft: async (
+    jobId: string,
+    languageCode: string,
+    options?: { channelId?: string; postToYouTube?: boolean }
+  ): Promise<{ message: string; localized_video_id?: string; channel_id?: string }> => {
     const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${jobId}/save-draft`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ language_code: languageCode }),
+      body: JSON.stringify({
+        language_code: languageCode,
+        channel_id: options?.channelId,
+        post_to_youtube: options?.postToYouTube ?? false,
+      }),
     });
 
     if (!response.ok) {

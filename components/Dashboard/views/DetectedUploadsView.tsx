@@ -9,6 +9,8 @@ import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { API_BASE_URL, jobsAPI, videosAPI } from "@/lib/api";
 import { useProject } from "@/lib/ProjectContext";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
+import { isDemoUser, YC_CEO_DEMO_VIDEO } from "@/lib/mockDemoData";
+import { resolveClientUserId } from "@/lib/user";
 import { SelectedItem, ViewType } from "../DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +49,15 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
   const [creatingVideoId, setCreatingVideoId] = useState<string | null>(null);
   const [dismissedDetectedVideoIds, setDismissedDetectedVideoIds] = useState<string[]>([]);
   const [autoSyncAttempted, setAutoSyncAttempted] = useState(false);
-  const userId = user?.id;
+  const userId = resolveClientUserId(user?.id);
+
+  const scheduleSimulationRefresh = () => {
+    if (typeof window === "undefined") return;
+    window.setTimeout(async () => {
+      await Promise.all([refetchJobs(), refetchVideos()]);
+      window.dispatchEvent(new CustomEvent("olleey-refresh"));
+    }, 6200);
+  };
 
   const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
     { user_id: userId },
@@ -65,8 +75,25 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
     return 7 * 24 * 60 * 60 * 1000;
   }, [detectedUploadWindow]);
 
+  const videosWithDemoSeed = useMemo(() => {
+    if (!isDemoUser(userId)) return videos;
+    const exists = videos.some((video) => video.video_id === YC_CEO_DEMO_VIDEO.video_id);
+    if (exists) return videos;
+
+    const seededPublishedAt = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+    return [
+      {
+        ...(YC_CEO_DEMO_VIDEO as any),
+        published_at: seededPublishedAt,
+        created_at: seededPublishedAt,
+        updated_at: seededPublishedAt,
+      },
+      ...videos,
+    ];
+  }, [videos, userId]);
+
   const detectedVideos = useMemo(() => {
-    return videos
+    return videosWithDemoSeed
       .filter((video) => {
         if (!video?.published_at) return false;
         const publishedAt = new Date(video.published_at).getTime();
@@ -87,7 +114,7 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
         return shouldShow && !dismissedDetectedVideoIds.includes(video.video_id);
       })
       .sort((a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime());
-  }, [videos, jobs, windowMs, dismissedDetectedVideoIds]);
+  }, [videosWithDemoSeed, jobs, windowMs, dismissedDetectedVideoIds]);
 
   const getVideoJobState = (videoId: string) => {
     const videoJobs = jobs
@@ -210,11 +237,12 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
     const existingJob = jobs.find((job) => job.job_id === jobId) || null;
     setStartingJobId(jobId);
     try {
-      await jobsAPI.approveAndStart(jobId);
+      await jobsAPI.approveAndStart(jobId, { simulate: true });
       const startedJob = await jobsAPI
         .getJobById(jobId)
         .catch(() => (existingJob ? { ...existingJob, status: "pending" } : null));
       await Promise.all([refetchJobs(), refetchVideos()]);
+      scheduleSimulationRefresh();
       setDismissedDetectedVideoIds((prev) => (prev.includes(videoId) ? prev : [...prev, videoId]));
       toast("Processing started", "success");
       if (startedJob?.job_id) {
@@ -256,13 +284,14 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
         include_lip_sync: lipSyncLanguages.length > 0,
         language_processing_modes: languageProcessingModes,
         lip_sync_languages: lipSyncLanguages,
-        is_simulation: false,
+        is_simulation: true,
       };
       if (projectId) {
         createPayload.project_id = projectId;
       }
       const createdJob = await jobsAPI.createJob(createPayload);
       await Promise.all([refetchJobs(), refetchVideos()]);
+      scheduleSimulationRefresh();
       setDismissedDetectedVideoIds((prev) => (prev.includes(video.video_id) ? prev : [...prev, video.video_id]));
       setExpandingVideoId(null);
       toast(`Processing started for ${selectedLanguages.length} language${selectedLanguages.length === 1 ? "" : "s"}`, "success");

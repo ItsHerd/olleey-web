@@ -46,6 +46,7 @@ import { ManualProcessView } from "@/components/ui/manual-process-view";
 import { X } from "lucide-react";
 import { OlleeyLoader } from "@/components/ui/OlleeyLoader";
 import { getDraftsFromStorage, isDemoUser } from "@/lib/mockDemoData";
+import { resolveClientUserId } from "@/lib/user";
 
 type ViewMode = "grid" | "list";
 type SortBy = "date" | "views" | "title" | "status";
@@ -90,7 +91,7 @@ export default function AllMediaPage({ channelGraph = [] }: AllMediaPageProps) {
   const { user, loading: authLoading } = useAuth();
 
   // Get userId from auth context
-  const userId = user?.id;
+  const userId = resolveClientUserId(user?.id);
 
   const { videos, loading: videosLoading, refetch: refetchVideos } = useVideos(
     useMemo(() => {

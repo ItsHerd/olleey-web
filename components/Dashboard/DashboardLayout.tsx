@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { SettingsProvider } from "@/lib/SettingsContext";
+import { resolveClientUserId } from "@/lib/user";
 
 export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "preferences" | "settings" | "notifications" | "account" | "guardrails" | "support" | "manual_workflow" | "review" | "preview" | "processing" | "runs" | "detected_uploads";
 export type DetailViewType = "job-detail" | "video-detail" | "channel-detail" | null;
@@ -26,7 +27,7 @@ export default function DashboardLayout() {
   const { theme } = useTheme();
   const { user, loading: authLoading } = useAuth();
   const { selectedProject } = useProject();
-  const userId = user?.id;
+  const userId = resolveClientUserId(user?.id);
   const isDark = theme === "dark";
   const bgClass = theme === "light" ? "bg-[#EBEBDC]" : "bg-[#0A0A0A]";
 
@@ -54,7 +55,7 @@ export default function DashboardLayout() {
   const { jobs } = useDashboardJobs({
     projectId: selectedProject?.id,
     user_id: userId,
-    enabled: !!userId && !!user
+    enabled: !!userId
   });
 
   // Show loading state while checking auth
@@ -69,8 +70,8 @@ export default function DashboardLayout() {
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!user) {
+  // Redirect to login only if no authenticated user and no resolved fallback user.
+  if (!user && !userId) {
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
     }

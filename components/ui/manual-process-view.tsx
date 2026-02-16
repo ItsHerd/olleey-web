@@ -63,6 +63,7 @@ import { LANGUAGE_OPTIONS, getLanguageFlag } from "@/lib/languages";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getMockDraftVideos, simulateProcessing, isDemoUser, YC_CEO_SPANISH_TRANSLATION } from "@/lib/mockDemoData";
+import { resolveClientUserId } from "@/lib/user";
 
 type SourceTab = "channel" | "url" | "upload" | "drafts";
 
@@ -91,7 +92,7 @@ export function ManualProcessView({
     const router = useRouter();
     const { theme } = useTheme();
     const { user } = useAuth();
-    const userId = user?.id;
+    const userId = resolveClientUserId(user?.id);
     const [activeTab, setActiveTab] = useState<SourceTab>("channel");
     const [currentStep, setCurrentStep] = useState(1);
     const [sourceVideoUrl, setSourceVideoUrl] = useState("");

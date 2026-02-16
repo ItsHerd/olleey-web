@@ -30,6 +30,7 @@ interface JobCardProps {
   highlight?: "review" | "error";
   onCancel?: () => void;
   onSelectLanguage?: (lang: string) => void;
+  videoTitle?: string;
 }
 
 const statusConfig = {
@@ -42,7 +43,7 @@ const statusConfig = {
   failed: { label: "Failed", color: "text-red-500", icon: AlertCircle },
 };
 
-export function JobCard({ job, onClick, theme, highlight, onCancel, onSelectLanguage }: JobCardProps) {
+export function JobCard({ job, onClick, theme, highlight, onCancel, onSelectLanguage, videoTitle }: JobCardProps) {
   const isDark = theme === "dark";
   const cardBgClass = isDark ? "bg-[#1A1A1A]" : "bg-white";
   const textClass = isDark ? "text-gray-300" : "text-gray-700";
@@ -112,7 +113,7 @@ export function JobCard({ job, onClick, theme, highlight, onCancel, onSelectLang
         <div className="flex items-start justify-between mb-1.5">
           <div className="flex-1 min-w-0">
             <h3 className={`text-sm font-semibold truncate mb-0.5 ${textClass}`}>
-              {job.source_video_id || "Untitled Video"}
+              {videoTitle || job.source_video_id || "Untitled Video"}
             </h3>
             <p className={`text-[10px] ${textSecondaryClass}`}>
               {getStageLabel()}

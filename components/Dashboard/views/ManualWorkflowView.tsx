@@ -10,6 +10,7 @@ import { useSupabaseChannels } from "@/lib/useSupabase";
 import { Loader2, Rocket } from "lucide-react";
 import { motion } from "framer-motion";
 import { ViewType } from "../DashboardLayout";
+import { resolveClientUserId } from "@/lib/user";
 
 interface ManualWorkflowViewProps {
     onViewChange?: (view: ViewType) => void;
@@ -42,7 +43,7 @@ const itemVariants = {
 export function ManualWorkflowView({ onViewChange, theme }: ManualWorkflowViewProps) {
     const { selectedProject } = useProject();
     const { user, loading: authLoading } = useAuth();
-    const userId = user?.id;
+    const userId = resolveClientUserId(user?.id);
     const isDark = theme === "dark";
 
     // Fetch data from Supabase ONLY

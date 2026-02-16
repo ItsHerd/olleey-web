@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Play, Clock, PanelRightClose, Loader2, Rss, Bell, X } from "lucide-react";
 import { SelectedItem, ViewType } from "./DashboardLayout";
@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useSettings } from "@/lib/SettingsContext";
 import { LANGUAGE_OPTIONS, getLanguageFlag } from "@/lib/languages";
 import { isDemoUser, YC_CEO_DEMO_VIDEO, YC_CEO_SPANISH_TRANSLATION } from "@/lib/mockDemoData";
+import { resolveClientUserId } from "@/lib/user";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -41,6 +42,7 @@ type StoredDetectedUploadPreferences = {
   languages: string[];
   mode: ProcessingMode;
 };
+const autoSyncRunGuard = new Set<string>();
 
 export function RightSidebar({
   selectedItem,
@@ -55,7 +57,7 @@ export function RightSidebar({
   const { openReview } = useReview();
   const { toast } = useToast();
   const { detectedUploadWindow } = useSettings();
-  const userId = user?.id;
+  const userId = resolveClientUserId(user?.id);
   const isDark = theme === "dark";
   const bgClass = isDark ? "bg-[#111111]" : "bg-[#ECE9DA]";
   const borderClass = isDark ? "border-[#2A2A2A]" : "border-gray-300/50";
@@ -67,20 +69,20 @@ export function RightSidebar({
     projectId: selectedProject?.id,
     user_id: userId,
     limit: 1000,
-    enabled: !!userId && !!user
+    enabled: !!userId
   });
 
   const { videos, error: videosError, refetch: refetchVideos } = useVideos({
     project_id: selectedProject?.id,
     user_id: userId,
-  }, { enabled: !!userId && !!user });
+  }, { enabled: !!userId });
   const {
     videos: allUserVideos,
     loading: allUserVideosLoading,
     refetch: refetchAllUserVideos
   } = useVideos({
     user_id: userId,
-  }, { enabled: !!userId && !!user });
+  }, { enabled: !!userId });
   const [autoApproveEnabled, setAutoApproveEnabled] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [savingAutoApprove, setSavingAutoApprove] = useState(false);
@@ -95,6 +97,105 @@ export function RightSidebar({
   const [autoSyncAttempted, setAutoSyncAttempted] = useState(false);
   const [autoSyncingDetected, setAutoSyncingDetected] = useState(false);
   const [cancelledJobIds, setCancelledJobIds] = useState<Set<string>>(new Set());
+  const [ephemeralJobs, setEphemeralJobs] = useState<Record<string, any>>({});
+  const [jobOverrides, setJobOverrides] = useState<Record<string, Partial<any>>>({});
+  const inFlightRefreshJobsRef = useRef<Set<string>>(new Set());
+  const lastRefreshAtByJobRef = useRef<Record<string, number>>({});
+
+  const upsertEphemeralJob = (job: any) => {
+    if (!job?.job_id) return;
+    setEphemeralJobs((prev) => {
+      const current = prev[job.job_id] || {};
+      const merged = {
+        ...current,
+        ...job,
+      };
+      const changed = Object.keys(job).some(
+        (key) => (current as any)[key] !== (merged as any)[key]
+      );
+      if (!changed) return prev;
+      return {
+        ...prev,
+        [job.job_id]: merged,
+      };
+    });
+  };
+
+  const patchJobOverride = (jobId: string, patch: Partial<any>) => {
+    setJobOverrides((prev) => {
+      const current = prev[jobId] || {};
+      const next = {
+        ...current,
+        ...patch,
+      };
+      const changed = Object.keys(patch).some(
+        (key) => (current as any)[key] !== (next as any)[key]
+      );
+      if (!changed) return prev;
+      return {
+        ...prev,
+        [jobId]: next,
+      };
+    });
+  };
+
+  const mergedJobs = useMemo(() => {
+    const byId = new Map<string, any>();
+    jobs.forEach((job) => byId.set(job.job_id, { ...job }));
+    Object.values(ephemeralJobs).forEach((job: any) => {
+      if (!job?.job_id) return;
+      byId.set(job.job_id, {
+        ...(byId.get(job.job_id) || {}),
+        ...job,
+      });
+    });
+
+    return Array.from(byId.values()).map((job: any) => ({
+      ...job,
+      ...(jobOverrides[job.job_id] || {}),
+    }));
+  }, [jobs, ephemeralJobs, jobOverrides]);
+
+  const scheduleSimulationSectionUpdate = (jobId: string) => {
+    if (typeof window === "undefined") return;
+    window.setTimeout(async () => {
+      try {
+        const latest = await jobsAPI.getJobById(jobId);
+        if (latest?.job_id) {
+          upsertEphemeralJob(latest);
+          patchJobOverride(jobId, {
+            status: latest.status,
+            progress: latest.progress,
+            current_stage: (latest as any).current_stage,
+          });
+          return;
+        }
+      } catch {
+        // Fallback optimistic move to review state.
+      }
+      patchJobOverride(jobId, {
+        status: "waiting_approval",
+        progress: 100,
+        current_stage: "completed",
+      });
+    }, 6200);
+  };
+
+  const getVideoTitleForJob = (job: any) => {
+    const video = videos.find(v => v.video_id === job.source_video_id);
+    if (video?.title) return video.title;
+
+    const metadataTitle = job?.workflow_state?.metadata?.title;
+    if (typeof metadataTitle === "string" && metadataTitle.trim().length > 0) {
+      return metadataTitle;
+    }
+
+    if (job.source_video_id === "demo_yc_ceo_video_001") {
+      return YC_CEO_DEMO_VIDEO.title;
+    }
+
+    return job.source_video_id;
+  };
 
   const handleReview = (job: any, langCode: string) => {
     // Set selected item first
@@ -108,16 +209,16 @@ export function RightSidebar({
       return;
     }
 
-    const localization = (job.source_video_id === "demo_yc_ceo_video_001" && langCode === "es") 
-        ? YC_CEO_SPANISH_TRANSLATION 
-        : (targetVideo.localizations as any)?.[langCode];
+    const localization = (job.source_video_id === "demo_yc_ceo_video_001" && langCode === "es")
+      ? YC_CEO_SPANISH_TRANSLATION
+      : (targetVideo.localizations as any)?.[langCode];
 
     openReview({
       videoId: job.source_video_id,
       languageCode: langCode,
       jobId: job.job_id,
       originalVideoUrl: (targetVideo as any).storage_url || (targetVideo as any).video_url,
-      dubbedVideoUrl: localization?.dubbed_video_url || "",
+      dubbedVideoUrl: localization?.dubbed_video_url || localization?.storage_url || localization?.video_url || "",
       videoTitle: targetVideo.title,
       videoDescription: targetVideo.description || "",
       thumbnailUrl: targetVideo.thumbnail_url,
@@ -157,19 +258,47 @@ export function RightSidebar({
   useEffect(() => {
     const handleCancelled = (e: any) => {
       const { jobId } = e.detail;
-      setCancelledJobIds(prev => new Set(prev).add(jobId));
+      setCancelledJobIds(prev => {
+        if (!jobId || prev.has(jobId)) return prev;
+        return new Set(prev).add(jobId);
+      });
     };
-    const handleRefresh = async () => {
-      await refetchJobs();
+    const handleRefresh = async (e: any) => {
+      const jobId = e?.detail?.jobId;
+      if (!jobId) return;
+      const now = Date.now();
+      const lastRefreshedAt = lastRefreshAtByJobRef.current[jobId] || 0;
+      if (now - lastRefreshedAt < 500) return;
+      if (inFlightRefreshJobsRef.current.has(jobId)) return;
+      inFlightRefreshJobsRef.current.add(jobId);
+      lastRefreshAtByJobRef.current[jobId] = now;
+      try {
+        const latest = await jobsAPI.getJobById(jobId);
+        if (latest?.job_id) {
+          upsertEphemeralJob(latest);
+        }
+      } catch {
+        // Ignore best-effort update failures.
+      } finally {
+        inFlightRefreshJobsRef.current.delete(jobId);
+      }
+    };
+    const handleJobSectionUpdate = (e: any) => {
+      const { jobId, status, progress, current_stage } = e?.detail || {};
+      if (!jobId) return;
+      if (status === undefined && progress === undefined && current_stage === undefined) return;
+      patchJobOverride(jobId, { status, progress, current_stage });
     };
 
     window.addEventListener('olleey-job-cancelled', handleCancelled);
     window.addEventListener('olleey-refresh', handleRefresh);
+    window.addEventListener('olleey-job-section-update', handleJobSectionUpdate);
     return () => {
       window.removeEventListener('olleey-job-cancelled', handleCancelled);
       window.removeEventListener('olleey-refresh', handleRefresh);
+      window.removeEventListener('olleey-job-section-update', handleJobSectionUpdate);
     };
-  }, [refetchJobs]);
+  }, []);
 
   // If there's an auth error, show a message
   if (jobsError?.includes("access token") || videosError?.includes("access token")) {
@@ -224,7 +353,24 @@ export function RightSidebar({
 
   const windowMs = getWindowMs();
 
-  const detectedVideos = allUserVideos
+  const seededDetectedSourceVideos = (() => {
+    if (!isDemoUser(userId)) return allUserVideos;
+    const exists = allUserVideos.some((video) => video.video_id === YC_CEO_DEMO_VIDEO.video_id);
+    if (exists) return allUserVideos;
+
+    const seededPublishedAt = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+    return [
+      {
+        ...(YC_CEO_DEMO_VIDEO as any),
+        published_at: seededPublishedAt,
+        created_at: seededPublishedAt,
+        updated_at: seededPublishedAt,
+      },
+      ...allUserVideos,
+    ];
+  })();
+
+  const detectedVideos = seededDetectedSourceVideos
     .filter((video) => {
       if (!video?.published_at) return false;
       const publishedAt = new Date(video.published_at).getTime();
@@ -235,7 +381,7 @@ export function RightSidebar({
       const isSourceVideo = !video.source_video_id || video.source_video_id === video.video_id;
       if (!inWindow || !isSourceVideo) return false;
 
-      const videoJobs = jobs.filter((j) => !cancelledJobIds.has(j.job_id) && j.source_video_id === video.video_id);
+      const videoJobs = mergedJobs.filter((j) => !cancelledJobIds.has(j.job_id) && j.source_video_id === video.video_id);
       const activeJobs = videoJobs.filter((j) => !["cancelled", "failed"].includes(j.status));
       const hasPreStartJob = activeJobs.some(
         (j) => j.status === "waiting_approval" && Number(j.progress || 0) === 0
@@ -248,21 +394,24 @@ export function RightSidebar({
     .sort((a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime());
 
   const getPreStartJobForVideo = (videoId: string) =>
-    jobs.find((j) => !cancelledJobIds.has(j.job_id) && j.source_video_id === videoId && j.status === "waiting_approval" && Number(j.progress || 0) === 0);
+    mergedJobs.find((j) => !cancelledJobIds.has(j.job_id) && j.source_video_id === videoId && j.status === "waiting_approval" && Number(j.progress || 0) === 0);
 
   const getAnyActiveJobForVideo = (videoId: string) =>
-    jobs.find((j) => !cancelledJobIds.has(j.job_id) && j.source_video_id === videoId && !["cancelled", "failed"].includes(j.status));
+    mergedJobs.find((j) => !cancelledJobIds.has(j.job_id) && j.source_video_id === videoId && !["cancelled", "failed"].includes(j.status));
 
   const handleCancelJob = async (e: React.MouseEvent, jobId: string) => {
     e.stopPropagation();
     try {
       // Optimistically mark as cancelled
-      setCancelledJobIds(prev => new Set(prev).add(jobId));
+      setCancelledJobIds(prev => {
+        if (prev.has(jobId)) return prev;
+        return new Set(prev).add(jobId);
+      });
       window.dispatchEvent(new CustomEvent('olleey-job-cancelled', { detail: { jobId } }));
       
       await jobsAPI.cancelJob(jobId);
+      patchJobOverride(jobId, { status: "cancelled", progress: 0 });
       toast("Job cancelled successfully", "success");
-      refetchJobs();
     } catch (err: any) {
       // Revert optimism on error
       setCancelledJobIds(prev => {
@@ -274,8 +423,15 @@ export function RightSidebar({
     }
   };
 
-  const needsReviewJobs = jobs.filter(j => !cancelledJobIds.has(j.job_id) && j.status === 'waiting_approval' && (j.progress || 0) > 0);
-  const processingJobs = jobs.filter(j =>
+  const needsReviewJobs = mergedJobs.filter((j: any) => {
+    if (cancelledJobIds.has(j.job_id)) return false;
+    if (j.status !== "waiting_approval") return false;
+    const progressReady = Number(j.progress || 0) > 0;
+    const stageReady = j.current_stage === "completed";
+    const reviewApproved = j?.workflow_state?.review?.status === "approved_manual";
+    return progressReady || stageReady || reviewApproved;
+  });
+  const processingJobs = mergedJobs.filter(j =>
     !cancelledJobIds.has(j.job_id) &&
     ['pending', 'downloading', 'processing', 'transcribing', 'translating', 'voice_cloning', 'dubbing', 'lip_sync', 'uploading'].includes(j.status)
   );
@@ -296,14 +452,24 @@ export function RightSidebar({
 
   const beginDetectedJob = async (videoId: string, jobId: string) => {
     if (startingJobId) return;
-    const existingJob = jobs.find((job) => job.job_id === jobId) || null;
+    const existingJob = mergedJobs.find((job) => job.job_id === jobId) || null;
     setStartingJobId(jobId);
     try {
-      await jobsAPI.approveAndStart(jobId);
+      await jobsAPI.approveAndStart(jobId, { simulate: true });
       const startedJob = await jobsAPI
         .getJobById(jobId)
         .catch(() => (existingJob ? { ...existingJob, status: "pending" } : null));
-      await Promise.all([refetchJobs(), refetchVideos(), refetchAllUserVideos()]);
+      if (startedJob?.job_id) {
+        upsertEphemeralJob({
+          ...startedJob,
+          status: "processing",
+          progress: Math.max(10, Number(startedJob.progress || 0)),
+          current_stage: (startedJob as any).current_stage || "processing",
+        });
+      } else if (existingJob?.job_id) {
+        patchJobOverride(jobId, { status: "processing", progress: 10, current_stage: "processing" });
+      }
+      scheduleSimulationSectionUpdate(jobId);
       setDismissedDetectedVideoIds((prev) => (prev.includes(videoId) ? prev : [...prev, videoId]));
       toast("Processing started", "success");
       if (startedJob?.job_id) {
@@ -346,13 +512,25 @@ export function RightSidebar({
         include_lip_sync: lipSyncLanguages.length > 0,
         language_processing_modes: languageProcessingModes,
         lip_sync_languages: lipSyncLanguages,
-        is_simulation: false,
+        is_simulation: true,
       };
       if (projectId) {
         createPayload.project_id = projectId;
       }
       const createdJob = await jobsAPI.createJob(createPayload);
-      await Promise.all([refetchJobs(), refetchVideos(), refetchAllUserVideos()]);
+      if (createdJob?.job_id) {
+        upsertEphemeralJob({
+          ...createdJob,
+          source_video_id: video.video_id,
+          target_languages: selectedLanguages,
+          project_id: projectId,
+          status: "processing",
+          progress: Math.max(10, Number(createdJob.progress || 0)),
+          current_stage: (createdJob as any).current_stage || "processing",
+          created_at: createdJob.created_at || new Date().toISOString(),
+        });
+        scheduleSimulationSectionUpdate(createdJob.job_id);
+      }
       setDismissedDetectedVideoIds((prev) => (prev.includes(video.video_id) ? prev : [...prev, video.video_id]));
       setExpandingVideoId(null);
       toast(`Processing started for ${selectedLanguages.length} language${selectedLanguages.length === 1 ? "" : "s"}`, "success");
@@ -440,10 +618,17 @@ export function RightSidebar({
   const isSelectingDetectedLanguages = expandingVideoId !== null;
 
   useEffect(() => {
+    const autoSyncGuardKey = `${userId || "anon"}:${selectedProject?.id || "all"}:${detectedUploadWindow}`;
+    if (currentView === "detected_uploads") return;
+    if (autoSyncRunGuard.has(autoSyncGuardKey)) {
+      if (!autoSyncAttempted) setAutoSyncAttempted(true);
+      return;
+    }
     if (!userId || loading || allUserVideosLoading || autoSyncAttempted || autoSyncingDetected || detectedVideos.length > 0) return;
 
     let cancelled = false;
     const runAutoSync = async () => {
+      autoSyncRunGuard.add(autoSyncGuardKey);
       setAutoSyncAttempted(true);
       setAutoSyncingDetected(true);
       try {
@@ -463,7 +648,7 @@ export function RightSidebar({
     return () => {
       cancelled = true;
     };
-  }, [userId, loading, allUserVideosLoading, autoSyncAttempted, autoSyncingDetected, detectedVideos.length, refetchJobs, refetchVideos, refetchAllUserVideos, toast]);
+  }, [currentView, userId, selectedProject?.id, detectedUploadWindow, loading, allUserVideosLoading, autoSyncAttempted, autoSyncingDetected, detectedVideos.length, refetchJobs, refetchVideos, refetchAllUserVideos, toast]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -779,23 +964,7 @@ export function RightSidebar({
                       // Navigate based on job status
                       if (job.status === 'waiting_approval' || job.status === 'completed') {
                         console.log('[RightSidebar] Navigating to review');
-                        // Open review with proper data
-                        openReview({
-                          videoId: job.source_video_id,
-                          languageCode: firstTargetLang,
-                          jobId: job.job_id,
-                          originalVideoUrl: (video as any)?.storage_url || (video as any)?.video_url || "",
-                          dubbedVideoUrl: "", // Will be fetched in ReviewView
-                          videoTitle: video?.title || job.source_video_id,
-                          videoDescription: video?.description || "",
-                          thumbnailUrl: video?.thumbnail_url || "",
-                          localizedTitle: "",
-                          localizedDescription: "",
-                          isApproved: false,
-                          approvedAt: video?.published_at || undefined,
-                          navigate: false // Stay within dashboard
-                        });
-                        onViewChange?.("review");
+                        handleReview(job, firstTargetLang);
                       } else if (['pending', 'downloading', 'processing', 'transcribing', 'translating', 'dubbing', 'voice_cloning', 'lip_sync', 'uploading'].includes(job.status)) {
                         console.log('[RightSidebar] Navigating to processing view');
                         onViewChange?.("processing");
@@ -818,11 +987,11 @@ export function RightSidebar({
                       </div>
                       <div className="flex flex-col min-w-0 flex-1">
                         <span className={`text-[12px] font-semibold truncate ${textClass} opacity-90 group-hover:opacity-100`}>
-                          {video?.title || job.source_video_id}
+                          {getVideoTitleForJob(job)}
                         </span>
                         
                         <div className="flex flex-wrap gap-1 mt-1.5 pb-1">
-                          {job.target_languages?.map(lang => (
+                          {job.target_languages?.map((lang: string) => (
                             <button
                               key={lang}
                               onClick={(e) => {
@@ -884,24 +1053,8 @@ export function RightSidebar({
                       // Navigate based on job status
                       if (job.status === 'waiting_approval' || job.status === 'completed') {
                         console.log('[RightSidebar] Navigating to review');
-                        const video = getJobVideo(job.source_video_id);
                         const firstTargetLang = job.target_languages?.[0] || "es";
-                        openReview({
-                          videoId: job.source_video_id,
-                          languageCode: firstTargetLang,
-                          jobId: job.job_id,
-                          originalVideoUrl: (video as any)?.storage_url || (video as any)?.video_url || "",
-                          dubbedVideoUrl: "",
-                          videoTitle: video?.title || job.source_video_id,
-                          videoDescription: video?.description || "",
-                          thumbnailUrl: video?.thumbnail_url || "",
-                          localizedTitle: "",
-                          localizedDescription: "",
-                          isApproved: false,
-                          approvedAt: video?.published_at || undefined,
-                          navigate: false
-                        });
-                        onViewChange?.("review");
+                        handleReview(job, firstTargetLang);
                       } else if (['pending', 'downloading', 'processing', 'transcribing', 'translating', 'dubbing', 'voice_cloning', 'lip_sync', 'uploading'].includes(job.status)) {
                         console.log('[RightSidebar] Navigating to processing view');
                         onViewChange?.("processing");
@@ -924,7 +1077,7 @@ export function RightSidebar({
                       </div>
                       <div className="flex flex-col min-w-0 flex-1">
                         <span className={`text-[12px] font-semibold truncate ${textClass} opacity-90`}>
-                          {video?.title || job.source_video_id}
+                          {getVideoTitleForJob(job)}
                         </span>
                         <span className={`text-[10px] ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"} mt-0.5`}>
                           {new Date(job.created_at).toLocaleDateString()}

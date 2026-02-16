@@ -105,6 +105,7 @@ const StageOneDemo = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [videoAspectRatio, setVideoAspectRatio] = useState(16 / 9);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const togglePlay = () => {
@@ -135,6 +136,12 @@ const StageOneDemo = () => {
     const onLoaded = () => {
       video.muted = true;
       setIsMuted(true);
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        const ratio = video.videoWidth / video.videoHeight;
+        if (Number.isFinite(ratio) && ratio > 0) {
+          setVideoAspectRatio(ratio);
+        }
+      }
     };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
@@ -153,8 +160,19 @@ const StageOneDemo = () => {
   }, []);
 
   return (
-    <div className="relative mt-4 rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 bg-black group">
-      <video ref={videoRef} src="/Demo1.mp4" className="w-full aspect-video object-cover" playsInline muted loop />
+    <div
+      className="relative mt-4 w-full rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 bg-black group"
+      style={{ aspectRatio: `${videoAspectRatio}` }}
+    >
+      <video
+        ref={videoRef}
+        src="/Demo1.mp4"
+        className="absolute inset-0 h-full w-full object-cover"
+        playsInline
+        muted
+        loop
+        preload="metadata"
+      />
 
       <div className="absolute top-3 left-3 inline-flex items-center gap-2 px-2 py-1 text-[10px] font-mono uppercase tracking-widest bg-black/60 text-emerald-300 border border-emerald-500/50 rounded">
         Stage 1 Demo

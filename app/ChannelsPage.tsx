@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { getInitialsAvatar } from "@/lib/utils";
 import { OlleeyLoader } from "@/components/ui/OlleeyLoader";
+import { resolveClientUserId } from "@/lib/user";
 
 type ConnectionStatus = "active" | "expired" | "restricted" | "disconnected";
 
@@ -102,7 +103,7 @@ export default function ChannelsPage() {
   const { theme } = useTheme();
   const { selectedProject } = useProject();
   const { user, loading: authLoading } = useAuth();
-  const userId = user?.id;
+  const userId = resolveClientUserId(user?.id);
 
   // Fetch channels from Supabase ONLY
   const {

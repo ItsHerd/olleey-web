@@ -25,6 +25,7 @@ import { API_BASE_URL, jobsAPI } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { ViewType } from "../DashboardLayout";
 import { X } from "lucide-react";
+import { resolveClientUserId } from "@/lib/user";
 
 interface RunsViewProps {
   theme: string;
@@ -35,19 +36,19 @@ interface RunsViewProps {
 export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
   const { user } = useAuth();
   const { selectedProject } = useProject();
-  const userId = user?.id;
+  const userId = resolveClientUserId(user?.id);
 
   const { jobs, loading, refetch } = useDashboardJobs({
     projectId: selectedProject?.id,
     user_id: userId,
     limit: 1000,
-    enabled: !!userId && !!user
+    enabled: !!userId
   });
 
   const { videos } = useVideos({
     project_id: selectedProject?.id,
     user_id: userId,
-  }, { enabled: !!userId && !!user });
+  }, { enabled: !!userId });
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [languageFilter, setLanguageFilter] = React.useState("all");

@@ -29,6 +29,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useReview } from "@/lib/ReviewContext";
 import { useVideos } from "@/lib/useVideos";
 import { isDemoUser, YC_CEO_DEMO_VIDEO, YC_CEO_SPANISH_TRANSLATION } from "@/lib/mockDemoData";
+import { resolveClientUserId } from "@/lib/user";
 
 interface DashboardViewProps {
   onSelectJob: (item: SelectedItem) => void;
@@ -63,7 +64,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
   const [viewMode, setViewMode] = useState<"agent" | "grid">("agent");
   const { user } = useAuth();
   const { selectedProject } = useProject();
-  const userId = user?.id;
+  const userId = resolveClientUserId(user?.id);
   const isDark = theme === "dark";
   const { openReview } = useReview();
   const { videos } = useVideos();
@@ -113,16 +114,16 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
       return;
     }
 
-    const localization = (job.source_video_id === "demo_yc_ceo_video_001" && langCode === "es") 
-        ? YC_CEO_SPANISH_TRANSLATION 
-        : (targetVideo.localizations as any)?.[langCode];
+    const localization = (job.source_video_id === "demo_yc_ceo_video_001" && langCode === "es")
+      ? YC_CEO_SPANISH_TRANSLATION
+      : (targetVideo.localizations as any)?.[langCode];
 
     openReview({
       videoId: job.source_video_id,
       languageCode: langCode,
       jobId: job.job_id,
       originalVideoUrl: (targetVideo as any).storage_url || (targetVideo as any).video_url,
-      dubbedVideoUrl: localization?.dubbed_video_url || "",
+      dubbedVideoUrl: localization?.dubbed_video_url || localization?.storage_url || localization?.video_url || "",
       videoTitle: targetVideo.title,
       videoDescription: targetVideo.description || "",
       thumbnailUrl: targetVideo.thumbnail_url,
@@ -136,16 +137,36 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
     onViewChange?.("review");
   };
 
+  const getJobDisplayTitle = (job: any) => {
+    const video = videos.find(v => v.video_id === job.source_video_id);
+    if (video?.title) return video.title;
+
+    const metadataTitle = job?.workflow_state?.metadata?.title;
+    if (typeof metadataTitle === "string" && metadataTitle.trim().length > 0) {
+      return metadataTitle;
+    }
+
+    if (job.source_video_id === "demo_yc_ceo_video_001") {
+      return YC_CEO_DEMO_VIDEO.title;
+    }
+
+    return job.source_video_id;
+  };
+
   // Split jobs into active and needs review, filtering out optimistically cancelled once
   const activeJobs = jobs.filter(j =>
     !cancelledJobIds.has(j.job_id) &&
     ['pending', 'downloading', 'processing', 'uploading'].includes(j.status)
   );
 
-  const needsReviewJobs = jobs.filter(j =>
-    !cancelledJobIds.has(j.job_id) &&
-    j.status === 'waiting_approval'
-  );
+  const needsReviewJobs = jobs.filter((j: any) => {
+    if (cancelledJobIds.has(j.job_id)) return false;
+    if (j.status !== "waiting_approval") return false;
+    const progressReady = Number(j.progress || 0) > 0;
+    const stageReady = j.current_stage === "completed";
+    const reviewApproved = j?.workflow_state?.review?.status === "approved_manual";
+    return progressReady || stageReady || reviewApproved;
+  });
 
   const completedRecentJobs = jobs.filter(j =>
     !cancelledJobIds.has(j.job_id) &&
@@ -273,6 +294,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                       <motion.div variants={itemVariants} key={job.job_id}>
                         <JobCard
                           job={job}
+                          videoTitle={getJobDisplayTitle(job)}
                           onClick={() =>
                             onSelectJob({ type: "job", id: job.job_id, data: job })
                           }
@@ -306,6 +328,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                       <motion.div variants={itemVariants} key={job.job_id}>
                         <JobCard
                           job={job}
+                          videoTitle={getJobDisplayTitle(job)}
                           onClick={() => {
                             onSelectJob({ type: "job", id: job.job_id, data: job });
                             // Now we prefer language-specific review
@@ -344,6 +367,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
                       <motion.div variants={itemVariants} key={job.job_id}>
                         <JobCard
                           job={job}
+                          videoTitle={getJobDisplayTitle(job)}
                           onClick={() =>
                             onSelectJob({ type: "job", id: job.job_id, data: job })
                           }
