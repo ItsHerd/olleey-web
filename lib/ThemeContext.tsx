@@ -14,13 +14,13 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [theme, setThemeState] = useState<Theme>('dark');
+    const [theme, setThemeState] = useState<Theme>('light');
     const [isLoading, setIsLoading] = useState(true);
 
     // Initialize theme on mount
     useEffect(() => {
         const initTheme = async () => {
-            let resolvedTheme: Theme = 'dark';
+            let resolvedTheme: Theme = 'light';
 
             // 1. Try localStorage
             if (typeof window !== "undefined") {
@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 if (saved) {
                     resolvedTheme = saved;
                 } else {
-                    resolvedTheme = 'dark';
+                    resolvedTheme = 'light';
                 }
             }
 

@@ -50,7 +50,7 @@ export function FeaturesSectionWithBentoGrid() {
   return (
     <section
       id="workflow-stages"
-      className="relative z-20 w-full bg-white dark:bg-[#141414] pt-16 md:pt-24 lg:pt-32 pb-14 md:pb-16 lg:pb-24 border-t border-black/5 dark:border-white/5"
+      className="relative z-20 w-full bg-[#FAFAFA] dark:bg-[#141414] pt-16 md:pt-24 lg:pt-32 pb-14 md:pb-16 lg:pb-24"
     >
       <div className="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-12 lg:px-[90px]">
         <div className="text-left mb-16 lg:mb-20">

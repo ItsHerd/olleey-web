@@ -129,15 +129,15 @@ export default function HeroAscii({
 
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#FAFAFA] dark:bg-black transition-colors duration-300">
+    <main className="relative min-h-screen overflow-hidden bg-[#FAFAFA] dark:bg-[#141414] transition-colors duration-300">
       {/* Top Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 lg:py-4 lg:px-10 transition-colors duration-300 pointer-events-none bg-[#FAFAFA]/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5">
+      <div className="fixed top-0 left-0 right-0 z-50 p-4 lg:py-4 lg:px-10 transition-colors duration-300 pointer-events-none bg-[#FAFAFA]/80 dark:bg-[#141414]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5">
         <div className="max-w-[1400px] mx-auto pointer-events-auto">
           <div className="flex items-center justify-between">
             {/* Left: Logo */}
             <div className="flex items-center gap-10 xl:gap-14">
               <Link href="/" className="flex items-center gap-2">
-                <div className="relative w-7 h-7 rounded-full overflow-hidden bg-black dark:bg-white flex items-center justify-center">
+                <div className="relative w-7 h-7 rounded-lg overflow-hidden bg-black dark:bg-white flex items-center justify-center">
                   <Image
                     src="/favicon/android-chrome-192x192.png"
                     alt="Olleey Logo"
@@ -146,7 +146,7 @@ export default function HeroAscii({
                   />
                 </div>
                 <span className="text-xl font-medium tracking-tight text-zinc-900 dark:text-zinc-100 mt-0.5">
-                  olleey.
+                  olleey
                 </span>
               </Link>
 
@@ -537,7 +537,7 @@ export default function HeroAscii({
                       transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
                       className="w-full max-w-[1200px] relative mx-auto px-4 md:px-8 flex justify-center translate-y-[1px]"
                     >
-                      <div className="relative w-full rounded-t-2xl md:rounded-t-[2rem] overflow-hidden shadow-2xl border-t border-x border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141414] border-b-0">
+                      <div className="relative w-full rounded-t-2xl md:rounded-t-[2rem] overflow-hidden shadow-[0_-8px_30px_rgba(0,0,0,0.12)] border-t border-x border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141414] border-b-0">
                         <Image
                           src="/herodashboard.png"
                           alt="Olleey Dashboard"
@@ -546,8 +546,8 @@ export default function HeroAscii({
                           className="w-full h-auto object-contain object-bottom align-bottom mb-[-1px]"
                           priority
                         />
-                        {/* Bottom Fade Gradient overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 h-[20%] bg-gradient-to-t from-[#FAFAFA] dark:from-black to-transparent pointer-events-none" />
+                        {/* Small Bottom Fade Gradient overlay */}
+                        <div className="absolute bottom-[-2px] left-0 right-0 h-[10%] bg-gradient-to-t from-[#FAFAFA] to-transparent dark:from-[#141414] pointer-events-none z-10" />
                       </div>
                     </motion.div>
                   </div>
