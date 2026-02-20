@@ -42,6 +42,7 @@ export default function HeroAscii({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [heroEmail, setHeroEmail] = useState("");
   const { signIn, signUp, signInWithGoogle } = useAuth();
 
   const handleAuth = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -129,71 +130,65 @@ export default function HeroAscii({
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#FAFAFA] dark:bg-black transition-colors duration-300">
-      {/* Top Header - Seamless with Hero */}
-      <div className="absolute top-0 left-0 right-0 z-20 p-4 lg:p-6 transition-colors duration-300 pointer-events-none">
-        <div className="max-w-[1600px] mx-auto pointer-events-auto">
+      {/* Top Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 p-4 lg:py-4 lg:px-10 transition-colors duration-300 pointer-events-none bg-[#FAFAFA]/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5">
+        <div className="max-w-[1400px] mx-auto pointer-events-auto">
           <div className="flex items-center justify-between">
-            {/* Left: Logo Island */}
-            <Link href="/" className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full">
-              <div className="relative m-1 w-12 h-12 lg:w-14 lg:h-14 p-1.5 rounded-xl overflow-hidden border border-white/20 bg-black/90">
-                <Image
-                  src="/favicon/android-chrome-192x192.png"
-                  alt="Olleey Logo"
-                  fill
-                  className="object-contain transition-all duration-300"
-                />
-              </div>
-              <span className="mr-3 text-base lg:text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-                olleey
-              </span>
-            </Link>
+            {/* Left: Logo */}
+            <div className="flex items-center gap-10 xl:gap-14">
+              <Link href="/" className="flex items-center gap-2">
+                <div className="relative w-7 h-7 rounded-full overflow-hidden bg-black dark:bg-white flex items-center justify-center">
+                  <Image
+                    src="/favicon/android-chrome-192x192.png"
+                    alt="Olleey Logo"
+                    fill
+                    className="object-cover p-[5px] invert dark:invert-0"
+                  />
+                </div>
+                <span className="text-xl font-medium tracking-tight text-zinc-900 dark:text-zinc-100 mt-0.5">
+                  olleey.
+                </span>
+              </Link>
 
-            {/* Center: Nav Links Island */}
-            <div className="hidden lg:flex items-center gap-1 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-1.5 shadow-sm">
-              {navLinks?.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={(e) => {
-                    if (link.label === 'Home') {
-                      e.preventDefault();
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                  }}
-                  className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition-all rounded-full cursor-pointer"
-                >
-                  {link.label}
-                </a>
-              ))}
+              {/* Center: Nav Links */}
+              <div className="hidden lg:flex items-center gap-8">
+                <Link href="#showcase" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
+                  Product
+                </Link>
+                <Link href="#workflow-stages" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
+                  Workflows
+                </Link>
+                <Link href="/mission" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
+                  Mission
+                </Link>
+                <Link href="#faq" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
+                  FAQ
+                </Link>
+              </div>
             </div>
 
-            {/* Right: Actions Island */}
-            <div className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-2 pl-4 shadow-sm">
+            {/* Right: Actions */}
+            <div className="flex items-center gap-6">
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="hidden lg:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                className="hidden lg:flex items-center justify-center w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                 aria-label="Toggle theme"
               >
                 {theme === 'dark' ? <Moon className="w-4 h-4 text-white" /> : <Sun className="w-4 h-4 text-black" />}
               </button>
 
               <button
-                onClick={() => {
-                  router.push('/login');
-                }}
-                className="hidden lg:block px-4 py-2 text-sm font-medium text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors"
+                onClick={() => router.push('/register')}
+                className="hidden lg:block text-[15px] font-medium text-zinc-900 dark:text-zinc-100 hover:opacity-70 transition-opacity"
               >
-                Log in
+                Get started
               </button>
 
               <button
-                onClick={() => {
-                  router.push('/register');
-                  setMobileMenuOpen(false);
-                }}
-                className="px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-bold rounded-full transition-all hover:opacity-90 hover:shadow-lg"
+                onClick={() => router.push('/login')}
+                className="hidden lg:block px-4 py-2 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-[15px] font-medium text-zinc-900 dark:text-zinc-100 hover:opacity-80 transition-all"
               >
-                Get Started
+                Login
               </button>
 
               {/* Mobile Menu Button */}
@@ -207,9 +202,9 @@ export default function HeroAscii({
                   <X className="w-5 h-5 text-black dark:text-white" />
                 ) : (
                   <div className="flex flex-col gap-1.5">
-                    <div className="w-5 h-0.5 bg-black dark:bg-white rounded-full transition-colors"></div>
-                    <div className="w-4 h-0.5 bg-black/60 dark:bg-white/60 rounded-full transition-colors"></div>
-                    <div className="w-5 h-0.5 bg-black dark:bg-white rounded-full transition-colors"></div>
+                    <div className="w-5 h-[2px] bg-black dark:bg-white rounded-full transition-colors"></div>
+                    <div className="w-5 h-[2px] bg-black dark:bg-white rounded-full transition-colors"></div>
+                    <div className="w-5 h-[2px] bg-black dark:bg-white rounded-full transition-colors"></div>
                   </div>
                 )}
               </button>
@@ -223,7 +218,7 @@ export default function HeroAscii({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="lg:hidden mt-3 rounded-2xl bg-white/90 dark:bg-black/90 backdrop-blur-md p-3 shadow-lg"
+                className="lg:hidden mt-3 rounded-2xl bg-white/90 dark:bg-[#141414]/90 backdrop-blur-md p-3 shadow-lg"
               >
                 <div className="flex flex-col gap-1">
                   {navLinks?.map((link) => (
@@ -270,8 +265,8 @@ export default function HeroAscii({
         </div>
       </div>
 
-      <div className="relative z-10 flex min-h-[100svh] items-center pt-28 pb-14 sm:pt-32 lg:pt-36 lg:pb-20">
-        <div className="container mx-auto px-6 sm:px-8 lg:px-16">
+      <div className="relative z-10 pt-24 sm:pt-28 lg:pt-32 pb-0">
+        <div className="container mx-auto px-0 sm:px-8 lg:px-16 w-full">
           <div className="relative">
 
             <AnimatePresence mode="wait">
@@ -466,48 +461,93 @@ export default function HeroAscii({
               ) : (
                 <motion.div
                   key="hero-content"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="w-full"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="w-full flex justify-center"
                 >
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 xl:gap-16 items-center">
-                    {/* Left side: Typography & CTA */}
-                    <div className="max-w-xl lg:max-w-2xl">
-                      <h1 className="text-[2.6rem] leading-[0.9] sm:text-6xl md:text-7xl lg:text-[5.2rem] xl:text-[6rem] font-normal tracking-[-0.05em] text-zinc-900 dark:text-zinc-50 mb-7 sm:mb-8 lg:mb-10 font-sans">
-                        Expand your reach <br /> in your own voice
-                      </h1>
-                      <p className="text-base sm:text-lg lg:text-2xl text-zinc-500 dark:text-zinc-400 mb-8 sm:mb-10 lg:mb-12 leading-relaxed font-sans max-w-[34rem]">
-                        In a world moving faster than ever, Olleey turns global distribution into clarity your team can act on.
-                      </p>
-                      <div className="flex flex-wrap gap-4">
-                        <button
-                          onClick={() => window.open("https://cal.com/ahmad-moltafet-q8mgvt", "_blank", "noopener,noreferrer")}
-                          className="px-6 py-3 bg-transparent border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-50 rounded-full font-sans font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all text-sm"
-                        >
-                          Request a demo
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Right side: Product Screenshot */}
+                  <div className="w-full max-w-[1240px] flex flex-col items-center text-center pt-6">
+                    {/* Tag Pill */}
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-                      className="hidden lg:block absolute -top-[5%] right-[calc(50%-50vw)] h-[650px] w-[55vw] z-0 pointer-events-none"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1, duration: 0.5 }}
                     >
-                      <div className="relative h-full w-full bg-white dark:bg-zinc-900 border-y border-l border-zinc-200 dark:border-zinc-800 rounded-l-[2rem] shadow-2xl overflow-hidden ml-auto">
+                      <Link href="/mission" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-[#141414] border border-zinc-200 dark:border-zinc-800 shadow-sm mb-8 hover:shadow-md transition-shadow">
+                        <span className="text-sm cursor-pointer">🗣️</span>
+                        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 cursor-pointer">Our Mission and Values</span>
+                        <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </Link>
+                    </motion.div>
+
+                    {/* Headline */}
+                    <motion.h1
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
+                      className="text-5xl sm:text-6xl md:text-[5rem] lg:text-[5.5rem] font-bold tracking-[-0.02em] text-zinc-900 dark:text-zinc-50 mb-5 leading-[1.05]"
+                    >
+                      Expand your reach <br className="hidden md:block" /> <span className="italic font-serif font-medium" style={{ fontFamily: 'Georgia, serif' }}>in your own voice</span>
+                    </motion.h1>
+
+                    {/* Subtitle */}
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+                      className="text-lg md:text-[1.3rem] text-zinc-600 dark:text-zinc-400 mb-8 max-w-[800px] leading-relaxed font-medium"
+                    >
+                      In a world moving faster than ever, Olleey turns global distribution into clarity your team can act on.
+                    </motion.p>
+
+                    {/* Form */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
+                      className="w-full max-w-[400px] bg-transparent mx-auto mb-12 flex flex-col gap-5 text-left px-4"
+                    >
+                      <div>
+                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">What's your email?</label>
+                        <input
+                          type="email"
+                          placeholder="walt@disney.com"
+                          value={heroEmail}
+                          onChange={(e) => setHeroEmail(e.target.value)}
+                          className="w-full px-4 py-3.5 rounded-[10px] border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-[#141414] text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-shadow text-[15px]"
+                        />
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (heroEmail.trim()) {
+                            window.open("https://youtu.be/FIjDXwAAuq8", "_blank");
+                          }
+                        }}
+                        className="w-full mt-1 bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-semibold text-[17px] hover:opacity-90 transition-opacity shadow-lg"
+                      >
+                        Get demo
+                      </button>
+                    </motion.div>
+
+                    {/* Image */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 50 }}
+                      animate={{ opacity: 1, y: 1 }}
+                      transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+                      className="w-full max-w-[1200px] relative mx-auto px-4 md:px-8 flex justify-center translate-y-[1px]"
+                    >
+                      <div className="relative w-full rounded-t-2xl md:rounded-t-[2rem] overflow-hidden shadow-2xl border-t border-x border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141414] border-b-0">
                         <Image
                           src="/herodashboard.png"
-                          alt="Olleey dashboard screenshot"
-                          fill
-                          className="object-cover object-left"
+                          alt="Olleey Dashboard"
+                          width={2400}
+                          height={1600}
+                          className="w-full h-auto object-contain object-bottom align-bottom mb-[-1px]"
                           priority
                         />
-                         {/* Inner shadow for depth */}
-                        <div className="absolute inset-0 shadow-[inset_10px_0_20px_-10px_rgba(0,0,0,0.1)] dark:shadow-[inset_10px_0_20px_-10px_rgba(255,255,255,0.05)] pointer-events-none" />
+                        {/* Bottom Fade Gradient overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 h-[20%] bg-gradient-to-t from-[#FAFAFA] dark:from-black to-transparent pointer-events-none" />
                       </div>
                     </motion.div>
                   </div>
@@ -590,6 +630,6 @@ export default function HeroAscii({
           opacity: 0.3;
         }
       `}</style>
-    </main>
+    </main >
   );
 }

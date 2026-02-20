@@ -227,59 +227,63 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
       heroImageSrc={heroImageSrc}
       testimonials={testimonials}
     >
-      <form className="space-y-4" onSubmit={onSignUp}>
-        <div className="animate-element animate-delay-300">
-          <label className="text-sm font-medium text-muted-foreground">Full Name (Optional)</label>
-          <GlassInputWrapper>
-            <input name="name" type="text" placeholder="Enter your full name" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
-          </GlassInputWrapper>
+      <form className="space-y-5" onSubmit={onSignUp}>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="animate-element animate-delay-300 flex-1">
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Full Name (Optional)</label>
+            <GlassInputWrapper>
+              <input name="name" type="text" placeholder="e.g. Walt Disney" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
+            </GlassInputWrapper>
+          </div>
+
+          <div className="animate-element animate-delay-400 flex-1">
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Email Address</label>
+            <GlassInputWrapper>
+              <input name="email" type="email" placeholder="hello@example.com" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
+            </GlassInputWrapper>
+          </div>
         </div>
 
-        <div className="animate-element animate-delay-400">
-          <label className="text-sm font-medium text-muted-foreground">Email Address</label>
-          <GlassInputWrapper>
-            <input name="email" type="email" placeholder="Enter your email address" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
-          </GlassInputWrapper>
-        </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="animate-element animate-delay-500 flex-1">
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Password</label>
+            <GlassInputWrapper>
+              <div className="relative">
+                <input name="password" type={showPassword ? 'text' : 'password'} placeholder="Min. 8 chars" className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-2 flex items-center h-full hover:bg-transparent"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" /> : <Eye className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />}
+                </Button>
+              </div>
+            </GlassInputWrapper>
+          </div>
 
-        <div className="animate-element animate-delay-500">
-          <label className="text-sm font-medium text-muted-foreground">Password</label>
-          <GlassInputWrapper>
-            <div className="relative">
-              <input name="password" type={showPassword ? 'text' : 'password'} placeholder="Create a password (min. 8 characters)" className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none" />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3 flex items-center h-full hover:bg-transparent"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" /> : <Eye className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />}
-              </Button>
-            </div>
-          </GlassInputWrapper>
-        </div>
-
-        <div className="animate-element animate-delay-600">
-          <label className="text-sm font-medium text-muted-foreground">Confirm Password</label>
-          <GlassInputWrapper>
-            <div className="relative">
-              <input name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} placeholder="Confirm your password" className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none" />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-3 flex items-center h-full hover:bg-transparent"
-              >
-                {showConfirmPassword ? <EyeOff className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" /> : <Eye className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />}
-              </Button>
-            </div>
-          </GlassInputWrapper>
+          <div className="animate-element animate-delay-600 flex-1">
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Confirm Password</label>
+            <GlassInputWrapper>
+              <div className="relative">
+                <input name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} placeholder="Confirm password" className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-2 flex items-center h-full hover:bg-transparent"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" /> : <Eye className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />}
+                </Button>
+              </div>
+            </GlassInputWrapper>
+          </div>
         </div>
 
         <div className="animate-element animate-delay-700">
-          <label className="text-sm font-medium text-muted-foreground">Invite Access Code</label>
+          <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Invite Access Code</label>
           <GlassInputWrapper>
             <input name="accessCode" type="text" placeholder="Enter your invite code" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
           </GlassInputWrapper>

@@ -78,65 +78,80 @@ export default function MissionPage() {
   const { theme, setTheme } = useThemeContext();
 
   return (
-    <main className="min-h-screen bg-[#FAFAFA] dark:bg-black text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
+    <main className="relative min-h-screen bg-[#FAFAFA] dark:bg-black text-zinc-900 dark:text-zinc-100 transition-colors duration-300 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none opacity-[0.06] dark:opacity-[0.1] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:24px_24px]" />
 
-      <header className="sticky top-0 z-30 p-4 lg:p-6 transition-colors duration-300">
-        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full"
-          >
-            <div className="relative m-1 w-12 h-12 lg:w-14 lg:h-14 p-1.5 rounded-xl overflow-hidden border border-white/20 bg-black/90">
-              <Image
-                src="/favicon/android-chrome-192x192.png"
-                alt="Olleey Logo"
-                fill
-                className="object-contain"
-              />
+      {/* Background Image Overlay */}
+      <div
+        className="fixed top-0 bottom-0 right-0 z-0 w-full md:w-1/2 bg-no-repeat bg-right opacity-30 dark:opacity-40 pointer-events-none bg-contain md:bg-[length:auto_100%]"
+        style={{ backgroundImage: `url('https://store-images.s-microsoft.com/image/apps.22527.14241444633392716.d6c44b65-031f-4f2a-851c-57ad619710a4.56f38a83-7224-4d82-8eec-6a52ab513be9?h=1280')` }}
+      />
+
+      <header className="fixed top-0 left-0 right-0 z-50 p-4 lg:py-4 lg:px-10 transition-colors duration-300 pointer-events-none bg-[#FAFAFA]/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5">
+        <div className="max-w-[1400px] mx-auto pointer-events-auto">
+          <div className="flex items-center justify-between">
+            {/* Left: Logo */}
+            <div className="flex items-center gap-10 xl:gap-14">
+              <Link href="/" className="flex items-center gap-2">
+                <div className="relative w-7 h-7 rounded-full overflow-hidden bg-black dark:bg-white flex items-center justify-center">
+                  <Image
+                    src="/favicon/android-chrome-192x192.png"
+                    alt="Olleey Logo"
+                    fill
+                    className="object-cover p-[5px] invert dark:invert-0"
+                  />
+                </div>
+                <span className="text-xl font-medium tracking-tight text-zinc-900 dark:text-zinc-100 mt-0.5">
+                  olleey.
+                </span>
+              </Link>
+
+              {/* Center: Nav Links */}
+              <div className="hidden lg:flex items-center gap-8">
+                <Link href="/#showcase" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
+                  Product
+                </Link>
+                <Link href="/#workflow-stages" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
+                  Workflows
+                </Link>
+                <Link href="/mission" className="text-[15px] font-medium text-black dark:text-white transition-colors">
+                  Mission
+                </Link>
+                <Link href="/#faq" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
+                  FAQ
+                </Link>
+              </div>
             </div>
-            <span className="mr-3 text-base lg:text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              olleey
-            </span>
-          </Link>
 
-          <nav className="hidden lg:flex items-center gap-1 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-1.5 shadow-sm">
-            <Link href="/" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
-              Home
-            </Link>
-            <Link href="/#distribution" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
-              Workflows
-            </Link>
-            <Link href="/#product" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
-              Product
-            </Link>
-            <Link href="/mission" className="px-5 py-2 text-sm font-medium text-black dark:text-white bg-zinc-100 dark:bg-white/10 rounded-full">
-              Mission
-            </Link>
-            <Link href="/#faq" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
-              FAQ
-            </Link>
-          </nav>
+            {/* Right: Actions */}
+            <div className="flex items-center gap-6">
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="hidden lg:flex items-center justify-center w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                aria-label="Toggle theme"
+              >
+                {theme === 'dark' ? <Moon className="w-4 h-4 text-white" /> : <Sun className="w-4 h-4 text-black" />}
+              </button>
 
-          <div className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-2 pl-4 shadow-sm">
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Moon className="w-4 h-4 text-white" /> : <Sun className="w-4 h-4 text-black" />}
-            </button>
-            <button
-              onClick={() => router.push("/register")}
-              className="px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-bold rounded-full transition-all hover:opacity-90"
-            >
-              Get Started
-            </button>
+              <button
+                onClick={() => router.push('/register')}
+                className="hidden lg:block text-[15px] font-medium text-zinc-900 dark:text-zinc-100 hover:opacity-70 transition-opacity"
+              >
+                Get started
+              </button>
+
+              <button
+                onClick={() => router.push('/login')}
+                className="px-4 py-2 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-[15px] font-medium text-zinc-900 dark:text-zinc-100 hover:opacity-80 transition-all"
+              >
+                Login
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <section className="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 pt-8 pb-10">
+      <section className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] pt-40 pb-16">
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <p className="text-[11px] font-mono uppercase tracking-[0.25em] text-zinc-500 dark:text-zinc-400 mb-5">Olleey Mission</p>
           <h1 className="text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-[-0.04em] mb-8">

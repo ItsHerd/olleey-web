@@ -146,18 +146,18 @@ export default function VideoDubbingShowcase() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-3xl md:text-5xl font-normal text-black dark:text-white font-mono uppercase tracking-tight mb-4 transition-colors duration-300"
+              className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mb-6 font-sans transition-colors duration-300"
             >
-              Source vs. <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-cyan-600 dark:from-green-400 dark:via-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent transition-colors duration-300">Localized.</span>
+              Original vs. <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-cyan-600 dark:from-green-400 dark:via-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent transition-colors duration-300">Dubbed.</span>
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="text-sm text-neutral-600 dark:text-gray-400 font-mono max-w-2xl mx-auto transition-colors duration-300"
+              className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl font-sans leading-relaxed mx-auto transition-colors duration-300"
             >
-              Parallel comparison of original English source and AI-dubbed Spanish version.
+              Parallel comparison of the original English video and its AI-dubbed Spanish version.
               Click either video to switch the audio track and compare the output.
             </motion.p>
           </div>
