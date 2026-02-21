@@ -651,8 +651,8 @@ export function ManualProcessView({
                                                             <label className="text-xs font-medium text-muted-foreground">Source channel</label>
                                                         </div>
                                                         <Select value={sourceChannelId} onValueChange={setSourceChannelId}>
-                                                                <SelectTrigger className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20">
-                                                                    <SelectValue placeholder="Select associated channel..." />
+                                                            <SelectTrigger className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20">
+                                                                <SelectValue placeholder="Select associated channel..." />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {availableChannels.map(c => (
@@ -1097,12 +1097,12 @@ export function ManualProcessView({
 
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center py-3 border-b border-border group/line">
-                                            <span className="text-xs font-medium text-muted-foreground group-hover/line:text-foreground transition-colors">Source type</span>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-medium text-foreground capitalize">{activeTab}</span>
-                                                <div className="w-1 h-1 rounded-full bg-primary" />
-                                            </div>
+                                        <span className="text-xs font-medium text-muted-foreground group-hover/line:text-foreground transition-colors">Source type</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-medium text-foreground capitalize">{activeTab}</span>
+                                            <div className="w-1 h-1 rounded-full bg-primary" />
                                         </div>
+                                    </div>
                                     <div className={`flex justify-between items-center py-3 border-b ${isDark ? "border-white/10" : "border-gray-200"} group/line`}>
                                         <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Targets</span>
                                         <div className="flex items-center gap-2">
@@ -1225,20 +1225,7 @@ export function ManualProcessView({
                                     </Button>
                                     {!isSuccessState && (
                                         <>
-                                            <Button
-                                                size="lg"
-                                                onClick={(e) => handleSubmit(e, true)}
-                                                disabled={isSubmitting || isSuccessState}
-                                                className={`w-full h-10 text-xs font-medium transition-all duration-500 rounded-lg relative overflow-hidden group/draft ${isDark
-                                                    ? 'bg-white/5 text-white/70 border-2 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
-                                                    : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 hover:text-gray-900 hover:border-gray-300'
-                                                    } active:scale-95`}
-                                            >
-                                                <span className="flex items-center gap-3">
-                                                    <FolderOpen className="w-4 h-4 group-hover/draft:scale-110 transition-transform" />
-                                                    Save as Draft
-                                                </span>
-                                            </Button>
+
                                             <Button
                                                 variant="ghost"
                                                 onClick={onCancel}
