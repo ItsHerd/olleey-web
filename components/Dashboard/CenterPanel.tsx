@@ -9,6 +9,7 @@ import { RunsView } from "./views/RunsView";
 import { VoicesView } from "./views/VoicesView";
 import { PreferencesView } from "./views/PreferencesView";
 import { AccountView } from "./views/AccountView";
+import { AnalyticsView } from "./views/AnalyticsView";
 import { NotificationsView } from "./views/NotificationsView";
 import { SupportView } from "./views/SupportView";
 import { ManualWorkflowView } from "./views/ManualWorkflowView";
@@ -17,6 +18,7 @@ import { PreviewView } from "./views/PreviewView";
 import { DetectedUploadsView } from "./views/DetectedUploadsView";
 import ProcessingPage from "@/app/ProcessingPage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { DashboardViewHeader } from "./components/DashboardViewHeader";
 
 interface CenterPanelProps {
   currentView: ViewType;
@@ -62,7 +64,9 @@ export function CenterPanel({
       case "settings":
         return <PreferencesView theme={theme} />;
       case "account":
-        return <AccountView theme={theme} />;
+        return <AccountView theme={theme} onViewChange={onViewChange} />;
+      case "analytics":
+        return <AnalyticsView theme={theme} />;
       case "notifications":
         return <NotificationsView theme={theme} />;
       case "guardrails":
@@ -89,19 +93,28 @@ export function CenterPanel({
   const baseView = currentView === "processing" ? lastNonProcessingViewRef.current : currentView;
 
   return (
-    <div className={`flex-1 overflow-auto relative ${bgClass}`}>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={selectedItem.id || baseView}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="h-full"
-        >
-          {renderViewFor(baseView)}
-        </motion.div>
-      </AnimatePresence>
+    <div className={`relative flex-1 overflow-hidden ${bgClass}`}>
+      <div className="flex h-full flex-col">
+        <DashboardViewHeader
+          view={baseView}
+          theme={theme}
+          onBackHome={() => onViewChange("dashboard")}
+        />
+        <div className="flex-1 overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedItem.id || baseView}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="h-full"
+            >
+              {renderViewFor(baseView)}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
 
       <Dialog open={currentView === "processing"} onOpenChange={(open) => !open && handleCloseProcessingModal()}>
         <DialogContent className="w-[min(980px,90vw)] max-w-[90vw] max-h-[80vh] p-0 gap-0 overflow-hidden">

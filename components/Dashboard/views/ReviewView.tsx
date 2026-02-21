@@ -418,7 +418,7 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                         className={cn(
                                                             "h-7 text-[8px] font-black uppercase tracking-wider border-dashed px-2",
                                                             isDark 
-                                                                ? "bg-white/5 border-white/20 text-white hover:bg-white/10" 
+                                                                ? "bg-white/5 border-zinc-700 text-white hover:bg-white/10 hover:border-zinc-500" 
                                                                 : "border-primary/20 text-primary hover:bg-primary/5"
                                                         )}
                                                         onClick={() => handleGenerateMetadataWithAI("title")}
@@ -490,7 +490,7 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                     className={cn(
                                                         "h-7 font-black text-[8px] uppercase tracking-wider border-dashed px-2",
                                                         isDark 
-                                                            ? "bg-white/5 border-white/20 text-white hover:bg-white/10" 
+                                                            ? "bg-white/5 border-zinc-700 text-white hover:bg-white/10 hover:border-zinc-500" 
                                                             : "border-primary/20 text-primary hover:bg-primary/5"
                                                     )}
                                                     onClick={() => handleGenerateMetadataWithAI("thumbnail")}
@@ -549,7 +549,7 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                                 className={cn(
                                                     "w-full h-9 rounded-xl text-[10px] font-black uppercase tracking-wider",
                                                     isDark
-                                                        ? "bg-white/5 border-white/15 text-white hover:bg-white/10"
+                                                        ? "bg-white/5 border-zinc-700 text-white hover:bg-white/10 hover:border-zinc-500"
                                                         : "bg-card border-border text-foreground hover:bg-muted/40"
                                                 )}
                                             >

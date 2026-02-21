@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { getUserFriendlyErrorMessage } from "@/lib/errorMessages";
 import { useThemeContext } from "@/lib/ThemeContext";
 import { motion, AnimatePresence } from 'framer-motion';
+import SiteHeader from './site-header';
 
 interface HeroAsciiProps {
   navLinks?: { label: string; href: string }[];
@@ -42,7 +43,6 @@ export default function HeroAscii({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [heroEmail, setHeroEmail] = useState("");
   const { signIn, signUp, signInWithGoogle } = useAuth();
 
   const handleAuth = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -129,141 +129,10 @@ export default function HeroAscii({
 
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#FAFAFA] dark:bg-[#141414] transition-colors duration-300">
+    <main className="relative min-h-screen overflow-hidden bg-[#FAFAFA] dark:bg-[#07080b] transition-colors duration-300">
       {/* Top Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 lg:py-4 lg:px-10 transition-colors duration-300 pointer-events-none bg-[#FAFAFA]/80 dark:bg-[#141414]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5">
-        <div className="max-w-[1400px] mx-auto pointer-events-auto">
-          <div className="flex items-center justify-between">
-            {/* Left: Logo */}
-            <div className="flex items-center gap-10 xl:gap-14">
-              <Link href="/" className="flex items-center gap-2">
-                <div className="relative w-7 h-7 rounded-lg overflow-hidden bg-black dark:bg-white flex items-center justify-center">
-                  <Image
-                    src="/favicon/android-chrome-192x192.png"
-                    alt="Olleey Logo"
-                    fill
-                    className="object-cover p-[5px] invert dark:invert-0"
-                  />
-                </div>
-                <span className="text-xl font-medium tracking-tight text-zinc-900 dark:text-zinc-100 mt-0.5">
-                  olleey
-                </span>
-              </Link>
-
-              {/* Center: Nav Links */}
-              <div className="hidden lg:flex items-center gap-8">
-                <Link href="#showcase" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
-                  Product
-                </Link>
-                <Link href="#workflow-stages" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
-                  Workflows
-                </Link>
-                <Link href="/mission" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
-                  Mission
-                </Link>
-                <Link href="#faq" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
-                  FAQ
-                </Link>
-              </div>
-            </div>
-
-            {/* Right: Actions */}
-            <div className="flex items-center gap-6">
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="hidden lg:flex items-center justify-center w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                aria-label="Toggle theme"
-              >
-                {theme === 'dark' ? <Moon className="w-4 h-4 text-white" /> : <Sun className="w-4 h-4 text-black" />}
-              </button>
-
-              <button
-                onClick={() => router.push('/register')}
-                className="hidden lg:block text-[15px] font-medium text-zinc-900 dark:text-zinc-100 hover:opacity-70 transition-opacity"
-              >
-                Get started
-              </button>
-
-              <button
-                onClick={() => router.push('/login')}
-                className="hidden lg:block px-4 py-2 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-[15px] font-medium text-zinc-900 dark:text-zinc-100 hover:opacity-80 transition-all"
-              >
-                Login
-              </button>
-
-              {/* Mobile Menu Button */}
-              <button
-                className="lg:hidden p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                onClick={() => setMobileMenuOpen((prev) => !prev)}
-                aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-                aria-expanded={mobileMenuOpen}
-              >
-                {mobileMenuOpen ? (
-                  <X className="w-5 h-5 text-black dark:text-white" />
-                ) : (
-                  <div className="flex flex-col gap-1.5">
-                    <div className="w-5 h-[2px] bg-black dark:bg-white rounded-full transition-colors"></div>
-                    <div className="w-5 h-[2px] bg-black dark:bg-white rounded-full transition-colors"></div>
-                    <div className="w-5 h-[2px] bg-black dark:bg-white rounded-full transition-colors"></div>
-                  </div>
-                )}
-              </button>
-            </div>
-          </div>
-
-          <AnimatePresence>
-            {mobileMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="lg:hidden mt-3 rounded-2xl bg-white/90 dark:bg-[#141414]/90 backdrop-blur-md p-3 shadow-lg"
-              >
-                <div className="flex flex-col gap-1">
-                  {navLinks?.map((link) => (
-                    <a
-                      key={link.label}
-                      href={link.href}
-                      onClick={(e) => {
-                        if (link.label === 'Home') {
-                          e.preventDefault();
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                        setMobileMenuOpen(false);
-                      }}
-                      className="px-3 py-2 rounded-lg text-sm font-medium text-black/80 dark:text-white/80 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  ))}
-                </div>
-
-                <div className="mt-3 pt-3 flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setTheme(theme === 'dark' ? 'light' : 'dark');
-                    }}
-                    className="inline-flex items-center justify-center w-10 h-10 rounded-full text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                    aria-label="Toggle theme"
-                  >
-                    {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={() => {
-                      router.push('/login');
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                  >
-                    Log in
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+      {/* Top Header */}
+      <SiteHeader />
 
       <div className="relative z-10 pt-24 sm:pt-28 lg:pt-32 pb-0">
         <div className="container mx-auto px-0 sm:px-8 lg:px-16 w-full">
@@ -474,7 +343,7 @@ export default function HeroAscii({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1, duration: 0.5 }}
                     >
-                      <Link href="/mission" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-[#141414] border border-zinc-200 dark:border-zinc-800 shadow-sm mb-8 hover:shadow-md transition-shadow">
+                      <Link href="/mission" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-[#07080b] border border-zinc-200 dark:border-zinc-800 shadow-sm mb-8 hover:shadow-md transition-shadow">
                         <span className="text-sm cursor-pointer">🗣️</span>
                         <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 cursor-pointer">Our Mission and Values</span>
                         <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
@@ -501,33 +370,21 @@ export default function HeroAscii({
                       In a world moving faster than ever, Olleey turns global distribution into clarity your team can act on.
                     </motion.p>
 
-                    {/* Form */}
+                    {/* Primary CTA */}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
-                      className="w-full max-w-[400px] bg-transparent mx-auto mb-12 flex flex-col gap-5 text-left px-4"
+                      className="w-full max-w-[400px] bg-transparent mx-auto mb-12 flex flex-col gap-3 text-center px-4"
                     >
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">What's your email?</label>
-                        <input
-                          type="email"
-                          placeholder="walt@disney.com"
-                          value={heroEmail}
-                          onChange={(e) => setHeroEmail(e.target.value)}
-                          className="w-full px-4 py-3.5 rounded-[10px] border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-[#141414] text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-shadow text-[15px]"
-                        />
-                      </div>
-                      <button
-                        onClick={() => {
-                          if (heroEmail.trim()) {
-                            window.open("https://youtu.be/FIjDXwAAuq8", "_blank");
-                          }
-                        }}
+                      <a
+                        href="https://cal.com/ahmad-moltafet-q8mgvt"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="w-full mt-1 bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-semibold text-[17px] hover:opacity-90 transition-opacity shadow-lg"
                       >
-                        Get demo
-                      </button>
+                        Talk to founder
+                      </a>
                     </motion.div>
 
                     {/* Image */}
@@ -537,7 +394,7 @@ export default function HeroAscii({
                       transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
                       className="w-full max-w-[1200px] relative mx-auto px-4 md:px-8 flex justify-center translate-y-[1px]"
                     >
-                      <div className="relative w-full rounded-t-2xl md:rounded-t-[2rem] overflow-hidden shadow-[0_-8px_30px_rgba(0,0,0,0.12)] border-t border-x border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141414] border-b-0">
+                      <div className="relative w-full rounded-t-2xl md:rounded-t-[2rem] overflow-hidden shadow-[0_-8px_30px_rgba(0,0,0,0.12)] border-t border-x border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#07080b] border-b-0">
                         <Image
                           src="/herodashboard.png"
                           alt="Olleey Dashboard"
@@ -547,7 +404,7 @@ export default function HeroAscii({
                           priority
                         />
                         {/* Small Bottom Fade Gradient overlay */}
-                        <div className="absolute bottom-[-2px] left-0 right-0 h-[10%] bg-gradient-to-t from-[#FAFAFA] to-transparent dark:from-[#141414] pointer-events-none z-10" />
+                        <div className="absolute bottom-[-2px] left-0 right-0 h-[10%] bg-gradient-to-t from-[#FAFAFA] to-transparent dark:from-[#07080b] pointer-events-none z-10" />
                       </div>
                     </motion.div>
                   </div>

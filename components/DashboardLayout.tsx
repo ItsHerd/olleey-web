@@ -11,6 +11,7 @@ import { tokenStorage, authAPI, youtubeAPI, type MasterNode } from "@/lib/api";
 import { useDashboard } from "@/lib/useDashboard";
 import { useTheme } from "@/lib/useTheme";
 import { useProject } from "@/lib/ProjectContext";
+import { useAuth } from "@/lib/AuthContext";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -29,6 +30,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const { theme } = useTheme();
     const router = useRouter();
     const pathname = usePathname();
+    const { signOut } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [channelGraph, setChannelGraph] = useState<MasterNode[]>([]);
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
@@ -105,7 +107,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         return { videos: matchingVideos, jobs: matchingJobs };
     }, [searchQuery, videos, dashboard?.recent_jobs]);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await signOut();
         authAPI.logout();
         setIsAuthenticated(false);
         router.push('/');

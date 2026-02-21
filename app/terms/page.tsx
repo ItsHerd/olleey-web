@@ -4,10 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Ban, FileCheck2, Gavel, Globe2, Moon, Shield, Sun } from "lucide-react";
+import { Ban, FileCheck2, Gavel, Globe2, Shield } from "lucide-react";
 
 import Footer from "@/components/LandingPage/Footer";
-import { useThemeContext } from "@/lib/ThemeContext";
+import SiteHeader from "@/components/ui/site-header";
 
 const summaryCards = [
   {
@@ -128,58 +128,12 @@ const termsSections = [
 
 export default function TermsOfServicePage() {
   const router = useRouter();
-  const { theme, setTheme } = useThemeContext();
 
   return (
     <main className="min-h-screen bg-[#FAFAFA] dark:bg-black text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
       <div className="absolute inset-0 pointer-events-none opacity-[0.06] dark:opacity-[0.1] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:24px_24px]" />
 
-      <header className="sticky top-0 z-30 p-4 lg:p-6 transition-colors duration-300">
-        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full">
-            <div className="relative m-1 w-12 h-12 lg:w-14 lg:h-14 p-1.5 rounded-xl overflow-hidden border border-white/20 bg-black/90">
-              <Image src="/favicon/android-chrome-192x192.png" alt="Olleey Logo" fill className="object-contain" />
-            </div>
-            <span className="mr-3 text-base lg:text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              olleey
-            </span>
-          </Link>
-
-          <nav className="hidden lg:flex items-center gap-1 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-1.5 shadow-sm">
-            <Link href="/" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
-              Home
-            </Link>
-            <Link href="/#distribution" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
-              Workflows
-            </Link>
-            <Link href="/#product" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
-              Product
-            </Link>
-            <Link href="/mission" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
-              Mission
-            </Link>
-            <Link href="/#faq" className="px-5 py-2 text-sm font-medium text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-all">
-              FAQ
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full p-2 pl-4 shadow-sm">
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Moon className="w-4 h-4 text-white" /> : <Sun className="w-4 h-4 text-black" />}
-            </button>
-            <button
-              onClick={() => router.push("/register")}
-              className="px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-bold rounded-full transition-all hover:opacity-90"
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       <section className="relative z-10 max-w-6xl mx-auto px-6 lg:px-16 pt-10 pb-8">
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>

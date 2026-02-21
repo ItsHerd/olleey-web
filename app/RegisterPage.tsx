@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
-import { getUserFriendlyErrorMessage, isNetworkError } from "@/lib/errorMessages";
+import { getUserFriendlyErrorMessage } from "@/lib/errorMessages";
 import { SignUpPage } from "@/components/ui/sign-in";
 import { useTheme } from "@/lib/useTheme";
 import { useRouter } from "next/navigation";

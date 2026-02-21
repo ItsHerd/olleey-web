@@ -270,13 +270,6 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
   return (
     <div className={`h-full overflow-auto custom-scrollbar ${isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
       <div className="max-w-6xl mx-auto p-8 space-y-5">
-        <Card className="border-none bg-transparent shadow-none">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-2xl">Preferences</CardTitle>
-            <CardDescription>Manage workspace settings and guardrails in one place.</CardDescription>
-          </CardHeader>
-        </Card>
-
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5">
           <Card className={`h-fit ${cardSurfaceClass}`}>
             <CardHeader className="pb-2">

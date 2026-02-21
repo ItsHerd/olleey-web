@@ -255,7 +255,7 @@ export function SupportView({ theme }: SupportViewProps) {
               <Button className="bg-[#FFC107] hover:bg-[#FFB300] text-black font-black px-10 h-14 rounded-2xl text-sm uppercase tracking-widest gap-2">
                 <MessageCircle className="w-4 h-4" /> Join Discord
               </Button>
-              <Button variant="outline" className={`h-14 px-10 rounded-2xl text-sm font-black uppercase tracking-widest border-2 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+              <Button variant="outline" className={`h-14 px-10 rounded-2xl text-sm font-black uppercase tracking-widest ${isDark ? 'border-zinc-700' : 'border-gray-200'}`}>
                 Email Engineering
               </Button>
             </div>

@@ -1,135 +1,75 @@
 "use client";
 
-import React, { useState } from "react";
-import Navbar from "@/components/ui/navbar";
-import Footer from "@/components/LandingPage/Footer";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { ArrowRight, Mail, MapPin } from "lucide-react";
+
+import SiteHeader from "@/components/ui/site-header";
+import Footer from "@/components/LandingPage/Footer";
 
 export default function ContactPage() {
-    const navLinks = [
-        { label: 'HOME', href: '/' },
-        { label: 'WORKFLOWS', href: "/#distribution" },
-        { label: 'PRODUCT', href: '/#product' },
-        { label: 'FAQ', href: '/#faq' },
-    ];
+  const router = useRouter();
 
-    const [loading, setLoading] = useState(false);
+  return (
+    <main className="relative min-h-screen bg-[#FAFAFA] dark:bg-[#141414] text-black dark:text-white font-sans transition-colors duration-300">
+      <SiteHeader />
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        // Simulate sending
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setLoading(false);
-        alert("Message Transmitted Successfully [ACK_RECEIVED]");
-    };
+      <section className="relative z-10 pt-32 md:pt-40 pb-16 md:pb-20 px-6">
+        <div className="mx-auto max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="rounded-3xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#0f0f0f] p-8 md:p-10"
+          >
+            <p className="text-[11px] uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400">Contact</p>
+            <h1 className="mt-3 text-4xl md:text-6xl tracking-tight font-semibold">
+              Talk to the Olleey team
+            </h1>
+            <p className="mt-4 text-base md:text-lg text-neutral-600 dark:text-neutral-300 max-w-3xl leading-relaxed">
+              Reach out for product walkthroughs, enterprise onboarding, or partnership discussions.
+            </p>
 
-    return (
-        <div className="min-h-screen bg-white dark:bg-black font-sans text-black dark:text-white relative flex flex-col transition-colors duration-300">
-            {/* Background Grid - Light Mode */}
-            <div className="absolute inset-0 z-0 opacity-5 dark:opacity-0 pointer-events-none fixed transition-opacity duration-300"
-                style={{
-                    backgroundImage: 'linear-gradient(black 1px, transparent 1px), linear-gradient(90deg, black 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
-                }}
-            />
-            {/* Background Grid - Dark Mode */}
-            <div className="absolute inset-0 z-0 opacity-0 dark:opacity-20 pointer-events-none fixed transition-opacity duration-300"
-                style={{
-                    backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
-                }}
-            />
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.03] p-5">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Mail className="w-4 h-4" />
+                  Email
+                </div>
+                <a href="mailto:hello@olleey.com" className="mt-2 inline-block text-neutral-700 dark:text-neutral-200 hover:underline">
+                  hello@olleey.com
+                </a>
+              </div>
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.03] p-5">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <MapPin className="w-4 h-4" />
+                  Headquarters
+                </div>
+                <p className="mt-2 text-neutral-700 dark:text-neutral-200">Seattle, WA</p>
+              </div>
+            </div>
 
-            <Navbar
-                navLinks={navLinks}
-                onSignIn={() => {}} 
-                onSignUp={() => {}} 
-            />
-            
-            <main className="flex-grow flex items-center justify-center pt-32 pb-32 px-6 relative z-10">
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-5xl"
-                >
-                    <div className="border border-black/10 dark:border-white/10 bg-white/80 dark:bg-black/80 backdrop-blur-md p-10 md:p-16 relative overflow-hidden group transition-colors duration-300 rounded-3xl shadow-xl dark:shadow-none">
-                         {/* Technical markers */}
-                        <div className="absolute top-0 left-0 p-2 border-b border-r border-black/20 dark:border-white/20 w-8 h-8 transition-colors duration-300" />
-                        <div className="absolute top-0 right-0 p-2 border-b border-l border-black/20 dark:border-white/20 w-8 h-8 transition-colors duration-300" />
-                        <div className="absolute bottom-0 left-0 p-2 border-t border-r border-black/20 dark:border-white/20 w-8 h-8 transition-colors duration-300" />
-                        <div className="absolute bottom-0 right-0 p-2 border-t border-l border-black/20 dark:border-white/20 w-8 h-8 transition-colors duration-300" />
-
-                        <div className="grid md:grid-cols-2 gap-16 items-start">
-                            <div>
-                                <div className="inline-flex items-center gap-3 px-4 py-1 border border-black/30 dark:border-white/30 mb-8 bg-black/5 dark:bg-black transition-colors duration-300 rounded-full">
-                                    <span className="w-1.5 h-1.5 bg-black dark:bg-white animate-pulse transition-colors duration-300" />
-                                    <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-black dark:text-white transition-colors duration-300">SYS.COMM.01</span>
-                                </div>
-                                <h1 className="text-4xl md:text-5xl font-mono uppercase tracking-tight mb-8 leading-tight text-black dark:text-white transition-colors duration-300">
-                                    Initialize <br/>
-                                    <span className="text-black/50 dark:text-white/50 transition-colors duration-300">Contact.</span>
-                                </h1>
-                                <p className="text-neutral-600 dark:text-white/70 font-mono text-sm leading-relaxed mb-8 transition-colors duration-300">
-                                    Ready to automate your global expansion? Our engineers are standing by to architect your pipeline.
-                                </p>
-                                
-                                <div className="space-y-4 font-mono text-xs">
-                                    <div className="flex items-center gap-4 text-black/60 dark:text-white/60 transition-colors duration-300">
-                                        <span className="w-20 uppercase tracking-widest">Email</span>
-                                        <span className="text-black dark:text-white transition-colors duration-300">hello@olleey.com</span>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-black/60 dark:text-white/60 transition-colors duration-300">
-                                        <span className="w-20 uppercase tracking-widest">HQ</span>
-                                        <span className="text-black dark:text-white transition-colors duration-300">Seattle, WA</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-mono text-black/50 dark:text-white/50 uppercase tracking-[0.2em] block mb-2 transition-colors duration-300">Identify User</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="FULL NAME"
-                                        required
-                                        className="w-full bg-black/5 dark:bg-white/5 border border-black/20 dark:border-white/20 px-4 py-3 text-black dark:text-white font-mono text-xs focus:outline-none focus:border-black/60 dark:focus:border-white/60 focus:bg-black/10 dark:focus:bg-white/10 transition-all placeholder:text-black/30 dark:placeholder:text-white/30 rounded-xl"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-mono text-black/50 dark:text-white/50 uppercase tracking-[0.2em] block mb-2 transition-colors duration-300">Comms Channel</label>
-                                    <input 
-                                        type="email" 
-                                        placeholder="EMAIL ADDRESS"
-                                        required
-                                        className="w-full bg-black/5 dark:bg-white/5 border border-black/20 dark:border-white/20 px-4 py-3 text-black dark:text-white font-mono text-xs focus:outline-none focus:border-black/60 dark:focus:border-white/60 focus:bg-black/10 dark:focus:bg-white/10 transition-all placeholder:text-black/30 dark:placeholder:text-white/30 rounded-xl"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-mono text-black/50 dark:text-white/50 uppercase tracking-[0.2em] block mb-2 transition-colors duration-300">Data Packet</label>
-                                    <textarea 
-                                        placeholder="ENTER YOUR MESSAGE..."
-                                        required
-                                        rows={4}
-                                        className="w-full bg-black/5 dark:bg-white/5 border border-black/20 dark:border-white/20 px-4 py-3 text-black dark:text-white font-mono text-xs focus:outline-none focus:border-black/60 dark:focus:border-white/60 focus:bg-black/10 dark:focus:bg-white/10 transition-all placeholder:text-black/30 dark:placeholder:text-white/30 resize-none rounded-xl"
-                                    />
-                                </div>
-
-                                <button 
-                                    type="submit" 
-                                    disabled={loading}
-                                    className="w-full bg-black text-white dark:bg-white dark:text-black font-mono text-xs uppercase tracking-widest py-3 hover:opacity-90 transition-all duration-200 rounded-xl font-bold hover:shadow-lg"
-                                >
-                                    {loading ? "TRANSMITTING..." : "SEND TRANSMISSION"}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </motion.div>
-            </main>
-
-            <Footer />
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => router.push("/register")}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-black dark:bg-white text-white dark:text-black px-6 py-3 text-sm font-semibold hover:opacity-90 transition-opacity"
+              >
+                Get started
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <Link
+                href="/mission"
+                className="inline-flex items-center justify-center rounded-full border border-black/15 dark:border-white/15 px-6 py-3 text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              >
+                Read our mission
+              </Link>
+            </div>
+          </motion.div>
         </div>
-    );
+      </section>
+
+      <Footer onGetStarted={() => router.push("/register")} />
+    </main>
+  );
 }

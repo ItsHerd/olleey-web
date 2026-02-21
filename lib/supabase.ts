@@ -140,8 +140,28 @@ export interface SupabaseLocalizedVideo {
   updated_at: string;
 }
 
+export interface ContactMessage {
+  id?: string;
+  name: string;
+  email: string;
+  message: string;
+  created_at?: string;
+}
+
 // Helper functions for common operations
 export const supabaseHelpers = {
+  /**
+   * Send a contact message
+   */
+  async sendContactMessage(message: ContactMessage) {
+    const { data, error } = await supabase
+      .from('contact_messages')
+      .insert([message]);
+
+    if (error) throw error;
+    return data;
+  },
+
   /**
    * Get videos for current user
    */

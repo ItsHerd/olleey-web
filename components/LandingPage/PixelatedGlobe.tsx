@@ -179,7 +179,7 @@ export default function PixelatedGlobe() {
   }, [isMobile]);
 
   return (
-    <div ref={containerRef} className="relative h-[165vh] sm:h-[180vh] lg:h-[200vh] z-0 bg-[#FAFAFA] dark:bg-black transition-colors duration-300">
+    <div ref={containerRef} className="relative h-[165vh] sm:h-[180vh] lg:h-[200vh] z-0 bg-[#FAFAFA] dark:bg-[#07080b] transition-colors duration-300">
       {/* Sticky container for the globe */}
       <div className="sticky top-0 h-[100svh] w-full flex items-center justify-center overflow-hidden pointer-events-none">
         <motion.div

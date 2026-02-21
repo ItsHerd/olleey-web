@@ -7,7 +7,7 @@ import { useProject } from "@/lib/ProjectContext";
 import { useAuth } from "@/lib/AuthContext";
 import { useVideos } from "@/lib/useVideos";
 import { useSupabaseChannels } from "@/lib/useSupabase";
-import { Loader2, Rocket } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ViewType } from "../DashboardLayout";
 import { resolveClientUserId } from "@/lib/user";
@@ -84,29 +84,13 @@ export function ManualWorkflowView({ onViewChange, theme }: ManualWorkflowViewPr
     }
 
     return (
-        <div className={`w-full h-full overflow-y-auto py-4 px-4 md:px-6 custom-scrollbar`}>
+        <div className={`w-full h-full overflow-y-auto px-4 py-4 md:px-6 custom-scrollbar`}>
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="max-w-6xl mx-auto space-y-4"
+                className="mx-auto max-w-7xl"
             >
-                {/* Compact Header */}
-                <motion.div variants={itemVariants} className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Rocket className="w-4 h-4 text-[#D97757]" />
-                            <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"} tracking-tight`}>
-                                Manual Ingestion
-                            </h1>
-                        </div>
-                        <p className={`${isDark ? "text-gray-500" : "text-gray-500"} text-xs font-medium uppercase tracking-widest`}>
-                            Configure your AI dubbing pipeline
-                        </p>
-                    </div>
-                </motion.div>
-
-                {/* Main Action View */}
                 <motion.div variants={itemVariants} className="relative z-20">
                     <ManualProcessView
                         availableChannels={allChannels}

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowLeft, Loader2, Play, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Loader2, Play, CheckCircle2, XCircle, Clock, X, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,6 @@ import { cn } from "@/lib/utils";
 import { API_BASE_URL, jobsAPI } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { ViewType } from "../DashboardLayout";
-import { X } from "lucide-react";
 import { resolveClientUserId } from "@/lib/user";
 
 interface RunsViewProps {
@@ -52,7 +51,13 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [languageFilter, setLanguageFilter] = React.useState("all");
+  const [pageSize, setPageSize] = React.useState(8);
+  const [currentPage, setCurrentPage] = React.useState(1);
   const [cancelledJobIds, setCancelledJobIds] = React.useState<Set<string>>(new Set());
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const cardHeaderRef = React.useRef<HTMLDivElement | null>(null);
+  const filtersRef = React.useRef<HTMLDivElement | null>(null);
+  const paginationRef = React.useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
 
   const handleCancelJob = async (e: React.MouseEvent, jobId: string) => {
@@ -85,11 +90,18 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
   };
 
   const getStatusBadge = (status: string) => {
-    if (status === 'completed' || status === 'waiting_approval') {
+    if (status === 'completed') {
       return (
         <Badge className="bg-emerald-500 text-white">
           <CheckCircle2 className="w-3 h-3 mr-1" />
           Complete
+        </Badge>
+      );
+    } else if (status === 'waiting_approval') {
+      return (
+        <Badge variant="secondary" className="bg-amber-500/15 text-amber-500 border border-amber-500/30">
+          <Clock className="w-3 h-3 mr-1" />
+          Needs Review
         </Badge>
       );
     } else if (status === 'failed') {
@@ -97,6 +109,13 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
         <Badge variant="destructive">
           <XCircle className="w-3 h-3 mr-1" />
           Failed
+        </Badge>
+      );
+    } else if (status === 'cancelled') {
+      return (
+        <Badge variant="secondary" className="bg-muted text-muted-foreground border border-border">
+          <X className="w-3 h-3 mr-1" />
+          Cancelled
         </Badge>
       );
     } else {
@@ -107,6 +126,22 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
         </Badge>
       );
     }
+  };
+
+  const formatRelativeTime = (timestamp?: string) => {
+    if (!timestamp) return "-";
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return "-";
+
+    const diffMs = Date.now() - date.getTime();
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
   };
 
   const handleRowClick = (job: any) => {
@@ -155,36 +190,104 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
     });
   }, [jobs, searchQuery, statusFilter, languageFilter, videos, cancelledJobIds]);
 
-  return (
-    <div className={cn("p-8 max-w-7xl mx-auto space-y-6", theme === "dark" ? "text-white" : "text-gray-900")}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewChange("dashboard")}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <h1 className="text-3xl font-semibold">Pipeline Runs</h1>
-          </div>
-          <p className="text-muted-foreground mt-2">All your video processing jobs</p>
-        </div>
-      </div>
+  const recalculatePageSize = React.useCallback(() => {
+    if (typeof window === "undefined") return;
 
-      {/* Table */}
+    const rootHeight = rootRef.current?.clientHeight ?? window.innerHeight;
+    const headerHeight = cardHeaderRef.current?.offsetHeight ?? 96;
+    const filtersHeight = filtersRef.current?.offsetHeight ?? 76;
+    const paginationHeight = paginationRef.current?.offsetHeight ?? 52;
+    const tableHeaderAndChrome = 56;
+    const safetyOffset = 40;
+
+    const rowHeight =
+      window.innerWidth < 768
+        ? 96
+        : window.innerWidth < 1280
+          ? 84
+          : 76;
+
+    const availableRowsHeight =
+      rootHeight -
+      headerHeight -
+      filtersHeight -
+      paginationHeight -
+      tableHeaderAndChrome -
+      safetyOffset;
+
+    const nextPageSize = Math.max(4, Math.min(16, Math.floor(availableRowsHeight / rowHeight)));
+    setPageSize((prev) => (prev === nextPageSize ? prev : nextPageSize));
+  }, []);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, languageFilter]);
+
+  React.useEffect(() => {
+    recalculatePageSize();
+    if (typeof window === "undefined") return;
+
+    const handleResize = () => recalculatePageSize();
+    window.addEventListener("resize", handleResize);
+
+    const observer =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => recalculatePageSize())
+        : null;
+
+    if (observer) {
+      if (rootRef.current) observer.observe(rootRef.current);
+      if (cardHeaderRef.current) observer.observe(cardHeaderRef.current);
+      if (filtersRef.current) observer.observe(filtersRef.current);
+      if (paginationRef.current) observer.observe(paginationRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      observer?.disconnect();
+    };
+  }, [recalculatePageSize, filteredJobs.length]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / pageSize));
+
+  React.useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedJobs = React.useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredJobs.slice(start, start + pageSize);
+  }, [filteredJobs, currentPage, pageSize]);
+
+  const pageStartIndex = filteredJobs.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const pageEndIndex = Math.min(filteredJobs.length, currentPage * pageSize);
+
+  return (
+    <div ref={rootRef} className={cn("h-full p-6 md:p-8 max-w-7xl mx-auto", theme === "dark" ? "text-white" : "text-gray-900")}>
       <Card>
-        <CardHeader>
-          <CardTitle>All Runs</CardTitle>
-          <CardDescription>
-            {filteredJobs.length} of {jobs.length} run{jobs.length !== 1 ? 's' : ''}
-          </CardDescription>
+        <CardHeader ref={cardHeaderRef} className="pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle>All Runs</CardTitle>
+              <CardDescription>
+                {filteredJobs.length} of {jobs.length} run{jobs.length !== 1 ? 's' : ''} • Showing {pageStartIndex}-{pageEndIndex}
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="gap-2"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div ref={filtersRef} className="mb-4 grid grid-cols-1 gap-3 rounded-lg border p-3 md:grid-cols-3">
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -222,104 +325,157 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
             </Select>
           </div>
 
+          {!loading && filteredJobs.length > 0 && (
+            <div ref={paginationRef} className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Auto rows/page:</span>
+                <Badge variant="secondary" className="h-7 px-2.5 text-[11px]">
+                  {pageSize}
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage <= 1}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  Prev
+                </Button>
+                <span className="text-xs text-muted-foreground px-1">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="gap-1"
+                >
+                  Next
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : filteredJobs.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Video</TableHead>
-                  <TableHead>Languages</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredJobs.map((job) => {
-                  const video = getJobVideo(job.source_video_id);
-                  return (
-                    <TableRow
-                      key={job.job_id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleRowClick(job)}
-                    >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                          <div className="w-16 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
-                            {video?.thumbnail_url ? (
-                              <img
-                                src={getFullUrl(video.thumbnail_url)}
-                                alt=""
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Play className="w-4 h-4 text-muted-foreground" />
-                              </div>
+            <div>
+              <div className="rounded-lg border overflow-hidden">
+                  <Table>
+                <TableHeader className="bg-muted/30">
+                  <TableRow className="bg-muted/30">
+                    <TableHead className="w-[35%]">Video</TableHead>
+                    <TableHead className="w-[20%]">Languages</TableHead>
+                    <TableHead className="w-[16%]">Status</TableHead>
+                    <TableHead className="w-[16%]">Progress</TableHead>
+                    <TableHead className="w-[10%]">Created</TableHead>
+                    <TableHead className="w-[3%] text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedJobs.map((job) => {
+                    const video = getJobVideo(job.source_video_id);
+                    const progress = Number(job.progress || 0);
+                    const allLanguages = job.target_languages || [];
+                    const visibleLanguages = allLanguages.slice(0, 3);
+                    return (
+                      <TableRow
+                        key={job.job_id}
+                        className="cursor-pointer hover:bg-muted/40"
+                        onClick={() => handleRowClick(job)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-3">
+                            <div className="w-20 h-12 rounded-md overflow-hidden bg-muted flex-shrink-0 border">
+                              {video?.thumbnail_url ? (
+                                <img
+                                  src={getFullUrl(video.thumbnail_url)}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Play className="w-4 h-4 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium max-w-[300px]">
+                                {video?.title || job.source_video_id}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground truncate max-w-[300px]">
+                                Job: {job.job_id}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1.5">
+                            {visibleLanguages.map((lang: string) => {
+                              const langInfo = LANGUAGE_OPTIONS.find((l) => l.code === lang);
+                              return (
+                                <Badge key={lang} variant="outline" className="text-[10px]">
+                                  {langInfo?.flag} {langInfo?.name || lang.toUpperCase()}
+                                </Badge>
+                              );
+                            })}
+                            {allLanguages.length > visibleLanguages.length && (
+                              <Badge variant="secondary" className="text-[10px]">
+                                +{allLanguages.length - visibleLanguages.length}
+                              </Badge>
                             )}
                           </div>
-                          <span className="truncate max-w-[300px]">
-                            {video?.title || job.source_video_id}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 flex-wrap">
-                          {job.target_languages?.map((lang: string) => {
-                            const langInfo = LANGUAGE_OPTIONS.find(l => l.code === lang);
-                            return (
-                              <Badge key={lang} variant="outline" className="text-xs">
-                                {langInfo?.flag} {langInfo?.code?.toUpperCase() || lang}
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(job.status)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className={cn(
-                                "h-full transition-all",
-                                job.status === 'completed' || job.status === 'waiting_approval' ? "bg-emerald-500" :
-                                job.status === 'failed' ? "bg-destructive" :
-                                "bg-primary"
-                              )}
-                              style={{ width: `${job.progress || 0}%` }}
-                            />
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(job.status)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1.5">
+                            <div className="w-28 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={cn(
+                                  "h-full transition-all",
+                                  job.status === 'completed' || job.status === 'waiting_approval' ? "bg-emerald-500" :
+                                  job.status === 'failed' ? "bg-destructive" :
+                                    "bg-primary"
+                                )}
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                            <p className="text-[11px] text-muted-foreground">{progress}%</p>
                           </div>
-                          <span className="text-sm text-muted-foreground">
-                            {job.progress || 0}%
-                          </span>
-                        </div>
-                      </TableCell>
-                       <TableCell className="text-muted-foreground">
-                        {new Date(job.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {!['completed', 'failed', 'cancelled'].includes(job.status) && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                            onClick={(e) => handleCancelJob(e, job.job_id)}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
+                          {formatRelativeTime(job.created_at)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {!['completed', 'failed', 'cancelled'].includes(job.status) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                              onClick={(e) => handleCancelJob(e, job.job_id)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+              </div>
+
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Clock className="w-12 h-12 text-muted-foreground mb-4" />

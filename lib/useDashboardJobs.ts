@@ -25,17 +25,30 @@ export function useDashboardJobs(params: { projectId?: string; limit?: number; e
 
     // Supabase already returns data sorted and limited, just map it.
     // Always sync local state to Supabase (including empty arrays) to avoid stale UI.
-    const mapped: ProcessingJob[] = supabaseJobs.map(sj => ({
-      job_id: sj.job_id,
-      source_video_id: sj.source_video_id,
-      status: sj.status as JobStatus,
-      progress: sj.progress || (sj.status === 'completed' ? 100 : 0),
-      target_languages: sj.target_languages,
-      created_at: sj.created_at,
-      project_id: sj.project_id,
-      current_stage: (sj as any).current_stage,
-      workflow_state: (sj as any).workflow_state,
-    }));
+    const mapped: ProcessingJob[] = supabaseJobs.map(sj => {
+      let parsedLanguages: string[] = [];
+      if (Array.isArray(sj.target_languages)) {
+        parsedLanguages = sj.target_languages;
+      } else if (typeof sj.target_languages === 'string') {
+        try {
+          parsedLanguages = JSON.parse(sj.target_languages);
+        } catch {
+          parsedLanguages = [sj.target_languages]; // fallback if it's just a single language string
+        }
+      }
+
+      return {
+        job_id: sj.job_id,
+        source_video_id: sj.source_video_id,
+        status: sj.status as JobStatus,
+        progress: sj.progress || (sj.status === 'completed' ? 100 : 0),
+        target_languages: parsedLanguages,
+        created_at: sj.created_at,
+        project_id: sj.project_id,
+        current_stage: (sj as any).current_stage,
+        workflow_state: (sj as any).workflow_state,
+      };
+    });
 
     console.log('[useDashboardJobs] Mapped jobs:', mapped);
     setJobs(mapped);

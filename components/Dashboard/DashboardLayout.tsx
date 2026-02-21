@@ -13,7 +13,7 @@ import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { SettingsProvider } from "@/lib/SettingsContext";
 import { resolveClientUserId } from "@/lib/user";
 
-export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "preferences" | "settings" | "notifications" | "account" | "guardrails" | "support" | "manual_workflow" | "review" | "preview" | "processing" | "runs" | "detected_uploads";
+export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "preferences" | "settings" | "notifications" | "account" | "analytics" | "guardrails" | "support" | "manual_workflow" | "review" | "preview" | "processing" | "runs" | "detected_uploads";
 export type DetailViewType = "job-detail" | "video-detail" | "channel-detail" | null;
 
 export interface SelectedItem {
@@ -72,9 +72,6 @@ export default function DashboardLayout() {
 
   // Redirect to login only if no authenticated user and no resolved fallback user.
   if (!user && !userId) {
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
-    }
     return null;
   }
 

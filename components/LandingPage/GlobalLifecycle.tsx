@@ -46,7 +46,7 @@ export const GlobalLifecycle = () => {
   return (
     <section
       id="distribution"
-      className="py-24 lg:py-28 bg-white dark:bg-[#141414] border-t border-black/5 dark:border-white/5 relative z-10 overflow-hidden transition-colors duration-300"
+      className="py-24 lg:py-28 bg-white dark:bg-[#0f1117] border-t border-black/5 dark:border-white/5 relative z-10 overflow-hidden transition-colors duration-300"
     >
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] relative z-10">
         <div className="mb-14 lg:mb-16">

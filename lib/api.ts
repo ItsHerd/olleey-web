@@ -1172,12 +1172,15 @@ export const authenticatedFetch = async (
   const useDevUserOverride = process.env.NODE_ENV !== "production" && !!devUserId;
 
   const headers = new Headers(options.headers || {});
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
   if (useDevUserOverride) {
     // Development override: force API calls to run as a chosen user ID.
     headers.set("x-dev-user-id", devUserId);
-  } else if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  } else {
+  }
+
+  if (!token && !useDevUserOverride) {
     return new Response(JSON.stringify({ detail: "No access token available" }), {
       status: 401,
       statusText: "Unauthorized",

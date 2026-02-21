@@ -3,7 +3,6 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { HelpCircle } from 'lucide-react'
 
 export default function FAQ() {
     const faqItems = [
@@ -35,10 +34,10 @@ export default function FAQ() {
     ]
 
     return (
-        <section className="bg-white dark:bg-[#141414] py-24 md:py-32 border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300" id="faq">
-            <div className="mx-auto max-w-5xl px-6 relative z-10">
-                <div className="grid gap-8 md:grid-cols-5 md:gap-16">
-                    <div className="md:col-span-2">
+        <section className="bg-white dark:bg-[#07080b] py-24 md:py-32 border-t border-black/10 dark:border-white/10 relative overflow-hidden transition-colors duration-300" id="faq">
+            <div className="mx-auto max-w-[1680px] px-6 lg:px-10 relative z-10">
+                <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -55,9 +54,9 @@ export default function FAQ() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.1 }}
-                            className="text-black dark:text-white text-4xl md:text-5xl font-bold font-sans tracking-tight mb-4 transition-colors duration-300"
+                            className="text-black dark:text-white text-4xl md:text-6xl font-bold font-sans tracking-tight mb-4 transition-colors duration-300"
                         >
-                            FAQ
+                            Frequently Asked Questions
                         </motion.h2>
 
                         <motion.p
@@ -65,67 +64,43 @@ export default function FAQ() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className="text-neutral-600 dark:text-neutral-400 mt-4 text-base md:text-lg font-sans leading-relaxed transition-colors duration-300"
+                            className="text-neutral-600 dark:text-neutral-400 text-base md:text-lg font-sans leading-relaxed transition-colors duration-300 max-w-3xl"
                         >
-                            Operational specifics regarding the Olleey engine and distribution network.
+                            Operational specifics regarding the Olleey engine, quality workflow, and distribution process.
                         </motion.p>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.3 }}
-                            className="text-neutral-500 dark:text-neutral-400 mt-8 hidden md:block font-sans text-sm border-l-2 border-black/10 dark:border-white/10 pl-4 py-2 transition-colors duration-300"
-                        >
-                            Require human assistance? <br />
-                            <Link
-                                href="/contact"
-                                className="text-black dark:text-white hover:text-black/80 dark:hover:text-white/80 underline decoration-black/30 dark:decoration-white/30 hover:decoration-black dark:hover:decoration-white transition-all mt-2 inline-block">
-                                Contact Support &rarr;
-                            </Link>
-                        </motion.div>
                     </div>
 
-                    <div className="md:col-span-3">
-                        <div className="relative">
-                            {/* Technical corners for the FAQ container */}
-                            <div className="absolute -top-2 -left-2 w-4 h-4 border-t border-l border-black/20 dark:border-white/20 transition-colors duration-300" />
-                            <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b border-r border-black/20 dark:border-white/20 transition-colors duration-300" />
-
-                            <Accordion
-                                type="single"
-                                collapsible
-                                className="w-full"
-                            >
-                                {faqItems.map((item, index) => (
-                                    <AccordionItem
-                                        key={item.id}
-                                        value={item.id}
-                                        className="border-b border-black/10 dark:border-white/10 last:border-0 transition-colors duration-300"
-                                    >
-                                        <AccordionTrigger className="cursor-pointer text-base md:text-lg font-medium font-sans text-black dark:text-white hover:text-black/80 dark:hover:text-white/80 hover:no-underline py-6 data-[state=open]:text-black dark:data-[state=open]:text-white transition-colors duration-300">
-                                            <span className="flex text-left">
-                                                <span className="mr-4 text-black/30 dark:text-white/30 text-sm mt-0.5 transition-colors duration-300">0{index + 1}</span>
-                                                {item.question}
-                                            </span>
-                                        </AccordionTrigger>
-                                        <AccordionContent className="text-neutral-600 dark:text-neutral-400 font-sans text-sm md:text-base leading-relaxed border-l-2 border-black/10 dark:border-white/10 pl-4 ml-8 mb-6 transition-colors duration-300">
-                                            {item.answer}
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ))}
-                            </Accordion>
-                        </div>
-                    </div>
-
-                    <p className="text-neutral-500 dark:text-neutral-400 mt-6 md:hidden font-sans text-sm transition-colors duration-300">
-                        Need more info?{' '}
+                    <div className="text-neutral-500 dark:text-neutral-400 font-sans text-sm border-l-2 border-black/10 dark:border-white/10 pl-4 py-2 transition-colors duration-300 shrink-0">
+                        Need more info?{" "}
                         <Link
-                            href="/contact"
-                            className="text-black dark:text-white hover:underline transition-colors duration-300">
-                            Contact Support
+                            href="/#contact"
+                            className="text-black dark:text-white hover:text-black/80 dark:hover:text-white/80 underline decoration-black/30 dark:decoration-white/30 hover:decoration-black dark:hover:decoration-white transition-all ml-1"
+                        >
+                            Contact Support &rarr;
                         </Link>
-                    </p>
+                    </div>
+                </div>
+
+                <div className="mt-10 rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#0d0e13] px-6 md:px-10 lg:px-12">
+                    <Accordion type="single" collapsible className="w-full">
+                        {faqItems.map((item, index) => (
+                            <AccordionItem
+                                key={item.id}
+                                value={item.id}
+                                className="border-b border-black/10 dark:border-white/10 last:border-0 transition-colors duration-300"
+                            >
+                                <AccordionTrigger className="cursor-pointer text-base md:text-xl font-medium font-sans text-black dark:text-white hover:text-black/80 dark:hover:text-white/80 hover:no-underline py-6 md:py-8 data-[state=open]:text-black dark:data-[state=open]:text-white transition-colors duration-300">
+                                    <span className="flex text-left pr-4">
+                                        <span className="mr-4 text-black/30 dark:text-white/30 text-sm md:text-base mt-0.5 transition-colors duration-300">0{index + 1}</span>
+                                        {item.question}
+                                    </span>
+                                </AccordionTrigger>
+                                <AccordionContent className="text-neutral-600 dark:text-neutral-400 font-sans text-sm md:text-base leading-relaxed border-l-2 border-black/10 dark:border-white/10 pl-4 md:pl-5 ml-8 mb-8 transition-colors duration-300">
+                                    {item.answer}
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
                 </div>
             </div>
         </section>

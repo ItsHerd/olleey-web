@@ -466,56 +466,48 @@ export function ManualProcessView({
     })();
 
     return (
-        <div className={`w-full mx-auto ${compact ? 'py-0' : 'py-2 max-w-6xl'}`}>
-            {/* Compact Stepper */}
-            <div className="flex items-center justify-between mb-4 px-0">
-                {steps.map((step, idx) => {
-                    const Icon = step.icon;
-                    const isActive = currentStep === step.id;
-                    const isCompleted = currentStep > step.id;
-                    return (
-                        <React.Fragment key={step.id}>
-                            <div
+        <div className={cn("w-full mx-auto", compact ? "py-0" : "py-2 max-w-7xl")}>
+            <div className="mb-4 rounded-xl border border-border bg-card px-4 py-4 md:px-5">
+                <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {steps.map((step) => {
+                        const Icon = step.icon;
+                        const isActive = currentStep === step.id;
+                        const isCompleted = currentStep > step.id;
+                        return (
+                            <button
+                                key={step.id}
+                                type="button"
                                 onClick={() => isCompleted && setCurrentStep(step.id)}
                                 className={cn(
-                                    "flex items-center gap-3 cursor-pointer transition-all",
-                                    isActive ? "opacity-100" : isCompleted ? "opacity-60 hover:opacity-100" : "opacity-30"
+                                    "flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition",
+                                    isActive && "border-primary bg-primary/5",
+                                    isCompleted && "border-emerald-500/40 bg-emerald-500/5",
+                                    !isActive && !isCompleted && "border-border bg-background/50",
+                                    isCompleted ? "cursor-pointer hover:border-emerald-500/70" : "cursor-default"
                                 )}
                             >
                                 <div className={cn(
-                                    "w-8 h-8 rounded-md flex items-center justify-center border-2 transition-all",
-                                    isActive ? "border-primary bg-primary/10 text-primary" :
-                                        isCompleted ? "border-emerald-500 bg-emerald-500/10 text-emerald-500" :
-                                            "border-border bg-transparent"
+                                    "flex h-8 w-8 items-center justify-center rounded-md border",
+                                    isActive && "border-primary text-primary",
+                                    isCompleted && "border-emerald-500 text-emerald-500",
+                                    !isActive && !isCompleted && "border-border text-muted-foreground"
                                 )}>
-                                    {isCompleted ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                                    {isCompleted ? <CheckCircle className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className={cn(
-                                        "text-[10px] font-bold uppercase tracking-widest",
-                                        isActive ? "text-foreground" : "text-muted-foreground"
-                                    )}>
-                                        Step 0{step.id}
-                                    </span>
-                                    <span className={cn(
-                                        "text-xs font-bold tracking-tight",
-                                        isActive ? "text-foreground" : "text-muted-foreground"
-                                    )}>
-                                        {step.name}
-                                    </span>
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Step {step.id}</p>
+                                    <p className="text-sm font-medium text-foreground">{step.name}</p>
                                 </div>
-                            </div>
-                            {idx < steps.length - 1 && (
-                                <div className={cn("flex-1 h-[1px] mx-4", isCompleted ? "bg-emerald-500/30" : "bg-border")} />
-                            )}
-                        </React.Fragment>
-                    );
-                })}
+                            </button>
+                        );
+                    })}
+                </div>
+                <Progress value={((currentStep - 1) / (steps.length - 1)) * 100} className="h-1.5" />
             </div>
 
-            <div className={`grid grid-cols-1 lg:grid-cols-12 gap-4 items-start`}>
+            <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
                 {/* Main Content Area */}
-                <div className="lg:col-span-8 space-y-4">
+                <div className="space-y-4 lg:col-span-7 xl:col-span-8">
                     <AnimatePresence mode="wait">
                         {currentStep === 1 && (
                             <motion.div
@@ -525,21 +517,21 @@ export function ManualProcessView({
                                 exit={{ opacity: 0, x: 20 }}
                                 className="space-y-4"
                             >
-                                <Card className="border bg-card shadow-sm rounded-md">
+                                <Card className="rounded-lg border bg-card shadow-sm">
                                     <CardContent className="p-3">
                                         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as SourceTab)} className="w-full">
-                                            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 h-10">
-                                                <TabsTrigger value="channel" className="text-[10px] uppercase font-bold tracking-widest">
-                                                    <Youtube className="w-3.5 h-3.5 mr-2" /> Hub
+                                            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1 sm:grid-cols-4">
+                                                <TabsTrigger value="channel" className="h-10 text-xs font-medium sm:text-sm">
+                                                    <Youtube className="mr-2 h-3.5 w-3.5" /> Channel
                                                 </TabsTrigger>
-                                                <TabsTrigger value="url" className="text-[10px] uppercase font-bold tracking-widest">
-                                                    <LinkIcon className="w-3.5 h-3.5 mr-2" /> URL
+                                                <TabsTrigger value="url" className="h-10 text-xs font-medium sm:text-sm">
+                                                    <LinkIcon className="mr-2 h-3.5 w-3.5" /> URL
                                                 </TabsTrigger>
-                                                <TabsTrigger value="upload" className="text-[10px] uppercase font-bold tracking-widest">
-                                                    <UploadIcon className="w-3.5 h-3.5 mr-2" /> File
+                                                <TabsTrigger value="upload" className="h-10 text-xs font-medium sm:text-sm">
+                                                    <UploadIcon className="mr-2 h-3.5 w-3.5" /> Upload
                                                 </TabsTrigger>
-                                                <TabsTrigger value="drafts" className="text-[10px] uppercase font-bold tracking-widest">
-                                                    <FolderOpen className="w-3.5 h-3.5 mr-2" /> Drafts
+                                                <TabsTrigger value="drafts" className="h-10 text-xs font-medium sm:text-sm">
+                                                    <FolderOpen className="mr-2 h-3.5 w-3.5" /> Drafts
                                                 </TabsTrigger>
                                             </TabsList>
                                         </Tabs>
@@ -563,10 +555,10 @@ export function ManualProcessView({
                                             {activeTab === 'channel' && (
                                                 <div className="space-y-4 relative z-10">
                                                     <div className="space-y-3">
-                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Source Repository</label>
+                                                        <label className="text-xs font-medium text-muted-foreground">Source channel</label>
                                                         <Select value={sourceChannelId} onValueChange={setSourceChannelId}>
-                                                            <SelectTrigger className="h-11 rounded-md border-border bg-background text-xs font-medium focus:ring-primary/20">
-                                                                <SelectValue placeholder="Select source hub..." />
+                                                            <SelectTrigger className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20">
+                                                                <SelectValue placeholder="Select a source channel..." />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {availableChannels.map(c => (
@@ -583,12 +575,12 @@ export function ManualProcessView({
                                                             {loadingVideos ? (
                                                                 <div className="p-24 flex flex-col items-center gap-4">
                                                                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                                                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Accessing Assets...</span>
+                                                                    <span className="text-xs font-medium text-muted-foreground">Loading videos...</span>
                                                                 </div>
                                                             ) : channelVideos.length === 0 ? (
                                                                 <div className="p-20 text-center text-muted-foreground">
                                                                     <Search className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                                                                    <p className="text-sm font-bold tracking-tight">Zero assets found in this hub</p>
+                                                                    <p className="text-sm font-medium tracking-tight">No videos found for this channel</p>
                                                                 </div>
                                                             ) : (
                                                                 <div className="divide-y divide-border/50">
@@ -622,7 +614,7 @@ export function ManualProcessView({
                                                                                     <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
                                                                                         {new Date(video.published_at).toLocaleDateString()}
                                                                                     </span>
-                                                                                    <Badge variant="outline" className="text-[8px] h-4 font-bold uppercase tracking-tighter opacity-50">MASTER ASSET</Badge>
+                                                                                    <Badge variant="outline" className="h-5 text-[10px] font-medium opacity-70">Source</Badge>
                                                                                 </div>
                                                                             </div>
                                                                             {selectedVideoId === video.video_id && (
@@ -644,7 +636,7 @@ export function ManualProcessView({
                                                     <div className="space-y-3">
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <LinkIcon className="w-3.5 h-3.5 text-primary" />
-                                                            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Video Source URL</label>
+                                                            <label className="text-xs font-medium text-muted-foreground">Video URL</label>
                                                         </div>
                                                         <Input
                                                             placeholder="https://example.com/video.mp4 or YouTube URL..."
@@ -656,11 +648,11 @@ export function ManualProcessView({
                                                     <div className="space-y-3">
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <Youtube className="w-3.5 h-3.5 text-primary" />
-                                                            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Assign Origin Hub</label>
+                                                            <label className="text-xs font-medium text-muted-foreground">Source channel</label>
                                                         </div>
                                                         <Select value={sourceChannelId} onValueChange={setSourceChannelId}>
-                                                            <SelectTrigger className="h-11 rounded-md border-border bg-background text-xs font-medium focus:ring-primary/20">
-                                                                <SelectValue placeholder="Select associated channel..." />
+                                                                <SelectTrigger className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20">
+                                                                    <SelectValue placeholder="Select associated channel..." />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {availableChannels.map(c => (
@@ -742,8 +734,8 @@ export function ManualProcessView({
                                                                     </div>
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-lg font-bold tracking-tight">Initiate Local Uplink</p>
-                                                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-2">Drag-n-drop high-bitrate media unit</p>
+                                                                    <p className="text-lg font-semibold tracking-tight">Upload a source video</p>
+                                                                    <p className="mt-2 text-xs text-muted-foreground">Drag and drop a video file, or click to browse</p>
                                                                 </div>
                                                             </motion.div>
                                                         )}
@@ -754,7 +746,7 @@ export function ManualProcessView({
                                             {activeTab === 'drafts' && (
                                                 <div className="space-y-4 relative z-10">
                                                     <div className="space-y-1">
-                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Storage Vault</label>
+                                                        <label className="text-xs font-medium text-muted-foreground">Draft videos</label>
                                                         <p className="text-xs text-muted-foreground/60">Select from your uploaded videos in storage</p>
                                                     </div>
 
@@ -762,7 +754,7 @@ export function ManualProcessView({
                                                         {loadingVideos ? (
                                                             <div className="p-24 flex flex-col items-center gap-4">
                                                                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                                                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Loading Vault...</span>
+                                                                <span className="text-xs font-medium text-muted-foreground">Loading draft videos...</span>
                                                             </div>
                                                         ) : draftVideos.length === 0 ? (
                                                             <div className="p-20 text-center text-muted-foreground">
@@ -805,7 +797,7 @@ export function ManualProcessView({
                                                                                 <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
                                                                                     {new Date((video as Video & { created_at?: string }).created_at || video.published_at || Date.now()).toLocaleDateString()}
                                                                                 </span>
-                                                                                <Badge variant="secondary" className="text-[8px] h-4 font-bold uppercase tracking-tighter opacity-50">PRODUCTION UNIT</Badge>
+                                                                                <Badge variant="secondary" className="h-5 text-[10px] font-medium opacity-70">Draft</Badge>
                                                                             </div>
                                                                         </div>
                                                                         {selectedVideoId === video.video_id && (
@@ -834,16 +826,16 @@ export function ManualProcessView({
                                 exit={{ opacity: 0, x: 20 }}
                                 className="space-y-4"
                             >
-                                <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
+                                <Card className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
                                     <CardContent className={cn("grid grid-cols-1 md:grid-cols-2 gap-4 p-5 lg:p-6", compact && "p-4 gap-4")}>
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <Globe className="w-4 h-4 text-primary" />
-                                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Source Linguistics</label>
+                                                <label className="text-xs font-medium text-muted-foreground">Source language</label>
                                             </div>
                                             <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
-                                                <SelectTrigger className="h-11 rounded-md border-border bg-background text-xs font-medium focus:ring-primary/20">
-                                                    <SelectValue placeholder="Auto-detect by neural engine" />
+                                                <SelectTrigger className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20">
+                                                    <SelectValue placeholder="Auto-detect" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {LANGUAGE_OPTIONS.map(l => (
@@ -857,10 +849,10 @@ export function ManualProcessView({
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <Layers className="w-4 h-4 text-primary" />
-                                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Public Registry Title</label>
+                                                <label className="text-xs font-medium text-muted-foreground">Title</label>
                                             </div>
                                             <Input
-                                                placeholder="Target publication title..."
+                                                placeholder="Video title"
                                                 value={customTitle}
                                                 onChange={(e) => setCustomTitle(e.target.value)}
                                                 className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20"
@@ -870,11 +862,11 @@ export function ManualProcessView({
                                         <div className="space-y-4 md:col-span-2">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <Sparkles className="w-4 h-4 text-primary" />
-                                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Global Distribution Description</label>
+                                                <label className="text-xs font-medium text-muted-foreground">Description</label>
                                             </div>
                                             <textarea
                                                 rows={5}
-                                                placeholder="Enter descriptive metadata for the global versions..."
+                                                placeholder="Write a description for localized versions..."
                                                 value={customDescription}
                                                 onChange={(e) => setCustomDescription(e.target.value)}
                                                 className="w-full bg-background border border-border text-foreground rounded-md p-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none resize-none transition-all leading-relaxed"
@@ -893,11 +885,11 @@ export function ManualProcessView({
                                 exit={{ opacity: 0, x: 20 }}
                                 className="space-y-4"
                             >
-                                <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
+                                <Card className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
                                     <CardContent className={cn("space-y-4 p-5 lg:p-6", compact && "p-4")}>
                                         <div className="flex items-center justify-between mb-4">
-                                            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Select Synchronization Nodes</label>
-                                            <Badge variant="outline" className="text-[8px] h-4 font-bold uppercase tracking-tighter text-teal-500 border-teal-500/20 bg-teal-500/5">CRITICAL STEP</Badge>
+                                            <label className="text-xs font-medium text-muted-foreground">Select target channels</label>
+                                            <Badge variant="outline" className="h-5 text-[10px] font-medium">{selectedTargetChannels.length} selected</Badge>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {availableChannels.filter(c => c.id !== sourceChannelId).map(c => (
@@ -928,7 +920,7 @@ export function ManualProcessView({
                                                                     "text-[15px] font-bold tracking-tight leading-none",
                                                                     selectedTargetChannels.includes(c.id) ? "text-primary" : "text-foreground/70"
                                                                 )}>{c.name}</span>
-                                                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1.5">{c.language_name || 'Generic Sync Hub'}</span>
+                                                                <span className="text-xs text-muted-foreground mt-1">{c.language_name || "No language set"}</span>
                                                             </div>
                                                         </div>
                                                         <div className={cn(
@@ -946,13 +938,13 @@ export function ManualProcessView({
                                                             className="mt-2 space-y-3"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
-                                                            <label className="text-[9px] font-bold uppercase tracking-widest text-primary/60">Define Sync Language</label>
+                                                            <label className="text-xs font-medium text-primary/80">Choose language</label>
                                                             <Select
                                                                 value={targetLanguageOverrides[c.id] || ""}
                                                                 onValueChange={(val) => setTargetLanguageOverrides(prev => ({ ...prev, [c.id]: val }))}
                                                             >
-                                                                <SelectTrigger className="h-10 rounded-xl border-border bg-background/50 text-[10px] font-bold focus:ring-primary/20">
-                                                                    <SelectValue placeholder="Choose linguistic target..." />
+                                                                <SelectTrigger className="h-10 rounded-md border-border bg-background/50 text-xs font-medium focus:ring-primary/20">
+                                                                    <SelectValue placeholder="Choose language..." />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
                                                                     {LANGUAGE_OPTIONS.map(l => (
@@ -972,13 +964,13 @@ export function ManualProcessView({
                                                         <div className="p-4 bg-muted inline-flex rounded-lg mb-4 text-muted-foreground">
                                                             <Globe className="w-10 h-10" />
                                                         </div>
-                                                        <p className="text-base font-semibold tracking-tight mb-2">No channels connected</p>
-                                                        <p className="text-xs text-muted-foreground mb-6">Select target languages below to create drafts</p>
+                                                        <p className="text-base font-semibold tracking-tight mb-2">No target channels connected</p>
+                                                        <p className="text-xs text-muted-foreground mb-6">Select target languages below to continue</p>
                                                     </div>
 
                                                     <div className="space-y-4">
-                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">
-                                                            Select Target Languages <span className="text-primary ml-2">For Drafts</span>
+                                                        <label className="text-xs font-medium text-muted-foreground block">
+                                                            Select target languages <span className="text-primary ml-2">for drafts</span>
                                                         </label>
                                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                                             {LANGUAGE_OPTIONS.slice(0, 12).map(lang => (
@@ -1029,7 +1021,7 @@ export function ManualProcessView({
                             variant="ghost"
                             onClick={() => setCurrentStep(prev => prev - 1)}
                             disabled={currentStep === 1}
-                            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                            className="h-10 rounded-md px-4 flex items-center gap-2 text-muted-foreground hover:text-foreground"
                         >
                             <ArrowLeft className="w-4 h-4" />
                             Back
@@ -1041,7 +1033,7 @@ export function ManualProcessView({
                                 }
                             }}
                             className={cn(
-                                "flex items-center gap-2 h-10 px-6 rounded-md font-bold uppercase tracking-widest text-[10px]",
+                                "flex h-10 items-center gap-2 rounded-md px-5 text-xs font-medium",
                                 currentStep === 3 ? "hidden" : "bg-primary text-primary-foreground hover:bg-primary/90"
                             )}
                         >
@@ -1051,18 +1043,13 @@ export function ManualProcessView({
                     </div>
                 </div>
 
-                {/* Right Column: EXECUTION COMMAND CENTER */}
-                <div className="lg:col-span-4 space-y-3 sticky top-4">
-                    <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
+                <div className="space-y-3 lg:col-span-5 xl:col-span-4 sticky top-4">
+                    <Card className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
                         <CardContent className={cn("p-5 relative", compact && "p-4")}>
-                            <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                                <Cpu className="w-32 h-32" />
-                            </div>
-
-                            <div className="flex items-center gap-3 mb-8 pb-6 border-b border-border">
-                                <Activity className="w-4 h-4 text-primary animate-pulse" />
-                                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-foreground">
-                                    Live Preview
+                            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-border">
+                                <Activity className="h-4 w-4 text-primary" />
+                                <h3 className="text-sm font-semibold text-foreground">
+                                    Review & Start
                                 </h3>
                             </div>
 
@@ -1074,8 +1061,8 @@ export function ManualProcessView({
                                             <img src={currentThumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[4000ms]" alt="Preview" />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
                                             <div className="absolute inset-x-0 bottom-0 p-3 flex items-end justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <label className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-all rounded-md font-bold text-[9px] uppercase tracking-widest cursor-pointer">
-                                                    Replace Visual
+                                                <label className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-all rounded-md text-xs font-medium cursor-pointer">
+                                                    Replace thumbnail
                                                     <input type="file" className="hidden" accept="image/*" onChange={handleThumbnailSelect} />
                                                 </label>
                                                 {thumbnailPreview && (
@@ -1110,28 +1097,28 @@ export function ManualProcessView({
 
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center py-3 border-b border-border group/line">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover/line:text-foreground transition-colors">Acquisition Mode</span>
+                                            <span className="text-xs font-medium text-muted-foreground group-hover/line:text-foreground transition-colors">Source type</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-medium text-foreground capitalize">{activeTab}</span>
+                                                <div className="w-1 h-1 rounded-full bg-primary" />
+                                            </div>
+                                        </div>
+                                    <div className={`flex justify-between items-center py-3 border-b ${isDark ? "border-white/10" : "border-gray-200"} group/line`}>
+                                        <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Targets</span>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-foreground uppercase tracking-tight">{activeTab}</span>
-                                            <div className="w-1 h-1 rounded-full bg-primary" />
+                                            <span className="text-xs font-semibold text-foreground">{selectedTargetChannels.length}</span>
+                                            <Radio className="h-3.5 w-3.5 text-primary" />
                                         </div>
                                     </div>
                                     <div className={`flex justify-between items-center py-3 border-b ${isDark ? "border-white/10" : "border-gray-200"} group/line`}>
-                                        <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Global Fanout</span>
+                                        <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Engine</span>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-olleey-yellow">{selectedTargetChannels.length} Hubs</span>
-                                            <Radio className="w-3.5 h-3.5 text-olleey-yellow animate-pulse" />
-                                        </div>
-                                    </div>
-                                    <div className={`flex justify-between items-center py-3 border-b ${isDark ? "border-white/10" : "border-gray-200"} group/line`}>
-                                        <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Neural Optimizer</span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-olleey-yellow">Turbo-XL V9</span>
-                                            <Zap className="w-3.5 h-3.5 text-olleey-yellow" />
+                                            <span className="text-xs font-medium text-foreground">Standard</span>
+                                            <Zap className="h-3.5 w-3.5 text-primary" />
                                         </div>
                                     </div>
                                     <div className="flex justify-between items-center py-3 group/line">
-                                        <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Linguistic Matrix</span>
+                                        <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Language map</span>
                                         <div className="flex items-center gap-3">
                                             <span className="text-xl">{sourceLanguage ? getLanguageFlag(sourceLanguage) : "🌐"}</span>
                                             <ArrowRight className={`w-3.5 h-3.5 ${isDark ? "text-white/40" : "text-gray-500"} group-hover/line:text-olleey-yellow/40 transition-colors`} />
@@ -1149,7 +1136,7 @@ export function ManualProcessView({
                                                         );
                                                     })
                                                 ) : (
-                                                    <span className={`text-xs font-black ${isDark ? "text-white/40" : "text-gray-500"} uppercase tracking-widest`}>Awaiting Nodes</span>
+                                                    <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-500"}`}>No targets selected</span>
                                                 )}
                                                 {selectedTargetChannels.length > 4 && (
                                                     <div className={`w-8 h-8 rounded-full border-2 ${isDark ? 'border-[#0c0c0c] bg-white/5' : 'border-white bg-gray-100'} flex items-center justify-center text-[9px] font-black ${isDark ? "text-white/70" : "text-gray-700"}`}>
@@ -1170,11 +1157,11 @@ export function ManualProcessView({
                                             className={`space-y-3 p-4 ${isDark ? 'bg-white/[0.03]' : 'bg-gray-100'} border ${isDark ? "border-white/10" : "border-gray-200"} rounded-lg`}
                                         >
                                             <div className="flex justify-between items-center mb-2">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-olleey-yellow flex items-center gap-2">
+                                                <span className="text-xs font-medium text-primary flex items-center gap-2">
                                                     <Activity className="w-3.5 h-3.5 animate-spin-slow" />
-                                                    Synchronizing Pipeline
+                                                    Processing
                                                 </span>
-                                                <span className="text-xs font-black text-olleey-yellow font-mono">{uploadProgress}%</span>
+                                                <span className="text-xs font-semibold text-primary font-mono">{uploadProgress}%</span>
                                             </div>
                                             <div className={`w-full h-2 ${isDark ? 'bg-white/5' : 'bg-gray-200'} rounded-full overflow-hidden`}>
                                                 <motion.div
@@ -1183,7 +1170,7 @@ export function ManualProcessView({
                                                     className="h-full bg-olleey-yellow"
                                                 />
                                             </div>
-                                            <p className={`text-[9px] font-bold ${isDark ? "text-white/60" : "text-gray-600"} uppercase tracking-[0.2em] text-center mt-4`}>Calibrating Transcoding Nodes...</p>
+                                            <p className={`text-xs ${isDark ? "text-white/60" : "text-gray-600"} text-center mt-3`}>Creating job and preparing workflow...</p>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -1192,7 +1179,7 @@ export function ManualProcessView({
                                     <div className={`flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg`}>
                                         <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Security / Handshake Failure</span>
+                                            <span className="text-xs font-semibold text-red-500">Something went wrong</span>
                                             <p className="text-xs font-medium text-red-400 leading-tight opacity-80">{error}</p>
                                         </div>
                                     </div>
@@ -1202,8 +1189,8 @@ export function ManualProcessView({
                                     <div className={`flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg`}>
                                         <ShieldCheck className="w-6 h-6 text-emerald-500 shrink-0" />
                                         <div className="flex flex-col gap-0.5">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Pipeline Authenticated</span>
-                                            <p className="text-xs font-medium text-emerald-400 opacity-80">Execution commenced.</p>
+                                            <span className="text-xs font-semibold text-emerald-500">Ready</span>
+                                            <p className="text-xs font-medium text-emerald-400 opacity-80">Processing started successfully.</p>
                                         </div>
                                     </div>
                                 )}
@@ -1213,7 +1200,7 @@ export function ManualProcessView({
                                         size="lg"
                                         onClick={(e) => handleSubmit(e, false)}
                                         disabled={isSubmitting || isSuccessState}
-                                        className={`w-full h-12 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 rounded-lg relative overflow-hidden group/submit border ${isSuccessState
+                                        className={`w-full h-12 text-sm font-semibold transition-all duration-500 rounded-lg relative overflow-hidden group/submit border ${isSuccessState
                                             ? 'bg-emerald-500 text-white border-emerald-400/50'
                                             : `bg-olleey-yellow text-black border-olleey-yellow/50 active:scale-95 ${isDark ? 'hover:bg-amber-300 hover:border-amber-400' : 'hover:bg-amber-400 hover:border-amber-500'}`
                                             } shadow-xl`}
@@ -1222,7 +1209,7 @@ export function ManualProcessView({
                                         {isSubmitting ? (
                                             <div className="flex items-center gap-4">
                                                 <Loader2 className="w-6 h-6 animate-spin" />
-                                                <span>Transmitting</span>
+                                                <span>Starting...</span>
                                             </div>
                                         ) : isSuccessState ? (
                                             <div className="flex items-center gap-4">
@@ -1232,7 +1219,7 @@ export function ManualProcessView({
                                         ) : (
                                             <span className="flex items-center gap-3">
                                                 <Rocket className="w-5 h-5 group-hover/submit:translate-x-1 group-hover/submit:-translate-y-1 transition-transform" />
-                                                Execute Deployment
+                                                Begin Processing
                                             </span>
                                         )}
                                     </Button>
@@ -1242,26 +1229,26 @@ export function ManualProcessView({
                                                 size="lg"
                                                 onClick={(e) => handleSubmit(e, true)}
                                                 disabled={isSubmitting || isSuccessState}
-                                                className={`w-full h-10 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 rounded-lg relative overflow-hidden group/draft ${isDark
+                                                className={`w-full h-10 text-xs font-medium transition-all duration-500 rounded-lg relative overflow-hidden group/draft ${isDark
                                                     ? 'bg-white/5 text-white/70 border-2 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
                                                     : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200 hover:text-gray-900 hover:border-gray-300'
                                                     } active:scale-95`}
                                             >
                                                 <span className="flex items-center gap-3">
                                                     <FolderOpen className="w-4 h-4 group-hover/draft:scale-110 transition-transform" />
-                                                    Save to Drafts
+                                                    Save as Draft
                                                 </span>
                                             </Button>
                                             <Button
                                                 variant="ghost"
                                                 onClick={onCancel}
-                                                className={`w-full h-9 text-[10px] font-black uppercase tracking-widest ${isDark
+                                                className={`w-full h-9 text-xs font-medium ${isDark
                                                     ? 'text-white/20 hover:text-red-400 hover:bg-red-500/5'
                                                     : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
                                                     } transition-all rounded-md border border-transparent ${isDark ? 'hover:border-red-500/10' : 'hover:border-red-200'
                                                     }`}
                                             >
-                                                Abort Operation
+                                                Cancel
                                             </Button>
                                         </>
                                     )}

@@ -123,7 +123,7 @@ export function JobCard({ job, onClick, theme, highlight, onCancel, onSelectLang
           {/* Quick Actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="sm" className={`h-8 w-8 p-0 border ${isDark ? "border-white/5 hover:border-white/20 hover:bg-white/10" : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"} transition-all`}>
+              <Button variant="ghost" size="sm" className={`h-8 w-8 p-0 border ${isDark ? "border-zinc-700 hover:border-zinc-500 hover:bg-white/10" : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"} transition-all`}>
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -162,7 +162,7 @@ export function JobCard({ job, onClick, theme, highlight, onCancel, onSelectLang
                   e.stopPropagation();
                   onSelectLanguage?.(lang);
                 }}
-                className={`h-7 px-2.5 text-[10px] font-bold gap-1.5 rounded-lg transition-all active:scale-95 ${isDark ? 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-primary/50' : 'bg-gray-50 border-gray-200 hover:bg-white hover:border-primary/50'}`}
+                className={`h-7 px-2.5 text-[10px] font-bold gap-1.5 rounded-lg transition-all active:scale-95 ${isDark ? 'bg-white/5 border-zinc-700 hover:bg-white/10 hover:border-primary/50' : 'bg-gray-50 border-gray-200 hover:bg-white hover:border-primary/50'}`}
               >
                 <span className="text-xs leading-none">{getLanguageFlag(lang)}</span>
                 {lang.toUpperCase()}

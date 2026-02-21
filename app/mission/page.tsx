@@ -4,270 +4,254 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight, Globe2, Languages, Moon, ShieldCheck, Sparkles, Sun, Users, Handshake, TrendingUp } from "lucide-react";
-import { useThemeContext } from "@/lib/ThemeContext";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Globe2,
+  Handshake,
+  Languages,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from "lucide-react";
+
+import SiteHeader from "@/components/ui/site-header";
 import Footer from "@/components/LandingPage/Footer";
 
 const principles = [
   {
-    title: "Meaning First",
+    title: "Voice Integrity",
     description:
-      "Localization should preserve intent, tone, and context, not just words.",
+      "Every localization should preserve intent, tone, and identity so creators and teams are represented authentically.",
     icon: Languages,
   },
   {
-    title: "Human Control",
+    title: "Responsible Distribution",
     description:
-      "Automation should accelerate teams while keeping clear review and approval gates.",
+      "Quality and safety checks should happen before content is distributed, not after issues appear in-market.",
     icon: ShieldCheck,
   },
   {
-    title: "Global By Default",
+    title: "Global Access",
     description:
-      "Publishing in multiple languages should be standard for every release.",
+      "Knowledge, stories, and ideas should not be limited by language barriers or publishing complexity.",
     icon: Globe2,
   },
 ];
 
 const commitments = [
   {
-    title: "Protect creator voice and identity",
+    title: "Protect authenticity across languages",
     detail:
-      "We design every step to preserve tone, emotion, and storytelling intent so localized versions still feel like the original creator, not a generic translation.",
+      "We design for translation quality that keeps original meaning and creator identity intact across every localized version.",
   },
   {
-    title: "Compress timelines from days to minutes",
+    title: "Make quality visible and accountable",
     detail:
-      "We automate repetitive production work so teams can go from upload to localized review quickly, ship faster, and stay consistent across releases.",
+      "We expose guardrails and review checkpoints so teams can approve content with confidence, not guesswork.",
   },
   {
-    title: "Make quality standards visible and enforceable",
+    title: "Reduce friction to global storytelling",
     detail:
-      "Our guardrails expose confidence, safety, and compliance signals before publish so teams can review with clarity and avoid silent quality regressions.",
+      "We simplify workflows so multilingual publishing is practical for small teams and large organizations alike.",
   },
   {
-    title: "Keep global publishing accessible",
+    title: "Build for long-term trust",
     detail:
-      "We build for lean teams as well as large organizations, with workflows that scale without adding operational complexity or requiring localization specialists.",
+      "Reliability, transparency, and user control guide product decisions across every part of the platform.",
   },
 ];
 
-const globalImpact = [
+const impact = [
   {
-    title: "More Voices, More Access",
+    title: "Education Without Language Limits",
     description:
-      "People can access educational, cultural, and practical content in their native language instead of being excluded by default.",
+      "Training, tutorials, and educational content can reach broader communities in formats people understand natively.",
     icon: Users,
   },
   {
-    title: "Cultural Exchange At Scale",
+    title: "More Inclusive Global Conversation",
     description:
-      "Creators can share local stories globally while preserving context and meaning, helping regions understand each other better.",
+      "Local voices and perspectives can travel further while retaining context and cultural nuance.",
     icon: Handshake,
   },
   {
-    title: "Economic Opportunity",
+    title: "Higher Quality At Global Scale",
     description:
-      "Small teams and independent creators can enter new markets without the cost and delay of traditional localization pipelines.",
-    icon: TrendingUp,
+      "Teams can expand distribution without sacrificing review standards, clarity, or consistency.",
+    icon: CheckCircle2,
   },
 ];
 
 export default function MissionPage() {
   const router = useRouter();
-  const { theme, setTheme } = useThemeContext();
 
   return (
-    <main className="relative min-h-screen bg-[#FAFAFA] dark:bg-black text-zinc-900 dark:text-zinc-100 transition-colors duration-300 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none opacity-[0.06] dark:opacity-[0.1] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:24px_24px]" />
+    <main className="relative min-h-screen bg-[#FAFAFA] dark:bg-[#07080b] text-black dark:text-white font-sans selection:bg-black/10 dark:selection:bg-white/20 transition-colors duration-300">
+      <SiteHeader />
 
-      {/* Background Image Overlay */}
-      <div
-        className="fixed top-0 bottom-0 right-0 z-0 w-full md:w-1/2 bg-no-repeat bg-right opacity-30 dark:opacity-40 pointer-events-none bg-contain md:bg-[length:auto_100%]"
-        style={{ backgroundImage: `url('https://store-images.s-microsoft.com/image/apps.22527.14241444633392716.d6c44b65-031f-4f2a-851c-57ad619710a4.56f38a83-7224-4d82-8eec-6a52ab513be9?h=1280')` }}
-      />
-
-      <header className="fixed top-0 left-0 right-0 z-50 p-4 lg:py-4 lg:px-10 transition-colors duration-300 pointer-events-none bg-[#FAFAFA]/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5">
-        <div className="max-w-[1400px] mx-auto pointer-events-auto">
-          <div className="flex items-center justify-between">
-            {/* Left: Logo */}
-            <div className="flex items-center gap-10 xl:gap-14">
-              <Link href="/" className="flex items-center gap-2">
-                <div className="relative w-7 h-7 rounded-full overflow-hidden bg-black dark:bg-white flex items-center justify-center">
-                  <Image
-                    src="/favicon/android-chrome-192x192.png"
-                    alt="Olleey Logo"
-                    fill
-                    className="object-cover p-[5px] invert dark:invert-0"
-                  />
-                </div>
-                <span className="text-xl font-medium tracking-tight text-zinc-900 dark:text-zinc-100 mt-0.5">
-                  olleey.
-                </span>
-              </Link>
-
-              {/* Center: Nav Links */}
-              <div className="hidden lg:flex items-center gap-8">
-                <Link href="/#showcase" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
-                  Product
-                </Link>
-                <Link href="/#workflow-stages" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
-                  Workflows
-                </Link>
-                <Link href="/mission" className="text-[15px] font-medium text-black dark:text-white transition-colors">
-                  Mission
-                </Link>
-                <Link href="/#faq" className="text-[15px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors">
-                  FAQ
-                </Link>
-              </div>
+      <section className="relative z-10 pt-32 md:pt-40 pb-14 md:pb-20 px-6">
+        <div className="mx-auto max-w-6xl text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+          >
+            <div className="inline-flex items-center gap-2 rounded-full border border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5 px-3 py-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.14em]">Our Mission</span>
             </div>
 
-            {/* Right: Actions */}
-            <div className="flex items-center gap-6">
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="hidden lg:flex items-center justify-center w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                aria-label="Toggle theme"
-              >
-                {theme === 'dark' ? <Moon className="w-4 h-4 text-white" /> : <Sun className="w-4 h-4 text-black" />}
-              </button>
-
-              <button
-                onClick={() => router.push('/register')}
-                className="hidden lg:block text-[15px] font-medium text-zinc-900 dark:text-zinc-100 hover:opacity-70 transition-opacity"
-              >
-                Get started
-              </button>
-
-              <button
-                onClick={() => router.push('/login')}
-                className="px-4 py-2 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-[15px] font-medium text-zinc-900 dark:text-zinc-100 hover:opacity-80 transition-all"
-              >
-                Login
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <section className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 lg:px-[90px] pt-40 pb-16">
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <p className="text-[11px] font-mono uppercase tracking-[0.25em] text-zinc-500 dark:text-zinc-400 mb-5">Olleey Mission</p>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-[-0.04em] mb-8">
-            We build the global
-            <br />
-            publishing layer for
-            <br />
-            modern creators.
-          </h1>
-          <p className="text-lg md:text-2xl text-zinc-600 dark:text-zinc-300 max-w-3xl leading-relaxed">
-            Teams should not have to choose between speed and quality. Olleey exists to make multilingual distribution as simple as pressing publish once.
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-black dark:bg-white text-white dark:text-black text-sm font-semibold hover:opacity-90 transition-opacity"
-            >
-              Start with Olleey
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/"
-              className="inline-flex items-center px-6 py-3 rounded-full border border-zinc-300 dark:border-zinc-700 text-sm font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
-            >
-              Back to home
-            </Link>
-          </div>
-        </motion.div>
-      </section>
-
-      <section className="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 pb-10">
-        <div className="grid md:grid-cols-3 gap-4">
-          {principles.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 * index, duration: 0.45 }}
-                className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-zinc-950/60 p-6"
-              >
-                <Icon className="w-5 h-5 text-zinc-500 dark:text-zinc-300 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">{item.description}</p>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.45 }}
-          className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-zinc-950/60 p-8 md:p-10"
-        >
-          <div className="flex items-center gap-2 mb-5">
-            <Sparkles className="w-4 h-4 text-zinc-500 dark:text-zinc-300" />
-            <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
-              What We Commit To
+            <h1 className="mt-6 text-4xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight font-semibold">
+              Help every story travel
+              <br className="hidden md:block" />
+              with its meaning intact.
+            </h1>
+            <p className="mt-6 text-base md:text-xl text-neutral-600 dark:text-neutral-300 max-w-3xl mx-auto leading-relaxed">
+              Olleey exists to remove language barriers without removing identity. We are building infrastructure that makes multilingual publishing trustworthy, clear, and accessible.
             </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            {commitments.map((item, index) => (
-              <div
-                key={item.title}
-                className="rounded-xl border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-zinc-900/50 p-5"
+
+            <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+              <Link
+                href="/register"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-black dark:bg-white text-white dark:text-black px-6 py-3 text-sm font-semibold hover:opacity-90 transition-opacity"
               >
-                <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 mb-2">
-                  Commitment 0{index + 1}
-                </p>
-                <h3 className="text-base font-semibold mb-2">{item.title}</h3>
-                <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">{item.detail}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+                Start with Olleey
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <button
+                onClick={() => router.push("/enterprise")}
+                className="inline-flex items-center justify-center rounded-full border border-black/15 dark:border-white/15 px-6 py-3 text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              >
+                Visit enterprise page
+              </button>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
-      <section className="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 pb-14">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.45 }}
-          className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-zinc-950/60 p-8 md:p-10"
-        >
-          <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 mb-4">
-            Global Impact
-          </p>
-          <h2 className="text-3xl md:text-5xl tracking-tight mb-8">
-            The impact this can have on the world
-          </h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            {globalImpact.map((item) => {
+      <section className="relative z-10 py-12 md:py-14 border-y border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#0b0c11] px-6">
+        <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-4">
+          <article className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#0f1117] p-3">
+            <div className="relative aspect-[16/10] rounded-xl overflow-hidden border border-black/10 dark:border-white/10">
+              <Image
+                src="/images/worlds.png"
+                alt="Global reach illustration"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+            <p className="mt-3 text-sm font-medium text-zinc-800 dark:text-zinc-100">Global reach, local relevance</p>
+            <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">We want high-quality stories to move across borders without losing context.</p>
+          </article>
+
+          <article className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#0f1117] p-3">
+            <div className="relative aspect-[16/10] rounded-xl overflow-hidden border border-black/10 dark:border-white/10">
+              <Image
+                src="/images/photo1.png"
+                alt="Team collaboration visual"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <p className="mt-3 text-sm font-medium text-zinc-800 dark:text-zinc-100">Built for real teams</p>
+            <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">Creators, operators, and reviewers can collaborate around one trusted workflow.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="relative z-10 py-16 md:py-20 px-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 md:mb-10">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400">Principles</p>
+            <h2 className="mt-3 text-3xl md:text-5xl tracking-tight font-semibold">How we make decisions</h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {principles.map((item, index) => {
               const Icon = item.icon;
               return (
-                <div
+                <motion.article
                   key={item.title}
-                  className="rounded-xl border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-zinc-900/50 p-5"
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.35, delay: 0.06 * index }}
+                  className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#0d0e13] p-6"
                 >
-                  <div className="mb-4 inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900">
-                    <Icon className="w-5 h-5 text-zinc-600 dark:text-zinc-300" />
+                  <div className="w-10 h-10 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5" />
                   </div>
-                  <h3 className="text-base font-semibold mb-2">{item.title}</h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">{item.description}</p>
-                </div>
+                  <h3 className="text-lg md:text-xl font-semibold">{item.title}</h3>
+                  <p className="mt-2 text-sm md:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">{item.description}</p>
+                </motion.article>
               );
             })}
           </div>
-        </motion.div>
+        </div>
+      </section>
+
+      <section className="relative z-10 py-16 md:py-20 border-y border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#0b0c11] px-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 md:mb-10">
+            <div className="inline-flex items-center gap-2">
+              <Languages className="w-4 h-4" />
+              <p className="text-[11px] uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400">Commitments</p>
+            </div>
+            <h2 className="mt-3 text-3xl md:text-5xl tracking-tight font-semibold">What we commit to</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {commitments.map((item, index) => (
+              <motion.article
+                key={item.title}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: 0.05 * index }}
+                className="rounded-2xl border border-black/10 dark:border-white/10 bg-[#FAFAFA] dark:bg-[#0f1117] p-6 md:p-7"
+              >
+                <p className="text-[11px] uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400">
+                  Commitment {String(index + 1).padStart(2, "0")}
+                </p>
+                <h3 className="mt-3 text-xl md:text-2xl font-semibold tracking-tight">{item.title}</h3>
+                <p className="mt-3 text-sm md:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">{item.detail}</p>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="relative z-10 py-16 md:py-20 px-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 md:mb-10 text-center">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400">Global Impact</p>
+            <h2 className="mt-3 text-3xl md:text-5xl tracking-tight font-semibold">The change we want to enable</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {impact.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <motion.article
+                  key={item.title}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.35, delay: 0.06 * index }}
+                  className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#0d0e13] p-6"
+                >
+                  <div className="w-10 h-10 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-semibold">{item.title}</h3>
+                  <p className="mt-2 text-sm md:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">{item.description}</p>
+                </motion.article>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
       <Footer onGetStarted={() => router.push("/register")} />

@@ -285,11 +285,16 @@ export function LeftSidebar({
         .some((field) => String(field).toLowerCase().includes(normalizedSearch));
     })
     : [];
+  const totalSearchResults = filteredVideos.length + filteredJobs.length + filteredChannels.length;
 
   const textClass = isDark ? "text-white" : "text-gray-900";
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-400";
   const glassBgClass = isDark ? "bg-white/[0.05]" : "bg-gray-100/50";
-  const borderClass = isDark ? "border-white/10" : "border-gray-300";
+  const borderClass = isDark ? "border-zinc-700" : "border-gray-300";
+  const searchPanelClass = isDark ? "bg-white/[0.02] border-white/10" : "bg-white/80 border-gray-200";
+  const searchItemClass = isDark
+    ? "bg-white/[0.04] border-white/10 hover:bg-white/[0.07] hover:border-white/20"
+    : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300";
   const sidebarBgClass = isDark ? "bg-[#111111]" : "bg-[#ECE9DA]";
   const accountName =
     user?.user_metadata?.name ||
@@ -375,7 +380,7 @@ export function LeftSidebar({
           </DropdownMenu>
           <button
             onClick={onClose}
-            className={`p-2 rounded-lg border-2 ${borderClass} hover:bg-white/5 hover:border-white/20 transition-all duration-200 active:scale-95`}
+            className={`p-2 rounded-lg border ${borderClass} ${isDark ? "hover:bg-white/5 hover:border-zinc-500" : "hover:bg-gray-100 hover:border-gray-400"} transition-all duration-200 active:scale-95`}
             title="Collapse sidebar"
           >
             <PanelLeftClose className="w-4 h-4 text-gray-400" />
@@ -395,13 +400,28 @@ export function LeftSidebar({
         {/* Sections Accordion */}
         <div className="flex-1 overflow-y-auto px-2 scrollbar-none relative z-10 space-y-4">
           {isSearching ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
+              <div className={cn("rounded-xl border p-3", searchPanelClass)}>
+                <div className="flex items-center justify-between">
+                  <p className={cn("text-[11px] font-semibold", textClass)}>Search results</p>
+                  <Badge variant="secondary" className="h-5 text-[10px] font-medium">
+                    {totalSearchResults}
+                  </Badge>
+                </div>
+                <p className={cn("mt-1 truncate text-[10px]", mutedTextClass)}>
+                  &quot;{searchQuery}&quot;
+                </p>
+              </div>
+
               {filteredVideos.length > 0 && (
-                <div className="space-y-2">
-                  <p className={`text-[10px] font-bold uppercase tracking-widest ${mutedTextClass} flex items-center gap-1.5`}>
-                    <Video className="w-3 h-3" />
-                    Videos
-                  </p>
+                <div className={cn("space-y-1.5 rounded-xl border p-2.5", searchPanelClass)}>
+                  <div className={`flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-widest ${mutedTextClass}`}>
+                    <span className="flex items-center gap-1.5">
+                      <Video className="w-3 h-3" />
+                      Videos
+                    </span>
+                    <span>{filteredVideos.length}</span>
+                  </div>
                   {filteredVideos.slice(0, 8).map((video) => (
                     <button
                       key={video.video_id}
@@ -410,28 +430,32 @@ export function LeftSidebar({
                         onViewChange("videos");
                       }}
                       className={cn(
-                        "w-full text-left p-2.5 rounded-md border transition-all flex items-center gap-2.5",
-                        isDark ? "bg-white/[0.05] border-white/10 hover:border-white/20" : "bg-white border-gray-200 hover:border-gray-300"
+                        "group w-full rounded-lg border p-2.5 text-left transition-all duration-200 flex items-center gap-2.5",
+                        searchItemClass
                       )}
                     >
-                      <div className={`w-7 h-7 rounded-md border flex items-center justify-center shrink-0 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                      <div className={`w-8 h-8 rounded-md border flex items-center justify-center shrink-0 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
                         <Video className="w-3.5 h-3.5 text-primary" />
                       </div>
                       <div className="min-w-0">
                         <p className={`text-xs font-semibold truncate ${textClass}`}>{video.title || video.video_id}</p>
-                        <p className={`text-[10px] truncate ${mutedTextClass}`}>{video.video_id}</p>
+                        <p className={`text-[10px] truncate ${mutedTextClass}`}>ID: {video.video_id}</p>
                       </div>
+                      <ChevronRight className={`ml-auto h-3.5 w-3.5 shrink-0 ${mutedTextClass} opacity-0 transition-opacity group-hover:opacity-100`} />
                     </button>
                   ))}
                 </div>
               )}
 
               {filteredJobs.length > 0 && (
-                <div className="space-y-2">
-                  <p className={`text-[10px] font-bold uppercase tracking-widest ${mutedTextClass} flex items-center gap-1.5`}>
-                    <Play className="w-3 h-3 text-blue-500" />
-                    Pipeline Runs
-                  </p>
+                <div className={cn("space-y-1.5 rounded-xl border p-2.5", searchPanelClass)}>
+                  <div className={`flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-widest ${mutedTextClass}`}>
+                    <span className="flex items-center gap-1.5">
+                      <Play className="w-3 h-3 text-blue-500" />
+                      Pipeline Runs
+                    </span>
+                    <span>{filteredJobs.length}</span>
+                  </div>
                   {filteredJobs.slice(0, 8).map((job) => {
                     const video = getJobVideo(job.source_video_id);
                     return (
@@ -439,17 +463,18 @@ export function LeftSidebar({
                         key={job.job_id}
                         onClick={() => navigateFromJob(job)}
                         className={cn(
-                          "w-full text-left p-2.5 rounded-md border transition-all flex items-center gap-2.5",
-                          isDark ? "bg-white/[0.05] border-white/10 hover:border-white/20" : "bg-white border-gray-200 hover:border-gray-300"
+                          "group w-full rounded-lg border p-2.5 text-left transition-all duration-200 flex items-center gap-2.5",
+                          searchItemClass
                         )}
                       >
-                        <div className={`w-7 h-7 rounded-md border flex items-center justify-center shrink-0 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                        <div className={`w-8 h-8 rounded-md border flex items-center justify-center shrink-0 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
                           <Play className="w-3.5 h-3.5 text-blue-500" />
                         </div>
                         <div className="min-w-0">
                           <p className={`text-xs font-semibold truncate ${textClass}`}>{video?.title || job.source_video_id}</p>
-                          <p className={`text-[10px] uppercase ${mutedTextClass}`}>{job.status.replace("_", " ")} • {job.progress}%</p>
+                          <p className={`text-[10px] uppercase ${mutedTextClass}`}>{job.status.replace(/_/g, " ")} • {job.progress}%</p>
                         </div>
+                        <ChevronRight className={`ml-auto h-3.5 w-3.5 shrink-0 ${mutedTextClass} opacity-0 transition-opacity group-hover:opacity-100`} />
                       </button>
                     );
                   })}
@@ -457,20 +482,23 @@ export function LeftSidebar({
               )}
 
               {filteredChannels.length > 0 && (
-                <div className="space-y-2">
-                  <p className={`text-[10px] font-bold uppercase tracking-widest ${mutedTextClass} flex items-center gap-1.5`}>
-                    <Radio className="w-3 h-3 text-primary" />
-                    Channels
-                  </p>
+                <div className={cn("space-y-1.5 rounded-xl border p-2.5", searchPanelClass)}>
+                  <div className={`flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-widest ${mutedTextClass}`}>
+                    <span className="flex items-center gap-1.5">
+                      <Radio className="w-3 h-3 text-primary" />
+                      Channels
+                    </span>
+                    <span>{filteredChannels.length}</span>
+                  </div>
                   {filteredChannels.slice(0, 8).map((channel) => (
                     <div
                       key={channel.id}
                       className={cn(
-                        "w-full p-2.5 rounded-lg border flex items-center gap-2.5",
-                        isDark ? "bg-white/[0.05] border-white/10" : "bg-white border-gray-200"
+                        "w-full rounded-lg border p-2.5 flex items-center gap-2.5",
+                        searchItemClass
                       )}
                     >
-                      <div className={`w-7 h-7 rounded-md border flex items-center justify-center shrink-0 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                      <div className={`w-8 h-8 rounded-md border flex items-center justify-center shrink-0 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
                         <Radio className="w-3.5 h-3.5 text-primary" />
                       </div>
                       <div className="min-w-0">
@@ -484,8 +512,8 @@ export function LeftSidebar({
                 </div>
               )}
 
-              {filteredVideos.length === 0 && filteredJobs.length === 0 && filteredChannels.length === 0 && (
-                <div className={`p-6 rounded-lg border border-dashed text-center ${borderClass}`}>
+              {totalSearchResults === 0 && (
+                <div className={`p-6 rounded-xl border border-dashed text-center ${borderClass}`}>
                   <p className={`text-xs ${mutedTextClass}`}>No results for "{searchQuery}"</p>
                 </div>
               )}
@@ -593,7 +621,7 @@ export function LeftSidebar({
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className={`h-6 w-6 flex items-center justify-center rounded-full border-2 ${borderClass} ${isDark ? "hover:border-white/20 hover:bg-white/10" : "hover:border-gray-300 hover:bg-gray-50"} transition-all shadow-sm`}>
+                              <button className={`h-6 w-6 flex items-center justify-center rounded-full border ${borderClass} ${isDark ? "hover:border-zinc-500 hover:bg-white/10" : "hover:border-gray-300 hover:bg-gray-50"} transition-all shadow-sm`}>
                                 <MoreHorizontal className={`w-3.5 h-3.5 ${mutedTextClass}`} />
                               </button>
                             </DropdownMenuTrigger>
@@ -663,7 +691,7 @@ export function LeftSidebar({
 
                     <button
                       onClick={handleConnectNewChannel}
-                      className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-xl border-2 border-dashed ${isDark ? borderClass : "border-gray-400/50"} hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all duration-200 bg-transparent group`}
+                      className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-xl border border-dashed ${isDark ? borderClass : "border-gray-400/50"} hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all duration-200 bg-transparent group`}
                     >
                       <Plus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
                       Connect New

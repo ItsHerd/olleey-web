@@ -212,10 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('[SupabaseAuth] Signing out');
     await supabase.auth.signOut();
     localStorage.removeItem('userId');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
     console.log('[SupabaseAuth] ✅ Signed out, cleared userId');
-    window.location.href = '/';
   };
 
   const signInWithGoogle = async () => {

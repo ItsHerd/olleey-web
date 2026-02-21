@@ -9,11 +9,7 @@ export default function LandingClient() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  useEffect(() => {
-    if (!loading && user) {
-      router.push("/app");
-    }
-  }, [user, loading, router]);
+  // Removed auto-redirect to allow users to stay on the landing page
 
   const handleNavigation = () => {
     router.push("/app");
