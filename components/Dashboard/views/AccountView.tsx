@@ -56,6 +56,22 @@ export function AccountView({
     ? new Date(user.created_at).toLocaleDateString()
     : "Unknown";
   const isPasswordAccount = accountProvider === "email";
+  const quickActions = [
+    {
+      key: "analytics",
+      title: "Open Analytics",
+      description: "Pipeline outcomes and language demand",
+      icon: BarChart3,
+      onClick: () => onViewChange?.("analytics"),
+    },
+    {
+      key: "preferences",
+      title: "Open Preferences",
+      description: "Workflow and quality controls",
+      icon: Settings2,
+      onClick: () => onViewChange?.("preferences"),
+    },
+  ] as const;
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -152,43 +168,28 @@ export function AccountView({
         <Card className={cn("w-full border p-6", borderClass, cardBgClass)}>
           <div className="space-y-3">
             <p className={cn("text-sm font-semibold", textClass)}>Quick Actions</p>
-            <button
-              onClick={() => onViewChange?.("analytics")}
-              className={cn(
-                "w-full rounded-lg border p-3 text-left transition-all",
-                borderClass,
-                tileBgClass,
-                "hover:border-primary/40 hover:bg-primary/5"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <BarChart3 className={cn("h-4 w-4", mutedTextClass)} />
-                <div className="min-w-0 flex-1">
-                  <p className={cn("text-sm font-medium", textClass)}>Open Analytics</p>
-                  <p className={cn("text-xs", mutedTextClass)}>Pipeline outcomes and language demand</p>
-                </div>
-                <ChevronRight className={cn("h-4 w-4", mutedTextClass)} />
-              </div>
-            </button>
-
-            <button
-              onClick={() => onViewChange?.("preferences")}
-              className={cn(
-                "w-full rounded-lg border p-3 text-left transition-all",
-                borderClass,
-                tileBgClass,
-                "hover:border-primary/40 hover:bg-primary/5"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <Settings2 className={cn("h-4 w-4", mutedTextClass)} />
-                <div className="min-w-0 flex-1">
-                  <p className={cn("text-sm font-medium", textClass)}>Open Preferences</p>
-                  <p className={cn("text-xs", mutedTextClass)}>Workflow and quality controls</p>
-                </div>
-                <ChevronRight className={cn("h-4 w-4", mutedTextClass)} />
-              </div>
-            </button>
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Button
+                  key={action.key}
+                  type="button"
+                  variant="outline"
+                  onClick={action.onClick}
+                  className={cn(
+                    "h-auto w-full justify-start gap-3 whitespace-normal rounded-lg px-3 py-3 text-left",
+                    "border-border/60 bg-transparent hover:bg-muted/30 dark:border-zinc-700/80"
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4 shrink-0", mutedTextClass)} />
+                  <div className="min-w-0 flex-1">
+                    <p className={cn("text-sm font-medium leading-5", textClass)}>{action.title}</p>
+                    <p className={cn("text-xs leading-4", mutedTextClass)}>{action.description}</p>
+                  </div>
+                  <ChevronRight className={cn("h-4 w-4 shrink-0", mutedTextClass)} />
+                </Button>
+              );
+            })}
 
             <Button size="sm" variant="destructive" onClick={handleSignOut} className="mt-2 w-fit gap-2">
               <LogOut className="h-4 w-4" />
@@ -261,14 +262,16 @@ export function AccountView({
                       className="pr-9"
                       disabled={!isPasswordAccount || isChangingPassword}
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => setShowCurrentPassword((v) => !v)}
-                      className={cn("absolute right-2.5 top-1/2 -translate-y-1/2", mutedTextClass)}
+                      className={cn("absolute right-1.5 top-1/2 h-7 w-7 -translate-y-1/2", mutedTextClass)}
                       disabled={!isPasswordAccount || isChangingPassword}
                     >
                       {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -283,14 +286,16 @@ export function AccountView({
                       className="pr-9"
                       disabled={!isPasswordAccount || isChangingPassword}
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => setShowNewPassword((v) => !v)}
-                      className={cn("absolute right-2.5 top-1/2 -translate-y-1/2", mutedTextClass)}
+                      className={cn("absolute right-1.5 top-1/2 h-7 w-7 -translate-y-1/2", mutedTextClass)}
                       disabled={!isPasswordAccount || isChangingPassword}
                     >
                       {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -305,14 +310,16 @@ export function AccountView({
                       className="pr-9"
                       disabled={!isPasswordAccount || isChangingPassword}
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => setShowConfirmPassword((v) => !v)}
-                      className={cn("absolute right-2.5 top-1/2 -translate-y-1/2", mutedTextClass)}
+                      className={cn("absolute right-1.5 top-1/2 h-7 w-7 -translate-y-1/2", mutedTextClass)}
                       disabled={!isPasswordAccount || isChangingPassword}
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 

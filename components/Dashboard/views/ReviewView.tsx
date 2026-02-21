@@ -340,61 +340,6 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                         className={cn("w-[360px] border-r flex flex-col overflow-hidden min-h-0", isDark ? "bg-[#141414] border-white/10" : "bg-card border-border")}
                     >
                         <div className="flex-1 flex flex-col justify-between p-5 lg:p-6 space-y-5 min-h-0">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <button 
-                                        onClick={() => onViewChange?.("dashboard")}
-                                        className={cn(
-                                            "flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest mb-2 group",
-                                            isDark ? "text-white/20 hover:text-white" : "text-muted-foreground/40 hover:text-primary"
-                                        )}
-                                    >
-                                        <ChevronLeft className="h-3 w-3 group-hover:-translate-x-0.5 transition-transform" />
-                                        Dashboard
-                                    </button>
-                                    <h2 className={cn("text-xl font-black tracking-tight uppercase leading-none", isDark ? "text-white" : "text-foreground")}>Review</h2>
-                                </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <button className={cn(
-                                            "flex items-center gap-1.5 focus:outline-none group h-7 px-2 rounded-lg border transition-colors",
-                                            isDark 
-                                                ? "border-white/10 bg-white/5 hover:bg-white/10" 
-                                                : "border-primary/20 bg-primary/5 hover:bg-primary/10"
-                                        )}>
-                                            <span className={cn("text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5", isDark ? "text-white" : "text-primary")}>
-                                                {getLanguageFlag(languageCode || 'es')} {languageName}
-                                            </span>
-                                            <ChevronDown className={cn("h-2.5 w-2.5 opacity-50 transition-transform group-data-[state=open]:rotate-180", isDark ? "text-white" : "text-primary")} />
-                                        </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className={cn("w-56 shadow-2xl rounded-2xl p-1.5 z-[100]", isDark ? "bg-[#141414] border-white/10" : "bg-card border-border")}>
-                                        <div className={cn("px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.2em] border-b mb-1.5", isDark ? "text-white/40 border-white/5" : "text-muted-foreground/40 border-border/50")}>Switch Language</div>
-                                        <div className="space-y-0.5">
-                                            {targetLanguages.map(lang => (
-                                                <DropdownMenuItem 
-                                                    key={lang} 
-                                                    onClick={() => handleSwitchLanguage(lang)}
-                                                    className={cn(
-                                                        "flex items-center gap-3 px-2.5 py-2.5 rounded-xl cursor-pointer text-xs font-bold transition-all",
-                                                        lang === languageCode 
-                                                            ? isDark ? "bg-white/10 text-white" : "bg-primary/10 text-primary" 
-                                                            : isDark ? "hover:bg-white/5 text-white/70" : "hover:bg-muted"
-                                                    )}
-                                                >
-                                                    <span className="text-lg leading-none filter drop-shadow-sm">{getLanguageFlag(lang)}</span>
-                                                    <div className="flex flex-col">
-                                                        <span className="leading-tight">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.name || lang.toUpperCase()}</span>
-                                                        <span className="text-[9px] opacity-50 font-medium uppercase tracking-tighter">Target Market</span>
-                                                    </div>
-                                                    {lang === languageCode && <CheckCircle2 className={cn("h-4 w-4 ml-auto fill-current", isDark ? "text-white" : "text-primary")} />}
-                                                </DropdownMenuItem>
-                                            ))}
-                                        </div>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-
                             <AnimatePresence mode="wait">
                                 {step === 'review' ? (
                                     <motion.div 
@@ -407,6 +352,46 @@ export function ReviewView({ onViewChange, theme, selectedJob }: ReviewViewProps
                                     >
                                         {/* Metadata Section */}
                                         <section className="space-y-3">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <button className={cn(
+                                                        "w-full flex items-center justify-between gap-2 focus:outline-none group h-9 px-3.5 rounded-xl border transition-colors",
+                                                        isDark
+                                                            ? "border-white/10 bg-white/5 hover:bg-white/10"
+                                                            : "border-primary/20 bg-primary/5 hover:bg-primary/10"
+                                                    )}>
+                                                        <span className={cn("text-[11px] font-bold uppercase tracking-widest flex items-center gap-2", isDark ? "text-white" : "text-primary")}>
+                                                            {getLanguageFlag(languageCode || 'es')} {languageName}
+                                                        </span>
+                                                        <ChevronDown className={cn("h-3.5 w-3.5 opacity-60 transition-transform group-data-[state=open]:rotate-180", isDark ? "text-white" : "text-primary")} />
+                                                    </button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="start" className={cn("w-[300px] shadow-2xl rounded-2xl p-1.5 z-[100]", isDark ? "bg-[#141414] border-white/10" : "bg-card border-border")}>
+                                                    <div className={cn("px-2.5 py-2 text-[10px] font-black uppercase tracking-[0.2em] border-b mb-1.5", isDark ? "text-white/40 border-white/5" : "text-muted-foreground/40 border-border/50")}>Switch Language</div>
+                                                    <div className="space-y-0.5">
+                                                        {targetLanguages.map(lang => (
+                                                            <DropdownMenuItem
+                                                                key={lang}
+                                                                onClick={() => handleSwitchLanguage(lang)}
+                                                                className={cn(
+                                                                    "flex items-center gap-3 px-2.5 py-2.5 rounded-xl cursor-pointer text-xs font-bold transition-all",
+                                                                    lang === languageCode
+                                                                        ? isDark ? "bg-white/10 text-white" : "bg-primary/10 text-primary"
+                                                                        : isDark ? "hover:bg-white/5 text-white/70" : "hover:bg-muted"
+                                                                )}
+                                                            >
+                                                                <span className="text-lg leading-none filter drop-shadow-sm">{getLanguageFlag(lang)}</span>
+                                                                <div className="flex flex-col">
+                                                                    <span className="leading-tight">{LANGUAGE_OPTIONS.find(l => l.code === lang)?.name || lang.toUpperCase()}</span>
+                                                                    <span className="text-[9px] opacity-50 font-medium uppercase tracking-tighter">Target Market</span>
+                                                                </div>
+                                                                {lang === languageCode && <CheckCircle2 className={cn("h-4 w-4 ml-auto fill-current", isDark ? "text-white" : "text-primary")} />}
+                                                            </DropdownMenuItem>
+                                                        ))}
+                                                    </div>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+
                                             <div className="flex items-center justify-between">
                                                 <div className="flex flex-col">
                                                     <h3 className={cn("text-[10px] font-black uppercase tracking-widest", isDark ? "text-white/40" : "text-muted-foreground")}>Localized Metadata</h3>

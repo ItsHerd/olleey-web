@@ -15,10 +15,10 @@ import { SelectedItem, ViewType } from "../DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
-import { CheckCircle2, Clock3, Loader2, PlayCircle, RefreshCw, Rss, Video } from "lucide-react";
+import { CheckCircle2, Clock3, Loader2, PlayCircle, RefreshCw, Video } from "lucide-react";
 
 interface DetectedUploadsViewProps {
   theme: string;
@@ -386,33 +386,23 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
     <div className={`h-full relative overflow-hidden ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
       <div className="h-full overflow-auto custom-scrollbar">
       <div className="max-w-6xl mx-auto p-6 space-y-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-2xl sm:text-3xl tracking-tight">
-                <Rss className="w-5 h-5" />
-                Detected Uploads
-              </CardTitle>
-              <CardDescription>
-                Showing uploads in window: {detectedUploadWindow === "last_1_day" ? "Last 1 Day" : detectedUploadWindow === "last_31_days" ? "Last 31 Days" : "Last 7 Days"}
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleSyncRecent()}
-                disabled={syncing}
-                className="h-9 px-3 gap-2 text-[11px] font-semibold uppercase tracking-wide"
-              >
-                {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                {syncing ? "Syncing..." : `Sync Last ${windowDays} Days`}
-              </Button>
-            </div>
-          </CardHeader>
-        </Card>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
+          <p className="text-sm text-muted-foreground">
+            Window: {detectedUploadWindow === "last_1_day" ? "Last 1 Day" : detectedUploadWindow === "last_31_days" ? "Last 31 Days" : "Last 7 Days"} • {detectedVideos.length} detected
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => handleSyncRecent()}
+            disabled={syncing}
+            className="h-9 px-3 gap-2 text-[11px] font-semibold uppercase tracking-wide"
+          >
+            {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            {syncing ? "Syncing..." : `Sync Last ${windowDays} Days`}
+          </Button>
+        </div>
 
         <Card>
-          <CardContent className="p-0 overflow-x-auto">
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -599,16 +589,18 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
                                         {LANGUAGE_OPTIONS.map((lang) => {
                                           const selected = selectedLanguages.includes(lang.code);
                                           return (
-                                            <button
+                                            <Button
                                               key={lang.code}
                                               type="button"
+                                              variant="outline"
+                                              size="sm"
                                               onClick={() => toggleLanguageForVideo(video.video_id, lang.code)}
-                                              className={`h-7 px-2 rounded-md border text-[11px] ${
-                                                selected ? "bg-primary/10 border-primary/40 text-foreground" : "bg-background border-border text-muted-foreground"
+                                              className={`h-7 px-2 rounded-md text-[11px] ${
+                                                selected ? "bg-primary/10 border-primary/40 text-foreground hover:bg-primary/15" : "bg-background border-border text-muted-foreground"
                                               }`}
                                             >
                                               {lang.flag} {lang.code.toUpperCase()}
-                                            </button>
+                                            </Button>
                                           );
                                         })}
                                       </div>
@@ -616,20 +608,24 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs text-muted-foreground">Mode</span>
                                       <div className="inline-flex rounded-md border border-border overflow-hidden">
-                                        <button
+                                        <Button
                                           type="button"
+                                          variant="ghost"
+                                          size="sm"
                                           onClick={() => setModeForVideo(video.video_id, "dubbing")}
                                           className={`h-7 px-3 text-[11px] ${selectedMode === "dubbing" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
                                         >
                                           Dubbing
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                           type="button"
+                                          variant="ghost"
+                                          size="sm"
                                           onClick={() => setModeForVideo(video.video_id, "lip_sync")}
                                           className={`h-7 px-3 text-[11px] border-l border-border ${selectedMode === "lip_sync" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
                                         >
                                           Lip-sync (includes dubbing)
-                                        </button>
+                                        </Button>
                                       </div>
                                     </div>
                                     <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">

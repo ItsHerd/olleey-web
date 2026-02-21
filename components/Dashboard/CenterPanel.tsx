@@ -95,11 +95,13 @@ export function CenterPanel({
   return (
     <div className={`relative flex-1 overflow-hidden ${bgClass}`}>
       <div className="flex h-full flex-col">
-        <DashboardViewHeader
-          view={baseView}
-          theme={theme}
-          onBackHome={() => onViewChange("dashboard")}
-        />
+        {baseView !== "dashboard" && (
+          <DashboardViewHeader
+            view={baseView}
+            theme={theme}
+            onBackHome={() => onViewChange("dashboard")}
+          />
+        )}
         <div className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div

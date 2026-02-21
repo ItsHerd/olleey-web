@@ -1,12 +1,21 @@
 "use client";
 
 import React from "react";
-import { Loader2, Play, CheckCircle2, XCircle, Clock, X, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Play, CheckCircle2, XCircle, Clock, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -264,9 +273,25 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
   const pageStartIndex = filteredJobs.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const pageEndIndex = Math.min(filteredJobs.length, currentPage * pageSize);
 
+  const paginationItems = React.useMemo<(number | "ellipsis-left" | "ellipsis-right")[]>(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    if (currentPage <= 3) {
+      return [1, 2, 3, 4, "ellipsis-right", totalPages];
+    }
+
+    if (currentPage >= totalPages - 2) {
+      return [1, "ellipsis-left", totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [1, "ellipsis-left", currentPage - 1, currentPage, currentPage + 1, "ellipsis-right", totalPages];
+  }, [currentPage, totalPages]);
+
   return (
     <div ref={rootRef} className={cn("h-full p-6 md:p-8 max-w-7xl mx-auto", theme === "dark" ? "text-white" : "text-gray-900")}>
-      <Card>
+      <Card className={cn(theme === "dark" ? "border-white/10" : "border-black/10")}>
         <CardHeader ref={cardHeaderRef} className="pb-4">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -287,7 +312,7 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div ref={filtersRef} className="mb-4 grid grid-cols-1 gap-3 rounded-lg border p-3 md:grid-cols-3">
+          <div ref={filtersRef} className="mb-4 grid grid-cols-1 gap-3 rounded-lg bg-muted/20 p-3 md:grid-cols-3">
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -325,53 +350,15 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
             </Select>
           </div>
 
-          {!loading && filteredJobs.length > 0 && (
-            <div ref={paginationRef} className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Auto rows/page:</span>
-                <Badge variant="secondary" className="h-7 px-2.5 text-[11px]">
-                  {pageSize}
-                </Badge>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  disabled={currentPage <= 1}
-                  className="gap-1"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                  Prev
-                </Button>
-                <span className="text-xs text-muted-foreground px-1">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage >= totalPages}
-                  className="gap-1"
-                >
-                  Next
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            </div>
-          )}
-
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : filteredJobs.length > 0 ? (
             <div>
-              <div className="rounded-lg border overflow-hidden">
-                  <Table>
-                <TableHeader className="bg-muted/30">
-                  <TableRow className="bg-muted/30">
+              <Table>
+                <TableHeader>
+                  <TableRow>
                     <TableHead className="w-[35%]">Video</TableHead>
                     <TableHead className="w-[20%]">Languages</TableHead>
                     <TableHead className="w-[16%]">Status</TableHead>
@@ -389,12 +376,12 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
                     return (
                       <TableRow
                         key={job.job_id}
-                        className="cursor-pointer hover:bg-muted/40"
+                        className="cursor-pointer"
                         onClick={() => handleRowClick(job)}
                       >
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-3">
-                            <div className="w-20 h-12 rounded-md overflow-hidden bg-muted flex-shrink-0 border">
+                            <div className="w-20 h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
                               {video?.thumbnail_url ? (
                                 <img
                                   src={getFullUrl(video.thumbnail_url)}
@@ -473,8 +460,74 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
                   })}
                 </TableBody>
               </Table>
-              </div>
 
+              <div ref={paginationRef} className="mt-4 border-t px-1 py-2.5">
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto_1fr] md:items-center">
+                  <div className="text-xs text-muted-foreground">
+                    Showing {pageStartIndex}-{pageEndIndex} of {filteredJobs.length}
+                  </div>
+
+                  <Pagination className="w-full justify-center md:w-auto">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage <= 1) return;
+                            setCurrentPage((prev) => Math.max(1, prev - 1));
+                          }}
+                          className={cn(currentPage <= 1 && "pointer-events-none opacity-50")}
+                        />
+                      </PaginationItem>
+
+                      {paginationItems.map((item) => {
+                        if (item === "ellipsis-left" || item === "ellipsis-right") {
+                          return (
+                            <PaginationItem key={item}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                        }
+
+                        return (
+                          <PaginationItem key={item}>
+                            <PaginationLink
+                              href="#"
+                              isActive={item === currentPage}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(item);
+                              }}
+                            >
+                              {item}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage >= totalPages) return;
+                            setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+                          }}
+                          className={cn(currentPage >= totalPages && "pointer-events-none opacity-50")}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+
+                  <div className="flex items-center justify-start gap-2 md:justify-end">
+                    <span className="text-xs text-muted-foreground">Auto rows/page:</span>
+                    <Badge variant="secondary" className="h-7 px-2.5 text-[11px]">
+                      {pageSize}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">

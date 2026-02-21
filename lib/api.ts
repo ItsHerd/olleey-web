@@ -2403,3 +2403,28 @@ export const eventsAPI = {
     eventSource.close();
   },
 };
+
+/**
+ * Agent API
+ */
+export const agentAPI = {
+  chat: async (prompt: string, history: { role: string; content: string }[] = []): Promise<any> => {
+    const response = await authenticatedFetch(`${API_BASE_URL}/agent/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt, history }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        tokenStorage.clearTokens();
+      }
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.detail || "Failed to communicate with agent");
+    }
+
+    return await response.json();
+  }
+};

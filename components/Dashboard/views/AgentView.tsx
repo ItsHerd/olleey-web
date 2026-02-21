@@ -22,9 +22,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Script from "next/script";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { cn } from "@/lib/utils";
 
 import { PromptInputBox } from "../components/PromptInputBox";
-import { youtubeAPI } from "@/lib/api";
+import { youtubeAPI, agentAPI } from "@/lib/api";
 
 interface AgentViewProps {
   theme: string;
@@ -160,17 +163,33 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
     setMessages((prev) => [...prev, userMessage]);
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Map existing messages to history format
+      const history = messages.map(m => ({
+        role: m.role,
+        content: m.content
+      }));
+
+      const response = await agentAPI.chat(trimmed, history);
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "I'll help you with that. Let me process your request...",
+        content: response.response || "I couldn't process that request.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
+    } catch (error: any) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: `Sorry, there was an error: ${error.message || "Failed to get response"}`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleQuickAction = (action: typeof quickActions[0]) => {
@@ -347,65 +366,86 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
         </div>
       ) : (
         <>
-          <div className="flex-1 overflow-y-auto p-8 z-10 custom-scrollbar">
-            <div className="max-w-4xl mx-auto space-y-10 pt-12">
-            <AnimatePresence>
-              {messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className={`flex gap-6 ${message.role === "user" ? "flex-row-reverse" : ""
-                    }`}
-                >
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${message.role === "assistant"
-                      ? "bg-[#D97757]/20 border border-[#D97757]/30"
-                      : isDark ? "bg-white/5 border border-white/10" : "bg-black/5 border border-black/10"
-                      }`}
+          <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 z-10 custom-scrollbar">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <AnimatePresence>
+                {messages.map((message) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className={`flex items-end gap-3 sm:gap-4 ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    {message.role === "assistant" ? (
-                      <OlleeyLogo className="w-6 h-6" isDark={isDark} />
-                    ) : (
-                      <span className={`text-lg font-bold ${textClass}`}>Y</span>
-                    )}
-                  </div>
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        message.role === "assistant"
+                          ? "bg-[#D97757]/20 border border-[#D97757]/30"
+                          : isDark
+                            ? "bg-white/5 border border-white/10"
+                            : "bg-black/5 border border-black/10"
+                      }`}
+                    >
+                      {message.role === "assistant" ? (
+                        <OlleeyLogo className="w-6 h-6" isDark={isDark} />
+                      ) : (
+                        <span className={`text-xs font-semibold ${textClass}`}>You</span>
+                      )}
+                    </div>
 
+                    <div
+                      className={cn(
+                        "max-w-[88%] border px-4 py-3.5 sm:px-5 sm:py-4",
+                        message.role === "user"
+                          ? isDark
+                            ? "bg-[#1A1A1A] border-white/10 rounded-2xl rounded-br-md shadow-sm"
+                            : "bg-white border-black/10 rounded-2xl rounded-br-md shadow-sm"
+                          : isDark
+                            ? "bg-[#121212] border-white/10 rounded-2xl rounded-bl-md"
+                            : "bg-[#F8F8F8] border-black/10 rounded-2xl rounded-bl-md"
+                      )}
+                    >
+                      <div className={cn("prose prose-sm sm:prose-base max-w-none leading-relaxed", isDark ? "prose-invert" : "", textClass)}>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                      <span className={cn("mt-2.5 block text-[10px] uppercase tracking-wide", textSecondaryClass, message.role === "user" ? "text-right" : "text-left")}>
+                        {message.timestamp.toLocaleTimeString()}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {isTyping && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-end gap-3 sm:gap-4"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[#D97757]/20 border border-[#D97757]/30 flex items-center justify-center">
+                    <OlleeyLogo className="w-6 h-6" isDark={isDark} />
+                  </div>
                   <div
-                    className={`flex-1 max-w-[85%] ${message.role === "user"
-                      ? `${cardBgClass} border ${borderClass} rounded-xl p-4 ${isDark ? 'shadow-xl' : 'shadow-none'}`
-                      : ""
-                      }`}
+                    className={cn(
+                      "rounded-2xl rounded-bl-md border px-4 py-3",
+                      isDark ? "bg-[#121212] border-white/10" : "bg-[#F8F8F8] border-black/10"
+                    )}
                   >
-                    <p className={`text-lg leading-relaxed ${textClass} whitespace-pre-wrap`}>{message.content}</p>
-                    <span className={`text-sm ${textSecondaryClass} mt-3 block`}>
-                      {message.timestamp.toLocaleTimeString()}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70 animate-bounce [animation-delay:0ms]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70 animate-bounce [animation-delay:120ms]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70 animate-bounce [animation-delay:240ms]" />
+                    </div>
                   </div>
                 </motion.div>
-              ))}
-            </AnimatePresence>
+              )}
 
-            {isTyping && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex gap-6"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-[#D97757]/20 border border-[#D97757]/30 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#D97757]" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg text-gray-400">Assistant is thinking...</span>
-                </div>
-              </motion.div>
-            )}
-
-            <div ref={messagesEndRef} />
+              <div ref={messagesEndRef} />
+            </div>
           </div>
-          </div>
-          <div className="p-8 pb-6 z-20">
+          <div className={cn("border-t px-4 py-4 sm:px-8 sm:py-5 z-20 backdrop-blur", isDark ? "border-white/10 bg-[#0A0A0A]/90" : "border-black/10 bg-[#EBEBDC]/90")}>
             <div className="max-w-4xl mx-auto">
               <PromptInputBox
                 onSend={handleSend}

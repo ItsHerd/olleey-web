@@ -103,6 +103,36 @@ export function AnalyticsView({ theme }: AnalyticsViewProps) {
   const maxJobsByDay = Math.max(1, ...jobsByDay.map((d) => d.count));
   const maxStatus = Math.max(1, ...statusRows.map(([, count]) => count));
   const maxLanguage = Math.max(1, ...topLanguageDemand.map(([, count]) => count));
+  const trendChart = useMemo(() => {
+    const width = 1000;
+    const height = 180;
+    const padX = 28;
+    const padTop = 14;
+    const padBottom = 20;
+    const drawHeight = height - padTop - padBottom;
+    const drawWidth = width - padX * 2;
+
+    const points = jobsByDay.map((day, index) => {
+      const x =
+        jobsByDay.length <= 1
+          ? width / 2
+          : padX + (index * drawWidth) / (jobsByDay.length - 1);
+      const normalized = maxJobsByDay > 0 ? day.count / maxJobsByDay : 0;
+      const y = padTop + (1 - normalized) * drawHeight;
+      return { ...day, x, y };
+    });
+
+    const linePath = points
+      .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+      .join(" ");
+
+    const areaPath =
+      points.length > 1
+        ? `${linePath} L ${points[points.length - 1].x} ${height - padBottom} L ${points[0].x} ${height - padBottom} Z`
+        : "";
+
+    return { width, height, padX, padTop, padBottom, points, linePath, areaPath };
+  }, [jobsByDay, maxJobsByDay]);
 
   if (isLoading) {
     return (
@@ -156,16 +186,54 @@ export function AnalyticsView({ theme }: AnalyticsViewProps) {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="h-52 rounded-lg border border-dashed border-border p-3">
-              <div className="flex h-full items-end gap-2">
-                {jobsByDay.map((day) => (
-                  <div key={day.label} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
-                    <div
-                      className="w-full rounded-sm bg-primary/80"
-                      style={{ height: `${Math.max(8, (day.count / maxJobsByDay) * 100)}%` }}
-                      title={`${day.label}: ${day.count}`}
+              <svg viewBox={`0 0 ${trendChart.width} ${trendChart.height}`} className="h-[calc(100%-18px)] w-full">
+                {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
+                  const y = trendChart.padTop + tick * (trendChart.height - trendChart.padTop - trendChart.padBottom);
+                  return (
+                    <line
+                      key={tick}
+                      x1={trendChart.padX}
+                      y1={y}
+                      x2={trendChart.width - trendChart.padX}
+                      y2={y}
+                      className={isDark ? "stroke-white/10" : "stroke-black/10"}
+                      strokeDasharray="3 3"
+                      strokeWidth={1}
                     />
-                    <span className="text-[10px] text-muted-foreground">{day.label}</span>
-                  </div>
+                  );
+                })}
+                {trendChart.areaPath && <path d={trendChart.areaPath} className="fill-primary/15" />}
+                {trendChart.linePath && (
+                  <path
+                    d={trendChart.linePath}
+                    className="stroke-primary"
+                    strokeWidth={3}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
+                {trendChart.points.map((point) => (
+                  <g key={point.label}>
+                    <circle cx={point.x} cy={point.y} r={4.5} className="fill-primary" />
+                    <circle
+                      cx={point.x}
+                      cy={point.y}
+                      r={2.2}
+                      className={isDark ? "fill-black" : "fill-white"}
+                    />
+                    <title>{`${point.label}: ${point.count}`}</title>
+                  </g>
+                ))}
+              </svg>
+              <div
+                className="mt-1 grid gap-1"
+                style={{ gridTemplateColumns: `repeat(${jobsByDay.length}, minmax(0, 1fr))` }}
+              >
+                {jobsByDay.map((day) => (
+                  <span key={day.label} className="text-center whitespace-nowrap text-[10px] text-muted-foreground">
+                    {day.label}
+                  </span>
                 ))}
               </div>
             </div>
@@ -255,4 +323,3 @@ export function AnalyticsView({ theme }: AnalyticsViewProps) {
     </div>
   );
 }
-
