@@ -9,9 +9,9 @@ import Footer from "@/components/LandingPage/Footer";
 import { PricingCalculator } from "@/components/LandingPage/PricingCalculator";
 
 const planHighlights = [
-  "Transparent monthly pricing bands",
-  "Scales from individual creators to enterprise teams",
-  "Quality guardrails and review controls included",
+  "No per-language fees",
+  "Scales from solo creators to enterprise teams",
+  "14-day free trial on all plans",
 ];
 
 export default function PricingPage() {
@@ -31,10 +31,10 @@ export default function PricingPage() {
           >
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Pricing</p>
             <h1 className="mt-3 text-4xl md:text-6xl leading-[0.95] tracking-tight font-semibold">
-              Predictable pricing for global video distribution.
+              The cost of a localization department. Minus the department.
             </h1>
             <p className="mt-5 text-base md:text-xl text-zinc-600 dark:text-zinc-300 max-w-3xl leading-relaxed">
-              Choose the usage band that fits your release volume and scale as your multilingual pipeline grows.
+              Subscription-based infrastructure that converts a single video into synchronized, publish-ready localized versions — automatically.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               {planHighlights.map((item) => (

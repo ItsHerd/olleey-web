@@ -59,7 +59,7 @@ export function RightSidebar({
   const { detectedUploadWindow } = useSettings();
   const userId = resolveClientUserId(user?.id);
   const isDark = theme === "dark";
-  const bgClass = isDark ? "bg-[#111111]" : "bg-[#ECE9DA]";
+  const bgClass = isDark ? "bg-[#111111]" : "bg-[#FAFAFA]";
   const borderClass = isDark ? "border-[#2A2A2A]" : "border-gray-300/50";
   const textClass = isDark ? "text-white" : "text-gray-900";
   const mutedTextClass = isDark ? "text-gray-500" : "text-gray-500";

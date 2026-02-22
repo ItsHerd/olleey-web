@@ -36,7 +36,7 @@ export function CenterPanel({
   theme
 }: CenterPanelProps) {
   const isDark = theme === "dark";
-  const bgClass = isDark ? "bg-[#141414]" : "bg-[#F7F6EE]";
+  const bgClass = isDark ? "bg-[#141414]" : "bg-[#F4F4F4]";
   const lastNonProcessingViewRef = useRef<ViewType>("dashboard");
 
   useEffect(() => {

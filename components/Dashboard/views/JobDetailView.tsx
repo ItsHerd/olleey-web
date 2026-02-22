@@ -44,7 +44,7 @@ export function JobDetailView({ jobId, onBack, theme }: JobDetailViewProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const isDark = theme === "dark";
 
-  const bgClass = isDark ? "bg-[#0A0A0A]" : "bg-gray-50";
+  const bgClass = isDark ? "bg-[#0A0A0A]" : "bg-[#F4F4F4]";
   const cardBgClass = isDark ? "bg-[#1A1A1A]" : "bg-white";
   const textClass = isDark ? "text-gray-300" : "text-gray-700";
   const textSecondaryClass = isDark ? "text-gray-500" : "text-gray-500";

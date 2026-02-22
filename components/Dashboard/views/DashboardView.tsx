@@ -180,7 +180,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
   const shadowClass = isDark ? "shadow-sm" : "shadow-none";
 
   return (
-    <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
+    <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-[#F4F4F4]"}`}>
       {viewMode === "agent" ? (
         <div className="h-full flex flex-col">
           <AgentView theme={theme} onViewChange={onViewChange} />

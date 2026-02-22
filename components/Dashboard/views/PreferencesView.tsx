@@ -72,8 +72,8 @@ interface PreferencesViewProps {
 
 export function PreferencesView({ theme }: PreferencesViewProps) {
   const isDark = theme === "dark";
-  const cardSurfaceClass = isDark ? "bg-[#111111] border-white/10" : "bg-[#E3E1D4] border-black/10";
-  const blockSurfaceClass = isDark ? "bg-[#151515] border-white/10" : "bg-[#DCD9CB] border-black/10";
+  const cardSurfaceClass = isDark ? "bg-[#111111] border-white/10" : "bg-white border-gray-200";
+  const blockSurfaceClass = isDark ? "bg-[#151515] border-white/10" : "bg-gray-50 border-gray-200";
   const { setTheme } = useTheme();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -268,7 +268,7 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
   }
 
   return (
-    <div className={`h-full overflow-auto custom-scrollbar ${isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
+    <div className={`h-full overflow-auto custom-scrollbar ${isDark ? "bg-[#0A0A0A]" : "bg-[#F4F4F4]"}`}>
       <div className="max-w-6xl mx-auto p-8 space-y-5">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5">
           <Card className={`h-fit ${cardSurfaceClass}`}>

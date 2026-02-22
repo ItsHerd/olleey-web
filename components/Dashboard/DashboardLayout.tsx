@@ -29,7 +29,7 @@ export default function DashboardLayout() {
   const { selectedProject } = useProject();
   const userId = resolveClientUserId(user?.id);
   const isDark = theme === "dark";
-  const bgClass = theme === "light" ? "bg-[#EBEBDC]" : "bg-[#0A0A0A]";
+  const bgClass = theme === "light" ? "bg-[#e8e8e8]" : "bg-[#0A0A0A]";
 
   // Navigation state - must be declared before any conditional returns
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
@@ -61,7 +61,7 @@ export default function DashboardLayout() {
   // Show loading state while checking auth
   if (authLoading) {
     return (
-      <div className={`flex h-screen w-screen items-center justify-center ${isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
+      <div className={`flex h-screen w-screen items-center justify-center ${isDark ? "bg-[#0A0A0A]" : "bg-[#e8e8e8]"}`}>
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-[#FFC107] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading...</p>
@@ -113,8 +113,8 @@ export default function DashboardLayout() {
           {!leftSidebarOpen && (
             <button
               onClick={() => setLeftSidebarOpen(true)}
-              className={`absolute left-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-r-lg ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-[#EBEBDC] hover:bg-gray-200/50"
-                } border-r border-t border-b ${isDark ? "border-white/5" : "border-gray-200/80"} transition-all shadow-xl active:scale-95`}
+              className={`absolute left-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-r-lg ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-white hover:bg-gray-50"
+                } border-r border-t border-b ${isDark ? "border-white/5" : "border-gray-200"} transition-all shadow-xl active:scale-95`}
               title="Expand sidebar"
             >
               <PanelLeftOpen className="w-4 h-4 text-gray-400" />
@@ -135,8 +135,8 @@ export default function DashboardLayout() {
           {!rightSidebarOpen && (
             <button
               onClick={() => setRightSidebarOpen(true)}
-              className={`absolute right-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-l-lg ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-[#EBEBDC] hover:bg-gray-200/50"
-                } border-l border-t border-b ${isDark ? "border-white/5" : "border-gray-200/80"} transition-all shadow-xl active:scale-95`}
+              className={`absolute right-0 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-l-lg ${isDark ? "bg-[#1A1A1A] hover:bg-[#222]" : "bg-white hover:bg-gray-50"
+                } border-l border-t border-b ${isDark ? "border-white/5" : "border-gray-200"} transition-all shadow-xl active:scale-95`}
               title="Show details"
             >
               <PanelRightOpen className="w-4 h-4 text-gray-400" />
@@ -152,7 +152,7 @@ export default function DashboardLayout() {
               animate={{ width: 396, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className={`h-full border-l ${isDark ? "bg-[#111111] border-white/5" : "bg-[#ECE9DA] border-gray-200/80"}`}
+              className={`h-full border-l ${isDark ? "bg-[#111111] border-white/5" : "bg-[#FAFAFA] border-gray-200"}`}
             >
               <RightSidebar
                 selectedItem={selectedItem}

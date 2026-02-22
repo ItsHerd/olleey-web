@@ -211,7 +211,7 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
   };
 
   return (
-    <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
+    <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-[#F4F4F4]"}`}>
       {messages.length === 0 ? (
         <div className="h-full overflow-y-auto custom-scrollbar p-6 sm:p-10">
           <motion.div
@@ -445,7 +445,7 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
               <div ref={messagesEndRef} />
             </div>
           </div>
-          <div className={cn("border-t px-4 py-4 sm:px-8 sm:py-5 z-20 backdrop-blur", isDark ? "border-white/10 bg-[#0A0A0A]/90" : "border-black/10 bg-[#EBEBDC]/90")}>
+          <div className={cn("border-t px-4 py-4 sm:px-8 sm:py-5 z-20 backdrop-blur", isDark ? "border-white/10 bg-[#0A0A0A]/90" : "border-black/8 bg-[#F4F4F4]/90")}>
             <div className="max-w-4xl mx-auto">
               <PromptInputBox
                 onSend={handleSend}

@@ -1,5 +1,5 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans } from "next/font/google";
 import ThemeProviderWrapper from "./ThemeProviderWrapper";
 import { ThemeProvider } from "@/lib/ThemeContext";
@@ -38,10 +38,6 @@ export const metadata: Metadata = {
   publisher: "Olleey",
   category: "technology",
   manifest: "/favicon/site.webmanifest",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
-  ],
   openGraph: {
     type: "website",
     siteName: "Olleey",
@@ -88,6 +84,13 @@ export const metadata: Metadata = {
       { rel: "icon", url: "/favicon/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
     ],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
 export default function RootLayout({

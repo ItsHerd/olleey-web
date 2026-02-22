@@ -383,7 +383,7 @@ export function DetectedUploadsView({ theme, onViewChange, onSelectItem }: Detec
   }, [rememberPreferences, expandingVideoId, selectedLanguageByVideo, selectedModeByVideo]);
 
   return (
-    <div className={`h-full relative overflow-hidden ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-[#EBEBDC]"}`}>
+    <div className={`h-full relative overflow-hidden ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-[#F4F4F4]"}`}>
       <div className="h-full overflow-auto custom-scrollbar">
       <div className="max-w-6xl mx-auto p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">

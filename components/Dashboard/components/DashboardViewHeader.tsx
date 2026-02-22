@@ -236,7 +236,7 @@ export function DashboardViewHeader({ view, theme, onBackHome }: DashboardViewHe
     <div
       className={cn(
         "sticky top-0 z-20 border-b px-6 py-4 md:px-8",
-        isDark ? "border-white/10 bg-[#141414]/95" : "border-black/10 bg-[#F7F6EE]/95",
+        isDark ? "border-white/10 bg-[#141414]/95" : "border-black/8 bg-[#F4F4F4]/95",
         "backdrop-blur supports-[backdrop-filter]:backdrop-blur"
       )}
     >

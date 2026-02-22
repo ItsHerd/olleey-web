@@ -10,7 +10,7 @@ interface VoicesViewProps {
 
 export function VoicesView({ theme }: VoicesViewProps) {
   const isDark = theme === "dark";
-  const bgClass = isDark ? "bg-[#0A0A0A]" : "bg-gray-50";
+  const bgClass = isDark ? "bg-[#0A0A0A]" : "bg-[#F4F4F4]";
   const cardBgClass = isDark ? "bg-[#141414]" : "bg-white";
   const borderClass = isDark ? "border-white/10" : "border-gray-200";
   const textClass = isDark ? "text-white" : "text-gray-900";

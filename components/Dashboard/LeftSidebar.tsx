@@ -295,7 +295,7 @@ export function LeftSidebar({
   const searchItemClass = isDark
     ? "bg-white/[0.04] border-white/10 hover:bg-white/[0.07] hover:border-white/20"
     : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300";
-  const sidebarBgClass = isDark ? "bg-[#111111]" : "bg-[#ECE9DA]";
+  const sidebarBgClass = isDark ? "bg-[#111111]" : "bg-[#FAFAFA]";
   const accountName =
     user?.user_metadata?.name ||
     user?.user_metadata?.full_name ||
