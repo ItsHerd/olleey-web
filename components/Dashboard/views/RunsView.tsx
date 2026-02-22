@@ -290,7 +290,7 @@ export function RunsView({ theme, onSelectItem, onViewChange }: RunsViewProps) {
   }, [currentPage, totalPages]);
 
   return (
-    <div ref={rootRef} className={cn("h-full p-6 md:p-8 max-w-7xl mx-auto", theme === "dark" ? "text-white" : "text-gray-900")}>
+    <div ref={rootRef} className={cn("h-full overflow-y-auto p-6 md:p-8 max-w-7xl mx-auto", theme === "dark" ? "text-white" : "text-gray-900")}>
       <Card className={cn(theme === "dark" ? "border-white/10" : "border-black/10")}>
         <CardHeader ref={cardHeaderRef} className="pb-4">
           <div className="flex items-start justify-between gap-4">

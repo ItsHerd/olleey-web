@@ -96,6 +96,7 @@ export default function DashboardLayout() {
                 currentView={currentView}
                 onViewChange={(view) => {
                   setCurrentView(view);
+                  if (view === "runs") setRightSidebarOpen(false);
                   // Don't clear selectedItem here - job card clicks depend on the selected item data
                 }}
                 onSelectItem={setSelectedItem}
