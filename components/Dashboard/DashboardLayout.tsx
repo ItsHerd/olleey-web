@@ -13,7 +13,7 @@ import { useDashboardJobs } from "@/lib/useDashboardJobs";
 import { SettingsProvider } from "@/lib/SettingsContext";
 import { resolveClientUserId } from "@/lib/user";
 
-export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "preferences" | "settings" | "notifications" | "account" | "analytics" | "guardrails" | "support" | "manual_workflow" | "review" | "preview" | "processing" | "runs" | "detected_uploads";
+export type ViewType = "dashboard" | "videos" | "channels" | "voices" | "preferences" | "settings" | "notifications" | "account" | "analytics" | "guardrails" | "support" | "manual_workflow" | "review" | "preview" | "processing" | "runs" | "detected_uploads" | "batch_upload";
 export type DetailViewType = "job-detail" | "video-detail" | "channel-detail" | null;
 
 export interface SelectedItem {
@@ -96,7 +96,7 @@ export default function DashboardLayout() {
                 currentView={currentView}
                 onViewChange={(view) => {
                   setCurrentView(view);
-                  if (view === "runs") setRightSidebarOpen(false);
+                  if (view === "runs" || view === "batch_upload") setRightSidebarOpen(false);
                   // Don't clear selectedItem here - job card clicks depend on the selected item data
                 }}
                 onSelectItem={setSelectedItem}

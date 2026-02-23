@@ -16,6 +16,7 @@ import { ManualWorkflowView } from "./views/ManualWorkflowView";
 import { ReviewView } from "./views/ReviewView";
 import { PreviewView } from "./views/PreviewView";
 import { DetectedUploadsView } from "./views/DetectedUploadsView";
+import { BatchUploadView } from "./views/BatchUploadView";
 import ProcessingPage from "@/app/ProcessingPage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { DashboardViewHeader } from "./components/DashboardViewHeader";
@@ -85,6 +86,8 @@ export function CenterPanel({
         return <RunsView theme={theme} onSelectItem={onSelectItem} onViewChange={onViewChange} />;
       case "detected_uploads":
         return <DetectedUploadsView theme={theme} onViewChange={onViewChange} onSelectItem={onSelectItem} />;
+      case "batch_upload":
+        return <BatchUploadView theme={theme} onViewChange={onViewChange} />;
       default:
         return <DashboardView onSelectJob={onSelectItem} theme={theme} onViewChange={onViewChange} />;
     }

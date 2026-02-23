@@ -26,7 +26,8 @@ import {
   Video,
   Pause,
   X,
-  PanelLeftClose
+  PanelLeftClose,
+  Layers
 } from "lucide-react";
 import { ViewType } from "./DashboardLayout";
 import { CreateProjectModal } from "@/components/ui/create-project-modal";
@@ -395,6 +396,27 @@ export function LeftSidebar({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-12 h-10 border-border/70 bg-muted/20 rounded-lg focus-visible:ring-primary/20"
           />
+        </div>
+
+        {/* Quick actions */}
+        <div className="px-2 mb-2">
+          <button
+            onClick={() => onViewChange("batch_upload")}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-xs font-semibold transition-all",
+              currentView === "batch_upload"
+                ? "bg-primary/10 border-primary/30 text-primary"
+                : isDark
+                ? "border-white/8 text-white/50 hover:border-white/20 hover:text-white/80 hover:bg-white/5"
+                : "border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50"
+            )}
+          >
+            <Layers className="w-3.5 h-3.5 shrink-0" />
+            Batch Upload
+            <span className={cn("ml-auto text-[10px] font-normal", isDark ? "text-white/25" : "text-gray-400")}>
+              Up to 15 videos
+            </span>
+          </button>
         </div>
 
         {/* Sections Accordion */}
@@ -806,6 +828,20 @@ export function LeftSidebar({
                             Show all
                           </Button>
                         )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onViewChange("batch_upload")}
+                          className={cn(
+                            "w-full gap-1.5",
+                            currentView === "batch_upload"
+                              ? "bg-primary/10 border-primary/30 text-primary"
+                              : ""
+                          )}
+                        >
+                          <Layers className="w-3.5 h-3.5" />
+                          Batch Upload
+                        </Button>
                       </>
                     ) : (
                       <div className={`p-6 rounded-xl border ${borderClass} border-dashed text-center ${isDark ? "opacity-60" : "opacity-80"}`}>
