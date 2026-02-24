@@ -10,14 +10,14 @@ export default function Login() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    // Redirect to /app if already authenticated
+    // Redirect to /dashboard if already authenticated
     if (!loading && user) {
-      router.push("/app");
+      router.push("/dashboard");
     }
   }, [loading, user, router]);
 
   const handleLoginSuccess = () => {
-    router.push("/app");
+    router.push("/dashboard");
   };
 
   return <LoginPage onLoginSuccess={handleLoginSuccess} />;

@@ -19,7 +19,6 @@ export default function SiteHeader() {
         { label: 'Product', href: '/#showcase' },
         { label: 'Pricing', href: '/pricing' },
         { label: 'Enterprise', href: '/enterprise' },
-        { label: 'Mission', href: '/mission' },
     ];
 
     useEffect(() => {
@@ -72,7 +71,7 @@ export default function SiteHeader() {
 
                         {!loading && user ? (
                             <Link
-                                href="/app"
+                                href="/dashboard"
                                 title="go to dashboard"
                                 className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                             >
@@ -162,7 +161,7 @@ export default function SiteHeader() {
                                 {!loading && user ? (
                                     <button
                                         onClick={() => {
-                                            router.push('/app');
+                                            router.push('/dashboard');
                                             setMobileMenuOpen(false);
                                         }}
                                         className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-black/5 dark:bg-white/5 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-colors"

@@ -59,10 +59,10 @@ export default function ContactPage() {
                 <ArrowRight className="w-4 h-4" />
               </button>
               <Link
-                href="/mission"
+                href="/enterprise"
                 className="inline-flex items-center justify-center rounded-full border border-black/15 dark:border-white/15 px-6 py-3 text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               >
-                Read our mission
+                Explore enterprise
               </Link>
             </div>
           </motion.div>

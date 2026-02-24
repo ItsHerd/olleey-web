@@ -23,7 +23,7 @@ export default function DevInitPage() {
       // Redirect to dashboard after a short delay
       setTimeout(() => {
         console.log('[Dev Init] ✓ Redirecting to dashboard...');
-        router.push('/app');
+        router.push('/dashboard');
       }, 1000);
     }
   }, [router]);

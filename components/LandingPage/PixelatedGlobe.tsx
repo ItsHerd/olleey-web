@@ -211,10 +211,10 @@ export default function PixelatedGlobe() {
               </p>
               <div className="mt-8">
                 <Link
-                  href="/mission"
+                  href="/contact"
                   className="inline-flex items-center px-6 py-3 border border-zinc-300 dark:border-zinc-700 rounded-full text-sm font-mono uppercase tracking-wider text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
                 >
-                  Our mission
+                  Contact us
                 </Link>
               </div>
             </motion.div>

@@ -203,7 +203,7 @@ export function RightSidebar({
 
     const video = videos.find(v => v.video_id === job.source_video_id);
     const targetVideo = video || (isDemoUser(userId || "demo") && job.source_video_id === "demo_yc_ceo_video_001" ? YC_CEO_DEMO_VIDEO : null);
-    
+
     if (!targetVideo) {
       toast("Source video not found for this job", "error");
       return;
@@ -408,7 +408,7 @@ export function RightSidebar({
         return new Set(prev).add(jobId);
       });
       window.dispatchEvent(new CustomEvent('olleey-job-cancelled', { detail: { jobId } }));
-      
+
       await jobsAPI.cancelJob(jobId);
       patchJobOverride(jobId, { status: "cancelled", progress: 0 });
       toast("Job cancelled successfully", "success");
@@ -929,237 +929,225 @@ export function RightSidebar({
         </div>
 
         {!isSelectingDetectedLanguages && (
-        <>
-        {/* Table for videos that need review */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-4 px-2">
-            <h4 className={`text-base font-semibold flex items-center gap-2 ${textClass} tracking-tight`}>
-              <div className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.5)]" />
-              Need Review
-            </h4>
-            {!loading && <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"}`}>{needsReviewJobs.length} videos</span>}
-          </div>
-
-          <div className="space-y-2">
-            {loading ? (
-              <div className="space-y-3">
-                {[1, 2].map(i => (
-                  <div key={i} className={`h-16 rounded-xl border ${borderClass} animate-pulse ${isDark ? "bg-white/5" : "bg-gray-200/50"}`} />
-                ))}
+          <>
+            {/* Table for videos that need review */}
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between mb-4 px-2">
+                <h4 className={`text-base font-semibold flex items-center gap-2 ${textClass} tracking-tight`}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.5)]" />
+                  Need Review
+                </h4>
+                {!loading && <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"}`}>{needsReviewJobs.length} videos</span>}
               </div>
-            ) : needsReviewJobs.length > 0 ? (
-              needsReviewJobs.map((job) => {
-                const video = getJobVideo(job.source_video_id);
-                return (
-                  <motion.div
-                    key={job.job_id}
-                    whileHover={{ x: -4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
-                    onClick={() => {
-                      console.log('[RightSidebar] Card clicked:', job.job_id, 'status:', job.status);
-                      const firstTargetLang = job.target_languages?.[0] || "es";
 
-                      // Set selected item
-                      onSelectItem?.({ type: "job", id: job.job_id, data: job });
+              <div className="space-y-2">
+                {loading ? (
+                  <div className="space-y-3">
+                    {[1, 2].map(i => (
+                      <div key={i} className={`h-16 rounded-xl border ${borderClass} animate-pulse ${isDark ? "bg-white/5" : "bg-gray-200/50"}`} />
+                    ))}
+                  </div>
+                ) : needsReviewJobs.length > 0 ? (
+                  needsReviewJobs.map((job) => {
+                    const video = getJobVideo(job.source_video_id);
+                    return (
+                      <motion.div
+                        key={job.job_id}
+                        whileHover={{ x: -4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
+                        onClick={() => {
+                          console.log('[RightSidebar] Card clicked:', job.job_id, 'status:', job.status);
+                          const firstTargetLang = job.target_languages?.[0] || "es";
 
-                      // Navigate based on job status
-                      if (job.status === 'waiting_approval' || job.status === 'completed') {
-                        console.log('[RightSidebar] Navigating to review');
-                        handleReview(job, firstTargetLang);
-                      } else if (['pending', 'downloading', 'processing', 'transcribing', 'translating', 'dubbing', 'voice_cloning', 'lip_sync', 'uploading'].includes(job.status)) {
-                        console.log('[RightSidebar] Navigating to processing view');
-                        onViewChange?.("processing");
-                      } else {
-                        console.log('[RightSidebar] Navigating to dashboard');
-                        onViewChange?.("dashboard");
-                      }
-                    }}
-                    className={`p-3 rounded-xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group ${isDark ? 'shadow-sm' : 'shadow-none'}`}
-                  >
-                    <div className="flex gap-3">
-                      <div className={`w-16 aspect-video rounded-lg overflow-hidden ${isDark ? "bg-white/5 border border-white/5" : "bg-gray-100 border border-gray-200"} shrink-0`}>
-                        {video?.thumbnail_url ? (
-                          <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Play className={`w-3 h-3 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
+                          // Set selected item
+                          onSelectItem?.({ type: "job", id: job.job_id, data: job });
+
+                          // Navigate based on job status
+                          if (job.status === 'waiting_approval' || job.status === 'completed') {
+                            console.log('[RightSidebar] Navigating to review');
+                            handleReview(job, firstTargetLang);
+                          } else if (['pending', 'downloading', 'processing', 'transcribing', 'translating', 'dubbing', 'voice_cloning', 'lip_sync', 'uploading'].includes(job.status)) {
+                            console.log('[RightSidebar] Navigating to processing view');
+                            onViewChange?.("processing");
+                          } else {
+                            console.log('[RightSidebar] Navigating to dashboard');
+                            onViewChange?.("dashboard");
+                          }
+                        }}
+                        className={`p-3 rounded-xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group ${isDark ? 'shadow-sm' : 'shadow-none'}`}
+                      >
+                        <div className="flex gap-3">
+                          <div className={`w-16 aspect-video rounded-lg overflow-hidden ${isDark ? "bg-white/5 border border-white/5" : "bg-gray-100 border border-gray-200"} shrink-0`}>
+                            {video?.thumbnail_url ? (
+                              <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Play className={`w-3 h-3 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className={`text-[12px] font-semibold truncate ${textClass} opacity-90 group-hover:opacity-100`}>
-                          {getVideoTitleForJob(job)}
-                        </span>
-                        
-                        <div className="flex flex-wrap gap-1 mt-1.5 pb-1">
-                          {job.target_languages?.map((lang: string) => (
-                            <button
-                              key={lang}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleReview(job, lang);
-                              }}
-                              className={`h-5 px-1.5 flex items-center gap-1 rounded-md text-[9px] font-bold transition-all hover:ring-1 hover:ring-primary/50 active:scale-95 ${isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-white"}`}
-                            >
-                              <span>{getLanguageFlag(lang)}</span>
-                              {lang.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })
-            ) : (
-              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-white/10 bg-white/[0.02]" : "border-gray-300 bg-gray-50/50"} flex flex-col items-center justify-center text-center`}>
-                <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? mutedTextClass : "text-gray-600"}`}>All caught up!</p>
-                <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-400 bg-white/60"} flex items-center justify-center`}>
-                  <Clock className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-500"}`} />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className={`text-[12px] font-semibold truncate ${textClass} opacity-90 group-hover:opacity-100`}>
+                              {getVideoTitleForJob(job)}
+                            </span>
 
-        {/* Table for jobs processing */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-4 px-2">
-            <h4 className={`text-base font-semibold flex items-center gap-2 ${textClass} tracking-tight`}>
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]" />
-              Processing
-            </h4>
-            {!loading && <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"}`}>{processingJobs.length} active</span>}
-          </div>
-
-          <div className="space-y-2">
-            {loading ? (
-              <div className="space-y-3">
-                {[1, 2].map(i => (
-                  <div key={i} className={`h-20 rounded-2xl border ${borderClass} animate-pulse ${isDark ? "bg-white/5" : "bg-gray-200/50"}`} />
-                ))}
-              </div>
-            ) : processingJobs.length > 0 ? (
-              processingJobs.map((job) => {
-                const video = getJobVideo(job.source_video_id);
-                const languageNames = getJobLanguageNames(job.target_languages);
-                return (
-                  <motion.div
-                    key={job.job_id}
-                    whileHover={{ x: -4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
-                    onClick={() => {
-                      console.log('[RightSidebar] Processing card clicked:', job.job_id, 'status:', job.status);
-                      onSelectItem?.({ type: "job", id: job.job_id, data: job });
-
-                      // Navigate based on job status
-                      if (job.status === 'waiting_approval' || job.status === 'completed') {
-                        console.log('[RightSidebar] Navigating to review');
-                        const firstTargetLang = job.target_languages?.[0] || "es";
-                        handleReview(job, firstTargetLang);
-                      } else if (['pending', 'downloading', 'processing', 'transcribing', 'translating', 'dubbing', 'voice_cloning', 'lip_sync', 'uploading'].includes(job.status)) {
-                        console.log('[RightSidebar] Navigating to processing view');
-                        onViewChange?.("processing");
-                      } else {
-                        console.log('[RightSidebar] Navigating to dashboard');
-                        onViewChange?.("dashboard");
-                      }
-                    }}
-                    className={`p-3 rounded-xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group ${isDark ? 'shadow-sm' : 'shadow-none'}`}
-                  >
-                    <div className="flex gap-3 mb-3">
-                      <div className={`w-16 aspect-video rounded-lg overflow-hidden ${isDark ? "bg-white/5 border border-white/5" : "bg-gray-100 border border-gray-200"} shrink-0`}>
-                        {video?.thumbnail_url ? (
-                          <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Clock className={`w-3 h-3 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
+                            <div className="flex flex-wrap gap-1 mt-1.5 pb-1">
+                              {job.target_languages?.map((lang: string) => (
+                                <button
+                                  key={lang}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleReview(job, lang);
+                                  }}
+                                  className={`h-5 px-1.5 flex items-center gap-1 rounded-md text-[9px] font-bold transition-all hover:ring-1 hover:ring-primary/50 active:scale-95 ${isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-white"}`}
+                                >
+                                  <span>{getLanguageFlag(lang)}</span>
+                                  {lang.toUpperCase()}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className={`text-[12px] font-semibold truncate ${textClass} opacity-90`}>
-                          {getVideoTitleForJob(job)}
-                        </span>
-                        <span className={`text-[10px] ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"} mt-0.5`}>
-                          {new Date(job.created_at).toLocaleDateString()}
-                        </span>
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          {languageNames.slice(0, 3).map((name) => (
-                            <Badge
-                              key={`${job.job_id}-${name}`}
-                              variant="secondary"
-                              className={`text-[9px] px-1.5 py-0 h-4 font-medium ${isDark ? "bg-white/10 text-gray-200 hover:bg-white/15" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
-                            >
-                              {name}
-                            </Badge>
-                          ))}
-                          {languageNames.length > 3 && (
-                            <Badge
-                              variant="secondary"
-                              className={`text-[9px] px-1.5 py-0 h-4 font-medium ${isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-700"}`}
-                            >
-                              +{languageNames.length - 3}
-                            </Badge>
-                          )}
                         </div>
-                      </div>
+                      </motion.div>
+                    );
+                  })
+                ) : (
+                  <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-white/10 bg-white/[0.02]" : "border-gray-300 bg-gray-50/50"} flex flex-col items-center justify-center text-center`}>
+                    <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? mutedTextClass : "text-gray-600"}`}>All caught up!</p>
+                    <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-400 bg-white/60"} flex items-center justify-center`}>
+                      <Clock className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-500"}`} />
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className={`text-[9px] font-bold uppercase tracking-tighter text-blue-400`}>
-                          {job.status}
-                        </span>
-                        <span className={`text-[10px] font-mono ${isDark ? "text-white opacity-40" : "text-gray-600"}`}>
-                          {job.progress}%
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => handleCancelJob(e, job.job_id)}
-                          className="h-6 w-6 rounded-md text-red-500 hover:bg-red-500/10 hover:text-red-600 transition-colors"
-                          title="Cancel Job"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                      <div className={`w-full h-1 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-full overflow-hidden`}>
-                        <motion.div
-                          className="h-full bg-blue-500/50"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${job.progress}%` }}
-                          transition={{ duration: 1 }}
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })
-            ) : (
-              <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-white/10 bg-white/[0.02]" : "border-gray-300 bg-gray-50/50"} flex flex-col items-center justify-center text-center`}>
-                <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? mutedTextClass : "text-gray-600"}`}>Quiet for now</p>
-                <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-400 bg-white/60"} flex items-center justify-center`}>
-                  <Play className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-500"}`} />
-                </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-        </>
+            </div>
+
+            {/* Table for jobs processing */}
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between mb-4 px-2">
+                <h4 className={`text-base font-semibold flex items-center gap-2 ${textClass} tracking-tight`}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]" />
+                  Processing
+                </h4>
+                {!loading && <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"}`}>{processingJobs.length} active</span>}
+              </div>
+
+              <div className="space-y-2">
+                {loading ? (
+                  <div className="space-y-3">
+                    {[1, 2].map(i => (
+                      <div key={i} className={`h-20 rounded-2xl border ${borderClass} animate-pulse ${isDark ? "bg-white/5" : "bg-gray-200/50"}`} />
+                    ))}
+                  </div>
+                ) : processingJobs.length > 0 ? (
+                  processingJobs.map((job) => {
+                    const video = getJobVideo(job.source_video_id);
+                    const languageNames = getJobLanguageNames(job.target_languages);
+                    return (
+                      <motion.div
+                        key={job.job_id}
+                        whileHover={{ x: -4, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)" }}
+                        onClick={() => {
+                          console.log('[RightSidebar] Processing card clicked:', job.job_id, 'status:', job.status);
+                          onSelectItem?.({ type: "job", id: job.job_id, data: job });
+
+                          // Navigate based on job status
+                          if (job.status === 'waiting_approval' || job.status === 'completed') {
+                            console.log('[RightSidebar] Navigating to review');
+                            const firstTargetLang = job.target_languages?.[0] || "es";
+                            handleReview(job, firstTargetLang);
+                          } else if (['pending', 'downloading', 'processing', 'transcribing', 'translating', 'dubbing', 'voice_cloning', 'lip_sync', 'uploading'].includes(job.status)) {
+                            console.log('[RightSidebar] Navigating to processing view');
+                            onViewChange?.("processing");
+                          } else {
+                            console.log('[RightSidebar] Navigating to dashboard');
+                            onViewChange?.("dashboard");
+                          }
+                        }}
+                        className={`p-3 rounded-xl border ${borderClass} ${glassBgClass} transition-all cursor-pointer group ${isDark ? 'shadow-sm' : 'shadow-none'}`}
+                      >
+                        <div className="flex gap-3 mb-3">
+                          <div className={`w-16 aspect-video rounded-lg overflow-hidden ${isDark ? "bg-white/5 border border-white/5" : "bg-gray-100 border border-gray-200"} shrink-0`}>
+                            {video?.thumbnail_url ? (
+                              <img src={getFullUrl(video.thumbnail_url)} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Clock className={`w-3 h-3 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className={`text-[12px] font-semibold truncate ${textClass} opacity-90`}>
+                              {getVideoTitleForJob(job)}
+                            </span>
+                            <span className={`text-[10px] ${isDark ? "text-gray-500 opacity-60" : "text-gray-500"} mt-0.5`}>
+                              {new Date(job.created_at).toLocaleDateString()}
+                            </span>
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {languageNames.slice(0, 3).map((name) => (
+                                <Badge
+                                  key={`${job.job_id}-${name}`}
+                                  variant="secondary"
+                                  className={`text-[9px] px-1.5 py-0 h-4 font-medium ${isDark ? "bg-white/10 text-gray-200 hover:bg-white/15" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                                >
+                                  {name}
+                                </Badge>
+                              ))}
+                              {languageNames.length > 3 && (
+                                <Badge
+                                  variant="secondary"
+                                  className={`text-[9px] px-1.5 py-0 h-4 font-medium ${isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-700"}`}
+                                >
+                                  +{languageNames.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className={`text-[9px] font-bold uppercase tracking-tighter text-blue-400`}>
+                              {job.status}
+                            </span>
+                            <span className={`text-[10px] font-mono ${isDark ? "text-white opacity-40" : "text-gray-600"}`}>
+                              {job.progress}%
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => handleCancelJob(e, job.job_id)}
+                              className="h-6 w-6 rounded-md text-red-500 hover:bg-red-500/10 hover:text-red-600 transition-colors"
+                              title="Cancel Job"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          <div className={`w-full h-1 ${isDark ? "bg-white/5" : "bg-gray-200"} rounded-full overflow-hidden`}>
+                            <motion.div
+                              className="h-full bg-blue-500/50"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${job.progress}%` }}
+                              transition={{ duration: 1 }}
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                ) : (
+                  <div className={`p-8 rounded-3xl border border-dashed ${isDark ? "border-white/10 bg-white/[0.02]" : "border-gray-300 bg-gray-50/50"} flex flex-col items-center justify-center text-center`}>
+                    <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? mutedTextClass : "text-gray-600"}`}>Quiet for now</p>
+                    <div className={`mt-4 w-10 h-10 rounded-full border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-400 bg-white/60"} flex items-center justify-center`}>
+                      <Play className={`w-4 h-4 ${isDark ? "text-gray-600" : "text-gray-500"}`} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Manual Workflow Button */}
-      <div className={`pt-4 border-t ${isDark ? "border-white/5" : "border-gray-100"} z-10`}>
-        <Button
-          variant="outline"
-          onClick={() => onViewChange?.("manual_workflow")}
-          className={`w-full flex items-center justify-center gap-2 h-10 border-dashed ${isDark ? "border-zinc-700 hover:border-zinc-500 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "border-gray-400 hover:border-gray-500 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900"} transition-all text-xs font-medium uppercase tracking-wider`}
-        >
-          <div className={`w-4 h-4 rounded-full border ${isDark ? "border-zinc-600" : "border-gray-400"} flex items-center justify-center`}>
-            <span className="text-[9px] leading-none">+</span>
-          </div>
-          Manual Workflow
-        </Button>
-      </div>
+
     </div>
   );
 }

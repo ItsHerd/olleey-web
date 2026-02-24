@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useTheme } from "@/lib/useTheme";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -141,44 +142,11 @@ export function SettingsView({ theme }: { theme: string }) {
               <p className="text-sm text-muted-foreground">Choose your preferred color scheme.</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                role="switch"
-                aria-checked={settings.theme === "dark"}
-                onClick={() => handleThemeChange(settings.theme === "dark" ? "light" : "dark")}
+              <ThemeToggle
+                isDark={settings.theme === "dark"}
+                onToggle={(isDark) => handleThemeChange(isDark ? "dark" : "light")}
                 disabled={saving}
-                className={`
-                  relative inline-flex h-8 w-16 shrink-0 cursor-pointer items-center justify-center rounded-full
-                  transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
-                  ${settings.theme === "dark" ? 'bg-slate-700' : 'bg-slate-200'}
-                  ${saving ? 'opacity-50 cursor-not-allowed' : ''}
-                `}
-              >
-                <span className="sr-only">Toggle theme</span>
-
-                {/* Thumb/Slider */}
-                <span
-                  className={`
-                    absolute left-1 flex h-6 w-6 transform items-center justify-center rounded-full bg-white shadow
-                    transition-transform duration-200 ease-in-out
-                    ${settings.theme === "dark" ? 'translate-x-8' : 'translate-x-0'}
-                  `}
-                >
-                  {settings.theme === "dark" ? (
-                    <Moon className="h-3 w-3 text-slate-700" strokeWidth={2.5} />
-                  ) : (
-                    <Sun className="h-3 w-3 text-amber-500" strokeWidth={2.5} />
-                  )}
-                </span>
-
-                {/* Background Icons */}
-                <span className={`absolute left-2 transition-opacity duration-200 ${settings.theme === "dark" ? 'opacity-0' : 'opacity-100'}`}>
-                  <Moon className="h-3 w-3 text-slate-400" strokeWidth={2.5} />
-                </span>
-                <span className={`absolute right-2 transition-opacity duration-200 ${settings.theme === "dark" ? 'opacity-100' : 'opacity-0'}`}>
-                  <Sun className="h-3 w-3 text-slate-400" strokeWidth={2.5} />
-                </span>
-              </button>
+              />
             </div>
           </div>
 

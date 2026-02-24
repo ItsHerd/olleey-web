@@ -54,7 +54,7 @@ export default function Footer({
     {
       title: "Company",
       links: [
-        { label: "Mission", href: "/mission" },
+        { label: "Enterprise", href: "/enterprise" },
         { label: "Contact", href: "/contact" },
         { label: "Support", href: "mailto:hello@olleey.com" },
       ],

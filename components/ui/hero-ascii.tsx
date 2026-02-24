@@ -131,7 +131,6 @@ export default function HeroAscii({
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#FAFAFA] dark:bg-[#07080b] transition-colors duration-300">
       {/* Top Header */}
-      {/* Top Header */}
       <SiteHeader />
 
       <div className="relative z-10 pt-24 sm:pt-28 lg:pt-32 pb-0">
@@ -343,9 +342,9 @@ export default function HeroAscii({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1, duration: 0.5 }}
                     >
-                      <Link href="/mission" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-[#07080b] border border-zinc-200 dark:border-zinc-800 shadow-sm mb-8 hover:shadow-md transition-shadow">
+                      <Link href="/contact" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-[#07080b] border border-zinc-200 dark:border-zinc-800 shadow-sm mb-8 hover:shadow-md transition-shadow">
                         <span className="text-sm cursor-pointer">🗣️</span>
-                        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 cursor-pointer">Our Mission and Values</span>
+                        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 cursor-pointer">Talk to Our Team</span>
                         <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                       </Link>
                     </motion.div>

@@ -476,7 +476,7 @@ export const authAPI = {
    * Generates the Google OAuth2 authorization URL for custom buttons
    */
   getGoogleAuthUrl: (clientId: string): string => {
-    const redirectUri = window.location.origin + '/app';
+    const redirectUri = window.location.origin + '/dashboard';
     const scope = 'openid profile email';
     const responseType = 'id_token';
     const nonce = Math.random().toString(36).substring(2);

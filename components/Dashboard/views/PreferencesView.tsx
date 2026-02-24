@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { LottieThemeToggle } from "@/components/ui/lottie-theme-toggle";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useTheme } from "@/lib/useTheme";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -283,9 +283,8 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
                   <button
                     key={category.id}
                     onClick={() => setActiveCategory(category.id)}
-                    className={`w-full text-left rounded-lg border p-3 transition-colors ${
-                      isActive ? "border-primary/40 bg-primary/5" : "border-border hover:bg-muted/40"
-                    }`}
+                    className={`w-full text-left rounded-lg border p-3 transition-colors ${isActive ? "border-primary/40 bg-primary/5" : "border-border hover:bg-muted/40"
+                      }`}
                   >
                     <div className="flex items-start gap-2.5">
                       <Icon className="w-4 h-4 mt-0.5 text-muted-foreground" />
@@ -316,9 +315,9 @@ export function PreferencesView({ theme }: PreferencesViewProps) {
                       <Label className="text-sm font-medium">Theme</Label>
                       <p className="text-sm text-muted-foreground">Choose your preferred color scheme.</p>
                     </div>
-                    <LottieThemeToggle
-                      theme={settings.theme}
-                      onThemeChange={handleThemeChange}
+                    <ThemeToggle
+                      isDark={settings.theme === "dark"}
+                      onToggle={(isDark) => handleThemeChange(isDark ? "dark" : "light")}
                       disabled={saving}
                     />
                   </div>

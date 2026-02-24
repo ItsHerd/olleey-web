@@ -12,7 +12,7 @@ export default function LandingClient() {
   // Removed auto-redirect to allow users to stay on the landing page
 
   const handleNavigation = () => {
-    router.push("/app");
+    router.push("/dashboard");
   };
 
   return <LandingPage onNavigation={handleNavigation} />;

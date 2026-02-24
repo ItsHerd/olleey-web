@@ -10,15 +10,15 @@ export default function Register() {
     const { user, loading } = useAuth();
 
     useEffect(() => {
-        // Redirect to /app if already authenticated
+        // Redirect to /dashboard if already authenticated
         if (!loading && user) {
-            router.push("/app");
+            router.push("/dashboard");
         }
     }, [loading, user, router]);
 
     const handleRegisterSuccess = () => {
-        // Redirect to app after successful registration
-        router.push("/app");
+        // Redirect to dashboard after successful registration
+        router.push("/dashboard");
     };
 
     return <RegisterPage onRegisterSuccess={handleRegisterSuccess} />;

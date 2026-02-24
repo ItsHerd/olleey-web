@@ -4,17 +4,19 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2,
-  Sparkles,
   Play,
   CheckCircle2,
   AlertCircle,
   Rocket,
   Trash2,
   Radio,
-  ChevronDown,
+  ChevronRight,
   Search,
   X,
   ListVideo,
+  Plus,
+  Link as LinkIcon,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +37,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { useSupabaseChannels } from "@/lib/useSupabase";
 import { resolveClientUserId } from "@/lib/user";
-import { API_BASE_URL, videosAPI } from "@/lib/api";
+import { videosAPI } from "@/lib/api";
 import { ViewType } from "../DashboardLayout";
 
 interface BatchUploadViewProps {
@@ -53,7 +55,7 @@ interface ChannelVideo {
   view_count?: number;
 }
 
-type CardStatus = "ready" | "autofilling" | "submitting" | "done" | "error";
+type CardStatus = "ready" | "submitting" | "done" | "error";
 
 interface BatchCard {
   video_id: string;
@@ -65,10 +67,27 @@ interface BatchCard {
   editedDescription: string;
   status: CardStatus;
   errorMsg?: string;
-  aiApplied?: boolean;
 }
 
 const MAX_BATCH = 15;
+
+type SourceMode = "channel" | "url" | "upload";
+
+function extractVideoId(url: string): string | null {
+  try {
+    const trimmed = url.trim();
+    if (!trimmed) return null;
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /^([a-zA-Z0-9_-]{11})$/,
+    ];
+    for (const p of patterns) {
+      const m = trimmed.match(p);
+      if (m?.[1]) return m[1];
+    }
+    return trimmed;
+  } catch { return null; }
+}
 
 export function BatchUploadView({ theme, onViewChange }: BatchUploadViewProps) {
   const { user } = useAuth();
@@ -87,7 +106,6 @@ export function BatchUploadView({ theme, onViewChange }: BatchUploadViewProps) {
 
   const [selectedChannelId, setSelectedChannelId] = React.useState<string>("");
 
-  // Auto-select first channel
   React.useEffect(() => {
     if (masterChannels.length > 0 && !selectedChannelId) {
       setSelectedChannelId(masterChannels[0].channel_id);
@@ -119,6 +137,12 @@ export function BatchUploadView({ theme, onViewChange }: BatchUploadViewProps) {
     load();
     return () => { cancelled = true; };
   }, [selectedChannelId]);
+
+  // ── Source mode ───────────────────────────────────────────────
+  const [sourceMode, setSourceMode] = React.useState<SourceMode>("channel");
+  const [singleUrl, setSingleUrl] = React.useState("");
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = React.useState(false);
 
   // ── Batch queue ───────────────────────────────────────────────
   const [batchCards, setBatchCards] = React.useState<BatchCard[]>([]);
@@ -189,7 +213,53 @@ export function BatchUploadView({ theme, onViewChange }: BatchUploadViewProps) {
 
     setBatchCards((prev) => [...prev, ...toAdd]);
     setSelectedIds(new Set());
-    toast(`${toAdd.length} video${toAdd.length > 1 ? "s" : ""} added to batch`, "success");
+    toast(`${toAdd.length} video${toAdd.length > 1 ? "s" : ""} added`, "success");
+  };
+
+  // ── Single URL add ─────────────────────────────────────────────
+  const handleAddSingleUrl = () => {
+    if (batchCards.length >= MAX_BATCH) { toast("Batch limit reached", "info"); return; }
+    const vid = extractVideoId(singleUrl);
+    if (!vid) { toast("Please enter a valid YouTube URL or video ID", "error"); return; }
+    if (batchCards.some((c) => c.video_id === vid)) { toast("This video is already in the queue", "info"); return; }
+    setBatchCards((prev) => [...prev, {
+      video_id: vid,
+      title: "",
+      description: "",
+      thumbnail_url: `https://img.youtube.com/vi/${vid}/mqdefault.jpg`,
+      channel_title: "",
+      editedTitle: "",
+      editedDescription: "",
+      status: "ready" as CardStatus,
+    }]);
+    setSingleUrl("");
+    toast("Video added to queue", "success");
+  };
+
+  // ── File upload ────────────────────────────────────────────────
+  const handleFileUpload = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const slots = MAX_BATCH - batchCards.length;
+    const added: BatchCard[] = [];
+    for (let i = 0; i < Math.min(files.length, slots); i++) {
+      const file = files[i];
+      if (!file.type.startsWith("video/")) continue;
+      const localId = `local_${Date.now()}_${i}`;
+      added.push({
+        video_id: localId,
+        title: file.name.replace(/\.[^.]+$/, ""),
+        description: "",
+        thumbnail_url: "",
+        channel_title: "Local Upload",
+        editedTitle: file.name.replace(/\.[^.]+$/, ""),
+        editedDescription: "",
+        status: "ready" as CardStatus,
+      });
+    }
+    if (added.length === 0) { toast("No valid video files found", "info"); return; }
+    setBatchCards((prev) => [...prev, ...added]);
+    toast(`${added.length} file${added.length > 1 ? "s" : ""} added to queue`, "success");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   // ── Languages ─────────────────────────────────────────────────
@@ -198,76 +268,6 @@ export function BatchUploadView({ theme, onViewChange }: BatchUploadViewProps) {
     setTargetLanguages((prev) =>
       prev.includes(code) ? prev.filter((l) => l !== code) : [...prev, code]
     );
-
-  // ── AI autofill ───────────────────────────────────────────────
-  const [isAutofilling, setIsAutofilling] = React.useState(false);
-
-  const autofillAll = async () => {
-    if (batchCards.length === 0) return;
-    setIsAutofilling(true);
-    setBatchCards((prev) => prev.map((c) => ({ ...c, status: "autofilling" as CardStatus })));
-    try {
-      const res = await fetch(`${API_BASE_URL}/batch/autofill`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          videos: batchCards.map((c) => ({
-            video_id: c.video_id,
-            title: c.editedTitle || c.title,
-            description: c.editedDescription || c.description,
-            thumbnail_url: c.thumbnail_url,
-            channel_title: c.channel_title,
-            url: `https://www.youtube.com/watch?v=${c.video_id}`,
-          })),
-          target_languages: targetLanguages,
-          source_language: "en",
-        }),
-      });
-      if (!res.ok) throw new Error("Autofill failed");
-      const data = await res.json();
-      const map: Record<string, { title: string; description: string }> = {};
-      for (const v of data.videos ?? []) map[v.video_id] = { title: v.suggested_title, description: v.suggested_description };
-      setBatchCards((prev) =>
-        prev.map((c) => ({
-          ...c,
-          editedTitle: map[c.video_id]?.title ?? c.editedTitle,
-          editedDescription: map[c.video_id]?.description ?? c.editedDescription,
-          status: "ready" as CardStatus,
-          aiApplied: true,
-        }))
-      );
-      toast("AI autofill applied to all videos", "success");
-    } catch (err: any) {
-      setBatchCards((prev) => prev.map((c) => ({ ...c, status: "ready" as CardStatus })));
-      toast(err.message || "Autofill failed", "error");
-    } finally {
-      setIsAutofilling(false);
-    }
-  };
-
-  const autofillOne = async (videoId: string) => {
-    const card = batchCards.find((c) => c.video_id === videoId);
-    if (!card) return;
-    updateCard(videoId, { status: "autofilling" });
-    try {
-      const res = await fetch(`${API_BASE_URL}/batch/autofill`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          videos: [{ video_id: card.video_id, title: card.editedTitle, description: card.editedDescription, thumbnail_url: card.thumbnail_url, channel_title: card.channel_title, url: `https://www.youtube.com/watch?v=${card.video_id}` }],
-          target_languages: targetLanguages,
-          source_language: "en",
-        }),
-      });
-      if (!res.ok) throw new Error("Autofill failed");
-      const data = await res.json();
-      const v = data.videos?.[0];
-      if (v) updateCard(videoId, { editedTitle: v.suggested_title, editedDescription: v.suggested_description, status: "ready", aiApplied: true });
-      else updateCard(videoId, { status: "ready" });
-    } catch {
-      updateCard(videoId, { status: "ready" });
-    }
-  };
 
   // ── Submit ────────────────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -320,31 +320,47 @@ export function BatchUploadView({ theme, onViewChange }: BatchUploadViewProps) {
     }
   };
 
-  // ── Styles ────────────────────────────────────────────────────
-  const bg = isDark ? "bg-[#141414]" : "bg-[#F4F4F4]";
-  const panelBg = isDark ? "bg-[#1A1A1A] border-white/8" : "bg-white border-gray-200";
-  const inputCls = isDark ? "bg-[#111] border-white/10 text-white placeholder:text-white/30" : "";
+  // ── Derived ───────────────────────────────────────────────────
+  const bg = isDark ? "bg-[#0A0A0A]" : "bg-[#F4F4F4]";
+  const panelBg = isDark ? "bg-[#141414]/80 backdrop-blur-xl border-white/5" : "bg-white/90 backdrop-blur-md border-gray-200/60";
   const mutedText = isDark ? "text-white/40" : "text-gray-400";
-
   const readyCount = batchCards.filter((c) => c.status === "ready").length;
   const doneCount = batchCards.filter((c) => c.status === "done").length;
 
   // ── Done screen ───────────────────────────────────────────────
   if (batchDone && doneCount === batchCards.length && batchCards.length > 0) {
     return (
-      <div className={cn("h-full overflow-y-auto flex items-center justify-center", bg)}>
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-sm px-6">
-          <div className="w-20 h-20 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-6">
+      <div className={cn("h-full overflow-y-auto flex items-center justify-center p-6 relative", bg)}>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={cn("text-center max-w-md px-8 py-12 rounded-[2rem] border shadow-2xl relative overflow-hidden", panelBg)}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/[0.03] to-transparent pointer-events-none" />
+          <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-10 h-10 text-emerald-500" />
           </div>
-          <h2 className={cn("text-2xl font-bold mb-2", isDark ? "text-white" : "text-gray-900")}>Batch Queued!</h2>
-          <p className={cn("text-sm mb-8", mutedText)}>{doneCount} video{doneCount > 1 ? "s" : ""} are now in the pipeline.</p>
+          <h2 className={cn("text-2xl font-bold mb-2 tracking-tight", isDark ? "text-white" : "text-gray-900")}>
+            All Set!
+          </h2>
+          <p className={cn("text-sm mb-8 leading-relaxed", mutedText)}>
+            {doneCount} video{doneCount > 1 ? "s are" : " is"} now being translated and dubbed.
+          </p>
           <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={() => { setBatchCards([]); setBatchDone(false); setSelectedIds(new Set()); }}>
+            <Button
+              variant="outline"
+              className="h-10 px-5 rounded-xl text-xs font-semibold"
+              onClick={() => { setBatchCards([]); setBatchDone(false); setSelectedIds(new Set()); }}
+            >
               New Batch
             </Button>
-            <Button onClick={() => onViewChange("runs")} className="gap-2">
-              <Rocket className="w-4 h-4" /> View Runs
+            <Button
+              onClick={() => onViewChange("runs")}
+              className="h-10 px-5 rounded-xl text-xs font-semibold gap-2"
+            >
+              <Rocket className="w-3.5 h-3.5" /> View Progress
             </Button>
           </div>
         </motion.div>
@@ -352,410 +368,572 @@ export function BatchUploadView({ theme, onViewChange }: BatchUploadViewProps) {
     );
   }
 
+  // ── Main layout ───────────────────────────────────────────────
   return (
-    <div className={cn("h-full overflow-hidden flex flex-col", bg)}>
-      {/* ── Two-column layout ─────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
+    <div className={cn("h-full overflow-hidden flex flex-col relative", bg)}>
+      {/* Ambient background */}
+      <div className="absolute top-0 right-0 w-[30%] h-[40%] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[30%] h-[40%] bg-violet-500/5 blur-[100px] rounded-full pointer-events-none" />
 
-        {/* ── LEFT: Channel browser ──────────────────────────── */}
-        <div className={cn("flex flex-col w-[55%] border-r overflow-hidden", isDark ? "border-white/8" : "border-gray-200")}>
+      <div className="flex-1 overflow-hidden relative z-10 px-6 md:px-8 py-6">
+        <div className={cn("mx-auto w-full max-w-7xl h-full flex overflow-hidden rounded-xl border", isDark ? "border-white/10" : "border-gray-200")}>
 
-          {/* Channel selector */}
-          <div className={cn("px-5 py-4 border-b shrink-0", isDark ? "border-white/8" : "border-gray-100")}>
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                {channelsLoading ? (
-                  <div className={cn("h-9 rounded-lg animate-pulse", isDark ? "bg-white/5" : "bg-gray-100")} />
-                ) : masterChannels.length === 0 ? (
-                  <div className={cn("text-sm rounded-lg px-3 py-2 border", isDark ? "border-white/8 text-white/40" : "border-gray-200 text-gray-400")}>
-                    No source channels connected
+
+          {/* ── LEFT: Source Library ──────────────────────────────── */}
+          <div className={cn("flex flex-col w-1/2 border-r overflow-hidden", isDark ? "border-white/5" : "border-gray-200/60")}>
+
+            {/* Header + Source Toggle */}
+            <div className={cn("px-6 py-5 border-b shrink-0", isDark ? "border-white/5" : "border-gray-200/60")}>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <ListVideo className="w-4 h-4 text-primary" />
+                    <h2 className="text-sm font-bold tracking-tight text-foreground">Your Videos</h2>
                   </div>
-                ) : (
-                  <Select value={selectedChannelId} onValueChange={setSelectedChannelId}>
-                    <SelectTrigger className={cn("h-9", inputCls)}>
-                      <SelectValue placeholder="Select a channel" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {masterChannels.map((ch) => (
-                        <SelectItem key={ch.channel_id} value={ch.channel_id}>
-                          <span className="flex items-center gap-2">
-                            <Radio className="w-3.5 h-3.5 text-primary shrink-0" />
-                            {ch.channel_name}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                  <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60 pl-6">
+                    Pick the videos you want to dub
+                  </p>
+                </div>
               </div>
 
-              {/* Batch count badge */}
-              <Badge variant={batchCards.length > 0 ? "default" : "secondary"} className="shrink-0 text-xs">
-                {batchCards.length} / {MAX_BATCH} queued
-              </Badge>
+              {/* Source mode tabs */}
+              <div className={cn("flex p-0.5 rounded-lg border", isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-200 bg-gray-100")}>
+                {(["channel", "url", "upload"] as SourceMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setSourceMode(mode)}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[11px] font-semibold transition-all",
+                      sourceMode === mode
+                        ? isDark ? "bg-white/10 text-white shadow-sm" : "bg-white text-gray-900 shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {mode === "channel" && <><Radio className="w-3 h-3" /> Channel</>}
+                    {mode === "url" && <><LinkIcon className="w-3 h-3" /> YouTube URL</>}
+                    {mode === "upload" && <><Upload className="w-3 h-3" /> Upload</>}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Search + select-all row */}
-            {selectedChannelId && !loadingVideos && channelVideos.length > 0 && (
-              <div className="flex items-center gap-2 mt-3">
-                <div className="relative flex-1">
-                  <Search className={cn("absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5", mutedText)} />
-                  <Input
-                    value={videoSearch}
-                    onChange={(e) => setVideoSearch(e.target.value)}
-                    placeholder="Search videos…"
-                    className={cn("pl-8 h-8 text-xs", inputCls)}
-                  />
-                  {videoSearch && (
-                    <button onClick={() => setVideoSearch("")} className={cn("absolute right-2.5 top-1/2 -translate-y-1/2", mutedText)}>
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-                <button
-                  onClick={toggleAll}
-                  disabled={availableForSelection.length === 0 || batchCards.length >= MAX_BATCH}
-                  className={cn(
-                    "text-xs font-medium px-3 py-1.5 rounded-lg border transition-all shrink-0",
-                    allSelected
-                      ? "border-primary text-primary"
-                      : isDark
-                      ? "border-white/10 text-white/50 hover:border-white/30 hover:text-white/80"
-                      : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-700"
-                  )}
-                >
-                  {allSelected ? "Deselect all" : "Select all"}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Video grid */}
-          <div className="flex-1 overflow-y-auto p-4">
-            {loadingVideos && (
-              <div className="flex flex-col items-center justify-center h-full gap-3">
-                <Loader2 className={cn("w-7 h-7 animate-spin", mutedText)} />
-                <p className={cn("text-sm", mutedText)}>Loading videos…</p>
-              </div>
-            )}
-
-            {videoError && (
-              <div className="flex flex-col items-center justify-center h-full gap-2">
-                <AlertCircle className="w-6 h-6 text-destructive" />
-                <p className="text-sm text-destructive">{videoError}</p>
-              </div>
-            )}
-
-            {!loadingVideos && !videoError && !selectedChannelId && (
-              <div className="flex flex-col items-center justify-center h-full gap-3">
-                <Radio className={cn("w-10 h-10", mutedText)} />
-                <p className={cn("text-sm", mutedText)}>Select a channel to browse videos</p>
-              </div>
-            )}
-
-            {!loadingVideos && !videoError && selectedChannelId && filteredVideos.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full gap-2">
-                <ListVideo className={cn("w-8 h-8", mutedText)} />
-                <p className={cn("text-sm", mutedText)}>
-                  {videoSearch ? `No videos matching "${videoSearch}"` : "No videos in this channel"}
-                </p>
-              </div>
-            )}
-
-            {!loadingVideos && !videoError && filteredVideos.length > 0 && (
-              <div className="grid grid-cols-2 gap-3">
-                {filteredVideos.map((video) => {
-                  const alreadyAdded = batchCards.some((c) => c.video_id === video.video_id);
-                  const isSelected = selectedIds.has(video.video_id);
-                  const atLimit = batchCards.length >= MAX_BATCH;
-
-                  return (
-                    <motion.button
-                      key={video.video_id}
-                      layout
-                      onClick={() => !alreadyAdded && !atLimit && toggleVideo(video.video_id)}
-                      disabled={alreadyAdded || (atLimit && !isSelected)}
-                      className={cn(
-                        "relative rounded-xl border overflow-hidden text-left transition-all",
-                        alreadyAdded
-                          ? "opacity-50 cursor-default"
-                          : atLimit && !isSelected
-                          ? "opacity-40 cursor-not-allowed"
-                          : isSelected
-                          ? "border-primary ring-2 ring-primary/25 shadow-md"
-                          : isDark
-                          ? "border-white/8 hover:border-white/25 hover:shadow-md"
-                          : "border-gray-200 hover:border-gray-400 hover:shadow-md"
-                      )}
-                    >
-                      {/* Thumbnail */}
-                      <div className="aspect-video bg-muted overflow-hidden relative">
-                        {video.thumbnail_url ? (
-                          <img src={video.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Play className="w-6 h-6 text-muted-foreground" />
-                          </div>
-                        )}
-
-                        {/* Selection indicator */}
-                        <div className={cn(
-                          "absolute top-2 right-2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
-                          alreadyAdded
-                            ? "bg-emerald-500 border-emerald-500"
-                            : isSelected
-                            ? "bg-primary border-primary"
-                            : isDark
-                            ? "bg-black/50 border-white/40"
-                            : "bg-white/70 border-gray-400"
-                        )}>
-                          {(isSelected || alreadyAdded) && (
-                            <CheckCircle2 className="w-3 h-3 text-white" />
+            {sourceMode === "channel" ? (
+              <>
+                {/* Channel + Search */}
+                <div className="px-6 py-4 space-y-3 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      {channelsLoading ? (
+                        <div className="h-9 rounded-lg animate-pulse bg-muted" />
+                      ) : masterChannels.length === 0 ? (
+                        <button
+                          onClick={() => {
+                            // Trigger YouTube connect flow
+                            const redirectUrl = `${window.location.origin}/youtube/connect/success?connection_type=master&redirect_to=/dashboard`;
+                            import("@/lib/api").then(({ youtubeAPI }) => {
+                              youtubeAPI.initiateConnection(redirectUrl).then((res) => {
+                                if (res.auth_url) window.location.href = res.auth_url;
+                              });
+                            });
+                          }}
+                          className={cn(
+                            "w-full flex items-center justify-center gap-2 text-xs font-semibold rounded-lg px-3 py-2.5 border border-dashed transition-all",
+                            isDark
+                              ? "border-white/10 text-white/40 hover:border-primary/40 hover:text-primary hover:bg-primary/5"
+                              : "border-gray-200 text-gray-400 hover:border-primary/40 hover:text-primary hover:bg-primary/5"
                           )}
-                        </div>
-
-                        {alreadyAdded && (
-                          <div className="absolute bottom-0 inset-x-0 py-1 bg-emerald-900/60 flex items-center justify-center">
-                            <span className="text-[9px] text-emerald-300 font-bold uppercase tracking-wider">In Batch</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Title */}
-                      <div className={cn("px-3 py-2", isDark ? "bg-[#1E1E1E]" : "bg-white")}>
-                        <p className={cn("text-[11px] font-medium leading-snug line-clamp-2", isDark ? "text-white/80" : "text-gray-800")}>
-                          {video.title || video.video_id}
-                        </p>
-                        {video.view_count != null && (
-                          <p className={cn("text-[10px] mt-0.5", mutedText)}>
-                            {video.view_count.toLocaleString()} views
-                          </p>
-                        )}
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Add selected footer */}
-          {selectedIds.size > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={cn("px-5 py-3 border-t shrink-0 flex items-center justify-between gap-3", isDark ? "border-white/8 bg-[#1A1A1A]" : "border-gray-100 bg-gray-50")}
-            >
-              <span className={cn("text-sm", isDark ? "text-white/60" : "text-gray-500")}>
-                {selectedIds.size} video{selectedIds.size > 1 ? "s" : ""} selected
-              </span>
-              <Button size="sm" onClick={handleAddSelected} className="gap-1.5">
-                Add to Batch →
-              </Button>
-            </motion.div>
-          )}
-        </div>
-
-        {/* ── RIGHT: Batch queue ─────────────────────────────── */}
-        <div className="flex flex-col flex-1 overflow-hidden">
-
-          {/* Header */}
-          <div className={cn("px-5 py-4 border-b shrink-0", isDark ? "border-white/8" : "border-gray-100")}>
-            <h2 className={cn("text-sm font-bold", isDark ? "text-white" : "text-gray-900")}>
-              Batch Queue
-            </h2>
-            <p className={cn("text-[11px] mt-0.5", mutedText)}>
-              {batchCards.length === 0
-                ? "Select videos from your channel on the left"
-                : `${readyCount} ready to launch`}
-            </p>
-          </div>
-
-          {/* Queue list */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            <AnimatePresence>
-              {batchCards.map((card) => (
-                <motion.div
-                  key={card.video_id}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className={cn(
-                    "rounded-xl border overflow-hidden",
-                    panelBg,
-                    card.status === "done" && "opacity-60",
-                    card.status === "error" && "border-destructive/40"
-                  )}
-                >
-                  {/* Thumbnail + title row */}
-                  <div className="flex gap-3 p-3">
-                    <div className="w-20 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-muted relative">
-                      {card.thumbnail_url ? (
-                        <img src={card.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Connect a YouTube Channel
+                        </button>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Play className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                      )}
-                      {(card.status === "submitting" || card.status === "autofilling") && (
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                          <Loader2 className="w-4 h-4 animate-spin text-white" />
-                        </div>
-                      )}
-                      {card.status === "done" && (
-                        <div className="absolute inset-0 bg-emerald-900/70 flex items-center justify-center">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        </div>
+                        <Select value={selectedChannelId} onValueChange={setSelectedChannelId}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Select channel" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {masterChannels.map((ch) => (
+                              <SelectItem key={ch.channel_id} value={ch.channel_id}>
+                                <span className="flex items-center gap-2">
+                                  <Radio className="w-3 h-3 text-primary shrink-0" />
+                                  {ch.channel_name}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       )}
                     </div>
+                    <Badge variant={batchCards.length > 0 ? "default" : "secondary"} className="shrink-0 text-[10px] font-bold px-2.5 h-7 rounded-lg">
+                      {batchCards.length}/{MAX_BATCH}
+                    </Badge>
+                  </div>
 
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex items-start gap-1.5">
+                  {selectedChannelId && !loadingVideos && channelVideos.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
                         <Input
-                          value={card.editedTitle}
-                          onChange={(e) => updateCard(card.video_id, { editedTitle: e.target.value })}
-                          placeholder="Title"
-                          className={cn("h-7 text-xs font-medium flex-1", inputCls)}
-                          disabled={card.status === "done" || card.status === "submitting"}
+                          value={videoSearch}
+                          onChange={(e) => setVideoSearch(e.target.value)}
+                          placeholder="Search videos…"
+                          className="pl-9 h-9 text-xs"
                         />
-                        <button
-                          onClick={() => autofillOne(card.video_id)}
-                          disabled={card.status !== "ready"}
-                          title="Autofill with AI"
-                          className={cn(
-                            "w-7 h-7 flex items-center justify-center rounded-lg border shrink-0 transition-all",
-                            card.status === "autofilling"
-                              ? "border-violet-500/40 bg-violet-500/10"
-                              : isDark
-                              ? "border-white/10 hover:border-violet-500/40 hover:bg-violet-500/10"
-                              : "border-gray-200 hover:border-violet-300 hover:bg-violet-50"
+                        {videoSearch && (
+                          <button onClick={() => setVideoSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <X className="w-3 h-3 text-muted-foreground" />
+                          </button>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={toggleAll}
+                        disabled={availableForSelection.length === 0 || batchCards.length >= MAX_BATCH}
+                        className={cn("text-[10px] font-bold uppercase tracking-wider h-9 px-4 rounded-lg shrink-0",
+                          allSelected && "bg-primary/10 border-primary text-primary")}
+                      >
+                        {allSelected ? "Clear" : "Select All"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Video Grid */}
+                <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
+                  {loadingVideos ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-3">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Loading videos…</p>
+                    </div>
+                  ) : videoError ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-2">
+                      <AlertCircle className="w-6 h-6 text-destructive" />
+                      <p className="text-sm text-destructive">{videoError}</p>
+                    </div>
+                  ) : !selectedChannelId ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-3 opacity-40">
+                      <Radio className="w-12 h-12 stroke-[1px]" />
+                      <p className="text-xs font-medium">Select a channel to browse</p>
+                    </div>
+                  ) : filteredVideos.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-2 opacity-40">
+                      <ListVideo className="w-8 h-8" />
+                      <p className="text-xs font-medium">
+                        {videoSearch ? `No videos matching "${videoSearch}"` : "No videos in this channel"}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {filteredVideos.map((video) => {
+                        const alreadyAdded = batchCards.some((c) => c.video_id === video.video_id);
+                        const isSelected = selectedIds.has(video.video_id);
+                        const atLimit = batchCards.length >= MAX_BATCH;
+
+                        return (
+                          <motion.div layout key={video.video_id} className="group">
+                            <button
+                              onClick={() => !alreadyAdded && !atLimit && toggleVideo(video.video_id)}
+                              disabled={alreadyAdded || (atLimit && !isSelected)}
+                              className={cn(
+                                "w-full text-left rounded-xl border overflow-hidden transition-all duration-200",
+                                alreadyAdded
+                                  ? "border-emerald-500/30 opacity-60 cursor-default"
+                                  : isSelected
+                                    ? "border-primary ring-2 ring-primary/20 shadow-lg -translate-y-0.5"
+                                    : isDark
+                                      ? "border-white/5 hover:border-white/15 hover:shadow-md"
+                                      : "border-gray-200 hover:border-primary/30 hover:shadow-md"
+                              )}
+                            >
+                              <div className="aspect-video relative overflow-hidden bg-muted">
+                                {video.thumbnail_url ? (
+                                  <img
+                                    src={video.thumbnail_url}
+                                    alt=""
+                                    className={cn("w-full h-full object-cover transition-transform duration-500 group-hover:scale-105",
+                                      alreadyAdded && "opacity-40 grayscale-[0.5]")}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Play className="w-6 h-6 text-muted-foreground/20" />
+                                  </div>
+                                )}
+
+                                {/* Selection check */}
+                                <div className={cn(
+                                  "absolute top-2 right-2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                                  alreadyAdded ? "bg-emerald-500 border-emerald-500"
+                                    : isSelected ? "bg-primary border-primary shadow-lg shadow-primary/30"
+                                      : "bg-black/30 border-white/40 backdrop-blur-sm"
+                                )}>
+                                  {(isSelected || alreadyAdded) && <CheckCircle2 className="w-3 h-3 text-white" />}
+                                </div>
+
+                                {alreadyAdded && (
+                                  <div className="absolute bottom-0 inset-x-0 py-1 bg-emerald-900/60 flex items-center justify-center">
+                                    <span className="text-[9px] text-emerald-300 font-bold uppercase tracking-wider">In Queue</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className={cn("px-3 py-2", isDark ? "bg-[#161616]" : "bg-white")}>
+                                <p className={cn("text-[11px] font-medium leading-snug line-clamp-2",
+                                  isSelected ? "text-primary" : isDark ? "text-white/80" : "text-gray-800")}>
+                                  {video.title || video.video_id}
+                                </p>
+                                {video.view_count != null && (
+                                  <p className={cn("text-[10px] mt-0.5", mutedText)}>
+                                    {video.view_count.toLocaleString()} views
+                                  </p>
+                                )}
+                              </div>
+                            </button>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Selection footer */}
+                <AnimatePresence>
+                  {selectedIds.size > 0 && (
+                    <motion.div
+                      initial={{ y: 60, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 60, opacity: 0 }}
+                      className={cn("px-6 py-3 border-t shrink-0 flex items-center justify-between",
+                        isDark ? "bg-[#141414]/95 backdrop-blur-xl border-white/5" : "bg-white/95 backdrop-blur-xl border-gray-100")}
+                    >
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {selectedIds.size} video{selectedIds.size > 1 ? "s" : ""} selected
+                      </span>
+                      <Button size="sm" onClick={handleAddSelected} className="h-8 px-4 rounded-lg text-xs font-semibold gap-1.5">
+                        Add to Queue <ChevronRight className="w-3 h-3" />
+                      </Button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            ) : sourceMode === "url" ? (
+              /* ── Single URL Input ──────────────────────────── */
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="px-6 py-4 space-y-4">
+                  <Badge variant={batchCards.length > 0 ? "default" : "secondary"} className="text-[10px] font-bold px-2.5 h-7 rounded-lg">
+                    {batchCards.length}/{MAX_BATCH}
+                  </Badge>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-foreground">YouTube Video URL</label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
+                        <Input
+                          value={singleUrl}
+                          onChange={(e) => setSingleUrl(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter" && singleUrl.trim()) handleAddSingleUrl(); }}
+                          placeholder="https://youtube.com/watch?v=..."
+                          className="pl-9 h-9 text-xs font-mono"
+                        />
+                        {singleUrl && (
+                          <button onClick={() => setSingleUrl("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <X className="w-3 h-3 text-muted-foreground" />
+                          </button>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={handleAddSingleUrl}
+                        disabled={!singleUrl.trim() || batchCards.length >= MAX_BATCH}
+                        className="h-9 px-4 rounded-lg text-xs font-semibold gap-1.5 shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Paste a YouTube URL or video ID and press Add. You can keep adding more videos.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Added URLs preview */}
+                <div className="flex-1 overflow-y-auto px-6 pb-4">
+                  {batchCards.filter((c) => !c.channel_title || c.channel_title === "").length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-2">Added via URL</p>
+                      {batchCards.filter((c) => !c.channel_title || c.channel_title === "").map((card) => (
+                        <div key={card.video_id} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg border",
+                          isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-200 bg-gray-50")}>
+                          {card.thumbnail_url && (
+                            <img src={card.thumbnail_url} alt="" className="w-14 h-8 rounded object-cover bg-muted shrink-0" />
                           )}
-                        >
-                          {card.status === "autofilling" ? (
-                            <Loader2 className="w-3 h-3 animate-spin text-violet-500" />
+                          <span className="text-xs text-muted-foreground font-mono truncate flex-1">{card.video_id}</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* ── File Upload ───────────────────────────────── */
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="px-6 py-4 shrink-0">
+                  <Badge variant={batchCards.length > 0 ? "default" : "secondary"} className="text-[10px] font-bold px-2.5 h-7 rounded-lg">
+                    {batchCards.length}/{MAX_BATCH}
+                  </Badge>
+                </div>
+
+                <div className="flex-1 px-6 pb-6 flex flex-col">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e.target.files)}
+                  />
+
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFileUpload(e.dataTransfer.files); }}
+                    className={cn(
+                      "flex-1 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all min-h-[200px]",
+                      dragOver
+                        ? "border-primary bg-primary/5 scale-[1.02]"
+                        : isDark
+                          ? "border-white/10 hover:border-white/20 bg-white/[0.01]"
+                          : "border-gray-300 hover:border-gray-400 bg-gray-50/50"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-14 h-14 rounded-2xl flex items-center justify-center transition-colors",
+                      dragOver ? "bg-primary/10" : "bg-muted"
+                    )}>
+                      <Upload className={cn("w-6 h-6", dragOver ? "text-primary" : "text-muted-foreground/40")} />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-foreground">
+                        {dragOver ? "Drop files here" : "Drag & drop video files"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        or <span className="text-primary font-semibold">click to browse</span> your computer
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground/50">MP4, MOV, AVI, MKV supported</p>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── RIGHT: Batch Queue ────────────────────────────────── */}
+          <div className="flex flex-col flex-1 overflow-hidden">
+
+            {/* Header */}
+            <div className={cn("px-6 py-5 border-b flex items-center justify-between shrink-0",
+              isDark ? "border-white/5" : "border-gray-200/60")}>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Rocket className="w-4 h-4 text-violet-500" />
+                  <h2 className="text-sm font-bold tracking-tight text-foreground">Dubbing Queue</h2>
+                </div>
+                <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60 pl-6">
+                  {batchCards.length === 0 ? "No videos added yet" : `${readyCount} video${readyCount !== 1 ? "s" : ""} ready`}
+                </p>
+              </div>
+              {batchCards.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setBatchCards([]); setSelectedIds(new Set()); }}
+                  className="text-xs text-destructive hover:bg-destructive/10 h-8 px-3 rounded-lg"
+                >
+                  Clear All
+                </Button>
+              )}
+            </div>
+
+            {/* Queue List */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
+              <AnimatePresence initial={false}>
+                {batchCards.map((card, idx) => (
+                  <motion.div
+                    key={card.video_id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: idx * 0.03 }}
+                    className={cn(
+                      "rounded-xl border overflow-hidden transition-all",
+                      panelBg,
+                      card.status === "done" && "border-emerald-500/30",
+                      card.status === "error" && "border-destructive/30"
+                    )}
+                  >
+                    <div className="flex gap-4 p-4">
+                      {/* Thumbnail */}
+                      <div className="w-24 shrink-0">
+                        <div className="aspect-video rounded-lg overflow-hidden bg-muted relative">
+                          {card.thumbnail_url ? (
+                            <img src={card.thumbnail_url} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <Sparkles className="w-3 h-3 text-violet-400" />
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Play className="w-4 h-4 text-muted-foreground/20" />
+                            </div>
                           )}
-                        </button>
-                        <button
-                          onClick={() => removeCard(card.video_id)}
-                          disabled={card.status === "submitting"}
-                          className={cn(
-                            "w-7 h-7 flex items-center justify-center rounded-lg border shrink-0 transition-all",
-                            isDark
-                              ? "border-white/10 hover:border-red-500/40 hover:bg-red-500/10 text-white/30 hover:text-red-400"
-                              : "border-gray-200 hover:border-red-200 hover:bg-red-50 text-gray-400 hover:text-red-500"
+                          {card.status === "submitting" && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <Loader2 className="w-4 h-4 animate-spin text-white" />
+                            </div>
                           )}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                          {card.status === "done" && (
+                            <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[1px] flex items-center justify-center">
+                              <CheckCircle2 className="w-5 h-5 text-white" />
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      <Textarea
-                        value={card.editedDescription}
-                        onChange={(e) => updateCard(card.video_id, { editedDescription: e.target.value })}
-                        placeholder="Description (optional)"
-                        rows={2}
-                        className={cn("text-[11px] resize-none", inputCls)}
-                        disabled={card.status === "done" || card.status === "submitting"}
-                      />
+                      {/* Fields */}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={card.editedTitle}
+                            onChange={(e) => updateCard(card.video_id, { editedTitle: e.target.value })}
+                            placeholder="Title"
+                            className="h-8 text-xs font-medium flex-1"
+                            disabled={card.status === "done" || card.status === "submitting"}
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => removeCard(card.video_id)}
+                            disabled={card.status === "submitting"}
+                            className="w-8 h-8 rounded-lg shrink-0 hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive text-muted-foreground/40 transition-colors"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
 
-                      {/* Status chips */}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {card.aiApplied && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] text-violet-500">
-                            <Sparkles className="w-2.5 h-2.5" /> AI
+                        <Textarea
+                          value={card.editedDescription}
+                          onChange={(e) => updateCard(card.video_id, { editedDescription: e.target.value })}
+                          placeholder="Description (optional)"
+                          rows={2}
+                          className="text-[11px] resize-none"
+                          disabled={card.status === "done" || card.status === "submitting"}
+                        />
+
+                        {/* Status */}
+                        {card.status === "error" && (
+                          <span className="flex items-center gap-1 text-[10px] text-destructive font-medium">
+                            <AlertCircle className="w-3 h-3" /> {card.errorMsg || "Error"}
                           </span>
                         )}
                         {card.status === "done" && (
-                          <Badge variant="outline" className="text-[10px] h-4 border-emerald-500/40 text-emerald-500 px-1.5">Queued</Badge>
-                        )}
-                        {card.status === "error" && (
-                          <span className="text-[10px] text-destructive flex items-center gap-0.5">
-                            <AlertCircle className="w-3 h-3" />{card.errorMsg || "Error"}
-                          </span>
+                          <Badge variant="outline" className="text-[10px] h-5 border-emerald-500/40 text-emerald-500 px-2 rounded-md">
+                            Queued
+                          </Badge>
                         )}
                       </div>
                     </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {batchCards.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full py-16 text-center select-none">
+                  <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6 border border-border">
+                    <Plus className="w-7 h-7 text-muted-foreground/30" />
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-
-            {batchCards.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full gap-3 py-16">
-                <ListVideo className={cn("w-10 h-10", mutedText)} />
-                <p className={cn("text-sm text-center", mutedText)}>
-                  Select videos from your channel<br />and add them here
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* ── Controls footer ───────────────────────────────── */}
-          {batchCards.length > 0 && (
-            <div className={cn("px-5 py-4 border-t space-y-4 shrink-0", isDark ? "border-white/8 bg-[#181818]" : "border-gray-100 bg-gray-50/80")}>
-              {/* Language pills */}
-              <div>
-                <p className={cn("text-[10px] font-bold uppercase tracking-widest mb-2", mutedText)}>
-                  Target Languages
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {LANGUAGE_OPTIONS.filter((l) => l.code !== "en").map((lang) => {
-                    const on = targetLanguages.includes(lang.code);
-                    return (
-                      <button
-                        key={lang.code}
-                        onClick={() => toggleLanguage(lang.code)}
-                        className={cn(
-                          "flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all",
-                          on
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : isDark
-                            ? "border-white/10 text-white/50 hover:border-white/30 hover:text-white/80"
-                            : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-800"
-                        )}
-                      >
-                        <span>{lang.flag}</span>
-                        <span>{lang.name}</span>
-                      </button>
-                    );
-                  })}
+                  <h3 className="text-sm font-bold mb-1 opacity-70">No Videos Yet</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[220px]">
+                    Choose videos from the left panel and add them here to get started.
+                  </p>
                 </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={autofillAll}
-                  disabled={isAutofilling || isSubmitting}
-                  className="gap-1.5"
-                >
-                  {isAutofilling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-violet-500" />}
-                  {isAutofilling ? "Autofilling…" : "Autofill All"}
-                </Button>
-
-                <Button
-                  size="sm"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || isAutofilling || readyCount === 0 || targetLanguages.length === 0}
-                  className="gap-1.5 ml-auto"
-                >
-                  {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Rocket className="w-3.5 h-3.5" />}
-                  {isSubmitting ? "Launching…" : `Launch ${readyCount} Video${readyCount !== 1 ? "s" : ""}`}
-                </Button>
-              </div>
-
-              {targetLanguages.length === 0 && (
-                <p className="text-[11px] text-amber-500 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3 shrink-0" />
-                  Pick at least one target language
-                </p>
               )}
             </div>
-          )}
+
+            {/* ── Footer: Language + Launch ────────────────────────── */}
+            <AnimatePresence>
+              {batchCards.length > 0 && (
+                <motion.div
+                  initial={{ y: 100 }}
+                  animate={{ y: 0 }}
+                  exit={{ y: 100 }}
+                  className={cn("px-6 py-5 border-t space-y-4 shrink-0",
+                    isDark ? "bg-[#111] border-white/5" : "bg-white border-gray-100")}
+                >
+                  {/* Language selection */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Target Languages
+                      </p>
+                      {targetLanguages.length > 0 && (
+                        <span className="text-[10px] font-bold text-primary">
+                          {targetLanguages.length} selected
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {LANGUAGE_OPTIONS.filter((l) => l.code !== "en").map((lang) => {
+                        const on = targetLanguages.includes(lang.code);
+                        return (
+                          <button
+                            key={lang.code}
+                            onClick={() => toggleLanguage(lang.code)}
+                            className={cn(
+                              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-medium transition-all",
+                              on
+                                ? "bg-primary border-primary text-primary-foreground shadow-sm"
+                                : isDark
+                                  ? "border-white/8 text-white/40 hover:border-white/20 hover:text-white/70"
+                                  : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-800"
+                            )}
+                          >
+                            <span>{lang.flag}</span>
+                            <span>{lang.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Launch */}
+                  <div className="flex items-center gap-3">
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={isSubmitting || readyCount === 0 || targetLanguages.length === 0}
+                      className={cn(
+                        "h-11 flex-1 rounded-xl text-xs font-bold uppercase tracking-wider gap-2 transition-all active:scale-[0.98]",
+                        targetLanguages.length > 0 && readyCount > 0
+                          ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
+                          : ""
+                      )}
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
+                      {isSubmitting ? "Starting…" : `Start Dubbing ${readyCount} Video${readyCount !== 1 ? "s" : ""}`}
+                    </Button>
+                  </div>
+
+                  {targetLanguages.length === 0 && (
+                    <p className="flex items-center justify-center gap-1.5 text-[10px] font-medium text-amber-500">
+                      <AlertCircle className="w-3 h-3" /> Choose at least one language to translate into
+                    </p>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>

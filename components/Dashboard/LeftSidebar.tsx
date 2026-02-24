@@ -27,7 +27,8 @@ import {
   Pause,
   X,
   PanelLeftClose,
-  Layers
+  Layers,
+  Upload
 } from "lucide-react";
 import { ViewType } from "./DashboardLayout";
 import { CreateProjectModal } from "@/components/ui/create-project-modal";
@@ -399,7 +400,7 @@ export function LeftSidebar({
         </div>
 
         {/* Quick actions */}
-        <div className="px-2 mb-2">
+        <div className="px-2 mb-2 space-y-1">
           <button
             onClick={() => onViewChange("batch_upload")}
             className={cn(
@@ -407,14 +408,31 @@ export function LeftSidebar({
               currentView === "batch_upload"
                 ? "bg-primary/10 border-primary/30 text-primary"
                 : isDark
-                ? "border-white/8 text-white/50 hover:border-white/20 hover:text-white/80 hover:bg-white/5"
-                : "border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50"
+                  ? "border-white/8 text-white/50 hover:border-white/20 hover:text-white/80 hover:bg-white/5"
+                  : "border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50"
             )}
           >
             <Layers className="w-3.5 h-3.5 shrink-0" />
             Batch Upload
             <span className={cn("ml-auto text-[10px] font-normal", isDark ? "text-white/25" : "text-gray-400")}>
               Up to 15 videos
+            </span>
+          </button>
+          <button
+            onClick={() => onViewChange("manual_workflow")}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-xs font-semibold transition-all",
+              currentView === "manual_workflow"
+                ? "bg-primary/10 border-primary/30 text-primary"
+                : isDark
+                  ? "border-white/8 text-white/50 hover:border-white/20 hover:text-white/80 hover:bg-white/5"
+                  : "border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50"
+            )}
+          >
+            <Upload className="w-3.5 h-3.5 shrink-0" />
+            Single Upload
+            <span className={cn("ml-auto text-[10px] font-normal", isDark ? "text-white/25" : "text-gray-400")}>
+              1 video
             </span>
           </button>
         </div>
@@ -713,10 +731,15 @@ export function LeftSidebar({
 
                     <button
                       onClick={handleConnectNewChannel}
-                      className={`w-full flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider ${mutedTextClass} mt-2 py-3 rounded-xl border border-dashed ${isDark ? borderClass : "border-gray-400/50"} hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all duration-200 bg-transparent group`}
+                      className={cn(
+                        "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-xs font-semibold transition-all mt-2",
+                        isDark
+                          ? "border-white/8 text-white/50 hover:border-white/20 hover:text-white/80 hover:bg-white/5"
+                          : "border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50"
+                      )}
                     >
-                      <Plus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
-                      Connect New
+                      <Plus className="w-3.5 h-3.5 shrink-0" />
+                      Connect YouTube Channel
                     </button>
                   </div>
                 </AccordionContent>
@@ -841,6 +864,20 @@ export function LeftSidebar({
                         >
                           <Layers className="w-3.5 h-3.5" />
                           Batch Upload
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onViewChange("manual_workflow")}
+                          className={cn(
+                            "w-full gap-1.5",
+                            currentView === "manual_workflow"
+                              ? "bg-primary/10 border-primary/30 text-primary"
+                              : ""
+                          )}
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          Single Upload
                         </Button>
                       </>
                     ) : (

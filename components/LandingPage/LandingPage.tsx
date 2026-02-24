@@ -20,7 +20,6 @@ export default function LandingPage({ onNavigation }: LandingPageProps) {
         { label: 'Product', href: '#product' },
         { label: 'Pricing', href: '/pricing' },
         { label: 'Enterprise', href: '/enterprise' },
-        { label: 'Mission', href: '/mission' },
     ];
 
 

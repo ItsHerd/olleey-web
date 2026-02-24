@@ -122,9 +122,9 @@ export function ManualProcessView({
     const isDark = theme === "dark";
 
     const steps = [
-        { id: 1, name: "Source", icon: Radio },
-        { id: 2, name: "Configure", icon: SlidersHorizontal },
-        { id: 3, name: "Targets", icon: Globe },
+        { id: 1, name: "Choose Video", icon: Radio },
+        { id: 2, name: "Details", icon: SlidersHorizontal },
+        { id: 3, name: "Languages", icon: Globe },
     ];
 
     // Default to first available source channel for better UX.
@@ -339,7 +339,7 @@ export function ManualProcessView({
             }
 
             if (selectedTargetChannels.length === 0) {
-                setError("Please select at least one target language/channel");
+                setError("Please choose at least one language to translate into");
                 setIsSubmitting(false);
                 return;
             }
@@ -357,7 +357,7 @@ export function ManualProcessView({
                 .filter(Boolean) as string[];
 
             if (targetLanguages.length === 0) {
-                setError("No valid languages found. Please configure language channels or select valid targets.");
+                setError("No valid languages found. Please set up language channels or pick valid languages.");
                 setIsSubmitting(false);
                 return;
             }
@@ -425,14 +425,14 @@ export function ManualProcessView({
                 setIsSubmitting(false);
                 setIsSuccessState(true);
                 const message = saveAsDraft
-                    ? `💾 Saved as Draft: "${customTitle || 'Video'}" ready for later processing`
-                    : `🚀 Production Pipeline Started! Processing "${customTitle || 'Video'}"`;
+                    ? `💾 Saved as Draft: "${customTitle || 'Video'}" ready for later`
+                    : `🚀 Started! "${customTitle || 'Video'}" is now being translated and dubbed.`;
                 toast(message, "success");
                 setTimeout(() => { if (onSuccess) onSuccess(); }, 1500);
             }, 1000);
 
         } catch (err: any) {
-            setError(err.message || "Failed to initiate pipeline");
+            setError(err.message || "Something went wrong. Please try again.");
             setIsSubmitting(false);
         }
     };
@@ -555,10 +555,10 @@ export function ManualProcessView({
                                             {activeTab === 'channel' && (
                                                 <div className="space-y-4 relative z-10">
                                                     <div className="space-y-3">
-                                                        <label className="text-xs font-medium text-muted-foreground">Source channel</label>
+                                                        <label className="text-xs font-medium text-muted-foreground">Your channel</label>
                                                         <Select value={sourceChannelId} onValueChange={setSourceChannelId}>
                                                             <SelectTrigger className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20">
-                                                                <SelectValue placeholder="Select a source channel..." />
+                                                                <SelectValue placeholder="Pick a channel..." />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {availableChannels.map(c => (
@@ -636,10 +636,10 @@ export function ManualProcessView({
                                                     <div className="space-y-3">
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <LinkIcon className="w-3.5 h-3.5 text-primary" />
-                                                            <label className="text-xs font-medium text-muted-foreground">Video URL</label>
+                                                            <label className="text-xs font-medium text-muted-foreground">YouTube URL or video link</label>
                                                         </div>
                                                         <Input
-                                                            placeholder="https://example.com/video.mp4 or YouTube URL..."
+                                                            placeholder="Paste a YouTube URL or video link..."
                                                             value={sourceVideoUrl}
                                                             onChange={(e) => setSourceVideoUrl(e.target.value)}
                                                             className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20"
@@ -648,11 +648,11 @@ export function ManualProcessView({
                                                     <div className="space-y-3">
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <Youtube className="w-3.5 h-3.5 text-primary" />
-                                                            <label className="text-xs font-medium text-muted-foreground">Source channel</label>
+                                                            <label className="text-xs font-medium text-muted-foreground">From channel</label>
                                                         </div>
                                                         <Select value={sourceChannelId} onValueChange={setSourceChannelId}>
                                                             <SelectTrigger className="h-11 rounded-md border-border bg-background text-sm font-medium focus:ring-primary/20">
-                                                                <SelectValue placeholder="Select associated channel..." />
+                                                                <SelectValue placeholder="Pick the channel this video belongs to..." />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {availableChannels.map(c => (
@@ -704,7 +704,7 @@ export function ManualProcessView({
                                                                 </div>
                                                                 <div>
                                                                     <p className="text-lg font-bold tracking-tight mb-1">{uploadedFile.name}</p>
-                                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB • Deployment Ready</p>
+                                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready to go</p>
                                                                 </div>
                                                                 <Button
                                                                     variant="outline"
@@ -716,7 +716,7 @@ export function ManualProcessView({
                                                                     }}
                                                                     className="h-9 px-6 text-[10px] font-bold uppercase tracking-widest border-destructive/20 text-destructive hover:bg-destructive/10"
                                                                 >
-                                                                    Discard Asset
+                                                                    Remove File
                                                                 </Button>
                                                             </motion.div>
                                                         ) : (
@@ -734,8 +734,8 @@ export function ManualProcessView({
                                                                     </div>
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-lg font-semibold tracking-tight">Upload a source video</p>
-                                                                    <p className="mt-2 text-xs text-muted-foreground">Drag and drop a video file, or click to browse</p>
+                                                                    <p className="text-lg font-semibold tracking-tight">Upload your video</p>
+                                                                    <p className="mt-2 text-xs text-muted-foreground">Drag and drop a video file, or click to browse your computer</p>
                                                                 </div>
                                                             </motion.div>
                                                         )}
@@ -746,8 +746,8 @@ export function ManualProcessView({
                                             {activeTab === 'drafts' && (
                                                 <div className="space-y-4 relative z-10">
                                                     <div className="space-y-1">
-                                                        <label className="text-xs font-medium text-muted-foreground">Draft videos</label>
-                                                        <p className="text-xs text-muted-foreground/60">Select from your uploaded videos in storage</p>
+                                                        <label className="text-xs font-medium text-muted-foreground">Your drafts</label>
+                                                        <p className="text-xs text-muted-foreground/60">Pick from videos you've saved for later</p>
                                                     </div>
 
                                                     <div className="border border-border rounded-md overflow-hidden max-h-[320px] overflow-y-auto bg-background custom-scrollbar">
@@ -1082,7 +1082,7 @@ export function ManualProcessView({
                                             <div className="w-14 h-14 rounded-lg bg-background border border-border flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-500">
                                                 <ImageIcon className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
                                             </div>
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">Assign asset visual</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">Add thumbnail</span>
                                             <input type="file" className="hidden" accept="image/*" onChange={handleThumbnailSelect} />
                                         </label>
                                     )}
@@ -1090,35 +1090,35 @@ export function ManualProcessView({
                                     <div className="absolute top-4 left-4">
                                         <Badge variant="outline" className="bg-black/60 backdrop-blur-xl border-white/20 flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            <span className="text-[9px] font-bold text-white uppercase tracking-widest">Feed Active</span>
+                                            <span className="text-[9px] font-bold text-white uppercase tracking-widest">Preview</span>
                                         </Badge>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center py-3 border-b border-border group/line">
-                                        <span className="text-xs font-medium text-muted-foreground group-hover/line:text-foreground transition-colors">Source type</span>
+                                        <span className="text-xs font-medium text-muted-foreground group-hover/line:text-foreground transition-colors">Video from</span>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-medium text-foreground capitalize">{activeTab}</span>
                                             <div className="w-1 h-1 rounded-full bg-primary" />
                                         </div>
                                     </div>
                                     <div className={`flex justify-between items-center py-3 border-b ${isDark ? "border-white/10" : "border-gray-200"} group/line`}>
-                                        <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Targets</span>
+                                        <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Languages</span>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-semibold text-foreground">{selectedTargetChannels.length}</span>
                                             <Radio className="h-3.5 w-3.5 text-primary" />
                                         </div>
                                     </div>
                                     <div className={`flex justify-between items-center py-3 border-b ${isDark ? "border-white/10" : "border-gray-200"} group/line`}>
-                                        <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Engine</span>
+                                        <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Quality</span>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-medium text-foreground">Standard</span>
                                             <Zap className="h-3.5 w-3.5 text-primary" />
                                         </div>
                                     </div>
                                     <div className="flex justify-between items-center py-3 group/line">
-                                        <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Language map</span>
+                                        <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-500"} ${isDark ? "group-hover/line:text-white/60" : "group-hover/line:text-gray-600"} transition-colors`}>Translating to</span>
                                         <div className="flex items-center gap-3">
                                             <span className="text-xl">{sourceLanguage ? getLanguageFlag(sourceLanguage) : "🌐"}</span>
                                             <ArrowRight className={`w-3.5 h-3.5 ${isDark ? "text-white/40" : "text-gray-500"} group-hover/line:text-olleey-yellow/40 transition-colors`} />
@@ -1136,7 +1136,7 @@ export function ManualProcessView({
                                                         );
                                                     })
                                                 ) : (
-                                                    <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-500"}`}>No targets selected</span>
+                                                    <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-500"}`}>No languages chosen yet</span>
                                                 )}
                                                 {selectedTargetChannels.length > 4 && (
                                                     <div className={`w-8 h-8 rounded-full border-2 ${isDark ? 'border-[#0c0c0c] bg-white/5' : 'border-white bg-gray-100'} flex items-center justify-center text-[9px] font-black ${isDark ? "text-white/70" : "text-gray-700"}`}>
@@ -1170,7 +1170,7 @@ export function ManualProcessView({
                                                     className="h-full bg-olleey-yellow"
                                                 />
                                             </div>
-                                            <p className={`text-xs ${isDark ? "text-white/60" : "text-gray-600"} text-center mt-3`}>Creating job and preparing workflow...</p>
+                                            <p className={`text-xs ${isDark ? "text-white/60" : "text-gray-600"} text-center mt-3`}>Setting up your translation and dubbing...</p>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -1190,7 +1190,7 @@ export function ManualProcessView({
                                         <ShieldCheck className="w-6 h-6 text-emerald-500 shrink-0" />
                                         <div className="flex flex-col gap-0.5">
                                             <span className="text-xs font-semibold text-emerald-500">Ready</span>
-                                            <p className="text-xs font-medium text-emerald-400 opacity-80">Processing started successfully.</p>
+                                            <p className="text-xs font-medium text-emerald-400 opacity-80">Your video is now being translated and dubbed.</p>
                                         </div>
                                     </div>
                                 )}
@@ -1214,12 +1214,12 @@ export function ManualProcessView({
                                         ) : isSuccessState ? (
                                             <div className="flex items-center gap-4">
                                                 <CheckCircle className="w-6 h-6" />
-                                                <span>Deployed</span>
+                                                <span>Started!</span>
                                             </div>
                                         ) : (
                                             <span className="flex items-center gap-3">
                                                 <Rocket className="w-5 h-5 group-hover/submit:translate-x-1 group-hover/submit:-translate-y-1 transition-transform" />
-                                                Begin Processing
+                                                Start Dubbing
                                             </span>
                                         )}
                                     </Button>

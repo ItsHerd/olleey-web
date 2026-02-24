@@ -9,6 +9,7 @@ import {
   Eye,
   FileCheck2,
   Home,
+  Layers,
   LifeBuoy,
   Radio,
   Rss,
@@ -86,8 +87,8 @@ const VIEW_COPY: Record<ViewType, { title: string; subtitle: string; icon: React
     icon: LifeBuoy,
   },
   manual_workflow: {
-    title: "Manual Ingestion",
-    subtitle: "Create and launch localization jobs manually",
+    title: "Single Upload",
+    subtitle: "Translate and dub one video at a time",
     icon: UploadCloud,
   },
   review: {
@@ -114,6 +115,11 @@ const VIEW_COPY: Record<ViewType, { title: string; subtitle: string; icon: React
     title: "Detected Uploads",
     subtitle: "New videos detected from your channels",
     icon: Rss,
+  },
+  batch_upload: {
+    title: "Batch Upload",
+    subtitle: "Translate and dub multiple videos at once",
+    icon: Layers,
   },
 };
 
@@ -223,6 +229,12 @@ const VIEW_ICON_STYLES: Record<
     lightIcon: "text-red-600",
     darkIcon: "text-red-300",
   },
+  batch_upload: {
+    lightContainer: "border-violet-200 bg-violet-50/90",
+    darkContainer: "border-violet-500/30 bg-violet-500/10",
+    lightIcon: "text-violet-600",
+    darkIcon: "text-violet-300",
+  },
 };
 
 export function DashboardViewHeader({ view, theme, onBackHome }: DashboardViewHeaderProps) {
@@ -261,11 +273,11 @@ export function DashboardViewHeader({ view, theme, onBackHome }: DashboardViewHe
             <div className={cn("rounded-md border p-1.5", isDark ? iconStyles.darkContainer : iconStyles.lightContainer)}>
               <Icon className={cn("h-5 w-5", isDark ? iconStyles.darkIcon : iconStyles.lightIcon)} />
             </div>
-            <h1 className={cn("truncate text-4xl leading-none tracking-tight md:text-5xl", isDark ? "text-white" : "text-black", "font-light")}>
+            <h1 className={cn("truncate text-2xl leading-none tracking-tight md:text-3xl", isDark ? "text-white" : "text-black", "font-light")}>
               {copy.title}
             </h1>
           </div>
-          <p className={cn("mt-2 text-sm", isDark ? "text-white/60" : "text-black/60")}>{copy.subtitle}</p>
+          <p className={cn("mt-1.5 text-xs", isDark ? "text-white/60" : "text-black/60")}>{copy.subtitle}</p>
         </div>
       </div>
     </div>
