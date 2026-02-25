@@ -16,6 +16,7 @@ import {
   Settings2,
   UploadCloud,
   UserCircle2,
+  UserPlus,
   Video,
   Volume2,
   Workflow,
@@ -120,6 +121,11 @@ const VIEW_COPY: Record<ViewType, { title: string; subtitle: string; icon: React
     title: "Batch Upload",
     subtitle: "Translate and dub multiple videos at once",
     icon: Layers,
+  },
+  invite_users: {
+    title: "Invite Users",
+    subtitle: "Send workspace invitations to new team members",
+    icon: UserPlus,
   },
 };
 
@@ -234,6 +240,12 @@ const VIEW_ICON_STYLES: Record<
     darkContainer: "border-violet-500/30 bg-violet-500/10",
     lightIcon: "text-violet-600",
     darkIcon: "text-violet-300",
+  },
+  invite_users: {
+    lightContainer: "border-pink-200 bg-pink-50/90",
+    darkContainer: "border-pink-500/30 bg-pink-500/10",
+    lightIcon: "text-pink-600",
+    darkIcon: "text-pink-300",
   },
 };
 

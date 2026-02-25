@@ -32,6 +32,7 @@ import { youtubeAPI, agentAPI } from "@/lib/api";
 interface AgentViewProps {
   theme: string;
   onViewChange?: (view: any) => void;
+  compact?: boolean;
 }
 
 interface Message {
@@ -82,7 +83,7 @@ const quickActions = [
   },
 ];
 
-export function AgentView({ theme, onViewChange }: AgentViewProps) {
+export function AgentView({ theme, onViewChange, compact = false }: AgentViewProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [draft, setDraft] = useState("");
@@ -213,11 +214,11 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
   return (
     <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-[#F4F4F4]"}`}>
       {messages.length === 0 ? (
-        <div className="h-full overflow-y-auto custom-scrollbar p-6 sm:p-10">
+        <div className={`h-full overflow-y-auto custom-scrollbar ${compact ? "p-4" : "p-6 sm:p-10"}`}>
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-5xl mx-auto min-h-full flex flex-col justify-center py-10"
+            className={`${compact ? "max-w-full" : "max-w-5xl"} mx-auto min-h-full flex flex-col justify-center ${compact ? "py-4" : "py-10"}`}
           >
             <div>
               <div className="mb-8">
@@ -226,25 +227,25 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
                   strategy="afterInteractive"
                 />
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 shrink-0">
+                  <div className={`${compact ? "w-8 h-8" : "w-16 h-16"} shrink-0`}>
                     {React.createElement("lottie-player", {
                       src: "/lotties/bubble-main-scene.json",
                       autoplay: true,
                       loop: true,
                       style: {
-                        width: "64px",
-                        height: "64px",
+                        width: compact ? "32px" : "64px",
+                        height: compact ? "32px" : "64px",
                         pointerEvents: "none",
                       },
                     })}
                   </div>
-                  <h1 className={`text-4xl sm:text-6xl leading-tight tracking-tight ${textClass}`}>
+                  <h1 className={`${compact ? "text-xl" : "text-4xl sm:text-6xl"} leading-tight tracking-tight ${textClass}`}>
                     Let&apos;s share stories
                   </h1>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className={`grid ${compact ? "grid-cols-1 gap-2" : "grid-cols-1 md:grid-cols-3 gap-4"} mb-8`}>
                 {quickActions.map((action, idx) => {
                   const Icon = action.icon;
                   return (
@@ -256,38 +257,40 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.99 }}
                       onClick={() => handleQuickAction(action)}
-                      className={`${cardBgClass} border ${borderClass} rounded-xl p-5 text-left transition-all ${shadowClass} ${isDark ? "hover:bg-[#171717]" : "hover:bg-white"} group`}
+                      className={`${cardBgClass} border ${borderClass} rounded-xl ${compact ? "p-3" : "p-5"} text-left transition-all ${shadowClass} ${isDark ? "hover:bg-[#171717]" : "hover:bg-white"} group`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <h3 className={`text-xl font-semibold tracking-tight ${textClass}`}>{action.title}</h3>
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? "bg-white/10" : "bg-black/5"}`}>
-                          <Icon className={`w-4 h-4 ${isDark ? "text-gray-300" : "text-gray-700"}`} />
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className={`${compact ? "text-xs font-semibold" : "text-xl font-semibold"} tracking-tight ${textClass}`}>{action.title}</h3>
+                        <div className={`${compact ? "w-6 h-6" : "w-8 h-8"} rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-white/10" : "bg-black/5"}`}>
+                          <Icon className={`${compact ? "w-3 h-3" : "w-4 h-4"} ${isDark ? "text-gray-300" : "text-gray-700"}`} />
                         </div>
                       </div>
-                      <p className={`mt-2 text-sm leading-relaxed ${textSecondaryClass}`}>{action.description}</p>
+                      {!compact && <p className={`mt-2 text-sm leading-relaxed ${textSecondaryClass}`}>{action.description}</p>}
                     </motion.button>
                   );
                 })}
               </div>
 
-              <button
-                onClick={async () => {
-                  try {
-                    const { auth_url } = await youtubeAPI.initiateConnection();
-                    window.location.href = auth_url;
-                  } catch (error) {
-                    console.error("Failed to initiate YouTube connection:", error);
-                  }
-                }}
-                className={`mb-5 inline-flex w-fit items-center gap-2 text-sm ${isDark ? "text-gray-400 hover:text-gray-200" : "text-gray-600 hover:text-gray-900"} transition-colors`}
-              >
-                Connect your channels to Olleey
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              {!compact && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const { auth_url } = await youtubeAPI.initiateConnection();
+                      window.location.href = auth_url;
+                    } catch (error) {
+                      console.error("Failed to initiate YouTube connection:", error);
+                    }
+                  }}
+                  className={`mb-5 inline-flex w-fit items-center gap-2 text-sm ${isDark ? "text-gray-400 hover:text-gray-200" : "text-gray-600 hover:text-gray-900"} transition-colors`}
+                >
+                  Connect your channels to Olleey
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
 
               <form
                 onSubmit={handleSubmitDraft}
-                className={`${cardBgClass} border ${borderClass} rounded-2xl p-4 sm:p-5 ${shadowClass}`}
+                className={`${cardBgClass} border ${borderClass} ${compact ? "rounded-xl p-3" : "rounded-2xl p-4 sm:p-5"} ${shadowClass}`}
               >
                 <textarea
                   value={draft}
@@ -299,12 +302,12 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
                     }
                   }}
                   placeholder="How can I help you today?"
-                  className={`w-full resize-none bg-transparent outline-none border-0 text-base sm:text-lg min-h-[72px] ${isDark ? "text-white placeholder:text-gray-500" : "text-gray-900 placeholder:text-gray-500"}`}
+                  className={`w-full resize-none bg-transparent outline-none border-0 ${compact ? "text-sm min-h-[48px]" : "text-base sm:text-lg min-h-[72px]"} ${isDark ? "text-white placeholder:text-gray-500" : "text-gray-900 placeholder:text-gray-500"}`}
                 />
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
-                    <span className={`text-xs px-2.5 py-1 rounded-md border ${isDark ? "border-white/10 bg-white/5 text-gray-300" : "border-black/10 bg-black/5 text-gray-700"}`}>
+                <div className={`${compact ? "mt-2" : "mt-3"} flex items-center justify-between gap-2`}>
+                  <div className={`flex items-center ${compact ? "gap-1" : "gap-2"} flex-wrap min-w-0`}>
+                    <Sparkles className={`w-3.5 h-3.5 shrink-0 ${isDark ? "text-gray-400" : "text-gray-500"}`} />
+                    <span className={`${compact ? "text-[10px]" : "text-xs"} px-2 py-0.5 rounded-md border whitespace-nowrap ${isDark ? "border-white/10 bg-white/5 text-gray-300" : "border-black/10 bg-black/5 text-gray-700"}`}>
                       Olleey Assistant
                     </span>
                     <DropdownMenu>
@@ -378,13 +381,12 @@ export function AgentView({ theme, onViewChange }: AgentViewProps) {
                     className={`flex items-end gap-3 sm:gap-4 ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        message.role === "assistant"
-                          ? "bg-[#D97757]/20 border border-[#D97757]/30"
-                          : isDark
-                            ? "bg-white/5 border border-white/10"
-                            : "bg-black/5 border border-black/10"
-                      }`}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${message.role === "assistant"
+                        ? "bg-[#D97757]/20 border border-[#D97757]/30"
+                        : isDark
+                          ? "bg-white/5 border border-white/10"
+                          : "bg-black/5 border border-black/10"
+                        }`}
                     >
                       {message.role === "assistant" ? (
                         <OlleeyLogo className="w-6 h-6" isDark={isDark} />

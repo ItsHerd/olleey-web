@@ -11,8 +11,10 @@ interface SettingsContextValue {
     error: string | null;
     autoApproveJobs: boolean;
     detectedUploadWindow: DetectedUploadWindow;
+    isEnterprise: boolean;
     updateAutoApproveJobs: (enabled: boolean) => Promise<void>;
     updateDetectedUploadWindow: (window: DetectedUploadWindow) => Promise<void>;
+    toggleEnterprise: (enabled: boolean) => void;
     refetch: () => Promise<void>;
 }
 
@@ -26,6 +28,10 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     const [settings, setSettings] = useState<UserSettings | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isEnterprise, setIsEnterprise] = useState(() => {
+        if (typeof window === "undefined") return false;
+        return localStorage.getItem("olleey_enterprise_mode") === "true";
+    });
 
     const loadSettings = async () => {
         try {
@@ -81,14 +87,23 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         }
     };
 
+    const toggleEnterprise = (enabled: boolean) => {
+        setIsEnterprise(enabled);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("olleey_enterprise_mode", String(enabled));
+        }
+    };
+
     const value: SettingsContextValue = {
         settings,
         loading,
         error,
         autoApproveJobs: Boolean(settings?.auto_approve_jobs),
         detectedUploadWindow: settings?.detected_upload_window || "last_7_days",
+        isEnterprise,
         updateAutoApproveJobs,
         updateDetectedUploadWindow,
+        toggleEnterprise,
         refetch: loadSettings,
     };
 

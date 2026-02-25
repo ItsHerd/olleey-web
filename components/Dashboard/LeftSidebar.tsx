@@ -28,12 +28,14 @@ import {
   X,
   PanelLeftClose,
   Layers,
-  Upload
+  Upload,
+  UserPlus
 } from "lucide-react";
 import { ViewType } from "./DashboardLayout";
 import { CreateProjectModal } from "@/components/ui/create-project-modal";
 import { useAuth } from "@/lib/AuthContext";
 import { useProject } from "@/lib/ProjectContext";
+import { useSettings } from "@/lib/SettingsContext";
 import { useDashboardChannels } from "@/lib/useDashboardChannels";
 import { useDashboardConnections } from "@/lib/useDashboardConnections";
 import { useDashboardJobs } from "@/lib/useDashboardJobs";
@@ -94,6 +96,7 @@ export function LeftSidebar({
   const userId = resolveClientUserId(user?.id);
   const { projects, selectedProject, setSelectedProject } = useProject();
   const isDark = theme === "dark";
+  const { isEnterprise } = useSettings();
 
   const [editChannel, setEditChannel] = React.useState<LanguageChannel | null>(null);
   const [editConnection, setEditConnection] = React.useState<YouTubeConnection | null>(null);
@@ -973,6 +976,30 @@ export function LeftSidebar({
               <ChevronRight className="w-3.5 h-3.5" />
             </div>
           </button>
+
+          {isEnterprise && (
+            <button
+              onClick={() => onViewChange("invite_users")}
+              className={cn(
+                "w-full p-3 rounded-md border flex items-center gap-3 shadow-sm transition-all text-left",
+                currentView === "invite_users"
+                  ? "bg-primary/10 border-primary/30"
+                  : "bg-background border-border hover:border-primary/30 hover:bg-muted/40"
+              )}
+            >
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+                <UserPlus className="w-4 h-4 text-pink-500" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[11px] font-bold text-foreground truncate">Invite Users</span>
+                <span className="text-[10px] text-muted-foreground truncate">Send workspace invitations</span>
+              </div>
+              <div className="ml-auto flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <span className="uppercase tracking-wider">Open</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </div>
+            </button>
+          )}
 
           <button
             onClick={() => onViewChange("account")}

@@ -30,6 +30,8 @@ import { useReview } from "@/lib/ReviewContext";
 import { useVideos } from "@/lib/useVideos";
 import { isDemoUser, YC_CEO_DEMO_VIDEO, YC_CEO_SPANISH_TRANSLATION } from "@/lib/mockDemoData";
 import { resolveClientUserId } from "@/lib/user";
+import { useSettings } from "@/lib/SettingsContext";
+import { EnterprisePipelineStatus } from "./EnterprisePipelineStatus";
 
 interface DashboardViewProps {
   onSelectJob: (item: SelectedItem) => void;
@@ -68,6 +70,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
   const isDark = theme === "dark";
   const { openReview } = useReview();
   const { videos } = useVideos();
+  const { isEnterprise } = useSettings();
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,7 +90,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
       // Optimistically mark as cancelled
       setCancelledJobIds(prev => new Set(prev).add(jobId));
       window.dispatchEvent(new CustomEvent('olleey-job-cancelled', { detail: { jobId } }));
-      
+
       await jobsAPI.cancelJob(jobId);
       toast("Job cancelled successfully", "success");
       refetch();
@@ -108,7 +111,7 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
 
     const video = videos.find(v => v.video_id === job.source_video_id);
     const targetVideo = video || (isDemoUser(userId || "demo") && job.source_video_id === "demo_yc_ceo_video_001" ? YC_CEO_DEMO_VIDEO : null);
-    
+
     if (!targetVideo) {
       toast("Source video not found for this job", "error");
       return;
@@ -181,7 +184,24 @@ export function DashboardView({ onSelectJob, theme, onViewChange }: DashboardVie
 
   return (
     <div className={`h-full flex flex-col relative overflow-hidden ${isDark ? "bg-[#0A0A0A]" : "bg-[#F4F4F4]"}`}>
-      {viewMode === "agent" ? (
+      {isEnterprise ? (
+        <div className="h-full flex flex-col overflow-auto custom-scrollbar">
+          <div className={`px-8 py-6 ${isDark ? 'border-b border-white/10' : ''} relative z-10`}>
+            <div className="flex items-center gap-2 mb-1">
+              <Activity className="w-4 h-4 text-primary" />
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Team Overview</h1>
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground opacity-70">
+              Workspace activity at a glance
+            </p>
+          </div>
+          <div className="flex-1 p-8">
+            <div className="max-w-7xl mx-auto">
+              <EnterprisePipelineStatus theme={theme} onViewChange={onViewChange} />
+            </div>
+          </div>
+        </div>
+      ) : viewMode === "agent" ? (
         <div className="h-full flex flex-col">
           <AgentView theme={theme} onViewChange={onViewChange} />
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Moon, Sun, Globe, Bell, Check, Loader2 } from "lucide-react";
+import { Moon, Sun, Globe, Bell, Check, Loader2, Building } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +11,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useTheme } from "@/lib/useTheme";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { useSettings } from "@/lib/SettingsContext";
 
 interface UserSettings {
   theme: "light" | "dark";
@@ -22,6 +23,9 @@ interface UserSettings {
 export function SettingsView({ theme }: { theme: string }) {
   const { setTheme } = useTheme();
   const { user } = useAuth();
+  const { isEnterprise, toggleEnterprise } = useSettings();
+  const isDemoUser = user?.email === "demo@olleey.com";
+  const isDev = process.env.NODE_ENV === "development";
 
   const [settings, setSettings] = useState<UserSettings>({
     theme: theme as "light" | "dark",
@@ -235,6 +239,32 @@ export function SettingsView({ theme }: { theme: string }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dev-only Enterprise Mode toggle */}
+      {isDev && isDemoUser && (
+        <Card className="border-dashed border-amber-500/40">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Building className="w-4 h-4 text-amber-500" />
+              Enterprise Mode
+              <span className="text-[10px] uppercase tracking-widest font-mono bg-amber-500/10 text-amber-500 border border-amber-500/30 px-1.5 py-0.5 rounded">Dev Only</span>
+            </CardTitle>
+            <CardDescription>Toggle enterprise admin features for testing. Only visible in development for demo@olleey.com.</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="rounded-lg border p-4 flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium">Enterprise Admin</Label>
+                <p className="text-sm text-muted-foreground">Enable enterprise features like team invitations and admin controls.</p>
+              </div>
+              <Switch
+                checked={isEnterprise}
+                onCheckedChange={toggleEnterprise}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
