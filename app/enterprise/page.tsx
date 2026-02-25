@@ -35,7 +35,7 @@ const workflowSurfaces = [
     description:
       "Turn incoming uploads and market requests into structured workflows that are routed, reviewed, and published by the right team.",
     step: "1.0 Intake",
-    image: "/herodashboard.png",
+    image: "/enterprise.png",
     imageAlt: "Enterprise workflow intake",
   },
   {
